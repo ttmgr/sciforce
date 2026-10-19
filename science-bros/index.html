@@ -79,7 +79,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
       <li><kbd>X</kbd> / <kbd>K</kbd> special (3 per bro)</li>
       <li><kbd>C</kbd> / <kbd>L</kbd> punch; <kbd>↓</kbd> + punch in the air slams down</li>
       <li><kbd>Shift</kbd> / <kbd>V</kbd> dash-roll (dodges bullets)</li>
-      <li>Jump off a wall to wall-jump · gamepad works too</li>
+      <li>Jump off a wall to wall-jump · gamepad / PS5 controller: ✕ jump, □ fire, ○ punch, △ special, R1 roll, touchpad map</li>
       <li><kbd>Tab</kbd> hold for the map · <kbd>P</kbd> pause menu · <kbd>M</kbd> sound</li>
     </ul>
     <button class="ui" id="fs" type="button">Fullscreen</button>
@@ -863,7 +863,8 @@ document.querySelectorAll('.touch button').forEach((b) => {
   const off = (e) => { e.preventDefault(); keys[k] = false; };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
 });
-// gamepad (standard mapping): stick or d-pad moves, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause
+// gamepad (standard mapping): stick or d-pad moves, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause,
+// Select/Create or the PS5 touchpad click hold the full map
 const padHeld = {};
 let padFull = 0, clock = 0; // stick pushed all the way; a clock that runs in every state (for double taps)
 let padSeen = false;
@@ -875,7 +876,7 @@ function pollPad() {
   if (!padSeen) { padSeen = true; audioInit(); }
   const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
   padFull = ax < -0.92 ? -1 : ax > 0.92 ? 1 : 0;
-  const now = { left: ax < -0.4 || b(14), right: ax > 0.4 || b(15), down: ay > 0.55 || b(13), jump: b(0) || b(12), fire: b(2) || b(7), melee: b(1), special: b(3), dash: b(4) || b(5) || b(6), pause: b(9), start: b(9) || (state !== 'play' && b(0)) };
+  const now = { left: ax < -0.4 || b(14), right: ax > 0.4 || b(15), down: ay > 0.55 || b(13), jump: b(0) || b(12), fire: b(2) || b(7), melee: b(1), special: b(3), dash: b(4) || b(5) || b(6), pause: b(9), start: b(9) || (state !== 'play' && b(0)), map: b(8) || b(17) };
   for (const k in now) {
     if (now[k] && !padHeld[k]) { pressed[k] = true; keys[k] = true; }
     if (!now[k] && padHeld[k]) keys[k] = false;
@@ -4309,7 +4310,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();
