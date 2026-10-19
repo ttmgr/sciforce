@@ -1486,7 +1486,148 @@ function buildSiege({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('spring', 20); sp('spring', 38); sp('barrel', 10); sp('propane', 47); sp('barrel', 52); sp('itemcrate', 29, 0); sp('guncrate', 33, 0);
   dc('sign', 4, { text: 'LAB SIEGE' }); dc('sandbags', 26); dc('palm', 56, { lean: -1 });
 }
-const ENDING = 'King Citrus is juiced and the Anti-Science League has scattered. The world goes back to evidence, vaccines and round planets. Science wins.';
+
+// ---------------------------------------------------------------- story
+// The war is told in four acts. Prof. Peer Review runs HQ; Dr. Placebo is the League's general; Professor
+// Quackenbush is its voice on the radio (Peer Review rejected his paper years ago); King Citrus is its face.
+const ACTS = [['PLACEBO ISLAND', 'ACT I', 'THE PLACEBO EFFECT'], ['FLAT EARTH STATION', 'ACT II', 'THE BROADCAST'], ['CROP CIRCLE FIELDS', 'ACT III', 'ROAD TO THE CITADEL'], ['CITRUS CITADEL', 'FINALE', 'THE BIG ORANGE']];
+function actOf(n) {
+  let a = null, first = false;
+  for (const [name, num, title] of ACTS) { const i = LEVELS.findIndex((L) => L.name === name); if (i >= 0 && i <= n) { a = [num, title]; first = i === n; } }
+  return a && { num: a[0], title: a[1], first };
+}
+// portraits for the radio: 12 x 10 pixels each
+const CAST = {
+  hq: { name: 'PROF. PEER REVIEW', col: '#8da0cb', img: paint(['..wwwwwwww..', '.wwwwwwwwww.', '.wwssssssww.', '.wsggsggssw.', '..ssssssss..', '..ssmmmmss..', '...ssssss...', '.cccctcccc..', 'ccccctcccccc', 'ccccctcccccc'], { w: '#c9ccd6', s: '#efc9a6', g: '#25223a', m: '#8a6a5a', c: '#e9eef6', t: '#d9534f' }, 12)[0] },
+  placebo: { name: 'DR. PLACEBO', col: '#e78ac3', img: paint(['...rrrwww...', '..rrrrwwww..', '..ssssssss..', '.ssoossooss.', '.ssssssssss.', '..ssmmmmss..', '...ssssss...', '.cccccccccc.', 'cccccrrccccc', 'cccccrrccccc'], { r: '#d9534f', w: '#f0f0f0', s: '#d9b38c', o: '#bfe9ff', m: '#7a3a3a', c: '#e9eef6' }, 12)[0] },
+  quack: { name: 'PROF. QUACKENBUSH', col: '#f2c94c', img: paint(['...hhhhhh...', '...hhhhhh...', '..bbbbbbbb..', '.hhhhhhhhhh.', '..kkkkkkkk..', '..kkokkekk..', '..kkkkkkkyyy', '..kkkkkkkyyy', '.pppptpppp..', 'ppppptpppppp'], { h: '#3a2c5a', b: '#8e2b3c', k: '#e6e2f0', o: '#f2c94c', e: '#1b1d2e', y: '#f29e4c', p: '#5a4a8c', t: '#f2c94c' }, 12)[0] },
+  citrus: { name: 'KING CITRUS', col: '#ff8a2a', img: paint(['..g.g.g.g...', '..ggggggg...', '.ooooooooo..', 'ooeooooeooo.', 'ooooooooooo.', 'oommmmmmooo.', 'ooooooooooo.', '.ooooooooo..', '..ooooooo...', '....ll......'], { g: '#f2c94c', o: '#ff8a2a', e: '#1b1d2e', m: '#8e2b3c', l: '#5f9a2c' }, 12)[0] },
+  goon: { name: 'LEAGUE RADIO', col: '#a3abd0', img: paint(['...oooooo...', '..oooooooo..', '..ookkkkko..', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...', '....ssss....', '..cccccccc..', '.cccccccccc.', 'cccccccccccc'], { o: '#5a4a8c', k: '#e6e2f0', e: '#1b1d2e', y: '#f2c94c', s: '#3d3560', c: '#2c2840' }, 12)[0] },
+};
+// what everyone says, mission by mission: an intercepted message on the briefing, then lines over the radio at
+// the start, at the first checkpoint, when the boss wakes (midboss: a boss on the way) and when it goes down
+const STORY = {
+  'PLACEBO ISLAND': { intercept: ['placebo', 'Dilute, shake, repeat. The weaker the dose, the bigger the profit!'],
+    start: [['hq', 'Peer Review here. Our scientists are in cages on this island. Bring them home.'], ['hq', 'Dr. Placebo sells water as medicine. Cite your sources, bro. Loudly.']],
+    mid: [['placebo', 'Who let a scientist on my island? Guards! Give them a sugar pill!']],
+    boss: [['placebo', 'Behold the Homeopathitron! Thirty C potency. No active ingredient. All anger!']],
+    win: [['hq', 'Pill crushed. The shipping logs point to a spa in the Detox Desert.']] },
+  'DETOX DESERT': { intercept: ['placebo', 'My spa detoxes everything. Toxins, wallets, common sense.'],
+    start: [['hq', 'The Wellness Spa sells detox over the radio. No liver was ever consulted.']],
+    mid: [['goon', 'Spa control to Dr. Placebo: a bro just walked through our crystal garden.']],
+    midboss: [['goon', 'Detoxkopter, launch! Spray them with essential oils!']],
+    boss: [['placebo', 'My Crystal Crawler eats scientists. It is very good for its aura.']],
+    win: [['hq', 'The ads are off the air. The invoice says Dr. Placebo is up at Cryo Summit.']] },
+  'CRYO SUMMIT': { intercept: ['placebo', 'Cold therapy cures all. Especially warm feelings about your money.'],
+    start: [['hq', 'Placebo himself is up here. 4.2 million customers on those servers. Wipe them.']],
+    mid: [['placebo', 'You will never find me! I am in the tank. Oh no, I said that out loud.']],
+    boss: [['placebo', 'Snake Oil Tank, roll out! Greased with genuine snake oil!']],
+    win: [['placebo', 'Eject! Eject! You will never stop the Engine!'], ['hq', 'He bailed out in a pod. To the Dilution Plant, bros. Hurry.']] },
+  'DILUTION PLANT': { intercept: ['placebo', 'One drop in the world water, shaken a hundred times. Then no medicine will work.'],
+    start: [['hq', 'The Succussion Engine. If it runs, every glass of water becomes a placebo. Stop it.']],
+    mid: [['placebo', 'Shake well! Shake WELL! Why is nobody shaking?']],
+    boss: [['placebo', 'The Engine is at full potency! Which means it contains nothing! Fear it!']],
+    win: [['placebo', 'Fine! I talk! I work for King Citrus! And HE works for... no. I have said too much.'], ['hq', 'Placebo is in handcuffs. Somebody else gives the orders. Let us find out who.']] },
+  'FLAT EARTH STATION': { intercept: ['quack', 'This is Professor Quackenbush on League Radio. The Earth is flat. So is your science.'],
+    start: [['quack', 'Hello, bros. I am the voice of the Anti-Science League. Peer Review, remember me?'], ['hq', '...Quackenbush. I rejected his paper in 98. It said water has feelings.']],
+    mid: [['quack', 'Rejected! By one grumpy old reviewer! Now the whole world listens to ME.']],
+    boss: [['quack', 'Launch the zeppelin! Proof the Earth is flat, held up by hot air. Mostly mine.']],
+    win: [['hq', 'Broadcast off. The zeppelin log lists a dozen League hideouts. We take them one by one.']] },
+  'CHEMTRAIL AIRFIELD': { intercept: ['quack', 'Look up! Those trails are mind control. Tin-foil hats, twenty dollars each.'],
+    start: [['hq', 'They spray water from planes and call it mind control. The selling is the mind control.']],
+    mid: [['goon', 'Tower to copter: a scientist is reading our spray labels. He is laughing.']],
+    boss: [['quack', 'Chemtrail Copter, scramble! Make it rain nonsense!']],
+    win: [['hq', 'Skies clear. The flight log points into the mountains, to a crystal cave.']] },
+  'QUARTZ CAVERNS': { intercept: ['quack', 'Crystals heal! Crystals charge! Crystals cost four hundred dollars!'],
+    start: [['hq', 'They charge rocks by moonlight and sell them as medicine. Rocks. Bring a torch.']],
+    mid: [['goon', 'Uh, the Queen is hungry again. Should we feed her the intern?']],
+    boss: [['quack', 'Meet the Quartz Queen, grown in the dark on pure good vibes!']],
+    win: [['hq', 'Cave cleared. The crystal money came from a marsh company. Bring a mask.']] },
+  'MIASMA MARSH': { intercept: ['quack', 'Germs are a myth! Illness is bad air! Our filters are full of good air. Mostly.'],
+    start: [['hq', 'Miasma theory died in the 1880s. Somebody dug it up and is selling it again.']],
+    mid: [['quack', 'Still hiding behind your microscope, Peer Review? I sold mine for air filters!']],
+    boss: [['goon', 'Start the Miasma Machine! Fog the whole coast!']],
+    win: [['hq', 'The fog is lifting. Their best customer is an observatory that sells horoscopes.']] },
+  'ZODIAC OBSERVATORY': { intercept: ['quack', 'Your horoscope: a bro will knock your dish down today. Lucky colour: orange.'],
+    start: [['hq', 'A telescope, used to sell horoscopes. Galileo would weep.']],
+    mid: [['goon', 'Sir, the stars say we lose today. Should we believe them?']],
+    boss: [['quack', 'The Zodiac Mech! A Leo. Proud. Angry. Very large.']],
+    win: [['hq', 'No more horoscopes. The money went to a factory that sells perpetual motion.']] },
+  'PERPETUAL MOTION WORKS': { intercept: ['quack', 'A machine that runs forever on nothing! Like my career, after Peer Review.'],
+    start: [['hq', 'Thermodynamics is not a suggestion. Stop the demo engines before the investor show.']],
+    mid: [['quack', 'You cannot stop progress! Progress runs forever! Please ignore the plug.']],
+    boss: [['goon', 'Ladies and gentlemen, please welcome... the Pitchman!']],
+    win: [['hq', 'Show cancelled. The investors were all League, scattered along the road to the Citadel.']] },
+  'CROP CIRCLE FIELDS': { intercept: ['placebo', 'Hello again, bros. Did you miss me? I feel GREAT.'],
+    start: [['hq', 'Bad news. Dr. Placebo escaped. The guards gave him sugar pills instead of sleeping pills.'], ['hq', 'Somehow that worked. He is out here somewhere.']],
+    mid: [['placebo', 'Aliens made these circles! Aliens with planks and rope and a business plan!']],
+    boss: [['placebo', 'Behold the UFO! It is a balloon. But you have to BELIEVE it is a UFO!']],
+    win: [['hq', 'Balloon popped. Placebo got away again. The ticket money went to a pyramid in the desert.']] },
+  'PYRAMID POWER PLANT': { intercept: ['quack', 'Pyramid power! Free energy! Sign here for the monthly subscription.'],
+    start: [['hq', 'A pyramid shape makes no energy. The diesel generator behind it does. Find the diesel.']],
+    mid: [['goon', 'The scarab ate the tour group again. Do we give refunds?'], ['quack', 'No refunds!']],
+    boss: [['quack', 'Rise, Sand Scarab! It rolls dung. It rolls bros. It cannot tell the difference.']],
+    win: [['hq', 'Car batteries in a pyramid. The power bill leads up the mountain, to a hot spring spa.']] },
+  'HOMEOPATHIC HOT SPRINGS': { intercept: ['placebo', 'This water remembers medicine! It also remembers the sewer. We do not talk about that.'],
+    start: [['hq', 'Water with a memory. If water remembered everything it touched, you would not drink it.']],
+    mid: [['placebo', 'Guard the booking servers! The credit cards remember EVERYTHING.']],
+    boss: [['placebo', 'Steam Tank! Boil them in our finest memory water!']],
+    win: [['hq', 'The guest list: the whole League leadership, booked into a lighthouse on the ley lines.']] },
+  'LEY LINE LIGHTHOUSE': { intercept: ['quack', 'Board meeting at the lighthouse. Agenda: one, world domination. Two, snacks.'],
+    start: [['hq', 'The League leaders meet at the lighthouse tonight. Quackenbush may be there. Careful.']],
+    mid: [['quack', 'Too late, Peer Review! The Big Orange is ready! Well, almost. Some assembly needed.']],
+    boss: [['goon', 'Astral Kopter, take out the board members! Wait, take ME out too!']],
+    win: [['hq', 'The pilot says the money runs through a water works under the city.'], ['hq', 'And... some assembly needed? What did Quackenbush mean by that?']] },
+  'STRUCTURED WATER WORKS': { intercept: ['quack', 'Structured water! We spin it until it is dizzy, then it heals. Science cannot explain it!'],
+    start: [['hq', 'They put tap water in a washing machine and sell it as medicine. Drain the tanks.']],
+    mid: [['placebo', 'Bros in the sewer! Raise the acid! No, not that lever! The OTHER lever!']],
+    boss: [['quack', 'Sludge Serpent, take out the trash! The trash is the bros!']],
+    win: [['hq', 'Tanks drained. The bottles went downtown, to an influencer with giant billboards.']] },
+  'NEON WELLNESS DISTRICT': { intercept: ['quack', 'Smash that like button to cure your cold! Use code SCIENCE for ten percent off!'],
+    start: [['hq', 'The League loudest voice is a man with a ring light. Cut his signal.']],
+    mid: [['goon', 'Boss, the bros are climbing the building! Should I go live?']],
+    boss: [['quack', 'The Influencer! Ten million followers cannot be wrong! (They can.)']],
+    win: [['hq', 'He is offline. His sponsors lead to the orange groves that feed the Citadel. We are close.']] },
+  'JUICE PIPELINE': { intercept: ['citrus', 'BOW TO THE BIG ORANGE. Vitamin C cures everything. Even doubt. ESPECIALLY doubt.'],
+    start: [['hq', 'That was King Citrus himself. One pipeline feeds his Citadel. Cut it.']],
+    mid: [['citrus', 'You dare squeeze my groves? I will juice you, bros. I WILL JUICE YOU.']],
+    boss: [['quack', 'Zestinator, hold the bridge! Do not let them reach the robot... I mean, the King!']],
+    win: [['hq', 'The last bridge is ours. Quackenbush keeps tripping over the word King. Stay sharp.']] },
+  'CITRUS CITADEL': { intercept: ['citrus', 'Come to my Citadel, bros. I am the Big Orange. I am fully ripe. I am NOT a robot.'],
+    start: [['hq', 'This is it: the League capital. Free our last scientists and end this.'], ['placebo', 'You will never reach the King! The rally is in the way! It is a very big rally!']],
+    mid: [['quack', 'Citrus! Stand up straight! Wave! Smile! ...Why are you not waving?']],
+    boss: [['citrus', 'I AM KING CITRUS! PEEL BEFORE ME!'], ['hq', 'Hit him while he is dizzy. Double damage.']],
+    win: [['quack', 'NO! My beautiful orange! Three years I spent building him!'], ['hq', 'Quackenbush? You were inside the orange? King Citrus was a ROBOT?'], ['quack', 'People trust fruit more than they trust me. Thanks to YOU, Peer Review!']] },
+};
+const storyOf = (n) => (mode === 'campaign' && LEVELS[n] ? STORY[LEVELS[n].name] : null);
+// things freed bros and HQ say now and then
+const BRO_QUIPS = ['Thanks, bro. That cage had no peer review.', 'Freedom! And my hypothesis was right.', 'Six weeks in there. They fed me only homeopathy.', 'I am back. Point me at the nonsense.', 'They made me watch a crystal healing seminar. Twice.', 'Data or it did not happen. Let us go make some.', 'Finally. My grant was running out.', 'Did anyone bring coffee? No? Fine. Guns, then.'];
+const HQ_DEATH = ['We lost a bro. Sending the next one in.', 'That was not in the methods section. Next bro!', 'Replicate the attempt, bros. That is how science works.', 'Bro down. Morale is fine. Science is fine. Next.'];
+// the radio: one message at a time in a box above the boss bar, with a portrait and the line typed out
+let radioQ = [], radioCur = null, storyFlag = false;
+function say(who, line, delay = 0) { if (radioQ.length < 8) radioQ.push({ who, line, delay }); }
+function updateRadio(dt) {
+  if (radioCur) { radioCur.t += dt; if (radioCur.t > radioCur.dur) radioCur = null; }
+  if (!radioCur && radioQ.length) { const m = radioQ[0]; m.delay -= dt; if (m.delay <= 0) { radioQ.shift(); radioCur = Object.assign(m, { t: 0, dur: 2.4 + m.line.length * 0.05 }); sfx('radio'); } }
+}
+function drawRadio(t) {
+  if (!radioCur || paused) return;
+  const m = radioCur, fade = Math.min(1, m.t * 6, (m.dur - m.t) * 4);
+  const who = m.who === 'bro' ? { name: P.bro.name.toUpperCase(), col: '#a6d854', bro: P.bro } : CAST[m.who] || CAST.goon;
+  const x = 6, y = VH - 66, w = 262, h = 32;
+  ctx.globalAlpha = fade;
+  ctx.fillStyle = 'rgba(11,14,31,0.88)'; ctx.fillRect(x, y, w, h); ctx.fillStyle = who.col; ctx.fillRect(x, y, 2, h);
+  ctx.fillStyle = '#171c37'; ctx.fillRect(x + 5, y + 4, 24, 24);
+  if (who.bro) ctx.drawImage(who.bro.spr[0][0], 0, 0, 14, 11, x + 4, y + 5, 26, 20); else ctx.drawImage(who.img, x + 4, y + 4, 26, 24);
+  if (Math.floor(t * 8) % 2 && m.t < m.dur - 0.6) { ctx.fillStyle = who.col; ctx.fillRect(x + 25, y + 25, 2, 2); } // talking light
+  text(who.name, x + 34, y + 10, 8, who.col);
+  const shown = m.line.slice(0, Math.floor(m.t * 55));
+  wrap(shown, 43).slice(0, 2).forEach((ln, i) => text(ln, x + 34, y + 20 + i * 9, 8, '#e7eaf6'));
+  ctx.globalAlpha = 1;
+}
+const ENDING = 'King Citrus was a robot. Professor Quackenbush built him as the face of the League, because people trusted fruit more than him. The League has scattered, and the world goes back to evidence, vaccines and round planets.';
+// who ended up where; rolls up the end screen
+const EPILOGUE = ['PROF. QUACKENBUSH', 'In prison. His appeal is under review. Verdict so far: major revisions.', '', 'DR. PLACEBO', 'Caught in a cardboard escape pod. Prescribed sugar pills. Reports feeling great.', '', 'KING CITRUS', 'Recycled into 9,000 litres of orange juice. Vitamin C content: normal.', '', 'PROF. PEER REVIEW', 'Back at his desk. Still rejecting papers that say water has feelings.', '', 'THE BROS', 'Back in their labs. Mostly. Nobody has seen the Bro-Mech since.', '', 'LEAGUE RADIO', 'Now plays science podcasts. Ratings have never been higher.', '', '', 'SCIENCE BROS', 'Thanks for playing.'];
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
 // ---------------------------------------------------------------- tile physics
@@ -1877,6 +2018,7 @@ function sfx(n, wx) {
       case 'eshot': tone(640, 260, 0.08, 'square', 0.024); noise(0.04, 0.035, 2800); break;
       case 'drop': sfxLast[n] = 0; noise(0.018, 0.006 + Math.random() * 0.01, 2200 + Math.random() * 3000, AC.currentTime, 'bandpass'); break;
       case 'plop': tone(900 + Math.random() * 500, 500, 0.035, 'sine', 0.012); noise(0.03, 0.01, 1400, AC.currentTime, 'bandpass'); break;
+      case 'radio': noise(0.07, 0.03, 3500, AC.currentTime, 'bandpass'); tone(1250, 1250, 0.04, 'square', 0.008); break;
       case 'drip': tone(1900, 1100, 0.06, 'sine', 0.025); tone(1400, 900, 0.05, 'sine', 0.012, 0.09); break;
       case 'croak': tone(190, 140, 0.09, 'square', 0.02); tone(180, 130, 0.09, 'square', 0.02, 0.14); break;
       case 'step': noise(0.035, 0.035, 900); break;
@@ -2402,6 +2544,8 @@ function startLevel(n) {
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
   boss = ents.find((e) => e.final); chopper = null;
   for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
+  radioQ = []; radioCur = null; storyFlag = false;
+  { const st = storyOf(n); if (st) st.start.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 2.6)); } // the radio opens the mission
   applyDifficulty(n);
   seedLife(); startAmbience();
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
@@ -2556,6 +2700,7 @@ function bossDown(e) {
   if (mode === 'rush') { rush.nextT = 2.5; showBanner(bname(e) + ' DOWN', 'next boss coming', 2); return; }
   if (mode === 'siege') { showBanner('BOSS DOWN', 'keep holding the lab', 2); return; }
   if (e.final) {
+    { const st = storyOf(level); if (st) st.win.forEach((l, i) => say(l[0], l[1], i ? 0.2 : 0.6)); }
     if (reqDone()) callChopper();
     else { extractPending = true; showBanner('NOT DONE YET', 'Finish the objectives, then the chopper comes', 3); objShowT = 6; }
   } else showBanner('THE WAY IS OPEN', 'Keep moving east', 2.5);
@@ -3153,6 +3298,7 @@ function pickRescueBro() {
 }
 function respawn() {
   lives--;
+  if (mode === 'campaign' && Math.random() < 0.35) say('hq', HQ_DEATH[(Math.random() * HQ_DEATH.length) | 0], 1.4);
   const bro = BRO[fromBag(unlocked)];
   P = newPlayer(checkpoint.x, checkpoint.y, bro);
   // the next bro parachutes in over the checkpoint, from as high as the open sky allows
@@ -3247,6 +3393,7 @@ function step(dt) {
   updateChopper(dt);
   updateWeather(dt);
   updateLife(dt);
+  updateRadio(dt);
 
   if (!P.alive && !P.ride) {
     endT -= dt;
@@ -3546,6 +3693,7 @@ function updateEnt(e, dt) {
         e.on = true; checkpoint = { x: e.x - 2, y: e.y + e.h - 16 }; sfx('flag');
         P.spec = 3; floatText(e.x + 6, e.y - 4, 'SPECIALS REFILLED', '#a6d854');
         showBanner('CHECKPOINT', 'Next bro drops in here', 1.4);
+        if (!storyFlag) { storyFlag = true; const st = storyOf(level); if (st) st.mid.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 0.8)); }
       }
       break;
     case 'boss': updateMech(e, dt); break;
@@ -3919,6 +4067,7 @@ function rescue(cage) {
   floatText(cage.x + 8, cage.y - 6, 'BRO!', '#a6d854');
   for (let i = 0; i < 16; i++) part(cage.x + 8, cage.y + 8, rand(-120, 120), rand(-200, -40), i % 2 ? '#8b93ad' : '#a6d854', rand(0.5, 1), 2, G);
   showBanner((fresh ? 'NEW BRO: ' : 'RESCUED: ') + bro.name.toUpperCase(), '+1 bro in reserve · ' + bro.weapon, 2.2);
+  if (mode === 'campaign' && Math.random() < 0.7) say('bro', BRO_QUIPS[(Math.random() * BRO_QUIPS.length) | 0], 0.6);
 }
 
 // ---------------------------------------------------------------- bro-mech
@@ -4024,6 +4173,7 @@ function drawBroMech(x, y, face, wp, onGround, vx, bro, flash, kick, punchT) {
 const PART_WORDS = { engine: ['STABILISER VAT', 'CORE', 'SHIELDED: BREAK THE VATS FIRST'], blimp: ['GONDOLA', 'GAS BAG', 'SHIELDED: SHOOT THE GONDOLAS'], director: ['STUDIO LIGHT', 'CAMERA', 'SHIELDED: SHOOT THE LIGHTS'] };
 function activateBoss(b, sub) {
   b.active = true; showBanner(bname(b), b.bossSub || sub, 3); sfx('roar');
+  if (!b.talked) { b.talked = true; const st = storyOf(level); if (st) (b.final ? st.boss : st.midboss || []).forEach((l, i) => say(l[0], l[1], i ? 0.3 : 1.2)); }
   const W = PART_WORDS[b.type];
   if (W && b.vats) setTimeoutGame(() => { if (b.active && !b.dead && b.vats.some((v) => !v.dead)) showBanner('BREAK THE ' + b.vats.length + ' ' + W[0] + 'S', 'then hit the ' + W[1].toLowerCase() + ' (follow the arrows)', 2.6); }, 3.1);
 }
@@ -6337,17 +6487,18 @@ function drawHud(t) {
     if (banner.sub) text(banner.sub, VW / 2, 88, 8, '#a6d854', 'center');
     ctx.globalAlpha = 1;
   }
+  drawRadio(t);
   if (paused) { // pause menu: up/down to choose, fire or Enter to switch
     ctx.fillStyle = 'rgba(11,14,31,0.75)'; ctx.fillRect(0, 0, VW, VH);
-    text('PAUSED', VW / 2, 74, 16, '#e7eaf6', 'center');
+    text('PAUSED', VW / 2, 62, 16, '#e7eaf6', 'center');
     MENU.forEach(([label, key], i) => {
-      const y = 104 + i * 16, sel = i === menuSel;
+      const y = 88 + i * 13, sel = i === menuSel;
       if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
       text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
       if (key === 'gore') text(['OFF', 'ON', 'EXTRA'][settings.gore | 0], VW / 2 + 100, y, 8, ['#e78ac3', '#a6d854', '#ff5a4a'][settings.gore | 0], 'right');
       else if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
     });
-    text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 214, 8, '#a3abd0', 'center');
+    text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 228, 8, '#a3abd0', 'center');
   }
   if (muted) text('MUTED', VW / 2, 14, 8, '#a3abd0', 'center');
 }
@@ -6398,11 +6549,17 @@ function drawScreen(t) {
     statRows(140);
     if (blink) text('PRESS ENTER TO CONTINUE', VW / 2, 252, 8, '#e7eaf6', 'center');
   } else if (state === 'done') {
-    text('SCIENCE WINS', VW / 2, 50, 28, '#a6d854', 'center');
-    wrap(ENDING, 70).forEach((ln, i) => text(ln, VW / 2, 70 + i * 11, 8, '#8da0cb', 'center'));
-    text('INTEL FOUND ' + dossier.length + ' / ' + LEVELS.length * 3, VW / 2, 106, 8, '#f2c94c', 'center');
-    statRows(124);
-    if (blink) text('PRESS ENTER TO PLAY AGAIN', VW / 2, 196, 8, '#e7eaf6', 'center');
+    text('SCIENCE WINS', VW / 2, 34, 28, '#a6d854', 'center');
+    wrap(ENDING, 74).forEach((ln, i) => text(ln, VW / 2, 52 + i * 10, 8, '#8da0cb', 'center'));
+    if (mapT < 3.5 + EPILOGUE.length * 0.9) { // the epilogue rolls up, then the run stats show
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 86, VW, 150); ctx.clip();
+      EPILOGUE.forEach((ln, i) => { const y = 236 + i * 11 - mapT * 14; if (y > 80 && y < 244) text(ln, VW / 2, y, 8, ln === ln.toUpperCase() && ln ? '#f2c94c' : '#e7eaf6', 'center'); });
+      ctx.restore();
+    } else {
+      text('INTEL FOUND ' + dossier.length + ' / ' + LEVELS.length * 3, VW / 2, 98, 8, '#f2c94c', 'center');
+      statRows(114);
+    }
+    if (blink) text('PRESS ENTER TO PLAY AGAIN', VW / 2, 252, 8, '#e7eaf6', 'center');
   }
 }
 // ---------------------------------------------------------------- maps
@@ -6499,6 +6656,8 @@ function applyGear() {
 function drawBriefing(t) {
   const L = LV();
   ctx.fillStyle = '#0b0e1f'; ctx.fillRect(0, 0, VW, VH);
+  const act = mode === 'campaign' ? actOf(level) : null;
+  if (act) text((act.first ? 'A NEW ACT BEGINS · ' : '') + act.num + ': ' + act.title, VW / 2, 13, 8, act.first ? '#f2c94c' : '#8da0cb', 'center');
   text('MISSION ' + (level + 1) + ' · ' + L.name, VW / 2, 30, 16, '#a6d854', 'center');
   ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
   text('PROF. PEER REVIEW, HQ', 72, 54, 8, '#8da0cb');
@@ -6513,6 +6672,14 @@ function drawBriefing(t) {
   row(0, 'DEPLOY AS', bro.name.toUpperCase(), 172); text(bro.weapon.toUpperCase() + ' · ' + bro.special.toUpperCase(), 258, 184, 8, '#8da0cb');
   row(1, 'GEAR', g[0], 202);
   text('UP/DOWN: ROW · LEFT/RIGHT: CHANGE', 258, 218, 8, '#5c6480');
+  const st = storyOf(level);
+  if (st && st.intercept && mapT > 1.2) { // a League transmission HQ picked up
+    const [who, line] = st.intercept, c = CAST[who];
+    ctx.fillStyle = '#171c37'; ctx.fillRect(24, 206, 222, 36); ctx.fillStyle = c.col; ctx.fillRect(24, 206, 2, 36);
+    ctx.drawImage(c.img, 29, 211, 24, 22);
+    text('INTERCEPTED · ' + c.name, 58, 216, 8, Math.floor(t * 3) % 2 ? '#ff5a4a' : c.col);
+    wrap(line, 34).slice(0, 2).forEach((ln, i) => text(ln, 58, 227 + i * 9, 8, '#a3abd0'));
+  }
   if (Math.floor(t * 2) % 2) text('PRESS ENTER TO DEPLOY', VW / 2, 252, 8, '#a6d854', 'center');
 }
 function render(t) {
@@ -6994,5 +7161,6 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
+if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 })();
 </script>
