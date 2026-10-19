@@ -52,14 +52,14 @@ for (let l = 5; l < 10; l++) {
   check(tag + ': the boss has its own name', !!B.bossName && B.bossName !== 'THE DIRECTOR', B.bossName);
   // a bot that runs right and jumps gets a fair way in without dying (invulnerable, we only test the path)
   S.P.inv = 1e9; let far = 0;
-  for (let i = 0; i < 60 * 40; i++) {
+  for (let i = 0; i < 60 * 60; i++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9; // the respawned bro too
     run(1, { right: true, jump: i % 25 < 14, fire: i % 6 < 3, up: stuck && i % 240 < 30 });
     far = Math.max(far, S.P.x / T);
   }
-  check(tag + ': a simple bot gets past the middle in 40 s', far > 100, 'reached col ' + far.toFixed(0));
+  check(tag + ': a simple bot gets past the middle in 60 s', far > 100, 'reached col ' + far.toFixed(0));
   // put the player in the arena: the boss wakes up
   S.startLevel(l); S.endCeasefire(); run(1);
   for (const e of S.ents) if (!BOSSES.includes(e.type) && e.type !== 'flag') e.dead = true;

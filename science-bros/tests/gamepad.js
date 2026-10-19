@@ -28,8 +28,8 @@ pad.axes[0] = 1; frame(30); check('stick pushed all the way runs', S.P.run && S.
 pad.axes[0] = 0; frame(20);
 const y0 = S.P.y; press(0); frame(5); press(0, false); check('cross jumps', S.P.y < y0 - 5); frame(40);
 press(2); frame(3); press(2, false); check('square fires', S.bullets.some((b) => b.owner === 'p')); frame(5);
-S.P.mcool = 0; press(1); frame(1); press(1, false); check('circle punches', S.P.punch > 0); frame(20);
-S.P.spec = 3; press(3); frame(1); press(3, false); check('triangle uses the special', S.P.spec === 2); frame(20);
+S.P.mcool = 0; press(3); frame(1); press(3, false); check('triangle punches (melee, as in Broforce)', S.P.punch > 0); frame(20);
+S.P.spec = 3; press(1); frame(1); press(1, false); check('circle uses the special (as in Broforce)', S.P.spec === 2); frame(20);
 press(5); frame(1); press(5, false); check('R1 dodge-rolls', S.P.dash > 0); frame(40);
 press(17); frame(2); check('holding the touchpad shows the map', S.keys.map === true); press(17, false); frame(2); check('letting go hides it', !S.keys.map);
 press(8); frame(2); check('holding Create shows the map too', S.keys.map === true); press(8, false); frame(2);
