@@ -68,7 +68,7 @@ for (let l = 0; l < S.nLevels; l++) { S.startLevel(l); for (const e of S.ents) i
 check('the new quacks appear in the campaign', counts.preacher >= 5 && counts.mortar >= 5 && counts.camdrone >= 5, JSON.stringify(counts));
 
 // ---- title menu
-S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
+S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 check('back on the title', S.state === 'title');
 S.pressed.down = true; run(1); S.pressed.start = true; run(1);
 check('the second menu entry starts Lab Siege', S.state === 'play' && S.mode === 'siege', S.mode);
@@ -89,7 +89,7 @@ check('running out of bros ends the siege', over, S.state + ' lives ' + S.lives)
 // ---- Boss Rush
 S.startMode('rush');
 check('Boss Rush starts with the first boss', S.state === 'play' && S.mode === 'rush' && S.rush.i === 0);
-check('Boss Rush has 12 bosses including the new ones', S.RUSH.length === 12, S.RUSH.length);
+check('Boss Rush has 16 bosses including the new ones', S.RUSH.length === 16, S.RUSH.length);
 let names = [];
 for (let i = 0; i < S.RUSH.length; i++) {
   const B = S.ents.find((e) => e.type === S.RUSH[i][2] && !e.dead);
@@ -101,7 +101,7 @@ for (let i = 0; i < S.RUSH.length; i++) {
   for (let k = 0; k < 60 * 4 && S.rush.i === i && S.state === 'play'; k++) { S.P.inv = 1e9; run(1); }
 }
 check('beating every boss finishes the rush', S.state === 'modedone', S.state + ' at ' + S.rush.i);
-check('the rush includes the new bosses', ['CHEMTRAIL COPTER', 'QUARTZ QUEEN', 'MIASMA MACHINE', 'ZODIAC MECH', 'THE PITCHMAN'].every((n) => names.includes(n)), names.join(','));
+check('the rush includes the new bosses', ['CHEMTRAIL COPTER', 'QUARTZ QUEEN', 'MIASMA MACHINE', 'ZODIAC MECH', 'THE PITCHMAN', 'UFO HOAX BALLOON', 'SAND SCARAB', 'STEAM TANK', 'ASTRAL KOPTER'].every((n) => names.includes(n)), names.join(','));
 check('clearing the rush unlocks BOSS RUSHER', !!S.trophies.rush);
 check('the finish screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());
 
@@ -129,7 +129,7 @@ check('G goes back to normal on a normal mission', (S.startMode('campaign'), S.s
 // ---- trophies
 check('19 trophies exist', S.ACH.length === 19, S.ACH.length);
 check('trophy ids are unique', new Set(S.ACH.map((a) => a[0])).size === S.ACH.length);
-S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
+S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 S.titleSel = 4; S.pressed.start = true; run(1);
 check('the last menu entry opens the trophy screen', S.state === 'trophies', S.state);
 check('the trophy screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());

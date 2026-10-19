@@ -16,7 +16,7 @@ const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + 
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
 
 const N = S.nLevels;
-check('the campaign has 11 missions', N === 11, N);
+check('the campaign has 15 missions', N === 15, N);
 check('King Citrus is still the last mission', S.levelDef(N - 1).name === 'CITRUS CITADEL');
 check('Lab Siege and Moon Base come right after the campaign', S.levelDef(S.SIEGE).name === 'LAB SIEGE' && S.levelDef(S.MOON).name === 'MOON BASE');
 const names = Array.from({ length: N }, (_, i) => S.levelDef(i).name);
@@ -45,7 +45,7 @@ for (let l = 0; l < N; l++) {
 }
 
 // the five new missions in detail
-for (let l = 5; l < 10; l++) {
+for (let l = 5; l < N - 1; l++) {
   const L = S.levelDef(l), tag = (l + 1) + ' ' + L.name;
   S.startLevel(l); S.endCeasefire(); run(1);
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
@@ -87,6 +87,24 @@ for (let l = 5; l < 10; l++) {
 
 // the story chains from Flat Earth Station into the new missions and on to the Citadel
 check('Flat Earth debrief points at the strongholds', /strongholds/i.test(S.levelDef(4).debrief));
-check('the last new mission points at the Citadel', /Citrus Citadel/i.test(S.levelDef(9).debrief));
+check('the mission before the finale points at the Citadel', /Citrus Citadel/i.test(S.levelDef(N - 2).debrief));
+
+// the campaign gets harder step by step: threat on the map climbs from the first mission to the finale
+{
+  const W = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
+  const threat = []; for (let l = 0; l < N; l++) { S.startLevel(l); threat.push(S.ents.filter((e) => W[e.type]).reduce((a, e) => a + W[e.type], 0)); }
+  check('the first mission is the easiest', threat[0] === Math.min(...threat), threat.map((x) => x.toFixed(0)).join(' '));
+  check('the finale is among the hardest', threat[N - 1] >= Math.max(...threat) - 6, threat[N - 1].toFixed(0));
+  let dips = 0; for (let l = 1; l < N; l++) if (threat[l] < threat[l - 1] - 6) dips++;
+  check('threat climbs along the campaign (no big drops)', dips === 0, dips + ' drops');
+  check('the second half is clearly harder than the first', threat.slice(8).reduce((a, b) => a + b) / (N - 8) > 1.5 * threat.slice(0, 7).reduce((a, b) => a + b) / 7);
+  S.startLevel(0); const hard = ['heavy', 'sniper', 'brute', 'mortar', 'preacher', 'jetpack', 'rocketeer', 'camdrone', 'turret'];
+  check('no heavy hitters on the first mission', !S.ents.some((e) => hard.includes(e.type)), S.ents.filter((e) => hard.includes(e.type)).map((e) => e.type).join(','));
+  const b0 = S.ents.find((e) => e.final).max; S.setRamp(false); S.startLevel(0); const b1 = S.ents.find((e) => e.final).max; S.setRamp(true);
+  check('the first boss has less health early in the campaign', b0 < b1, b0 + ' vs ' + b1);
+  S.startLevel(0); const same = S.ents.map((e) => e.type + Math.round(e.x)).join(); S.startLevel(0);
+  check('a mission has the same quacks every time', S.ents.map((e) => e.type + Math.round(e.x)).join() === same);
+  S.startMode('siege'); check('bonus modes play at full strength', S.diff.p === 1); S.startMode('campaign');
+}
 console.log(fails ? fails + ' FAILED' : 'ALL PASS');
 process.exit(fails ? 1 : 0);

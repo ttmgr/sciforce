@@ -102,7 +102,7 @@ S.pressed.pause = true; run(1); check('P pauses the game', S.paused);
 const t0 = S.stats.time; run(30); check('nothing moves while paused', S.stats.time === t0);
 const shake0 = S.settings.shake; S.pressed.fire = true; run(1); check('fire switches the selected setting', S.settings.shake === !shake0);
 S.pressed.fire = true; run(1); // switch it back
-for (let k = 0; k < 7; k++) { S.pressed.down = true; run(1); } // down to RESTART LEVEL
+for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } // down to RESTART LEVEL
 S.P.x = 50 * T; S.pressed.fire = true; run(1);
 check('restart level from the menu', !S.paused && S.P.x < 5 * T && S.state === 'play');
 

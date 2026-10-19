@@ -49,7 +49,7 @@ check('the others stay calm', !b.provoked && S.ceasefire > 0);
 S.reset(); S.unlocked.push('curie', 'tesla'); S.state;
 S.startLevel(0); // through the screens instead:
 // go to the title and walk through map -> briefing
-S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1); // pause menu -> quit to title
+S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1); // pause menu -> quit to title
 check('quit to title from the pause menu', S.state === 'title');
 S.pressed.start = true; run(1); check('on the world map', S.state === 'map');
 S.unlocked.push('curie', 'tesla');
@@ -61,7 +61,7 @@ check('deployed as the chosen bro', S.state === 'play' && S.P.bro.id === 'curie'
 check('with the chosen gear', S.P.alt && S.P.alt.kind === 'shotgun', S.P.alt && S.P.alt.kind);
 
 // world map: pick any mission reached before
-S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
+S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 S.setReached(2); S.pressed.start = true; run(1);
 S.pressed.right = true; run(1); S.pressed.right = true; run(1); S.pressed.right = true; run(1);
 check('left/right on the map moves only as far as you have reached', S.level === 2, 'level ' + S.level);
