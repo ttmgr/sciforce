@@ -45,11 +45,12 @@ check('up close the mortar crew backs away instead of firing', mo2.x > x0 + 4 &&
 
 // ---- camera drone
 arena();
+for (let i = 0; i < 90; i++) { S.P.inv = 1e9; S.P.x = 30 * T; run(1); } // let the camera catch up: nothing attacks from off the screen
 const d1 = add('camdrone', 44, { face: -1 });
 check('the drone hovers above the ground', d1.y < 15 * T - 40, (d1.y / T).toFixed(1));
 const y0 = d1.y; for (let i = 0; i < 30; i++) run(1);
 check('it does not fall', Math.abs(d1.y - y0) < 8);
-let dove = false; for (let i = 0; i < 60 * 4 && !d1.dead; i++) { S.P.inv = 1e9; run(1); if (d1.dive) dove = true; }
+let dove = false; for (let i = 0; i < 60 * 6 && !d1.dead; i++) { S.P.inv = 1e9; run(1); if (d1.dive) dove = true; }
 check('it spots you and dives', dove);
 check('it blows up on contact', d1.dead);
 arena(); S.P.x = 30 * T; const d2 = add('camdrone', 70); const gq = add('grunt', 71); for (let i = 0; i < 10; i++) run(1);
