@@ -1439,7 +1439,9 @@ const LAST_LEVELS = [
       { kind: 'bridge', boss: 'boss', extra: { name: 'THE ZESTINATOR', sub: 'Peels steel. Squeezes bros.', hpMul: 1.6 } }) },
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...LAST_LEVELS); // and the Citadel is still the finale
-LEVELS.forEach((L, i) => { L.map = [26 + Math.round(i * 428 / (LEVELS.length - 1)), 150 + Math.round(Math.sin(i * 1.25) * 50)]; }); // the route on the world map
+// the route on the world map: hand-placed stops on three landmasses, the Citadel on its own island at the end
+const WM_SPOTS = [[26, 186], [76, 166], [52, 104], [104, 132], [150, 98], [152, 162], [194, 188], [214, 140], [198, 96], [252, 120], [298, 170], [338, 190], [324, 110], [366, 90], [382, 146], [416, 110], [414, 182], [456, 150]];
+LEVELS.forEach((L, i) => { L.map = WM_SPOTS[i] ? WM_SPOTS[i].slice() : [26 + Math.round(i * 428 / (LEVELS.length - 1)), 150]; });
 // levels outside the campaign: Lab Siege (horde) and the bonus Moon Base
 const EXTRA = [
   { name: 'LAB SIEGE', sub: 'Hold the lab. Waves never stop.', theme: 'island', build: buildSiege, cages: 0, pad: [30, 16], objectives: [], ceasefire: 4 },
@@ -3173,9 +3175,17 @@ function respawn() {
 // title screen: the camera drifts along the level while things blow up in the background
 let attractT = 1, mapT = 0, reached = 0;
 try { reached = Math.min(LEVELS.length - 1, +localStorage.getItem('sciencebros.reached') || 0); } catch (e) { /* storage blocked */ }
+let wmF = -1, wmDir = 1, wmTrail = []; // the plane: where it is on the route (a stop index), its heading, its contrail
 function mapInput() {
   const d = (pressed.right ? 1 : 0) - (pressed.left ? 1 : 0);
   if (d) { level = clamp(level + d, 0, reached); mapT = 0; sfx('flag'); }
+  // the plane flies along the route to the chosen stop; the choice itself counts at once (one step is 1/60 s)
+  if (wmF < 0) wmF = level;
+  const gap = level - wmF, sp = Math.min(Math.abs(gap), Math.max(Math.abs(gap) * 0.06, 0.03));
+  wmF += Math.sign(gap) * sp;
+  for (const p of wmTrail) p[2] -= 0.04;
+  wmTrail = wmTrail.filter((p) => p[2] > 0);
+  if (sp > 0) { const [x, y, dx] = wmAt(wmF); wmTrail.push([x, y - 24, 1]); if (Math.abs(dx) > 0.5) wmDir = Math.sign(dx * gap); }
 }
 function markReached(n) { if (n > reached) { reached = Math.min(LEVELS.length - 1, n); try { localStorage.setItem('sciencebros.reached', String(reached)); } catch (e) { /* storage blocked */ } } }
 function attract(dt) {
@@ -6456,24 +6466,305 @@ function wrap(str, n) { // split a sentence into lines of at most n characters
   if (line.trim()) out.push(line.trim());
   return out;
 }
-// world map: the stops of the campaign joined by a dotted route; done ones are ticked, the next one pulses
+// world map: land drawn once to a canvas; sea, fog, route, stops and the plane drawn on top each frame
+const WM_ACTS = [[0, 3, 'ACT I', 'THE PLACEBO EFFECT'], [4, 9, 'ACT II', 'THE LEAGUE SPREADS'], [10, 16, 'ACT III', 'ROAD TO THE CITADEL'], [17, 17, 'FINALE', '']];
+const wmAct = (i) => (i >= LEVELS.length - 1 ? 3 : i <= 3 ? 0 : i <= 9 ? 1 : 2);
+const WM_PAL = { // beach, ground, high ground, cliff
+  island: ['#e8d49a', '#4f9a4a', '#3d7f3c', '#2b4f2e'], desert: ['#f0dca6', '#d9b36a', '#c99a50', '#8a6234'], snow: ['#9fb0c4', '#b8c6d8', '#ccd8e6', '#6a7a92'],
+  plant: ['#b9b08a', '#6f8a5a', '#5c7448', '#3a4a33'], edge: ['#d8c99a', '#7fa35a', '#6b8f4a', '#4a5a3a'], sky: ['#d8cc90', '#8fbf5a', '#78a84a', '#4a6a32'],
+  cave: ['#9a8f9f', '#6d6478', '#5d5468', '#3a3346'], swamp: ['#7a7448', '#4f6a3a', '#3f5a32', '#2a3a26'], astro: ['#c8bf98', '#5f8a5c', '#4f7a4e', '#38503a'],
+  rust: ['#b89a72', '#8a6a4a', '#7a5a3c', '#4a3226'], sewer: ['#a8a8a0', '#6f7d7a', '#5d6a68', '#3a4240'], city: ['#b0aca0', '#5a6070', '#4a5060', '#2e3240'],
+  grove: ['#e0cc8a', '#3f8a3a', '#2f7230', '#24462a'], citrus: ['#e8c07a', '#c8742e', '#a85a22', '#5a2e14'],
+};
+function wmKind(L) { // what to draw at a stop: by theme, with a few missions picked out by name
+  const n = L.name || '';
+  if (/PYRAMID/.test(n)) return 'pyramid';
+  if (/CROP/.test(n)) return 'crops';
+  if (/LIGHTHOUSE/.test(n)) return 'lighthouse';
+  if (/SPRING/.test(n)) return 'springs';
+  return { island: 'palms', desert: 'dunes', snow: 'peaks', plant: 'factory', edge: 'dish', sky: 'airfield', cave: 'cave', swamp: 'swamp', astro: 'observatory', rust: 'gears', sewer: 'tanks', city: 'city', grove: 'grove', citrus: 'citadel' }[L.theme] || 'palms';
+}
+const wmHash = (x, y) => { let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) % 1000 / 999; };
+function wmNoise(x, y) { // smooth value noise, 0..1
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const a = wmHash(xi, yi), b = wmHash(xi + 1, yi), c = wmHash(xi, yi + 1), d = wmHash(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function wmCurve(i) { // the leg from stop i to i+1 as a gentle curve: start, control point, end
+  const [x0, y0] = LEVELS[i].map, [x1, y1] = LEVELS[i + 1].map, s = i % 2 ? 1 : -1, l = Math.hypot(x1 - x0, y1 - y0) || 1;
+  return [x0, y0, (x0 + x1) / 2 - (y1 - y0) / l * 8 * s, (y0 + y1) / 2 + (x1 - x0) / l * 8 * s, x1, y1];
+}
+function wmAt(f) { // a point on the route; f is a stop index, fractions lie between stops. Returns x, y and the x heading
+  f = clamp(f, 0, LEVELS.length - 1);
+  const i = Math.min(Math.floor(f), LEVELS.length - 2), u = f - i, v = 1 - u, [x0, y0, cx, cy, x1, y1] = wmCurve(i);
+  return [v * v * x0 + 2 * v * u * cx + u * u * x1, v * v * y0 + 2 * v * u * cy + u * u * y1, 2 * v * (cx - x0) + 2 * u * (x1 - cx)];
+}
+function wmPaint(g, cols, W, H) { // fill a grid of 2x2 cells, merging runs of one colour
+  for (let cy = 0; cy < H; cy++) {
+    for (let cx = 0; cx < W;) {
+      const c = cols[cy * W + cx]; let e = cx + 1;
+      while (e < W && cols[cy * W + e] === c) e++;
+      if (c) { g.fillStyle = c; g.fillRect(cx * 2, cy * 2, (e - cx) * 2, 2); }
+      cx = e;
+    }
+  }
+}
+let wmLand = null, wmFoam = null, wmFog = null, wmFogKey = -1, wmOwn = null, wmRoute = [], wmWaves = [], wmGlints = [];
+function wmBuild() { // the landmasses, coasts and shallows: worked out once on a 2 px grid
+  const W = 240, H = 135, n = LEVELS.length, stops = LEVELS.map((L) => L.map), kinds = LEVELS.map(wmKind);
+  const rad = kinds.map((k) => (k === 'palms' ? 15 : k === 'citadel' ? 21 : k === 'city' || k === 'grove' ? 18 : 20));
+  const caps = []; for (let i = 1; i < n - 1; i++) if (wmAct(i) === wmAct(i + 1)) caps.push([...stops[i], ...stops[i + 1]]);
+  const isles = [[12, 128, 7], [128, 198, 7], [272, 78, 7], [262, 198, 8], [446, 84, 8], [474, 202, 6], [176, 64, 5], [106, 72, 6], [232, 198, 5], [16, 82, 5]];
+  const field = new Float32Array(W * H); wmOwn = new Uint8Array(W * H);
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const px = cx * 2 + 1, py = cy * 2 + 1; let f = -1, best = 1e9, own = 0;
+    for (let i = 0; i < n; i++) {
+      const d = Math.hypot(px - stops[i][0], py - stops[i][1]), nd = d + (wmNoise(px / 9 + i * 7, py / 9) - 0.5) * 22;
+      f = Math.max(f, 1 - d / rad[i]); if (nd < best) { best = nd; own = i; }
+    }
+    for (const [x0, y0, x1, y1] of caps) {
+      const dx = x1 - x0, dy = y1 - y0, u = clamp(((px - x0) * dx + (py - y0) * dy) / (dx * dx + dy * dy), 0, 1);
+      f = Math.max(f, 1 - Math.hypot(px - x0 - dx * u, py - y0 - dy * u) / 11);
+    }
+    for (const [x, y, r] of isles) f = Math.max(f, 1 - Math.hypot(px - x, py - y) / r);
+    f += (wmNoise(px / 18, py / 18) - 0.5) * 0.6 + (wmNoise(px / 7 + 40, py / 7) - 0.5) * 0.3;
+    if (py < 52) f -= (52 - py) * 0.05; // open sea under the header and the panel
+    if (py > 204) f -= (py - 204) * 0.05;
+    field[cy * W + cx] = f; wmOwn[cy * W + cx] = own;
+  }
+  const at = (cx, cy) => (cx >= 0 && cy >= 0 && cx < W && cy < H ? field[cy * W + cx] : -1);
+  const pal = (i) => WM_PAL[LEVELS[wmOwn[i]].theme] || WM_PAL.island;
+  const cols = new Array(W * H).fill(null), foam = new Array(W * H).fill(null), solid = (cx, cy) => at(cx, cy) > 0 || at(cx, cy - 1) > 0;
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const i = cy * W + cx, f = field[i];
+    if (f > 0) { const p = pal(i); cols[i] = f < 0.07 ? p[0] : f > 0.45 ? p[2] : wmHash(cx, cy) > 0.86 ? p[2] : p[1]; }
+    else if (at(cx, cy - 1) > 0) cols[i] = pal(i - W)[3]; // the cliff face under a coast
+    else {
+      cols[i] = f > -0.12 ? '#2c74a3' : f > -0.3 ? '#1e548c' : null;
+      if (solid(cx - 1, cy) || solid(cx + 1, cy) || solid(cx, cy + 1) || at(cx, cy - 2) > 0) foam[i] = '#d6eef7';
+    }
+  }
+  wmLand = mk(VW, VH); const g = wmLand.getContext('2d');
+  wmPaint(g, cols, W, H);
+  LEVELS.forEach((L, i) => { if (kinds[i] !== 'citadel') wmDecor(g, kinds[i], L.map[0], L.map[1]); });
+  wmFoam = mk(VW, VH); wmPaint(wmFoam.getContext('2d'), foam, W, H);
+  // the route, sampled every pixel: x, y, leg, distance along the route
+  wmRoute = []; let a = 0, lx = stops[0][0], ly = stops[0][1];
+  for (let i = 0; i < n - 1; i++) {
+    const steps = Math.ceil(Math.hypot(stops[i + 1][0] - stops[i][0], stops[i + 1][1] - stops[i][1]));
+    for (let k = 0; k < steps; k++) { const [x, y] = wmAt(i + k / steps); a += Math.hypot(x - lx, y - ly); lx = x; ly = y; wmRoute.push([Math.round(x), Math.round(y), i, a]); }
+  }
+  // waves and glints only out in the deep sea
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  wmWaves = []; wmGlints = [];
+  for (let k = 0; k < 400 && wmWaves.length < 110; k++) {
+    const x = Math.floor(rnd() * 470), y = 46 + Math.floor(rnd() * 160);
+    if (at(x >> 1, y >> 1) < -0.32) (k % 4 ? wmWaves : wmGlints).push([x, y, rnd() * 7, 3 + Math.floor(rnd() * 3)]);
+  }
+}
+function wmFogBuild() { // fog of war over every place the bros have not reached yet
+  wmFogKey = reached; wmFog = wmFog || mk(VW, VH);
+  const W = 240, H = 135, g = wmFog.getContext('2d'), cols = new Array(W * H).fill(null);
+  for (let cy = 22; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const i = cy * W + cx;
+    if (wmOwn[i] > reached) cols[i] = wmNoise(cx / 6, cy / 6) > 0.62 ? 'rgba(12,8,28,0.72)' : 'rgba(18,14,38,0.6)';
+  }
+  g.clearRect(0, 0, VW, VH); wmPaint(g, cols, W, H);
+}
+function wmSkull(g, x, y, c) { // the League emblem
+  g.fillStyle = c; g.fillRect(x, y, 5, 3); g.fillRect(x + 1, y + 3, 3, 1);
+  g.fillStyle = '#1b1730'; g.fillRect(x + 1, y + 1, 1, 1); g.fillRect(x + 3, y + 1, 1, 1);
+}
+function wmMount(g, x, y, h) { // a snowy peak, lit from the left
+  for (let k = 0; k < h; k++) {
+    g.fillStyle = k < 4 ? '#ffffff' : '#7a8ba4'; g.fillRect(x - k, y - h + k, k + 1, 1);
+    g.fillStyle = k < 4 ? '#c6d4e4' : '#56667e'; g.fillRect(x + 1, y - h + k, k, 1);
+  }
+}
+function wmDecor(g, k, x, y) { // the still part of a stop's landmark, drawn into the land canvas
+  const R = (c, a, b, w, h) => { g.fillStyle = c; g.fillRect(x + a, y + b, w, h); };
+  if (k === 'palms') for (const [a, b] of [[-9, -1], [8, -3], [-1, -6]]) { R('#8a5a34', a, b - 7, 1, 3); R('#8a5a34', a + 1, b - 4, 1, 4); R('#3f9a3a', a - 3, b - 8, 7, 1); R('#3f9a3a', a - 4, b - 7, 2, 1); R('#3f9a3a', a + 3, b - 7, 2, 1); R('#3f9a3a', a - 1, b - 9, 3, 1); R('#5a3a1a', a, b - 7, 1, 1); }
+  if (k === 'dunes' || k === 'pyramid') for (const [a, b, w] of k === 'dunes' ? [[-13, -6, 10], [-2, -10, 12], [3, -4, 9]] : [[6, -5, 9]]) { R('#f8e8bc', a + 3, b, w - 6, 1); R('#f8e8bc', a + 1, b + 1, w - 2, 1); R('#f8e8bc', a, b + 2, w, 1); R('#a8783a', a + (w >> 1), b + 1, (w >> 1) - 1, 2); }
+  if (k === 'dunes') { R('#3f8a3a', 9, -14, 2, 7); R('#3f8a3a', 7, -12, 2, 1); R('#3f8a3a', 7, -13, 1, 2); R('#3f8a3a', 11, -11, 2, 1); R('#3f8a3a', 12, -12, 1, 2); }
+  if (k === 'pyramid') for (let j = 0; j < 12; j++) { R('#e8c77a', -2 - j, -17 + j, j + 1, 1); R('#b88a48', -1, -17 + j, j, 1); }
+  if (k === 'peaks') { wmMount(g, x - 6, y - 2, 13); wmMount(g, x + 7, y - 2, 10); wmMount(g, x, y, 7); }
+  if (k === 'springs') { wmMount(g, x - 6, y - 4, 11); R('#7fd0e8', 2, -6, 7, 2); R('#7fd0e8', 3, -7, 5, 1); R('#7fd0e8', -13, -3, 5, 2); }
+  if (k === 'factory') { R('#7a7f8c', -10, -8, 16, 7); R('#5c6170', -10, -9, 16, 1); for (let j = 0; j < 4; j++) { R('#5c6170', -10 + j * 4, -11, 2, 2); R('#c8a040', -8 + j * 4, -6, 2, 2); } R('#8a5a4a', 7, -16, 3, 15); R('#6a4a3a', 7, -16, 3, 1); }
+  if (k === 'dish') { R('#c8c0a8', 3, -6, 7, 5); R('#8a5a4a', 2, -7, 9, 1); R('#9aa3b8', -3, -9, 1, 8); R('#e6e2f0', -7, -13, 1, 2); R('#e6e2f0', -6, -12, 1, 2); R('#e6e2f0', -5, -11, 5, 1); R('#e6e2f0', 0, -12, 1, 2); R('#e6e2f0', 1, -13, 1, 2); R('#9aa3b8', -3, -15, 1, 4); R('#9aa3b8', 8, -18, 1, 12); }
+  if (k === 'lighthouse') { R('#6a6478', -6, -3, 12, 3); for (let j = 0; j < 6; j++) R(j % 2 ? '#e6e2f0' : '#d94a3a', -2, -15 + j * 2, 4, 2); R('#2a3160', -2, -18, 4, 3); R('#d94a3a', -3, -19, 6, 1); R('#d94a3a', -1, -20, 2, 1); R('#c8c0a8', 4, -6, 6, 4); R('#5c6170', 4, -7, 6, 1); }
+  if (k === 'airfield') { R('#4a4f5c', -14, -4, 26, 4); for (let j = 0; j < 5; j++) R('#e6e2f0', -12 + j * 5, -2, 3, 1); R('#9aa3b8', 6, -13, 2, 9); R('#7fd0e8', 5, -15, 4, 2); R('#5c6170', 5, -16, 4, 1); R('#8a8f9c', -12, -11, 9, 6); R('#6c717c', -11, -12, 7, 1); R('#3a3f4c', -10, -9, 5, 4); }
+  if (k === 'crops') {
+    for (const [a, b, w, c] of [[-14, -12, 9, '#c8b85a'], [-4, -12, 9, '#8fbf5a'], [6, -12, 8, '#a8c860'], [-14, -6, 10, '#9ac25a'], [-3, -6, 8, '#d8c86a'], [6, -6, 8, '#7aa84a']]) { R(c, a, b, w, 5); R('rgba(40,50,20,0.25)', a, b + 1, w, 1); R('rgba(40,50,20,0.25)', a, b + 3, w, 1); }
+    R('#f6ecb0', -1, -6, 4, 1); R('#f6ecb0', -2, -5, 1, 3); R('#f6ecb0', 3, -5, 1, 3); R('#f6ecb0', -1, -2, 4, 1); R('#f6ecb0', 0, -4, 2, 1); // the crop circle
+  }
+  if (k === 'cave') {
+    for (let j = 0; j < 8; j++) { const w = 6 + j * 3; R(j < 2 ? '#a89cb8' : '#857a94', -(w >> 1), -13 + j, w, 1); }
+    R('#1b1730', -2, -6, 5, 4); R('#1b1730', -1, -7, 3, 1);
+    for (const [a, b, c] of [[-8, -6, '#7fe8f0'], [6, -4, '#e78ac3'], [3, -10, '#b48af0']]) { R(c, a, b - 2, 1, 4); R(c, a - 1, b - 1, 3, 2); }
+  }
+  if (k === 'swamp') { R('#2f4a3e', -12, -4, 8, 2); R('#2f4a3e', 2, -7, 9, 3); for (let j = 0; j < 8; j++) R('#8a9a4a', -13 + j * 3, -9 + (j % 2) * 2, 1, 4); R('#4a3a2a', 6, -15, 1, 8); R('#4a3a2a', 4, -13, 2, 1); R('#4a3a2a', 7, -12, 2, 1); R('#4a3a2a', 3, -14, 1, 1); }
+  if (k === 'observatory') { R('#c8c0b0', -6, -7, 12, 6); R('#e6e2f0', -5, -9, 10, 2); R('#e6e2f0', -4, -11, 8, 2); R('#e6e2f0', -2, -12, 4, 1); R('#2a3160', 0, -12, 1, 4); R('#9aa3b8', 1, -14, 1, 3); R('#5c6170', -1, -4, 2, 3); }
+  if (k === 'gears') { R('#8a5a3a', -13, -8, 14, 7); R('#6a3a2a', -13, -9, 14, 1); R('#6a3a2a', -10, -15, 2, 7); for (let j = 0; j < 3; j++) R('#3a2a20', -11 + j * 4, -6, 2, 2); }
+  if (k === 'tanks') { for (const [a, h] of [[-12, 7], [-3, 9]]) { R('#9aa8a8', a, -2 - h, 7, h); R('#c0cccc', a, -3 - h, 7, 1); R('#7a8888', a + 5, -2 - h, 2, h); } R('#6f7d7a', 4, -4, 10, 2); R('#566260', 13, -5, 2, 4); }
+  if (k === 'city') for (const [a, b, w, j] of [[-13, -10, 5, 0], [-8, -17, 5, 1], [-3, -12, 4, 0], [1, -20, 5, 1], [6, -11, 4, 0], [10, -15, 4, 1]]) { R(j ? '#464c66' : '#3a4058', a, b, w, -2 - b); R('#2a2e40', a + w - 1, b, 1, -2 - b); }
+  if (k === 'grove') {
+    R('#9aa3b8', -14, -1, 30, 2); for (let j = 0; j < 4; j++) R('#6f7d7a', -11 + j * 8, -2, 2, 4);
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) { const a = -12 + c * 7 + r * 3, b = -12 + r * 6; R('#6a4a2a', a, b + 2, 1, 2); R('#2f7a30', a - 2, b - 2, 5, 4); R('#3f9a3a', a - 1, b - 3, 3, 1); R('#f28c28', a - 1, b - 1, 1, 1); R('#f28c28', a + 1, b, 1, 1); }
+  }
+}
+function wmPuffs(g, x, y, t, c, n) { // smoke or steam rising from a point
+  for (let k = 0; k < n; k++) {
+    const p = (t * 0.45 + k / n) % 1, s = 2 + Math.floor(p * 3);
+    g.globalAlpha = (1 - p) * 0.7; g.fillStyle = c; g.fillRect(Math.round(x + p * 6 + Math.sin(t * 2 + k) - s / 2), Math.round(y - p * 14), s, s);
+  }
+  g.globalAlpha = 1;
+}
+function wmAnim(g, k, x, y, t, night, free) { // the moving part of a stop's landmark
+  const R = (c, a, b, w, h) => { g.fillStyle = c; g.fillRect(x + a, y + b, w, h); };
+  if (k === 'factory') wmPuffs(g, x + 8, y - 17, t, '#b8bcc8', 4);
+  if (k === 'springs') { wmPuffs(g, x + 5, y - 8, t, '#f4f8ff', 3); wmPuffs(g, x - 11, y - 4, t + 0.3, '#f4f8ff', 2); }
+  if (k === 'gears') {
+    wmPuffs(g, x - 9, y - 16, t, '#9a8a80', 3);
+    R('#9c5a3a', 5, -17, 6, 6); R('#9c5a3a', 4, -16, 8, 4);
+    for (let j = 0; j < 8; j++) { const an = t * 1.2 + j * Math.PI / 4; R('#c8742e', 7 + Math.round(Math.cos(an) * 5), -15 + Math.round(Math.sin(an) * 5), 2, 2); }
+    R('#4a3226', 7, -15, 2, 2);
+  }
+  if (k === 'lighthouse') {
+    const s = Math.cos(t * 1.6);
+    g.globalAlpha = 0.15 + night * 0.6; g.fillStyle = '#fff3a0';
+    g.beginPath(); g.moveTo(x, y - 16.5); g.lineTo(x + 30 * s, y - 21); g.lineTo(x + 30 * s, y - 12); g.fill(); g.globalAlpha = 1;
+    R(Math.abs(s) > 0.7 ? '#ffffff' : '#f2c94c', -1, -17, 2, 1);
+  }
+  if (k === 'city') {
+    const tick = Math.floor(t * 0.5);
+    [[-13, -10, 5], [-8, -17, 5], [-3, -12, 4], [1, -20, 5], [6, -11, 4], [10, -15, 4]].forEach(([a, b, w], j) => {
+      for (let wy = b + 2; wy < -3; wy += 3) for (let wx = a + 1; wx < a + w - 1; wx += 2) if (wmHash(j * 31 + wx, wy + tick) > 0.62 - night * 0.3) R('#f2e27a', wx, wy, 1, 1);
+    });
+    R(Math.sin(t * 9) > -0.6 ? '#ff5ad0' : '#8a3a78', -7, -21, 4, 2); // a neon billboard
+  }
+  if (k === 'cave') { const j = Math.floor(t * 1.5) % 3, [a, b] = [[-8, -6], [6, -4], [3, -10]][j]; if ((t * 1.5) % 1 < 0.5) { R('#ffffff', a, b - 3, 1, 3); R('#ffffff', a - 1, b - 2, 3, 1); } }
+  if (k === 'swamp') {
+    g.globalAlpha = 0.3; R('#c8d8b0', Math.round(-15 + Math.sin(t * 0.5) * 3), -7, 12, 1); R('#c8d8b0', Math.round(-4 + Math.sin(t * 0.4 + 1) * 3), -3, 14, 1); g.globalAlpha = 1;
+    const p = (t * 0.8) % 1; if (p < 0.7) R('#a6d854', 5, -6 - Math.floor(p * 3), 1, 1);
+  }
+  if (k === 'observatory') { if (Math.sin(t * 2.2) > 0.6) { R('#ffffff', 7, -19, 1, 3); R('#ffffff', 6, -18, 3, 1); } g.globalAlpha = 0.3 + night; R('#f2e27a', 0, -11, 1, 2); g.globalAlpha = 1; }
+  if (k === 'tanks') { R('#7fd0e8', -11 + Math.floor(t * 6) % 5, -10, 2, 1); R('#7fd0e8', -2 + Math.floor(t * 6 + 2) % 7, -12, 2, 1); const p = (t * 1.2) % 1; R('#7fd0e8', 14, -1 + Math.floor(p * 4), 1, 1); }
+  if (k === 'airfield') for (let j = 0; j < 6; j++) R(Math.floor(t * 8) % 6 === j ? '#fff3a0' : '#7a6a30', -14 + j * 5, -5, 1, 1);
+  if (k === 'crops') { const b = Math.round(-21 + Math.sin(t * 1.5) * 2); R('#8a8478', 6, b + 2, 1, -8 - b); R('#c0c8d8', 2, b, 9, 2); R('#9aa3b8', 4, b - 2, 5, 2); R(Math.sin(t * 6) > 0 ? '#a6d854' : '#f2c94c', 3, b + 1, 1, 1); R(Math.sin(t * 6) > 0 ? '#f2c94c' : '#a6d854', 9, b + 1, 1, 1); }
+  if (k === 'dish' && Math.sin(t * 4) > 0) R('#ff5a4a', 8, -19, 1, 1);
+  if (k === 'pyramid') { g.globalAlpha = 0.5 + Math.sin(t * 3) * 0.5; R('#fff3a0', -3, -18, 3, 2); g.globalAlpha = 1; }
+  if (k === 'grove') { const p = (t * 0.7) % 1; if (p < 0.8) R('#f28c28', -9, -9 + Math.floor(p * 4), 1, 1); }
+  if (k === 'citadel') wmCitadel(g, x, y, t, free);
+}
+function wmCitadel(g, x, y, t, free) { // King Citrus's fortress: a giant orange behind walls, under a storm until it falls
+  const R = (c, a, b, w, h) => { g.fillStyle = c; g.fillRect(x + a, y + b, w, h); };
+  if (!free) { g.globalAlpha = 0.16 + Math.sin(t * 2) * 0.08; g.fillStyle = '#ff5a2a'; g.beginPath(); g.arc(x, y - 12, 30, 0, 7); g.fill(); g.globalAlpha = 1; }
+  for (let dy = -9; dy <= 9; dy++) { const w = Math.round(Math.sqrt(81 - dy * dy)); R(dy < -3 ? '#ffa040' : '#f28c28', -w, -20 + dy, w * 2, 1); }
+  R('#ffd08a', -5, -26, 3, 2); R('#d8741e', 3, -18, 1, 1); R('#d8741e', -2, -15, 1, 1); R('#d8741e', 5, -23, 1, 1);
+  R('#6a4a2a', 0, -31, 1, 2); R('#3f9a3a', 1, -31, 4, 2); R('#3f9a3a', 2, -32, 2, 1);
+  for (const tx of [-19, 14]) { R('#b8642a', tx, -18, 5, 18); R('#8a4418', tx + 3, -18, 2, 18); R('#8a4418', tx - 1, -19, 7, 1); R('#8a4418', tx, -21, 5, 2); R('#8a4418', tx + 1, -23, 3, 2); R('#8a4418', tx + 2, -24, 1, 1); R('#ffcf5a', tx + 2, -14, 1, 2); }
+  R('#a85a22', -14, -9, 28, 9); R('#c8742e', -14, -9, 28, 5); for (let k = 0; k < 10; k++) R('#c8742e', -14 + k * 3, -11, 2, 2);
+  R('#3a1a0a', -2, -5, 4, 5); R('#3a1a0a', -1, -6, 2, 1);
+  if (free) return;
+  R('#e6e2f0', -1, -41, 1, 11); // the League banner on top
+  for (let c = 0; c < 8; c++) R('#c8323c', c, -41 + Math.round(Math.sin(t * 5 - c * 0.7)), 1, 6);
+  wmSkull(g, x + 1, y - 40 + Math.round(Math.sin(t * 5 - 2.5)), '#f2eee0');
+  R('#2e2440', -16, -49, 11, 4); R('#2e2440', -8, -53, 12, 6); R('#2e2440', 3, -51, 13, 5); R('#3a2e52', -13, -47, 28, 3); R('#463a62', -6, -54, 7, 2); // the storm
+  if (t % 3.7 < 0.16) { R('#fff3a0', -7, -44, 1, 3); R('#fff3a0', -6, -41, 1, 2); R('#fff3a0', -7, -39, 1, 3); R('#fff3a0', 9, -44, 1, 2); R('#fff3a0', 10, -42, 1, 3); }
+}
+function wmFlag(x, y, t, col, league) { // a pole with a science flag or a League banner
+  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y - 10, 1, 10); ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x + 1, y - 6, 1, 6);
+  for (let c = 0; c < 6; c++) { ctx.fillStyle = col; ctx.fillRect(x + 1 + c, y - 10 + Math.round(Math.sin(t * 5 - c * 0.8) * 0.7), 1, 4); }
+  const m = Math.round(Math.sin(t * 5 - 2.4) * 0.7);
+  ctx.fillStyle = '#ffffff';
+  if (league) { ctx.fillRect(x + 3, y - 9 + m, 3, 2); ctx.fillStyle = col; ctx.fillRect(x + 4, y - 9 + m, 1, 1); }
+  else { ctx.fillRect(x + 4, y - 9 + m, 1, 1); ctx.fillRect(x + 3, y - 8 + m, 3, 1); }
+}
+function wmDot(x, y, c) { // a stop marker
+  ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 3, y - 2, 7, 5); ctx.fillRect(x - 2, y - 3, 5, 7);
+  ctx.fillStyle = c; ctx.fillRect(x - 2, y - 1, 5, 3); ctx.fillRect(x - 1, y - 2, 3, 5);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 1, 1);
+}
+function wmPlane(t) { // the bros' plane, its shadow and its contrail
+  const [gx, gy] = wmAt(wmF < 0 ? level : wmF), d = wmDir, px = Math.round(gx), py = Math.round(gy - 24 + Math.sin(t * 3) * 1.5);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(px - 5, Math.round(gy) + 4, 11, 2);
+  ctx.fillStyle = '#e6e2f0'; for (const [x, y, l] of wmTrail) { ctx.globalAlpha = l * 0.5; ctx.fillRect(Math.round(x) - 1, Math.round(y), 2, 1); }
+  ctx.globalAlpha = 1;
+  const P = (a, b, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(d > 0 ? px + a : px - a - w + 1, py + b, w, h); };
+  P(-6, -1, 12, 3, '#e6e2f0'); P(-5, 1, 10, 1, '#a3abd0'); P(6, 0, 1, 2, '#a3abd0'); P(-6, -4, 2, 3, '#e6e2f0'); P(-6, -4, 2, 1, '#a6d854');
+  P(-2, 0, 5, 2, '#8da0cb'); P(-1, 2, 3, 1, '#6a7499'); P(1, -1, 1, 1, '#2a3160'); P(3, -1, 1, 1, '#2a3160'); P(5, -1, 1, 1, '#7fd0e8');
+  if (Math.floor(t * 20) % 2) P(7, -2, 1, 6, '#c0c8d8'); else P(7, 0, 1, 2, '#c0c8d8');
+}
+const WM_CLOUDS = [[0, 74, 26, 5], [140, 152, 34, 4], [260, 104, 22, 6], [380, 182, 30, 5], [60, 196, 20, 7]]; // x, y, width, speed
+function wmClouds(t, shadow) {
+  for (const [x0, y0, w, sp] of WM_CLOUDS) {
+    const x = Math.round(((x0 + t * sp) % (VW + 80)) - 40) - (shadow ? 0 : 10), y = y0 - (shadow ? 0 : 22);
+    ctx.fillStyle = shadow ? 'rgba(4,6,24,0.16)' : 'rgba(236,240,255,0.45)';
+    ctx.fillRect(x, y, w, 4); ctx.fillRect(x + 4, y - 3, w - 10, 3); ctx.fillRect(x + 3, y + 4, w - 8, 2);
+  }
+}
 function drawWorldMap(t) {
-  ctx.fillStyle = '#0d1a33'; ctx.fillRect(0, 0, VW, VH);
-  ctx.fillStyle = '#12244a'; for (let y = 0; y < VH; y += 6) ctx.fillRect(0, y, VW, 1); // sea lines
-  const land = LEVELS.map((L) => [L.map[0] - 20, L.map[1] - 20, 40, 40]);
-  ctx.fillStyle = '#2b3a52'; for (const [x, y, w, h] of land) { ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 7); ctx.fill(); }
-  const stops = LEVELS.map((L) => L.map);
-  ctx.fillStyle = '#5c6480'; for (let i = 0; i < stops.length - 1; i++) { const [x0, y0] = stops[i], [x1, y1] = stops[i + 1]; for (let k = 0; k <= 20; k += 2) ctx.fillRect(Math.round(x0 + (x1 - x0) * k / 20), Math.round(y0 + (y1 - y0) * k / 20), 2, 2); }
+  if (!wmLand) wmBuild();
+  if (wmFogKey !== reached) wmFogBuild();
+  const n = LEVELS.length, sel = clamp(level, 0, n - 1), night = Math.max(0, Math.sin(t * 0.08)) ** 2 * 0.35;
+  // the sea: waves that come and go, glints of sun
+  ctx.fillStyle = '#10234f'; ctx.fillRect(0, 0, VW, VH);
+  for (const [x, y, ph, l] of wmWaves) { const s = Math.sin(t * 1.4 + ph); if (s > -0.3) { ctx.fillStyle = s > 0.6 ? '#3c66b0' : '#22407e'; ctx.fillRect(Math.round(x + Math.sin(t * 0.6 + ph) * 3), y, l, 1); } }
+  for (const [x, y, ph] of wmGlints) if (Math.sin(t * 2.3 + ph * 3) > 0.93) { ctx.fillStyle = '#9fc4ff'; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1); }
+  ctx.drawImage(wmLand, 0, 0);
+  ctx.globalAlpha = 0.25 + Math.sin(t * 2) * 0.2; ctx.drawImage(wmFoam, 0, 0); ctx.globalAlpha = 1;
+  // the route: the way ahead is a faint dotted line, the way travelled marches in green
+  for (const [x, y, i, a] of wmRoute) if (i >= reached && Math.floor(a) % 6 < 2) { ctx.fillStyle = '#5c6480'; ctx.fillRect(x, y, 1, 1); }
+  ctx.drawImage(wmFog, 0, 0);
+  for (let i = reached + 1; i < n; i++) { // wisps drifting over the fog
+    const [x, y] = LEVELS[i].map; ctx.fillStyle = 'rgba(150,140,190,0.1)';
+    ctx.fillRect(Math.round(x - 18 + Math.sin(t * 0.5 + i) * 6), y - 14, 26, 3); ctx.fillRect(Math.round(x - 8 + Math.sin(t * 0.4 + i * 2) * 6), y + 2, 22, 2);
+  }
+  wmClouds(t, true);
+  const on = (a) => (((a - t * 14) % 8) + 8) % 8 < 4;
+  ctx.fillStyle = '#0b0e1f'; for (const [x, y, i, a] of wmRoute) if (i < reached && on(a)) ctx.fillRect(x - 1, y, 2, 2);
+  for (const [x, y, i, a] of wmRoute) if (i < reached && on(a)) { ctx.fillStyle = i === reached - 1 ? '#f2c94c' : '#a6d854'; ctx.fillRect(x - 1, y - 1, 2, 2); }
+  if (night > 0.01) { ctx.fillStyle = 'rgba(6,8,34,' + night.toFixed(3) + ')'; ctx.fillRect(0, 0, VW, VH); }
+  // the stops: freed ones fly a science flag and glow, the next target flies the League banner, the rest hide in the fog
   LEVELS.forEach((L, i) => {
-    const [x, y] = L.map, done = i < level || (i <= reached && i !== level), cur = i === level;
-    if (cur) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
-    ctx.fillStyle = done ? '#a6d854' : cur ? '#f2c94c' : '#5c6480'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
-    text(String(i + 1), x, y - 9, 8, done ? '#a6d854' : cur ? '#f2c94c' : '#a3abd0', 'center');
+    const [x, y] = L.map, lib = i < reached, front = i === reached, fog = i > reached, k = wmKind(L);
+    wmAnim(ctx, k, x, y, t, night, lib);
+    if (lib) { ctx.globalAlpha = 0.18 + Math.sin(t * 2 + i) * 0.08 + night * 0.2; ctx.fillStyle = '#a6d854'; ctx.beginPath(); ctx.ellipse(x, y + 1, 10, 4, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    if (i === sel) { ctx.strokeStyle = '#f2c94c'; ctx.lineWidth = 1; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 8 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+    const c = lib ? '#a6d854' : front ? (Math.floor(t * 3) % 2 ? '#f2c94c' : '#ff8a4a') : '#6a6290';
+    if (fog && k !== 'citadel') wmSkull(ctx, x - 2, y - 2, '#a39cbc'); else wmDot(x, y, c);
+    if (lib) wmFlag(x + 4, y - 1, t, '#4f9a2a', false);
+    else if (front && k !== 'citadel') wmFlag(x + 4, y - 1, t, '#c8323c', true);
+    if (!fog || i === sel) text(String(i + 1), x, y + 12, 8, lib ? '#a6d854' : front ? '#f2c94c' : '#8a83a3', 'center');
   });
-  const [px, py] = LV().map, bob = Math.sin(t * 3) * 2; // the bros' plane
-  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 6, py - 26 + bob, 12, 3); ctx.fillRect(px - 2, py - 30 + bob, 4, 11);
+  wmClouds(t, false);
+  wmPlane(t);
+  // the three acts and the finale
+  WM_ACTS.forEach(([a, b, name, title]) => {
+    const hi = Math.min(b, n - 1), xs = LEVELS.slice(a, hi + 1).map((L) => L.map[0]); if (!xs.length) return;
+    const w = Math.max(name.length, title.length) * 3.5, cx = clamp((Math.min(...xs) + Math.max(...xs)) / 2, 6 + w, VW - 6 - w);
+    const col = hi < reached ? '#a6d854' : a <= reached ? '#f2c94c' : '#5c6480';
+    text(name, cx, 52, 8, col, 'center'); if (title) text(title, cx, 61, 8, col, 'center');
+  });
+  // header, progress
+  ctx.fillStyle = 'rgba(9,12,28,0.6)'; ctx.fillRect(0, 0, VW, 44);
   text('WAR ON THE ANTI-SCIENCE LEAGUE', VW / 2, 20, 16, '#a6d854', 'center');
   text('BROS ' + unlocked.length + ' / ' + BROS.length + ' · RESERVE ' + lives + ' · INTEL ' + dossier.length + ' / ' + LEVELS.length * 3 + ' · RUN ' + runScore, VW / 2, 34, 8, '#a3abd0', 'center');
+  const bx = Math.round(VW / 2 - (n * 10 + 70) / 2);
+  for (let i = 0; i < n; i++) { ctx.fillStyle = i < reached ? '#a6d854' : i === reached ? (Math.floor(t * 3) % 2 ? '#f2c94c' : '#8a6a20') : '#2a3160'; ctx.fillRect(bx + i * 10, 38, 9, 3); }
+  text('FREED ' + Math.min(reached, n) + '/' + n, bx + n * 10 + 4, 42, 8, '#a6d854');
+  // the panel: a picture of the chosen stop, its act and state, then the mission and the controls
+  ctx.fillStyle = 'rgba(9,12,28,0.92)'; ctx.fillRect(0, 211, VW, VH - 211); ctx.fillStyle = '#2a3160'; ctx.fillRect(0, 211, VW, 1);
+  const L = LEVELS[sel], k = wmKind(L), p = WM_PAL[L.theme] || WM_PAL.island;
+  ctx.fillStyle = '#2a3160'; ctx.fillRect(5, 215, 40, 48);
+  ctx.save(); ctx.beginPath(); ctx.rect(6, 216, 38, 46); ctx.clip();
+  ctx.fillStyle = '#1e548c'; ctx.fillRect(6, 216, 38, 46); ctx.fillStyle = p[0]; ctx.fillRect(6, 255, 38, 2); ctx.fillStyle = p[1]; ctx.fillRect(6, 257, 38, 5);
+  const z = k === 'citadel' ? 1 : 2; ctx.translate(25, 258); ctx.scale(z, z); // small landmarks at double size
+  if (k !== 'citadel') wmDecor(ctx, k, 0, 0);
+  wmAnim(ctx, k, 0, 0, t, night, sel < reached);
+  ctx.restore();
+  const st = sel < reached ? ['FREED', '#a6d854'] : sel === reached ? ['TARGET', '#f2c94c'] : ['LEAGUE', '#ff5a4a'];
+  text(WM_ACTS[wmAct(sel)][2], VW - 8, 224, 8, '#8da0cb', 'right'); text(st[0], VW - 8, 236, 8, st[1], 'right');
   text('MISSION ' + (level + 1) + ' · ' + LV().name, VW / 2, 222, 8, '#f2c94c', 'center');
   text(LV().sub.toUpperCase(), VW / 2, 233, 8, '#a3abd0', 'center');
   if (reached > 0) text('LEFT/RIGHT PICK ANY MISSION YOU HAVE REACHED', VW / 2, 244, 8, '#8da0cb', 'center');
@@ -6994,5 +7285,6 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
+if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
 })();
 </script>
