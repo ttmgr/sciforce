@@ -350,34 +350,41 @@ function drawArm(sh, face, mode, coat, skin, swing = 0) {
 const THEMES = {
   island: { sky: ['#121735', '#2b2f66', '#3d3a78'], stars: true, orb: 'planet', hill: '#242a58', city: '#1a1f47', cityKind: 'labs', win: ['#8da0cb', '#a6d854'], beam: '#c9f08f',
     dirt: ['#3b3247', '#4a3f57', '#2e2738', '#514560'], top: ['#5f9a2c', '#8cc63f'], dust: '#8b84a6', ambient: 0.42, dark: '#05051a', rain: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
-  desert: { sky: ['#2b1d3a', '#8a3f55', '#e8875a'], stars: false, orb: 'sun', hill: '#6a3048', city: '#4a2238', cityKind: 'mesas', win: ['#f2c94c', '#e78ac3'], beam: '#ffd9a0',
+  desert: { sky: ['#2b1d3a', '#8a3f55', '#e8875a'], stars: false, orb: 'sun', hill: '#6a3048', city: '#4a2238', cityKind: 'pyramids', hills: 'dunes', win: ['#f2c94c', '#e78ac3'], beam: '#ffd9a0',
     dirt: ['#9a6a3e', '#b07a4a', '#86592f', '#c48c56'], top: ['#d9a35c', '#f2c98c'], dust: '#c9a27a', ambient: 0.28, dark: '#2a0c22', sand: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
-  edge: { sky: ['#140c2a', '#3a2a5a', '#7a5a8a'], stars: true, orb: 'earth', hill: '#241a3c', city: '#1a1430', cityKind: 'domes', win: ['#8fd3ff', '#e78ac3'], beam: '#bfe9ff',
+  edge: { sky: ['#140c2a', '#3a2a5a', '#7a5a8a'], stars: true, orb: 'earth', hill: '#241a3c', city: '#1a1430', cityKind: 'sea', hills: 'sea', win: ['#8fd3ff', '#e78ac3'], beam: '#bfe9ff',
     dirt: ['#3a3f52', '#454b60', '#30344a', '#525872'], top: ['#3f7f4a', '#6fbf6a'], dust: '#9a9ab0', ambient: 0.45, dark: '#05031a', acid: ['#1f4a8a', '#4f8fd0', '#bfe9ff'] },
   citrus: { sky: ['#2a0a0a', '#7a2a10', '#e8862a'], stars: false, orb: 'bigsun', hill: '#4a1a0a', city: '#2a0e06', cityKind: 'towers', win: ['#f2c94c', '#ff8a2a'], beam: '#ffb060',
     dirt: ['#7a3a1a', '#8a4a22', '#6a3014', '#9a5a2a'], top: ['#e8862a', '#f2b04a'], dust: '#c98a5a', ambient: 0.3, dark: '#1a0602', embers: true, acid: ['#c85a10', '#f2a030', '#ffd080'] },
-  sky: { sky: ['#3a6ab8', '#7aaee0', '#cfe6f5'], stars: false, orb: 'sun', hill: '#5a8a6a', city: '#6a8aa0', cityKind: 'domes', win: ['#f2c94c', '#e6e2f0'], beam: '#ffffff',
+  sky: { sky: ['#3a6ab8', '#7aaee0', '#cfe6f5'], stars: false, orb: 'sun', hill: '#5a8a6a', city: '#6a8aa0', cityKind: 'farm', win: ['#f2c94c', '#e6e2f0'], beam: '#ffffff',
     dirt: ['#6a5a4a', '#7a6a5a', '#5a4a3a', '#8a7a6a'], top: ['#5f9a2c', '#8cc63f'], dust: '#c9b9a0', ambient: 0.08, dark: '#0a1020', acid: ['#2a6a9a', '#6ab0e0', '#dff4ff'] },
-  cave: { sky: ['#06030c', '#120a20', '#1e1030'], stars: false, orb: 'none', hill: '#140c22', city: '#0e0818', cityKind: 'mesas', win: ['#b3a6ff', '#e78ac3'], beam: '#b3a6ff',
+  cave: { sky: ['#06030c', '#120a20', '#1e1030'], stars: false, orb: 'none', hill: '#140c22', city: '#0e0818', cityKind: 'crystals', win: ['#b3a6ff', '#e78ac3'], beam: '#b3a6ff',
     dirt: ['#4a3a5e', '#5a4a6e', '#3e2e52', '#6a5a80'], top: ['#8a6aae', '#c3b6ff'], dust: '#8a7aa0', ambient: 0.5, dark: '#06021a', acid: ['#4a2a6a', '#b3a6ff', '#e8dcff'] },
-  swamp: { sky: ['#0a140c', '#1a2a1a', '#3a4a2a'], stars: false, orb: 'moon', hill: '#14201a', city: '#0e1810', cityKind: 'pines', win: ['#a6d854', '#f2c94c'], beam: '#c9f08f',
+  swamp: { sky: ['#0a140c', '#1a2a1a', '#3a4a2a'], stars: false, orb: 'moon', hill: '#14201a', city: '#0e1810', cityKind: 'swamp', win: ['#a6d854', '#f2c94c'], beam: '#c9f08f',
     dirt: ['#3a3a24', '#4a4a2e', '#2e2e1c', '#5a5a38'], top: ['#4a6a2a', '#6a8a3a'], dust: '#7a7a5a', ambient: 0.5, dark: '#020602', rain: true, acid: ['#3a5a1a', '#7a9a2a', '#c9e08f'] },
-  astro: { sky: ['#02041a', '#0a1240', '#1a2a6a'], stars: true, orb: 'planet', hill: '#0a1030', city: '#060a24', cityKind: 'domes', win: ['#8fd3ff', '#f2c94c'], beam: '#bfe9ff',
+  astro: { sky: ['#02041a', '#0a1240', '#1a2a6a'], stars: true, orb: 'planet', hill: '#0a1030', city: '#060a24', cityKind: 'observatory', hills: 'peaks', win: ['#8fd3ff', '#f2c94c'], beam: '#bfe9ff',
     dirt: ['#4a4a5a', '#5a5a6a', '#3a3a4a', '#6a6a7a'], top: ['#8da0cb', '#bfe9ff'], dust: '#9aa0b8', ambient: 0.45, dark: '#000210', snow: true, acid: ['#1f3a7a', '#4f6fd0', '#bfd0ff'] },
-  rust: { sky: ['#1a0e08', '#3a2010', '#6a3a1a'], stars: false, orb: 'moon', hill: '#2a1810', city: '#1a0e08', cityKind: 'factory', win: ['#f2c94c', '#ff6a4a'], beam: '#ffb060',
+  rust: { sky: ['#1a0e08', '#3a2010', '#6a3a1a'], stars: false, orb: 'moon', hill: '#2a1810', city: '#1a0e08', cityKind: 'gears', win: ['#f2c94c', '#ff6a4a'], beam: '#ffb060',
     dirt: ['#5a3a2a', '#6a4a32', '#4a2e20', '#7a5a3a'], top: ['#8a5a2a', '#b07a3a'], dust: '#9a7a5a', ambient: 0.45, dark: '#080402', ash: true, acid: ['#6a3a1a', '#c96a2a', '#f2a060'] },
   moon: { sky: ['#000000', '#05050f', '#101020'], stars: true, orb: 'earth', hill: '#202028', city: '#16161e', cityKind: 'domes', win: ['#bfe9ff', '#f2c94c'], beam: '#e6e2f0',
     dirt: ['#6a6a72', '#7a7a82', '#5a5a62', '#8a8a92'], top: ['#9a9aa2', '#b4b4bc'], dust: '#b4b4bc', ambient: 0.35, dark: '#000005', acid: ['#3a3a4a', '#6a6a7a', '#9a9aaa'] },
-  plant: { sky: ['#0d1410', '#1c2a24', '#3a3a2c'], stars: false, orb: 'moon', hill: '#1a2420', city: '#141c18', cityKind: 'factory', win: ['#f2c94c', '#ff6a4a'], beam: '#ff9a6a',
+  plant: { sky: ['#0d1410', '#1c2a24', '#3a3a2c'], stars: false, orb: 'moon', hill: '#1a2420', city: '#141c18', cityKind: 'cooling', win: ['#f2c94c', '#ff6a4a'], beam: '#ff9a6a',
     dirt: ['#4a4a52', '#56565e', '#3e3e46', '#62626c'], top: ['#6b5a4a', '#8a7560'], dust: '#8a8a92', ambient: 0.5, dark: '#050806', ash: true, acid: ['#1f6a7a', '#7de0f0', '#dff8ff'] },
-  snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'pines', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
+  snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'spa', hills: 'peaks', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
     dirt: ['#4a5068', '#59617c', '#3b4057', '#646d8a'], top: ['#c9d8ea', '#ffffff'], dust: '#cfd8e8', ambient: 0.45, dark: '#030818', snow: true, acid: ['#1f5a86', '#6fc3f0', '#dff4ff'] },
+  sewer: { sky: ['#050a09', '#0c1513', '#15201d'], stars: false, orb: 'none', hill: '#0d1714', city: '#0a120f', cityKind: 'pipes', win: ['#a6d854', '#f2c94c'], beam: '#c9f08f',
+    dirt: ['#3c4642', '#48544e', '#303a36', '#56645d'], top: ['#4f6a3a', '#6f8a4a'], dust: '#6a7a70', ambient: 0.55, dark: '#020605', acid: ['#3f5a1c', '#86a52e', '#d2e89a'] },
+  city: { sky: ['#0b0620', '#241046', '#5a2468'], stars: true, orb: 'moon', hill: '#170d2c', city: '#100822', cityKind: 'neon', win: ['#ff4fa3', '#4ff0ff'], beam: '#ff8ad8',
+    dirt: ['#3a3a48', '#46465a', '#2e2e3c', '#545468'], top: ['#5c5c6c', '#80808e'], dust: '#8a8a9a', ambient: 0.42, dark: '#04020c', rain: true, acid: ['#1a4a6a', '#3aa0d0', '#bfe9ff'] },
+  grove: { sky: ['#2c4c8c', '#d98f5c', '#ffd890'], stars: false, orb: 'sun', hill: '#5f7f3a', city: '#3d5e2a', cityKind: 'orchard', win: ['#ff9a2a', '#f2c94c'], beam: '#fff0c0',
+    dirt: ['#7a4a2a', '#8a5a32', '#6a3e22', '#9a6a3a'], top: ['#6a9a2a', '#9ac63f'], dust: '#c9a070', ambient: 0.12, dark: '#1a0a04', acid: ['#c8620e', '#f2a030', '#ffd080'] },
 };
 // extra looks per theme: grass blades on top of the earth, cloud colour (none underground), what floats in the air
 const LOOK = {
   island: { grass: 1, cloud: '#4a4f8a', motes: 'fly' }, desert: { cloud: '#c96a6a', motes: 'dust' }, edge: { grass: 1, cloud: '#6a5a8a' },
   citrus: { cloud: '#c95a2a', motes: 'ember' }, sky: { grass: 1, cloud: '#ffffff' }, cave: { motes: 'fly' }, swamp: { grass: 1, cloud: '#3a4a3a', motes: 'fly' },
   astro: { cloud: '#2a3a7a' }, rust: { cloud: '#5a3a2a', motes: 'dust' }, moon: {}, plant: { cloud: '#3a3a34', motes: 'dust' }, snow: { cloud: '#3a5072' },
+  sewer: { motes: 'fly' }, city: { cloud: '#3a2a5a' }, grove: { grass: 1, cloud: '#fff4e0', motes: 'fly' },
 };
 for (const k in THEMES) { THEMES[k].look = LOOK[k] || {}; THEMES[k].name = k; }
 const mixHex = (a, b, k) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), ch = (sh) => Math.round(((pa >> sh) & 255) * (1 - k) + ((pb >> sh) & 255) * k); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; };
@@ -432,7 +439,7 @@ function buildTiles(th) {
 // ---------------------------------------------------------------- levels
 let tiles, thp, spawns, bg, decor, lamps, level = 0;
 function buildLevel() {
-  tiles = new Uint8Array(LW * LH); thp = new Float32Array(LW * LH); bg = new Uint8Array(LW * LH); spawns = []; decor = []; lamps = [];
+  tiles = new Uint8Array(LW * LH); thp = new Float32Array(LW * LH); bg = new Uint8Array(LW * LH); spawns = []; decor = []; lamps = []; devs.length = 0; crumbly.fill(0);
   const set = (c, r, v) => { if (c < 0 || r < 0 || c >= LW || r >= LH) return; tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; if (v === DIRT && r > 0 && tiles[(r - 1) * LW + c] === DIRT) bg[r * LW + c] = BG_EARTH; };
   const fill = (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) set(c, r, v); };
   LV().build({
@@ -443,6 +450,15 @@ function buildLevel() {
     // decor sits on the tile under it (or hangs on a wall tile) and drops when that tile goes
     dc: (kind, c, extra = {}) => decor.push(Object.assign({ kind, c, r: surf(c, extra.from || 0), seed: Math.random() * 10 }, extra)),
     lamp: (c, r) => lamps.push({ c, r, a: rand(-0.3, 0.3), va: 0, L: 13, fall: null }),
+    // level mechanics (see updateDevices): each takes tile columns and rows
+    belt: (c0, c1, r, dir, spd = 50) => { fill(c0, r, c1, r, STEEL); devs.push({ kind: 'belt', c0, c1, r, dir, spd, x0: c0 * T, x1: (c1 + 1) * T }); },
+    wind: (c0, c1, dir, o = {}) => devs.push(Object.assign({ kind: 'wind', dir, r0: 0, r1: LH - 1, spd: 70, t: 0, pow: 0, socks: [], x0: c0 * T, x1: (c1 + 1) * T }, o)),
+    vent: (c, r, h = 7, o = {}) => { set(c, r, STEEL); devs.push(Object.assign({ kind: 'vent', c, r, h, t: 0, st: 0, col: '#e6eef8', x0: c * T, x1: c * T + T }, o)); },
+    lift: (c, r, w, dc, dr, o = {}) => devs.push(Object.assign({ kind: 'lift', ax: c * T, ay: r * T, bx: (c + dc) * T, by: (r + dr) * T, x: c * T, y: r * T, w: w * T, s: 0, dir: 1, wait: 0.5, pause: 1.2, spd: 42, cab: 3,
+      x0: Math.min(c, c + dc) * T, x1: (Math.max(c, c + dc) + w) * T }, o)),
+    flood: (c0, c1, bot, top, trig, gx = c0) => devs.push({ kind: 'flood', c0, c1, bot, top, trig, gx, lv: bot, row: bot, spd: 0.7, state: 'idle', t: 0, wet: [], x0: c0 * T, x1: (c1 + 1) * T }),
+    grav: (c0, r0, c1, r1, k = 0.58) => devs.push({ kind: 'grav', k, x0: c0 * T, y0: r0 * T, x1: (c1 + 1) * T, y1: (r1 + 1) * T }),
+    crumble: (c0, r0, c1, r1) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) crumbly[r * LW + c] = 1; },
   });
 }
 function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
@@ -745,7 +761,7 @@ const LEVELS = [
 LEVELS.push(
   { name: 'FLAT EARTH STATION', sub: 'Jam the antennas, bring down the zeppelin', theme: 'edge', build: buildEdge, cages: 3, pad: [230, 16], map: [368, 100],
     brief: 'The League broadcasts its lies from a Flat Earth Station on the coast. Jam its three propaganda antennas, climb the ice wall they say is the edge of the world, and bring down the Flat Earth Zeppelin. Shoot its four gondolas off first; the gas bag only gives once they are gone.',
-    debrief: 'The broadcasts are off and the zeppelin is in the sea. Its log lists five League strongholds that guard the road to the Citrus Citadel.',
+    debrief: 'The broadcasts are off and the zeppelin is in the sea. Its log lists a dozen League strongholds that guard the road to the Citrus Citadel.',
     objectives: [{ id: 'radio', text: 'Jam the propaganda antennas', need: 3, req: true }, { id: 'boss', text: 'Bring down the Flat Earth Zeppelin', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Script: today we prove the Earth is flat by refusing to look at it.', 'Memo from K.C.: more antennas. Also, oranges in every lunchbox.', 'Flight plan: zeppelin returns to the Citrus Citadel after each broadcast.'] },
   { name: 'CITRUS CITADEL', sub: 'Pour out the megadose vats, juice King Citrus', theme: 'citrus', build: buildCitadel, cages: 3, pad: [231, 15], map: [432, 182],
@@ -757,7 +773,10 @@ LEVELS.push(
 // ---- a library of level pieces: each fills columns c..c+w-1; `put` lists [type, column offset, search row, extra]
 function place(H, c, o) { for (const [type, dc, from, extra] of o.put || []) H.sp(type, c + dc, from || 0, extra || {}); }
 const SEG = {
-  camp(H, c, w, o) { H.ground(c, c + w - 1, 16); H.sp('guncrate', c + 8); H.sp('itemcrate', c + 11); H.dc('sign', c + 5, { text: o.sign || 'BASE CAMP' }); for (const k of [2, 15]) H.dc(o.decor || 'sandbags', c + k); },
+  camp(H, c, w, o) { // the start: supplies and a sign; `ceil` puts rock overhead (caves and sewers)
+    H.ground(c, c + w - 1, 16); const f = o.ceil ? o.ceil + 1 : 0; if (o.ceil) H.fill(c, 0, c + w - 1, o.ceil, DIRT);
+    H.sp('guncrate', c + 8, f); H.sp('itemcrate', c + 11, f); H.dc('sign', c + 5, { text: o.sign || 'BASE CAMP', from: f }); for (const k of [2, 15]) H.dc(o.decor || 'sandbags', c + k, { from: f });
+  },
   yard(H, c, w, o) { const top = o.top || 16; H.ground(c, c + w - 1, top); H.fill(c + 5, top - 2, c + 5, top - 1, CRATE); H.fill(c + w - 9, top - 2, c + w - 8, top - 1, BRICK); place(H, c, o); },
   hall(H, c, w, o) { // a building: crate doors, a steel girder, a catwalk with a ladder, lamps
     H.ground(c, c + w - 1, 16);
@@ -797,114 +816,606 @@ const ARENA = {
   sand(H, o) { H.ground(176, 177, 12); H.fill(178, 12, 223, 17, DIRT); H.fill(178, 18, 223, 21, STEEL); H.fill(224, 0, 225, 21, STEEL); H.fill(226, 12, 235, 21, STEEL); H.sp(o.boss, 200, 0, Object.assign({ ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] }, o.extra)); },
   stage(H, o) { H.fill(176, 16, 225, 17, DIRT); H.fill(176, 18, 235, 21, STEEL); H.fill(186, 11, 190, 11, STEEL); H.fill(185, 11, 185, 15, LADDER); H.fill(210, 11, 214, 11, STEEL); H.fill(215, 11, 215, 15, LADDER); H.fill(226, 0, 227, 15, STEEL); H.ground(228, 235, 16); H.sp(o.boss, 200, 0, Object.assign({ ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] }, o.extra)); },
 };
+// ---- more pieces, so each mission has shapes of its own. Most meet the next piece with ground at row 16.
+// Steel never overhangs the main path: a bro pushed against steel under a ceiling would have no way on.
+const pool = (H, a, b, top = 17) => { H.fill(a, 21, b, 21, STEEL); H.fill(a, top, b, 20, ACID); }; // a liquid pool on a steel bed
+const lobby = (H, a, b) => { H.fill(a, 13, b, 15, EMPTY); H.bgFill(a, 13, b, 15, BG_BRICK); for (let x = a; x <= b; x += 5) H.fill(x, 12, x, 12, STEEL); H.fill(b, 12, b, 12, STEEL); }; // a ground-floor passage under steel beams
+const catchUnder = (H, a, b, v = CRATE) => { H.fill(a - 1, 17, b + 1, 18, v); H.fill(a, 17, b, 17, EMPTY); }; // a walled ledge under a cracked floor: a fall costs time, not a bro
+const roofOf = (c, r) => { while (r > 0 && !isSolidT(tileAt(c, r))) r--; return r; }; // the first solid tile at or above a row
+Object.assign(SEG, {
+  // -- airfield: wind on the runway, a crashed plane, a hangar with a freight lift, a control tower
+  runway(H, c, w, o) { // gusts blow against you on the open tarmac; parked spray jets and crates are the only cover
+    H.ground(c, c + w - 1, 16); H.fill(c + 1, 16, c + w - 2, 16, STEEL);
+    H.fill(c + 9, 14, c + 10, 15, CRATE); H.fill(c + w - 8, 15, c + w - 7, 15, CRATE);
+    for (const j of o.jets || [22]) { const k = c + j; H.fill(k, 14, k + 6, 15, STEEL); H.fill(k + 6, 12, k + 6, 13, STEEL); H.fill(k, 13, k, 13, ICE); } // fuselage, tail, glass nose
+    H.wind(c, c + w - 1, o.dir || -1, { socks: [c + 4, c + w - 4] });
+    place(H, c, o);
+  },
+  wreck(H, c, w, o) { // a crashed spray plane: walk through the cabin or run along the roof; the tail fin stands at the back
+    H.ground(c, c + w - 1, 16);
+    const a = c + 5, b = c + w - 7;
+    H.fill(a, 11, b, 11, STEEL); H.bgFill(a, 12, b, 15, BG_BRICK);
+    H.fill(a - 3, 14, a - 2, 15, CRATE); // crates to hop up onto the roof
+    H.fill(b - 3, 8, b - 3, 10, STEEL); H.fill(b - 2, 5, b - 1, 10, STEEL); H.fill(b, 5, b + 2, 5, BRICK); // tail fin and stabiliser
+    H.fill(b + 3, 15, b + 5, 15, STEEL); // a torn-off wing
+    H.lamp(a + 3, 11); H.lamp(b - 6, 11);
+    place(H, c, o);
+  },
+  hangar(H, c, w, o) { // a big hangar: open doors, a catwalk, and a freight lift up to the far gantry
+    H.ground(c, c + w - 1, 16);
+    const a = c + 2, b = c + w - 3, m = (a + b) >> 1;
+    H.fill(a, 4, b, 5, BRICK); for (let k = a; k < b; k += 6) H.fill(k, 4, k, 4, STEEL); H.fill(b, 4, b, 4, STEEL); // roof on steel trusses
+    H.fill(a, 6, a, 11, BRICK); H.fill(b, 6, b, 11, BRICK); H.bgFill(a + 1, 6, b - 1, 15, BG_BRICK);
+    H.fill(a + 1, 10, a + 7, 10, STEEL); H.fill(a + 8, 10, a + 8, 15, LADDER);
+    H.fill(m + 2, 9, b - 1, 9, STEEL);
+    H.lift(m - 1, 16, 3, 0, -7);
+    for (const k of [a + 4, m + 4, b - 3]) H.lamp(k, 5);
+    place(H, c, o);
+  },
+  ctower(H, c, w, o) { // the control tower: walk through the base, or climb the ladder to the glass cab on top
+    H.ground(c, c + w - 1, 16);
+    const m = c + (w >> 1);
+    H.fill(m - 4, 10, m + 4, 15, BRICK); H.fill(m - 3, 11, m + 3, 15, EMPTY); H.fill(m - 4, 13, m - 4, 15, EMPTY); H.fill(m + 4, 13, m + 4, 15, EMPTY);
+    H.fill(m - 1, 10, m + 1, 10, STEEL); H.bgFill(m - 3, 11, m + 3, 15, BG_BRICK);
+    H.fill(m - 2, 6, m - 2, 9, STEEL); H.fill(m + 2, 6, m + 2, 9, STEEL); // the shaft
+    H.fill(m - 4, 5, m + 4, 5, STEEL); H.fill(m - 4, 1, m + 4, 1, STEEL); H.fill(m - 4, 2, m - 4, 3, ICE); H.fill(m + 4, 2, m + 4, 3, ICE); // the cab: floor, roof, glass
+    H.fill(m, 2, m, 15, LADDER); H.lamp(m - 2, 1); H.lamp(m + 2, 1);
+    place(H, c, o);
+  },
+  // -- caverns: tunnels with stalactites, a chasm with a mine cart, a deep shaft, a crystal hall
+  tunnels(H, c, w, o) { // low, winding tunnels through rock; stalactites drop when you pass under them
+    H.ground(c, c + w - 1, 0);
+    const fl = o.floors || [16, 16, 17, 18, 18, 17, 16, 15, 14, 14, 15, 16], hd = o.head || 4, at = (k) => fl[Math.min(fl.length - 1, Math.floor(k * fl.length / w))];
+    for (let k = 0; k < w; k++) H.fill(c + k, at(k) - hd, c + k, at(k) - 1, EMPTY);
+    for (const [k0, k1, top] of o.rooms || []) for (let k = k0; k <= k1; k++) H.fill(c + k, top, c + k, at(k) - 1, EMPTY);
+    for (const k of o.drips || []) H.sp('icicle', c + k, 0, { hang: roofOf(c + k, at(k) - 1), rock: true });
+    for (const k of o.lamps || []) H.lamp(c + k, roofOf(c + k, at(k) - 1));
+    for (const [type, k, from, extra] of o.put || []) H.sp(type, c + k, from || roofOf(c + k, at(k) - 1) + 1, extra || {}); // spawns land on the tunnel floor
+  },
+  chasm(H, c, w, o) { // an acid chasm: rotten planks give way under you; a mine cart shuttles across above them
+    const a = c + 4, b = c + w - 5, m = (a + b) >> 1;
+    H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16); pool(H, a, b);
+    if (o.ceil) H.fill(c, 0, c + w - 1, o.ceil, DIRT);
+    H.fill(a, 16, b, 16, o.plank || CRATE); for (let k = a + 2; k <= b; k += 5) H.fill(k, 17, k, 20, STEEL);
+    H.crumble(m - 5, 16, m + 5, 16); catchUnder(H, m - 5, m + 5);
+    H.lift(a, 13, 3, b - a - 2, 0, { cab: 13 - (o.ceil || 6) - 1, spd: 50 });
+    place(H, c, o);
+  },
+  shaft(H, c, w, o) { // a deep shaft: drop in, then ride the cage lift or climb the ladder up the far wall
+    H.ground(c, c + w - 1, 0);
+    H.fill(c, 12, c + 5, 15, EMPTY); H.fill(c + 6, 3, c + w - 7, 19, EMPTY); H.fill(c + w - 6, 12, c + w - 1, 15, EMPTY);
+    H.fill(c + 11, 15, c + 15, 15, DIRT); H.fill(c + w - 15, 11, c + w - 11, 11, DIRT); // ledges
+    H.fill(c + w - 7, 16, c + w - 7, 19, LADDER);
+    H.lift(c + w - 9, 20, 3, 0, -4, { cab: 13 });
+    for (const k of [9, 18, 24]) H.sp('icicle', c + k, 0, { hang: 2, rock: true });
+    place(H, c, o);
+  },
+  geode(H, c, w, o) { // a crystal hall: a high roof with rock fangs, ledges along the walls
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 3, DIRT);
+    for (let k = 4; k < w - 4; k += 7) H.fill(c + k, 4, c + k + 1, 5 + (k % 3), DIRT);
+    H.fill(c + 7, 12, c + 12, 12, DIRT); H.fill(c + w - 14, 10, c + w - 9, 10, DIRT); H.fill(c + w - 7, 13, c + w - 5, 13, DIRT);
+    for (const k of [10, 24]) H.sp('icicle', c + k, 0, { hang: 3, rock: true });
+    place(H, c, o);
+  },
+  // -- marsh: rotten boardwalks and stilt huts over the bog, gas vents, a pumping station, trenches
+  boardwalk(H, c, w, o) { // planks over the bog on crate stilts; the rotten stretches give way; huts stand on stilts
+    const a = c + 3, b = c + w - 4;
+    H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16); pool(H, a, b);
+    H.fill(a, 16, b, 16, CRATE); for (let k = a + 1; k <= b; k += 4) H.fill(k, 17, k, 20, CRATE);
+    for (const [k0, k1] of o.rot || []) { H.crumble(c + k0, 16, c + k1, 16); catchUnder(H, c + k0, c + k1); }
+    for (const k of o.huts || []) { // floor on stilts, a roof on posts, a ladder up through the floor
+      const x = c + k; H.fill(x, 14, x, 15, CRATE); H.fill(x + 4, 14, x + 4, 15, CRATE); H.fill(x, 13, x + 4, 13, CRATE);
+      H.fill(x, 10, x, 12, CRATE); H.fill(x + 4, 10, x + 4, 12, CRATE); H.fill(x, 9, x + 4, 9, BRICK); H.fill(x + 2, 13, x + 2, 15, LADDER); H.bgFill(x + 1, 10, x + 3, 12, BG_BRICK);
+    }
+    place(H, c, o);
+  },
+  geysers(H, c, w, o) { // vents in the mud throw you up to the ledges
+    H.ground(c, c + w - 1, 16);
+    for (const [k, h] of o.vents || [[6, 7], [17, 7], [28, 6]]) H.vent(c + k, 16, h, { col: o.col || '#e6eef8', t: k * 0.37 });
+    for (const [k0, k1, r] of o.ledges || [[3, 9, 9], [14, 20, 9], [25, 31, 10]]) H.fill(c + k0, r, c + k1, r, DIRT);
+    for (const [k0, k1] of o.pits || [[11, 13], [22, 24]]) { H.fill(c + k0, 17, c + k1, 19, ACID); H.fill(c + k0, 16, c + k1, 16, CRATE); H.fill(c + k0 + 1, 17, c + k0 + 1, 19, STEEL); }
+    place(H, c, o);
+  },
+  mill(H, c, w, o) { // a two-storey pumping station: a crate door in, an open door out, a ladder between floors
+    H.ground(c, c + w - 1, 16);
+    const a = c + 3, b = c + w - 4, m = (a + b) >> 1;
+    H.fill(a, 5, b, 15, BRICK); H.fill(a + 1, 6, b - 1, 10, EMPTY); H.fill(a + 1, 12, b - 1, 15, EMPTY);
+    H.fill(a, 13, a, 15, CRATE); H.fill(b, 12, b, 15, EMPTY);
+    H.fill(a + 1, 11, a + 2, 11, STEEL); H.fill(b - 2, 11, b - 1, 11, STEEL); H.fill(m - 1, 5, m + 1, 5, STEEL);
+    H.fill(a + 6, 11, a + 6, 15, LADDER); H.fill(b - 6, 5, b - 6, 10, LADDER);
+    H.bgFill(a + 1, 6, b - 1, 15, BG_BRICK);
+    for (const k of [a + 4, b - 4]) { H.lamp(k, 5); H.lamp(k, 11); }
+    place(H, c, o);
+  },
+  trench(H, c, w, o) { // dug-in trenches: drop in, climb out by the ladder; sandbags on the lips
+    H.ground(c, c + w - 1, 16);
+    for (let k = 3; k < w - 5; k += 8) { H.fill(c + k, 16, c + k + 3, 18, EMPTY); H.fill(c + k + 3, 16, c + k + 3, 18, LADDER); H.dc('sandbags', c + k + 5); }
+    place(H, c, o);
+  },
+  // -- observatory: switchback terraces, an anti-gravity dome, dish cliffs with a lift, a broken ridge
+  switchback(H, c, w, o) { // terraces up the mountain, each a jump higher, and back down at the far end
+    const st = o.steps || [16, 14, 12, 10, 8, 8, 10, 13, 16], sw = w / st.length;
+    st.forEach((top, i) => { const x0 = c + Math.round(i * sw), x1 = c + Math.round((i + 1) * sw) - 1; H.ground(x0, x1, top); if (i && st[i - 1] - top > 2) H.fill(x0 - 1, top, x0 - 1, st[i - 1] - 1, LADDER); });
+    place(H, c, o);
+  },
+  dome(H, c, w, o) { // an observatory dome: inside, an anti-gravity field makes every jump float up to the decks
+    H.ground(c, c + w - 1, 16);
+    const a = c + 2, b = c + w - 3, m = (a + b) / 2, half = (b - a) / 2, top = (x) => 3 + Math.round(((x - m) / half) ** 2 * 7);
+    for (let x = a; x <= b; x++) H.fill(x, top(x), x, Math.max(top(Math.max(a, x - 1)), top(x), top(Math.min(b, x + 1))), BRICK);
+    H.fill(a, 10, a, 12, BRICK); H.fill(b, 10, b, 12, BRICK); // walls over the doorways
+    H.fill(Math.round(m) - 1, 3, Math.round(m), 3, STEEL); H.fill(a, 12, a, 12, STEEL); H.fill(b, 12, b, 12, STEEL); // the frame holds it up
+    H.bgFill(a + 1, 4, b - 1, 15, BG_BRICK);
+    for (const [k0, k1, r] of o.decks || [[7, 10, 11], [15, 18, 7], [24, 27, 10]]) H.fill(c + k0, r, c + k1, r, STEEL);
+    H.grav(a + 1, 4, b - 1, 15);
+    place(H, c, o);
+  },
+  dishes(H, c, w, o) { // radio dishes on a cliff shelf with a cave under it; a cage lift runs up the cliff face
+    H.ground(c, c + 9, 16); H.ground(c + 10, c + w - 9, 9); H.ground(c + w - 8, c + w - 1, 16);
+    H.fill(c + 10, 12, c + w - 9, 15, EMPTY); // a cave under the shelf
+    H.fill(c + 9, 9, c + 9, 15, LADDER); H.lift(c + 6, 16, 3, 0, -7, { cab: 2 });
+    place(H, c, o);
+  },
+  ridge(H, c, w, o) { // a broken ridge: gaps down to the scree, and anti-gravity pylons to float across them
+    H.ground(c, c + w - 1, 16);
+    for (const [k0, k1, top] of o.ridge || [[6, 12, 13], [16, 21, 11], [25, 31, 12]]) H.ground(c + k0, c + k1, top);
+    for (const [k0, k1] of o.gaps || [[13, 15], [22, 24]]) { H.fill(c + k0, 16, c + k1, 19, EMPTY); H.grav(c + k0 - 1, 4, c + k1 + 1, 19, 0.5); H.fill(c + k1, 16, c + k1, 19, LADDER); }
+    place(H, c, o);
+  },
+  // -- factory: conveyor lines, a foundry with vents and a molten pool, a crane yard, a warehouse
+  assembly(H, c, w, o) { // conveyor belts on the floor and on a catwalk carry you, the quacks and the crates
+    H.ground(c, c + w - 1, 16);
+    for (const [k0, k1, r, d] of o.belts || [[2, 15, 16, 1], [w - 16, w - 3, 16, -1], [6, w - 8, 11, 1]]) H.belt(c + k0, c + k1, r, d);
+    H.fill(c + 5, 11, c + 5, 15, LADDER); H.fill(c + w - 7, 11, c + w - 7, 15, LADDER);
+    H.fill(c + 18, 14, c + 19, 15, CRATE);
+    if (o.ceil) H.fill(c, 0, c + w - 1, o.ceil, DIRT);
+    if (o.roof) { H.fill(c + 1, 4, c + w - 2, 4, BRICK); for (let k = c + 1; k < c + w - 1; k += 7) H.fill(k, 4, k, 4, STEEL); H.fill(c + w - 2, 4, c + w - 2, 4, STEEL); H.bgFill(c + 1, 5, c + w - 2, 15, BG_BRICK); for (let k = c + 4; k < c + w - 3; k += 9) H.lamp(k, 4); }
+    place(H, c, o);
+  },
+  foundry(H, c, w, o) { // a molten pool under a brick walkway that crumbles in the middle; steam vents up to the catwalk
+    H.ground(c, c + w - 1, 16);
+    const a = c + 8, b = c + w - 9;
+    H.fill(a, 17, b, 20, ACID); H.fill(a, 16, b, 16, BRICK); H.fill(a - 1, 16, a - 1, 16, STEEL); H.fill(b + 1, 16, b + 1, 16, STEEL);
+    for (let k = a + 4; k < b - 2; k += 6) H.fill(k, 17, k, 20, STEEL);
+    H.crumble(a + 3, 16, b - 3, 16); catchUnder(H, a + 3, b - 3, BRICK);
+    H.fill(a - 2, 10, b + 2, 10, STEEL); H.fill(a - 3, 10, a - 3, 15, LADDER); H.fill(b + 3, 10, b + 3, 15, LADDER);
+    H.vent(c + 3, 16, 7, { col: '#c9c0b0' }); H.vent(c + w - 4, 16, 7, { col: '#c9c0b0', t: 1.7 });
+    for (const k of [a + 2, b - 2]) H.lamp(k, 10);
+    place(H, c, o);
+  },
+  crane(H, c, w, o) { // a crane yard: lattice towers, a jib with hanging containers, a hook platform that rides across
+    H.ground(c, c + w - 1, 16);
+    const L = c + 3, R = c + w - 5;
+    for (const k of [L, R]) H.fill(k, 4, k + 1, 15, LADDER); // lattice towers you can climb
+    H.fill(L, 3, R + 1, 3, STEEL);
+    for (const k of [L + 9, R - 11]) { H.fill(k + 1, 4, k + 1, 5, STEEL); H.fill(k, 6, k + 2, 7, CRATE); } // containers hanging off the jib on hooks
+    H.fill(c + 12, 13, c + 14, 15, CRATE); H.fill(c + w - 16, 14, c + w - 14, 15, CRATE); // container stacks
+    H.lift(L + 3, 9, 3, R - L - 6, 0, { cab: 5, spd: 55 });
+    place(H, c, o);
+  },
+  warehouse(H, c, w, o) { // tall racks of crates to climb for the loot (walk under them); an express belt along the floor
+    H.ground(c, c + w - 1, 16);
+    for (let k = 3; k < w - 8; k += 12) { // an upright with three shelves sticking out to the right; walk under the bottom one
+      const x = c + k; H.fill(x, 6, x, 12, STEEL); for (const r of [12, 9, 6]) H.fill(x + 1, r, x + 5, r, STEEL);
+      H.fill(x + 1, 10, x + 3, 11, CRATE); H.fill(x + 3, 7, x + 5, 8, CRATE); H.fill(x - 1, 6, x - 1, 15, LADDER);
+    }
+    H.belt(c + 1, c + w - 2, 16, 1, 70);
+    H.lamp(c + 9, 5); H.lamp(c + 21, 5);
+    place(H, c, o);
+  },
+  // -- farm: fields with hay springs, grain silos with an elevator, a barn with a loft, a corn maze
+  field(H, c, w, o) { // a crop field: fences, hay bales with springs in front, scarecrows
+    H.ground(c, c + w - 1, 16);
+    for (const k of o.fences || [6, 18, 30]) H.fill(c + k, 15, c + k + 1, 15, CRATE);
+    for (const k of o.bales || [12, 24]) { H.fill(c + k, 14, c + k + 1, 15, CRATE); H.sp('spring', c + k - 1); }
+    for (const k of o.crows || [3, 21, 34]) H.dc('scarecrow', c + k);
+    place(H, c, o);
+  },
+  silos(H, c, w, o) { // grain silos: walk through them or climb the ladder inside; catwalks link the tops; a grain elevator
+    H.ground(c, c + w - 1, 16);
+    const xs = o.at || [3, 15, 27];
+    for (const k of xs) { const x = c + k; H.fill(x, 5, x + 3, 15, BRICK); H.fill(x + 1, 6, x + 2, 15, EMPTY); H.fill(x, 13, x, 15, EMPTY); H.fill(x + 3, 13, x + 3, 15, EMPTY); H.fill(x, 5, x + 3, 5, STEEL); H.bgFill(x + 1, 6, x + 2, 15, BG_BRICK); H.fill(x + 2, 4, x + 2, 12, LADDER); }
+    for (let i = 0; i + 1 < xs.length; i++) H.fill(c + xs[i] + 4, 5, c + xs[i + 1] - 1, 5, STEEL);
+    H.fill(c + xs[0] + 5, 5, c + xs[0] + 6, 5, EMPTY); H.lift(c + xs[0] + 5, 16, 2, 0, -11, { cab: 1 }); // the elevator rides up through a gap in the catwalk
+    place(H, c, o);
+  },
+  barn(H, c, w, o) { // a red barn: open doors, a hay loft with a ladder, springs in the hay
+    H.ground(c, c + w - 1, 16);
+    const a = c + 3, b = c + w - 4, m = (a + b) >> 1, top = (x) => 4 + Math.round(Math.abs(x - m) * 4 / (m - a));
+    for (let x = a; x <= b; x++) H.fill(x, top(x), x, Math.max(top(x - 1), top(x), top(x + 1)), BRICK);
+    H.fill(a, 8, a, 11, BRICK); H.fill(b, 8, b, 11, BRICK); H.fill(m, 4, m, 4, STEEL); H.fill(a, 12, a, 12, STEEL); H.fill(b, 12, b, 12, STEEL);
+    H.bgFill(a + 1, 5, b - 1, 15, BG_BRICK);
+    H.fill(a + 1, 10, m - 2, 10, CRATE); H.crumble(a + 5, 10, m - 3, 10); H.fill(m - 1, 10, m - 1, 15, LADDER); // the far end of the loft is rotten
+    H.fill(b - 5, 14, b - 3, 15, CRATE); H.sp('spring', b - 7); H.lamp(m, 4);
+    place(H, c, o);
+  },
+  maze(H, c, w, o) { // a corn maze: hedges to climb or crawl under, springs to bounce over the tall ones
+    H.ground(c, c + w - 1, 16);
+    for (const [k, top, gap] of o.walls || [[5, 11, 0], [12, 9, 1], [19, 10, 0], [27, 8, 1], [34, 11, 0]]) {
+      H.fill(c + k, top, c + k + 1, 15, DIRT); if (gap) H.fill(c + k, 14, c + k + 1, 15, EMPTY); else H.sp('spring', c + k - 2);
+    }
+    place(H, c, o);
+  },
+  // -- desert: dunes in a sandstorm, a stepped pyramid with a trap tunnel, ruins over a sinkhole
+  dunes(H, c, w, o) { // rolling dunes in a sandstorm: the gusts push you along
+    for (let k = 0; k < w; k++) H.ground(c + k, c + k, 16 - Math.round(Math.sin(k / w * Math.PI * (o.waves || 3)) * 2));
+    H.wind(c, c + w - 1, o.dir || 1, { spd: 60 });
+    for (const k of o.cacti || [4, 15, 29]) H.dc('cactus', c + k);
+    place(H, c, o);
+  },
+  pyramid(H, c, w, o) { // a stepped pyramid: climb over the top, or take the tunnel through it and mind the trap floor
+    H.ground(c, c + w - 1, 16);
+    const m = c + (w >> 1), half = (w >> 1) - 3;
+    for (let x = m - half; x <= m + half; x++) H.fill(x, 15 - Math.floor((half - Math.abs(x - m)) / 2), x, 15, DIRT);
+    H.fill(m - half, 13, m + half, 15, EMPTY); // the tunnel
+    H.fill(m + 4, 17, m + 7, 19, ACID); H.fill(m + 4, 16, m + 7, 16, BRICK); H.fill(m + 3, 16, m + 3, 16, STEEL); H.fill(m + 8, 16, m + 8, 16, STEEL); H.crumble(m + 4, 16, m + 7, 16); catchUnder(H, m + 4, m + 7, STEEL);
+    H.fill(m - 4, 8, m + 2, 11, EMPTY); H.fill(m - 5, 8, m - 5, 12, LADDER); H.fill(m + 3, 8, m + 3, 12, EMPTY); // the vault: a ladder up from the tunnel, a chute back down
+    H.bgFill(m - half, 13, m + half, 15, BG_BRICK); H.bgFill(m - 4, 8, m + 3, 12, BG_BRICK);
+    H.lamp(m - 1, 7); H.lamp(m - 10, 12); H.lamp(m + 10, 12);
+    place(H, c, o);
+  },
+  ruins(H, c, w, o) { // a ruined colonnade: broken pillars, a lintel still standing, a crumbling floor over a sinkhole
+    H.ground(c, c + w - 1, 16);
+    for (const [k, top] of o.cols || [[3, 9], [9, 9], [15, 12], [25, 10], [29, 11]]) H.fill(c + k, top, c + k, 15, BRICK);
+    H.fill(c + 3, 8, c + 9, 8, BRICK); // the lintel on its two pillars
+    H.fill(c + 18, 17, c + 22, 19, ACID); H.fill(c + 18, 16, c + 22, 16, BRICK); H.fill(c + 17, 16, c + 17, 16, STEEL); H.fill(c + 23, 16, c + 23, 16, STEEL); H.crumble(c + 18, 16, c + 22, 16); catchUnder(H, c + 18, c + 22, STEEL);
+    place(H, c, o);
+  },
+  // -- hot springs: an icy hill to slide down, terraced pools with geysers, a spa hotel with an elevator
+  slope(H, c, w, o) { // a snowy hill: up the steps on one side, then an icy slide down the other
+    const peak = o.peak || 10, up = (16 - peak) * 2;
+    for (let k = 0; k < w; k++) {
+      const top = k < up ? 16 - Math.floor((k + 1) / 2) : k < up + 3 ? peak : Math.min(16, peak + Math.floor((k - up - 3) / 3) + 1);
+      H.ground(c + k, c + k, top); if (k >= up + 3 && top < 16) H.fill(c + k, top, c + k, top, ICE);
+    }
+    place(H, c, o);
+  },
+  pools(H, c, w, o) { // terraced hot springs: duckboards over scalding pools, geysers up to the high ledges
+    H.ground(c, c + w - 1, 16);
+    for (const [k0, k1] of o.pools || [[3, 8], [17, 22], [31, 36]]) { H.fill(c + k0, 17, c + k1, 19, ACID); H.fill(c + k0, 16, c + k1, 16, CRATE); H.fill(c + ((k0 + k1) >> 1), 17, c + ((k0 + k1) >> 1), 19, STEEL); }
+    for (const [k0, k1, top] of o.terraces || [[11, 15, 13], [25, 29, 12]]) H.ground(c + k0, c + k1, top);
+    for (const [k, h] of o.vents || [[10, 8], [24, 8], [38, 7]]) H.vent(c + k, 16, h, { t: k * 0.29 });
+    for (const [k0, k1, r] of o.ledges || [[11, 15, 8], [25, 29, 8]]) H.fill(c + k0, r, c + k1, r, DIRT);
+    place(H, c, o);
+  },
+  hotel(H, c, w, o) { // a spa hotel: three floors, a ladder up one side and an elevator in the middle
+    H.ground(c, c + w - 1, 16);
+    const a = c + 2, b = c + w - 3, m = (a + b) >> 1;
+    H.fill(a, 3, b, 15, BRICK);
+    for (const [r0, r1] of [[12, 15], [8, 10], [4, 6]]) H.fill(a + 1, r0, b - 1, r1, EMPTY);
+    H.fill(m - 1, 4, m + 1, 15, EMPTY); H.fill(a, 13, a, 15, EMPTY); H.fill(b, 13, b, 15, EMPTY);
+    for (const r of [3, 7, 11]) { H.fill(a + 1, r, a + 1, r, STEEL); H.fill(m - 2, r, m - 2, r, STEEL); H.fill(m + 2, r, m + 2, r, STEEL); H.fill(b - 1, r, b - 1, r, STEEL); }
+    H.fill(a + 3, 4, a + 3, 15, LADDER); H.fill(m - 1, 3, m + 1, 3, STEEL);
+    H.lift(m - 1, 16, 3, 0, -9, { cab: 1 });
+    H.bgFill(a + 1, 4, b - 1, 15, BG_BRICK);
+    for (const k of [a + 6, b - 5]) for (const r of [3, 7, 11]) H.lamp(k, r);
+    place(H, c, o);
+  },
+  // -- lighthouse coast: piers over the sea, a windy cliff path, the lighthouse, a stone circle
+  piers(H, c, w, o) { // planks over the sea on crate stilts; rotten boards give way; a moored boat with a cabin
+    const a = c + 2, b = c + w - 3;
+    H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16); pool(H, a, b);
+    H.fill(a, 16, b, 16, CRATE); for (let k = a + 1; k <= b; k += 4) H.fill(k, 17, k, 20, CRATE);
+    for (const [k0, k1] of o.rot || [[8, 11], [27, 30]]) { H.crumble(c + k0, 16, c + k1, 16); catchUnder(H, c + k0, c + k1); }
+    const k = c + (o.boat || 15); H.fill(k, 16, k + 8, 16, BRICK); H.fill(k + 1, 17, k + 7, 17, STEEL); H.fill(k, 15, k, 15, BRICK); H.fill(k + 8, 15, k + 8, 15, BRICK);
+    H.fill(k + 3, 12, k + 5, 12, BRICK); H.fill(k + 4, 12, k + 4, 12, STEEL); H.fill(k + 5, 13, k + 5, 14, BRICK); H.bgFill(k + 3, 13, k + 4, 15, BG_BRICK); H.fill(k + 4, 6, k + 4, 11, CRATE); // cabin and mast
+    place(H, c, o);
+  },
+  cliffs(H, c, w, o) { // a cliff path climbing to the headland; gusts come in off the sea up high
+    const st = o.steps || [16, 15, 14, 12, 11, 10, 9, 9, 9, 10, 12, 14, 16], sw = w / st.length;
+    st.forEach((top, i) => H.ground(c + Math.round(i * sw), c + Math.round((i + 1) * sw) - 1, top));
+    H.wind(c, c + w - 1, -1, { r0: 0, r1: 11, socks: [c + Math.round(7 * sw)] });
+    place(H, c, o);
+  },
+  lighthouse(H, c, w, o) { // in through the door, up the ladders past two landings, out onto the gallery
+    H.ground(c, c + w - 1, 16);
+    const m = c + (w >> 1);
+    H.fill(m - 3, 2, m + 3, 15, BRICK); H.fill(m - 2, 3, m + 2, 15, EMPTY); H.fill(m - 3, 12, m - 3, 15, EMPTY); H.fill(m + 3, 12, m + 3, 15, EMPTY);
+    H.fill(m - 2, 11, m + 2, 11, STEEL); H.fill(m - 2, 7, m + 2, 7, STEEL); H.fill(m - 3, 2, m + 6, 2, STEEL); // landings, and the gallery out over the sea side
+    H.fill(m + 1, 11, m + 1, 15, LADDER); H.fill(m - 1, 7, m - 1, 10, LADDER); H.fill(m + 2, 2, m + 2, 6, LADDER);
+    H.fill(m - 1, 0, m + 1, 0, STEEL); H.fill(m - 1, 1, m - 1, 1, ICE); H.fill(m + 1, 1, m + 1, 1, ICE); // the lamp room
+    H.bgFill(m - 2, 3, m + 2, 15, BG_BRICK);
+    for (const r of [7, 11]) H.lamp(m, r);
+    place(H, c, o);
+  },
+  stones(H, c, w, o) { // a stone circle on the headland: trilithons to climb, lintels to stand on
+    H.ground(c, c + w - 1, 16);
+    for (const k of o.at || [4, 17, 30]) { H.fill(c + k, 11, c + k, 15, BRICK); H.fill(c + k + 3, 11, c + k + 3, 15, BRICK); H.fill(c + k, 10, c + k + 3, 10, BRICK); }
+    place(H, c, o);
+  },
+  // -- water works: sewer channels, a bottling line, a cistern that floods, a pump hall
+  sluice(H, c, w, o) { // a sewer under a low vault: sludge runs under the grating, rock hangs low
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 8, DIRT);
+    for (let k = 3; k < w - 2; k += 8) H.fill(c + k, 9, c + k + 2, 10 + (k % 3 === 0 ? 1 : 0), DIRT); // the vault ribs
+    for (const [k0, k1] of o.chan || [[6, 15], [22, 32]]) { H.fill(c + k0, 17, c + k1, 17, EMPTY); H.fill(c + k0, 18, c + k1, 19, ACID); H.fill(c + k0, 16, c + k1, 16, STEEL); H.bgFill(c + k0, 17, c + k1, 17, BG_BRICK); } // sludge under the grating
+    for (const k of o.drips || [5, 13, 21, 29, 37]) if (k < w) H.sp('icicle', c + k, 0, { hang: roofOf(c + k, 12), rock: true });
+    for (const k of [1, 9, 17, 25, 33]) if (k < w) H.lamp(c + k, roofOf(c + k, 12));
+    place(H, c, o);
+  },
+  cistern(H, c, w, o) { // once you are in, acid floods up to the red line: climb the scaffolds to the high way out
+    H.ground(c, c + w - 1, 0);
+    const a = c + 4, b = c + w - 5;
+    H.fill(c, 12, a - 1, 15, EMPTY); H.fill(a, 3, b, 19, EMPTY); H.fill(b + 1, 5, c + w - 1, 8, EMPTY);
+    for (const [k0, k1, r] of o.decks || [[0, 5, 16], [9, 13, 14], [16, 20, 12], [23, w - 9, 9]]) H.fill(a + k0, r, a + k1, r, STEEL);
+    H.fill(a + 6, 16, a + 6, 19, LADDER); H.fill(a + 8, 14, a + 8, 19, LADDER); H.fill(a + 15, 12, a + 15, 13, LADDER); H.fill(a + 22, 9, a + 22, 11, LADDER);
+    H.bgFill(a, 3, b, 19, BG_BRICK);
+    H.flood(a, b, 20, 9, a + 3, b);
+    for (const k of [6, 14, 26]) H.lamp(a + k, 2);
+    place(H, c, o);
+  },
+  pumphall(H, c, w, o) { // a pump hall: giant pipes to run along, steam bursting from the floor, a lift up to the high pipe
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 3, DIRT);
+    H.fill(c + 4, 11, c + 15, 12, STEEL); H.fill(c + 19, 7, c + w - 5, 8, STEEL); // the pipes
+    H.vent(c + 2, 16, 6, { col: '#c9e08f' }); H.vent(c + 17, 16, 8, { col: '#c9e08f', t: 1.2 });
+    H.lift(c + w - 4, 16, 3, 0, -9, { cab: 4 });
+    for (const k of [8, 24]) H.lamp(c + k, 3);
+    place(H, c, o);
+  },
+  // -- downtown: climb a block, jump the rooftops, ride the window-cleaning gondolas, the big billboard
+  facade(H, c, w, o) { // an apartment block: climb the fire-escape ladder up the front, cross the roof
+    H.ground(c, c + w - 1, 16);
+    const a = c + 4, b = c + w - 1, top = o.top || 5;
+    H.fill(a, top, b, 15, BRICK); lobby(H, a, b);
+    for (let r = top + 2; r < 12; r += 3) for (let x = a + 2; x < b - 1; x += 3) { H.fill(x, r, x, r, EMPTY); H.bgFill(x, r, x, r, BG_BRICK); } // windows
+    H.fill(a - 1, top, a - 1, 12, LADDER); H.fill(a - 3, 14, a - 2, 15, CRATE); // the fire escape, bins at the bottom
+    place(H, c, o);
+  },
+  rooftops(H, c, w, o) { // roofs at different heights with alleys between: jump the gaps, or climb back up from the alley
+    H.ground(c, c + w - 1, 16);
+    for (const [k0, k1, top] of o.roofs || [[0, 8, 6], [11, 18, 8], [21, 28, 5], [31, w - 1, 7]]) {
+      H.fill(c + k0, top, c + k1, 15, BRICK); lobby(H, c + k0, c + k1); if (k0) H.fill(c + k0 - 1, top, c + k0 - 1, 15, LADDER);
+      for (let r = top + 2; r < 12; r += 3) for (let x = c + k0 + 1; x < c + k1; x += 3) { H.fill(x, r, x, r, EMPTY); H.bgFill(x, r, x, r, BG_BRICK); }
+    }
+    H.wind(c, c + w - 1, -1, { r0: 0, r1: 8, socks: [c + 13] });
+    place(H, c, o);
+  },
+  gondola(H, c, w, o) { // two towers with a long drop between; window cleaners' gondolas shuttle across
+    H.ground(c, c + w - 1, 16);
+    H.fill(c, 6, c + 7, 15, BRICK); H.fill(c + w - 8, 6, c + w - 1, 15, BRICK); lobby(H, c, c + 7); lobby(H, c + w - 8, c + w - 1);
+    for (const [x0, x1] of [[c, c + 7], [c + w - 8, c + w - 1]]) for (let r = 8; r < 12; r += 3) for (let x = x0 + 1; x < x1; x += 3) { H.fill(x, r, x, r, EMPTY); H.bgFill(x, r, x, r, BG_BRICK); }
+    H.lift(c + 8, 6, 3, w - 19, 0, { cab: 4, spd: 48 });
+    H.fill(c + w - 9, 6, c + w - 9, 15, LADDER);
+    place(H, c, o);
+  },
+  billboard(H, c, w, o) { // a giant billboard on scaffolding over the plaza: catwalks, ladders, neon
+    H.ground(c, c + w - 1, 16);
+    const a = c + 6, b = c + w - 8;
+    H.fill(a, 3, b, 6, BRICK); H.fill(a + 2, 6, b - 2, 6, STEEL); H.fill(a - 1, 9, b + 1, 9, STEEL); // the board, and the catwalk under it
+    H.fill(a - 4, 12, a + 4, 12, STEEL); H.fill(b - 4, 12, b + 3, 12, STEEL); // lower catwalks
+    for (const x of [a + 2, b - 2]) H.fill(x, 9, x, 15, LADDER);
+    H.dc('neon', (a + b) >> 1, { from: 0, text: o.text || 'DETOX YOUR PHONE' });
+    place(H, c, o);
+  },
+  // -- orange groves: terraced orchards, a packhouse with belts, the juice pipeline, a rail depot
+  grove(H, c, w, o) { // terraced orange groves; crate stacks of oranges ready to ship
+    const st = o.steps || [16, 15, 14, 14, 15, 16, 16, 14, 13, 13, 14, 16], sw = w / st.length;
+    st.forEach((top, i) => H.ground(c + Math.round(i * sw), c + Math.round((i + 1) * sw) - 1, top));
+    for (let k = 2; k < w - 1; k += 5) H.dc('orange', c + k);
+    for (const k of o.stacks || [10, 27]) { const s = surf(c + k, 0); H.fill(c + k, s - 2, c + k + 1, s - 1, CRATE); }
+    place(H, c, o);
+  },
+  pipeline(H, c, w, o) { // the juice pipeline crosses a canyon: run along the pipe; pressure valves blast steam
+    H.ground(c, c + 3, 16); H.ground(c + w - 4, c + w - 1, 16); pool(H, c + 4, c + w - 5);
+    H.fill(c + 2, 14, c + w - 3, 15, STEEL); for (let k = c + 8; k < c + w - 6; k += 9) H.fill(k, 16, k + 1, 20, STEEL);
+    const g = c + (w >> 1); H.fill(g - 1, 14, g + 1, 15, CRATE); H.crumble(g - 1, 14, g + 1, 15); // a patched joint that gives way
+    for (const k of o.valves || [6, 14, 26, 33]) H.vent(c + k, 14, 7, { col: '#ffd9a0', t: k * 0.41 });
+    place(H, c, o);
+  },
+  depot(H, c, w, o) { // a rail depot: a flatcar rolls along the track, a boxcar, a gantry over it all
+    H.ground(c, c + w - 1, 16); H.fill(c, 16, c + w - 1, 16, STEEL);
+    H.fill(c + 19, 12, c + 25, 14, BRICK); H.fill(c + 19, 15, c + 25, 15, STEEL); // a boxcar
+    H.lift(c + 4, 15, 5, 10, 0, { cab: 0, spd: 30, pause: 2 }); // a flatcar
+    H.fill(c + 3, 5, c + w - 4, 5, STEEL); for (const k of [c + 2, c + w - 3]) H.fill(k, 5, k, 15, LADDER);
+    for (const k of [c + 10, c + 30]) H.fill(k, 6, k + 1, 7, CRATE);
+    place(H, c, o);
+  },
+});
+// more arenas: each starts at column 176 and keeps the extraction pad behind a gate
+const bossAt = (H, o, c, def, from = 0) => H.sp(o.boss, c, from, Object.assign(def, o.extra));
+Object.assign(ARENA, {
+  airstrip(H, o) { // windy tarmac with two lookout platforms on ladder legs
+    H.ground(176, 235, 16); H.fill(177, 16, 225, 16, STEEL);
+    for (const k of [188, 212]) { H.fill(k, 10, k + 3, 10, STEEL); H.fill(k, 11, k, 15, LADDER); H.fill(k + 3, 11, k + 3, 15, LADDER); }
+    H.wind(176, 225, -1, { socks: [181, 221] }); H.sp('ammo', 200);
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+  cavern(H, o) { // a sand pit under a rock roof: rock fangs and stalactites overhead
+    H.ground(176, 177, 12); H.fill(178, 12, 223, 17, DIRT); H.fill(178, 18, 223, 21, STEEL); H.fill(224, 0, 225, 21, STEEL); H.fill(226, 12, 235, 21, STEEL);
+    H.fill(176, 0, 235, 1, DIRT); for (const k of [181, 193, 209, 220]) H.fill(k, 2, k + 1, 3 + (k % 3), DIRT);
+    for (const k of [187, 201, 215]) H.sp('icicle', k, 0, { hang: 1, rock: true });
+    bossAt(H, o, 200, { ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 2, 11] }, 8);
+  },
+  bridge(H, o) { // a steel bridge over a gorge of acid (bog, or juice): two brick perches above the deck
+    H.fill(176, 16, 225, 16, STEEL); pool(H, 176, 225); for (const k of [186, 200, 214]) H.fill(k, 17, k, 20, STEEL);
+    H.fill(176, 15, 177, 15, BRICK); H.fill(224, 15, 225, 15, BRICK);
+    for (const k of [189, 209]) { H.fill(k, 11, k + 4, 11, BRICK); H.fill(k + 2, 11, k + 2, 11, STEEL); }
+    H.ground(226, 235, 16); H.fill(226, 0, 227, 15, STEEL);
+    bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+  dome(H, o) { // a great dome with an anti-gravity field in the middle and decks to float up to
+    H.ground(176, 235, 16);
+    const a = 181, b = 224, m = (a + b) / 2, half = (b - a) / 2, top = (x) => 2 + Math.round(((x - m) / half) ** 2 * 8);
+    for (let x = a; x <= b; x++) H.fill(x, top(x), x, Math.max(top(Math.max(a, x - 1)), top(x), top(Math.min(b, x + 1))), (x - a) % 4 ? BRICK : STEEL);
+    H.fill(a, 10, a, 12, BRICK); H.fill(b, 10, b, 12, BRICK); H.fill(a, 12, a, 12, STEEL); H.fill(b, 12, b, 12, STEEL);
+    H.bgFill(a + 1, 4, b - 1, 15, BG_BRICK);
+    for (const [k0, k1, r] of [[186, 189, 11], [216, 219, 11], [199, 206, 7]]) H.fill(k0, r, k1, r, STEEL);
+    H.grav(196, 3, 209, 15, 0.5);
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] }, 8);
+  },
+  crane(H, o) { // a container yard: lattice towers with lookouts, two lifts, container stacks to hide behind
+    H.ground(176, 235, 16);
+    for (const k of [180, 222]) { H.fill(k, 6, k + 1, 15, LADDER); H.fill(k - 1, 6, k + 2, 6, STEEL); }
+    H.lift(186, 16, 3, 0, -6); H.lift(209, 10, 3, 0, 6);
+    for (const [k0, k1, r] of [[196, 197, 14], [206, 207, 13], [213, 215, 15]]) H.fill(k0, r, k1, 15, CRATE);
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 200, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+  vents(H, o) { // a geyser field: steam vents throw you up to the floating ledges
+    H.ground(176, 235, 16);
+    for (const [k, t] of [[184, 0], [196, 1.1], [208, 2.2], [219, 0.6]]) H.vent(k, 16, 9, { t, col: o.col || '#e6eef8' });
+    for (const [k0, k1, r] of [[187, 191, 8], [210, 214, 8], [198, 205, 11]]) H.fill(k0, r, k1, r, DIRT);
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] }, 12);
+  },
+  headland(H, o) { // a cliff top high over the sea, swept by gusts, with standing stones for cover
+    H.ground(176, 235, 11); H.fill(176, 11, 176, 15, LADDER);
+    for (const k of [189, 206, 218]) H.fill(k, 8, k, 10, BRICK);
+    for (const k of [194, 212]) { H.fill(k, 5, k + 1, 10, DIRT); H.fill(k - 1, 5, k - 1, 10, LADDER); } // sea stacks to climb: the kopter flies high here
+    H.wind(178, 225, -1, { socks: [183, 223] });
+    H.fill(226, 0, 227, 10, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 10] });
+  },
+  rooftop(H, o) { // a studio on a roof: a water tower, air vents, a neon sign
+    H.ground(176, 235, 16); H.fill(176, 16, 225, 16, STEEL);
+    H.fill(183, 8, 186, 11, BRICK); H.fill(183, 12, 186, 12, STEEL); H.fill(183, 13, 183, 15, LADDER); H.fill(186, 13, 186, 15, LADDER); // the water tower
+    for (const k of [196, 210]) H.fill(k, 15, k + 1, 15, STEEL); // air vents
+    H.dc('neon', 206, { text: o.text || 'LIKE + SUBSCRIBE', back: true });
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 200, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+});
 // a mission made of pieces left to right (they must add up to 176 columns), then an arena
-const pieces = (segs, arena, deco) => (H) => { let c = 0; for (const [kind, w, o] of segs) { SEG[kind](H, c, w, o || {}); c += w; } ARENA[arena.kind](H, arena); if (deco) deco(H); };
+const pieces = (segs, arena, deco) => Object.assign((H) => { let c = 0; for (const [kind, w, o] of segs) { SEG[kind](H, c, w, o || {}); c += w; } ARENA[arena.kind](H, arena); if (deco) deco(H); }, { segs, arena });
+const openRow = (c) => { let r = 0; while (r < LH - 1 && isSolidT(tileAt(c, r))) r++; return r; }; // the first open row from the top (under a rock roof)
+const intelAt = (k, from = 0) => ['pickup', k, from, { item: 'intel' }];
 const NEW_LEVELS = [
-  { name: 'CHEMTRAIL AIRFIELD', sub: 'Topple the spray towers, down the Chemtrail Copter', theme: 'sky', cages: 3, pad: [231, 16],
-    brief: 'The League says planes spray mind-control mist, and to prove it they built their own spraying planes. Topple their three spray towers, free our people and shoot down the Chemtrail Copter.',
+  { name: 'CHEMTRAIL AIRFIELD', sub: 'Topple the spray towers, down the Chemtrail Copter', theme: 'sky', look: { cityKind: 'hangars', trails: true }, cages: 3, pad: [231, 16],
+    brief: 'The League says planes spray mind-control mist, and to prove it they built their own spraying planes. Topple their three spray towers, free our people and shoot down the Chemtrail Copter. The wind on the runway is strong: watch the windsocks.',
     debrief: 'The skies are clear. A flight log points to a cave full of healing crystals.',
     objectives: [{ id: 'radio', text: 'Topple the spray towers', need: 3, req: true }, { id: 'boss', text: 'Shoot down the Chemtrail Copter', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Pilot notes: the mist is water. Do not tell the customers.', 'Order form: 500 tin-foil hats, extra shiny.', 'Map: crystals shipped in from the Quartz Caverns.'],
-    build: pieces([['camp', 20, { sign: 'CHEMTRAILS ARE REAL', decor: 'palm' }],
-      ['yard', 40, { put: [['grunt', 2], ['shield', 7], ['dog', 10], ['target', 14, 0, { skin: 'radio' }], ['jetpack', 18], ['fueltank', 22], ['camdrone', 24], ['cage', 26], ['rocketeer', 30], ['pickup', 34, 0, { item: 'intel' }], ['flag', 38]] }],
-      ['hall', 40, { put: [['grunt', 8, 12], ['target', 20, 0, { skin: 'radio' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['alarm', 37], ['flag', 39]] }],
-      ['pit', 36, { put: [['grunt', 10], ['bomber', 18], ['itemcrate', 32], ['pickup', 33, 0, { item: 'intel' }]] }],
-      ['fort', 40, { put: [['mechsuit', 2], ['sniper', 9], ['target', 20, 0, { skin: 'radio' }], ['grenadier', 22], ['guncrate', 25], ['cage', 30], ['pickup', 34, 0, { item: 'intel' }], ['mortar', 35], ['flag', 38]] }]],
-      { kind: 'towers', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays the sky with nonsense.', hpMul: 1.4 } }) },
+    build: pieces([['camp', 20, { sign: 'CHEMTRAILS ARE REAL' }],
+      ['runway', 44, { put: [['grunt', 6], ['dog', 12], ['target', 16, 0, { skin: 'radio' }], ['shield', 20], ['grunt', 24], ['fueltank', 31], ['jetpack', 33], ['cage', 39], intelAt(41), ['flag', 43]] }],
+      ['wreck', 36, { put: [['grunt', 9, 12], ['propane', 13, 12], ['medic', 16, 12], ['cage', 20, 12], intelAt(23, 12), ['sniper', 14], ['grenadier', 22], ['heavy', 32], ['flag', 34, 6]] }],
+      ['hangar', 36, { put: [['mechsuit', 0, 6], ['itemcrate', 6, 12], ['target', 12, 6, { skin: 'radio' }], ['shield', 15, 12], ['alarm', 20, 12], ['rocketeer', 24, 6], ['grunt', 28, 6], ['cage', 30, 6], ['flag', 35]] }],
+      ['ctower', 40, { put: [['dog', 4], ['turret', 9], ['grunt', 17, 11], ['sniper', 18, 2], intelAt(22, 2), ['bomber', 27], ['target', 30, 0, { skin: 'radio' }], ['strike', 33], ['guru', 35], ['flag', 39]] }]],
+      { kind: 'airstrip', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays the sky with nonsense.', hpMul: 1.4 } }) },
   { name: 'QUARTZ CAVERNS', sub: 'Smash the charging vats, kill the Quartz Queen', theme: 'cave', cages: 3, pad: [230, 12],
-    brief: 'Deep under the mountains the League charges crystals to sell as medicine. Smash the three crystal-charging vats and kill the Quartz Queen, a crawler grown in the dark.',
+    brief: 'Deep under the mountains the League charges crystals to sell as medicine. Smash the three crystal-charging vats and kill the Quartz Queen, a crawler grown in the dark. Stalactites fall when you walk under them, and the old plank bridge is rotten: the mine cart is safer.',
     debrief: 'The caverns are quiet. The crystal invoices were paid by a marsh company that sells bad air.',
     objectives: [{ id: 'vat', text: 'Smash the charging vats', need: 3, req: true }, { id: 'boss', text: 'Kill the Quartz Queen', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Label: crystal, charged by moonlight, 400 dollars.', 'Lab note: the crystals do nothing. Price goes up.', 'Invoice: paid by Miasma Holdings, Marsh Road.'],
-    build: pieces([['camp', 20, { sign: 'CRYSTALS HEAL', decor: 'crystal' }],
-      ['cliff', 40, { put: [['grunt', 8, 13], ['dog', 14, 13], ['sniper', 18], ['target', 20, 13, { skin: 'vat' }], ['cage', 28, 13], ['pickup', 33], ['flag', 38]] }],
-      ['pit', 36, { bridge: ICE, put: [['jetpack', 12], ['camdrone', 16], ['shield', 20], ['pickup', 33, 0, { item: 'intel' }]] }],
-      ['hall', 40, { put: [['target', 10, 12, { skin: 'vat' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }],
-      ['yard', 40, { put: [['brute', 10], ['target', 16, 0, { skin: 'vat' }], ['flamer', 22], ['preacher', 24], ['cage', 26], ['guru', 28], ['itemcrate', 31], ['pickup', 34, 0, { item: 'intel' }], ['flag', 38]] }]],
-      { kind: 'sand', boss: 'crawler', extra: { name: 'QUARTZ QUEEN', sub: 'Grown in the dark on good vibes.', hpMul: 1.3 } },
-      (H) => { for (let c = 3; c < 232; c += 9) H.dc('crystal', c); }) }, // glowing crystals light the way
+    build: pieces([['camp', 20, { sign: 'CRYSTALS HEAL', decor: 'crystal', ceil: 6 }],
+      ['tunnels', 40, { rooms: [[10, 17, 9]], drips: [5, 21, 28, 35], lamps: [12, 26], put: [['grunt', 6], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['cage', 16], ['shield', 24], ['sniper', 30], intelAt(33), ['flag', 38]] }],
+      ['shaft', 40, { put: [['grunt', 3, 12], ['heavy', 9, 3], ['cage', 13, 3], intelAt(23, 3), ['rocketeer', 27, 3], ['grunt', 36, 12], ['flag', 38, 12]] }],
+      ['chasm', 36, { ceil: 5, put: [['jetpack', 2, 6], ['grunt', 8, 6], ['camdrone', 14, 6], ['grunt', 20, 6], ['target', 33, 6, { skin: 'vat' }], ['flag', 35, 6]] }],
+      ['geode', 40, { put: [['brute', 4, 8], ['target', 9, 8, { skin: 'vat' }], ['preacher', 14, 8], ['cage', 20, 8], ['guru', 24, 8], intelAt(28, 8), ['flamer', 31, 8], ['itemcrate', 34, 8], ['flag', 39, 8]] }]],
+      { kind: 'cavern', boss: 'crawler', extra: { name: 'QUARTZ QUEEN', sub: 'Grown in the dark on good vibes.', hpMul: 1.3 } },
+      (H) => { for (let c = 3; c < 232; c += 9) H.dc('crystal', c, { from: openRow(c) }); }) }, // glowing crystals light the way
   { name: 'MIASMA MARSH', sub: 'Wipe the servers, stop the Miasma Machine', theme: 'swamp', cages: 3, pad: [231, 16],
-    brief: 'Miasma Holdings says illness comes from bad air, and sells air filters full of nothing. Wipe their two research servers and stop the Miasma Machine before it fogs the whole coast.',
+    brief: 'Miasma Holdings says illness comes from bad air, and sells air filters full of nothing. Wipe their two research servers and stop the Miasma Machine before it fogs the whole coast. The boardwalks are rotten in places, and the bog gas vents will throw you sky high.',
     debrief: 'The fog is lifting. Their best customer was an observatory that sells horoscopes.',
     objectives: [{ id: 'server', text: 'Wipe the research servers', need: 2, req: true }, { id: 'boss', text: 'Stop the Miasma Machine', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Brochure: germs are a myth. Breathe our premium air.', 'Memo: hide the microscope. Customers keep looking in it.', 'Receipt: 10,000 air filters to the Zodiac Observatory.'],
     build: pieces([['camp', 20, { sign: 'BAD AIR CAUSES ALL', decor: 'pine' }],
-      ['pit', 40, { put: [['grunt', 10], ['dog', 16], ['bomber', 24], ['cage', 37]] }],
-      ['yard', 40, { top: 15, put: [['target', 6, 0, { skin: 'server' }], ['shield', 12], ['flamer', 18], ['fueltank', 21], ['heavy', 26], ['pickup', 30, 0, { item: 'intel' }], ['mine', 33], ['mortar', 36], ['flag', 38]] }],
-      ['chimneys', 36, { put: [['grenadier', 4], ['preacher', 12], ['rocketeer', 16], ['cage', 20], ['medic', 28], ['pickup', 32, 0, { item: 'intel' }], ['flag', 34]] }],
-      ['hall', 40, { put: [['target', 10, 12, { skin: 'server' }], ['camdrone', 14], ['grunt', 18, 12], ['sniper', 26, 12], ['cage', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['alarm', 37], ['flag', 39]] }]],
-      { kind: 'flat', boss: 'tank', extra: { name: 'MIASMA MACHINE', sub: 'Pumps out bad air, and bad ideas.', hpMul: 1.2 } }) },
+      ['geysers', 36, { col: '#a6d854', vents: [[6, 8], [19, 8], [30, 7]], ledges: [[8, 13, 8], [21, 26, 8], [32, 35, 9]], put: [['shield', 3], ['target', 10, 0, { skin: 'server' }], ['grenadier', 14], ['flamer', 16], ['mortar', 24], ['fueltank', 27], intelAt(33), ['flag', 34, 10]] }],
+      ['mill', 40, { put: [['target', 10, 12, { skin: 'server' }], ['grunt', 14, 12], ['preacher', 16], ['medic', 18, 6], ['heavy', 20, 12], ['cage', 24, 6], ['sniper', 28, 6], ['alarm', 30, 12], ['flag', 39]] }],
+      ['boardwalk', 44, { rot: [[9, 14], [25, 29]], huts: [18, 34], put: [['grunt', 5], ['dog', 12], ['cage', 20, 10], ['bomber', 26], ['grunt', 31], intelAt(36, 10), ['flag', 42]] }],
+      ['trench', 36, { put: [['grunt', 5], ['rocketeer', 8], ['mine', 10], ['cage', 13], ['guru', 17], ['grunt', 21], ['mortar', 25], intelAt(29), ['itemcrate', 31], ['flag', 34]] }]],
+      { kind: 'bridge', boss: 'tank', extra: { name: 'MIASMA MACHINE', sub: 'Pumps out bad air, and bad ideas.', hpMul: 1.2 } }) },
   { name: 'ZODIAC OBSERVATORY', sub: 'Knock down the horoscope dishes, scrap the Zodiac Mech', theme: 'astro', cages: 3, pad: [231, 16],
-    brief: 'The Zodiac Observatory points its dishes at the stars to sell horoscopes. Knock down its three dishes and scrap the Zodiac Mech on the summit.',
+    brief: 'The Zodiac Observatory points its dishes at the stars to sell horoscopes. Knock down its three dishes and scrap the Zodiac Mech under the great dome. Their astral fields cancel gravity: jump in one and you float.',
     debrief: 'No more horoscopes. The dish money went to a factory that sells perpetual motion machines.',
     objectives: [{ id: 'radio', text: 'Knock down the horoscope dishes', need: 3, req: true }, { id: 'boss', text: 'Scrap the Zodiac Mech', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Horoscope for Leo: avoid scientists today.', 'Telescope log: pointed at the stars once. Too confusing.', 'Bank note: profits sent to the Perpetual Motion Works.'],
     build: pieces([['camp', 20, { sign: 'YOUR STARS SAY RUN', decor: 'pine' }],
-      ['fort', 40, { put: [['sniper', 9], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 22], ['cage', 26], ['jetpack', 30], ['pickup', 34, 0, { item: 'intel' }], ['mortar', 35], ['flag', 38]] }],
-      ['cliff', 40, { icicles: true, put: [['grunt', 8, 13], ['heavy', 16, 13], ['target', 22, 0, { skin: 'radio' }], ['preacher', 26, 13], ['cage', 28, 13], ['guru', 30], ['pickup', 33, 13, { item: 'intel' }], ['flag', 38]] }],
-      ['yard', 40, { put: [['target', 8, 0, { skin: 'radio' }], ['shield', 12], ['brute', 18], ['itemcrate', 22], ['camdrone', 24], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['flamer', 33], ['flag', 38]] }],
-      ['pit', 36, { bridge: ICE, put: [['dog', 10], ['jetpack', 18], ['grenadier', 33]] }]],
-      { kind: 'flat', boss: 'boss', extra: { name: 'ZODIAC MECH', sub: 'It is a Leo. It is angry.', hpMul: 1.5 } }) },
+      ['switchback', 40, { put: [['grunt', 6], ['sniper', 15], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 24], intelAt(29), ['jetpack', 33], ['flag', 38]] }],
+      ['dishes', 36, { put: [['grunt', 12, 12], ['target', 14, 0, { skin: 'radio' }], ['cage', 18, 12], ['sniper', 20], intelAt(24, 12), ['mortar', 25], ['dog', 31], ['flag', 34]] }],
+      ['dome', 40, { put: [['grunt', 5, 4], ['heavy', 12, 4], ['cage', 16, 4], ['guru', 22, 4], ['target', 25, 6, { skin: 'radio' }], ['medic', 30, 4], ['flag', 39]] }],
+      ['ridge', 40, { put: [['grunt', 3], ['shield', 9], ['jetpack', 18], intelAt(20), ['camdrone', 26], ['brute', 28], ['cage', 30], ['grenadier', 34], ['strike', 36], ['flag', 39]] }]],
+      { kind: 'dome', boss: 'boss', extra: { name: 'ZODIAC MECH', sub: 'It is a Leo. It is angry.', hpMul: 1.5 } }) },
   { name: 'PERPETUAL MOTION WORKS', sub: 'Smash the demo engines, stop the Pitchman', theme: 'rust', cages: 3, pad: [231, 16],
-    brief: 'The Works sell machines that run forever on nothing, to anyone who pays in advance. Smash the three demo engines and stop the Pitchman before the big investor show.',
-    debrief: 'The show is cancelled. The investors were all League members. They have scattered to four hideouts on the road to the Citrus Citadel.',
+    brief: 'The Works sell machines that run forever on nothing, to anyone who pays in advance. Smash the three demo engines and stop the Pitchman before the big investor show. The conveyor belts never stop, and the foundry floor will not hold you for long.',
+    debrief: 'The show is cancelled. The investors were all League members. They have scattered to hideouts all along the road to the Citrus Citadel.',
     objectives: [{ id: 'vat', text: 'Smash the demo engines', need: 3, req: true }, { id: 'boss', text: 'Stop the Pitchman', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Sales script: it runs forever. Do not ask about the plug.', 'Engineer note: the plug is behind the curtain.', 'Guest list: King Citrus, front row. Paid in oranges.'],
     build: pieces([['camp', 20, { sign: 'FREE ENERGY FOREVER' }],
-      ['hall', 40, { put: [['target', 10, 12, { skin: 'vat' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }],
-      ['chimneys', 36, { put: [['rocketeer', 4], ['shield', 12], ['target', 18, 0, { skin: 'vat' }], ['jetpack', 26], ['cage', 30], ['mortar', 32], ['flag', 34]] }],
-      ['pit', 40, { put: [['grunt', 12], ['bomber', 20], ['camdrone', 26], ['pickup', 37, 0, { item: 'intel' }]] }],
-      ['yard', 40, { put: [['mechsuit', 2], ['target', 6, 0, { skin: 'vat' }], ['brute', 12], ['fueltank', 16], ['guru', 20], ['preacher', 23], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['heavy', 34], ['flag', 38]] }]],
-      { kind: 'stage', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Just pay first.', hpMul: 1.3 } }) },
+      ['assembly', 40, { roof: true, put: [['grunt', 8, 12], ['barrel', 12, 12], ['target', 16, 5, { skin: 'vat' }], ['shield', 21, 12], ['heavy', 28, 5], ['cage', 31, 5], ['grunt', 33, 12], ['flag', 39, 5]] }],
+      ['foundry', 36, { put: [['flamer', 4], ['grunt', 10], ['target', 13, 0, { skin: 'vat' }], ['rocketeer', 20], intelAt(25), ['medic', 31], ['flag', 34]] }],
+      ['crane', 40, { put: [['grunt', 6, 6], ['cage', 14, 8], intelAt(12, 6), ['jetpack', 15, 6], ['target', 18, 6, { skin: 'vat' }], ['heavy', 22, 6], ['mortar', 30, 6], ['flag', 38, 6]] }],
+      ['warehouse', 40, { put: [['mechsuit', 1, 13], ['cage', 4, 7], ['brute', 9, 13], ['preacher', 18], ['guru', 24], intelAt(28, 7), ['heavy', 34], ['flag', 39]] }]],
+      { kind: 'crane', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Just pay first.', hpMul: 1.3 } }) },
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...NEW_LEVELS); // they come before the Citrus Citadel, which stays the finale
 const MORE_LEVELS = [
   { name: 'CROP CIRCLE FIELDS', sub: 'Topple the beacon masts, pop the UFO Hoax Balloon', theme: 'sky', cages: 3, pad: [231, 16],
-    brief: 'League farmers flatten the wheat into circles and sell tickets to see the aliens. Topple their three fake alien beacons and pop the UFO Hoax Balloon that hovers over the fields at night.',
+    brief: 'League farmers flatten the wheat into circles and sell tickets to see the aliens. Topple their three fake alien beacons and pop the UFO Hoax Balloon that hovers over the fields at night. The hay bales hide springs, and the grain elevator goes all the way up.',
     debrief: 'The aliens were plywood. The ticket money went to a pyramid in the desert that claims to make free power.',
     objectives: [{ id: 'radio', text: 'Topple the beacon masts', need: 3, req: true }, { id: 'boss', text: 'Pop the UFO Hoax Balloon', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Flyer: SEE REAL ALIENS. Children half price.', 'Shopping list: rope, planks, 400 glow sticks, one balloon.', 'Bank transfer: profits to Pyramid Power Ltd.'],
-    build: pieces([['camp', 20, { sign: 'THEY ARE HERE', decor: 'palm' }],
-      ['yard', 40, { put: [['grunt', 3], ['dog', 8], ['target', 12, 0, { skin: 'radio' }], ['scout', 16], ['shield', 20], ['cage', 24], ['grenadier', 28], ['pickup', 32, 0, { item: 'intel' }], ['camdrone', 34], ['flag', 38]] }],
-      ['pit', 36, { put: [['grunt', 10], ['bomber', 18], ['jetpack', 26], ['pickup', 33, 0, { item: 'intel' }]] }],
-      ['fort', 40, { put: [['rocketeer', 2], ['target', 18, 0, { skin: 'radio' }], ['heavy', 22], ['guncrate', 25], ['cage', 30], ['mortar', 35], ['flag', 38]] }],
-      ['hall', 40, { put: [['target', 10, 12, { skin: 'radio' }], ['medic', 22, 12], ['cage', 26, 12], ['preacher', 28, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }]],
+    build: pieces([['camp', 20, { sign: 'THEY ARE HERE', decor: 'scarecrow' }],
+      ['field', 40, { put: [['grunt', 4], ['dog', 9], ['target', 15, 0, { skin: 'radio' }], ['scout', 20], ['shield', 27], ['cage', 29], ['grenadier', 33], intelAt(36), ['flag', 39]] }],
+      ['silos', 40, { put: [['grunt', 9], ['cage', 13], ['target', 16, 0, { skin: 'radio' }], ['camdrone', 18], ['rocketeer', 22], intelAt(29, 6), ['heavy', 32], ['flag', 38]] }],
+      ['barn', 36, { put: [['cage', 4, 6], ['grunt', 8, 6], ['medic', 14, 11], ['preacher', 20, 11], ['itemcrate', 22, 11], ['shield', 26, 6], ['flag', 35]] }],
+      ['maze', 40, { put: [['guncrate', 2], ['grunt', 9], ['dog', 16], ['target', 23, 0, { skin: 'radio' }], ['brute', 25], intelAt(31), ['mortar', 38], ['flag', 39]] }]],
       { kind: 'towers', boss: 'blimp', extra: { name: 'UFO HOAX BALLOON', sub: 'Lit from inside. Full of hot air.', hpMul: 1.1 } }) },
   { name: 'PYRAMID POWER PLANT', sub: 'Smash the pyramid batteries, kill the Sand Scarab', theme: 'desert', cages: 3, pad: [230, 12],
-    brief: 'The League says a pyramid shape gathers free energy, and sells the power to whole towns. Smash the three pyramid batteries and kill the Sand Scarab that guards the vault.',
+    brief: 'The League says a pyramid shape gathers free energy, and sells the power to whole towns. Smash the three pyramid batteries and kill the Sand Scarab that guards the vault. A sandstorm blows across the dunes, and the tomb floors are trapped.',
     debrief: 'The batteries were car batteries. The power bill was paid by a hot spring spa up in the mountains.',
     objectives: [{ id: 'vat', text: 'Smash the pyramid batteries', need: 3, req: true }, { id: 'boss', text: 'Kill the Sand Scarab', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Sales sheet: one pyramid hat, 99 dollars, sharpens razors.', 'Engineer note: unplug the diesel before the tour comes.', 'Invoice: power bill sent to Hot Springs Wellness.'],
     build: pieces([['camp', 20, { sign: 'PYRAMID POWER', decor: 'cactus' }],
-      ['cliff', 40, { put: [['grunt', 8, 13], ['dog', 14, 13], ['sniper', 18], ['target', 22, 13, { skin: 'vat' }], ['cage', 28, 13], ['pickup', 33, 13, { item: 'intel' }], ['flag', 38]] }],
-      ['yard', 40, { put: [['flamer', 6], ['target', 10, 0, { skin: 'vat' }], ['shield', 14], ['brute', 20], ['cage', 26], ['guru', 28], ['pickup', 31, 0, { item: 'intel' }], ['grenadier', 34], ['flag', 38]] }],
-      ['chimneys', 36, { put: [['rocketeer', 4], ['preacher', 12], ['target', 18, 0, { skin: 'vat' }], ['jetpack', 26], ['cage', 30], ['flag', 34]] }],
-      ['pit', 40, { put: [['grunt', 12], ['bomber', 20], ['camdrone', 26], ['pickup', 37, 0, { item: 'intel' }]] }]],
+      ['dunes', 40, { put: [['grunt', 5], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['flamer', 18], ['shield', 23], ['cage', 27], ['bomber', 31], intelAt(35), ['flag', 39]] }],
+      ['pyramid', 48, { put: [intelAt(8, 13), ['grunt', 10, 13], ['heavy', 16, 13], ['cage', 21, 8], ['target', 23, 8, { skin: 'vat' }], ['sniper', 24], ['rocketeer', 30], ['guru', 33, 13], ['flag', 46]] }],
+      ['ruins', 32, { put: [['preacher', 6], ['target', 10, 0, { skin: 'vat' }], ['grunt', 13], ['brute', 23], ['jetpack', 27], ['flag', 31]] }],
+      ['trench', 36, { put: [['grunt', 5], ['mortar', 9], ['cage', 13], ['grenadier', 17], ['strike', 20], ['heavy', 25], ['alarm', 26], intelAt(29), ['flag', 34]] }]],
       { kind: 'sand', boss: 'crawler', extra: { name: 'SAND SCARAB', sub: 'It rolls dung. It rolls you.', hpMul: 1.2 } }) },
   { name: 'HOMEOPATHIC HOT SPRINGS', sub: 'Wipe the booking servers, scrap the Steam Tank', theme: 'snow', cages: 3, pad: [231, 16],
-    brief: 'A mountain spa where the water is said to remember medicine it once touched. Guests pay a fortune to bathe in it. Wipe their two booking servers and scrap the Steam Tank that guards the springs.',
+    brief: 'A mountain spa where the water is said to remember medicine it once touched. Guests pay a fortune to bathe in it. Wipe their two booking servers and scrap the Steam Tank that guards the springs. The geysers will throw you up to the high terraces; the pools will boil you.',
     debrief: 'The guest list holds the whole League leadership, booked into a lighthouse on the ley lines.',
     objectives: [{ id: 'server', text: 'Wipe the booking servers', need: 2, req: true }, { id: 'boss', text: 'Scrap the Steam Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Price list: water that remembers aspirin, 80 dollars a bath.', 'Memo: the water also remembers the sewer. Do not mention it.', 'Booking: League board meeting, Ley Line Lighthouse.'],
     build: pieces([['camp', 20, { sign: 'WATER REMEMBERS', decor: 'pine' }],
-      ['hall', 40, { put: [['target', 10, 12, { skin: 'server' }], ['grunt', 18, 12], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }],
-      ['cliff', 40, { icicles: true, put: [['grunt', 8, 13], ['sniper', 16], ['preacher', 22, 13], ['cage', 28, 13], ['pickup', 33, 13, { item: 'intel' }], ['mortar', 36], ['flag', 38]] }],
-      ['pit', 36, { bridge: ICE, put: [['dog', 10], ['jetpack', 18], ['camdrone', 24], ['grenadier', 33]] }],
-      ['yard', 40, { put: [['target', 8, 0, { skin: 'server' }], ['shield', 12], ['brute', 18], ['itemcrate', 22], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['flamer', 33], ['flag', 38]] }]],
-      { kind: 'flat', boss: 'tank', extra: { name: 'STEAM TANK', sub: 'Runs on hot water and bad ideas.', hpMul: 1.3 } }) },
-  { name: 'LEY LINE LIGHTHOUSE', sub: 'Knock down the antennas, shoot down the Astral Kopter', theme: 'edge', cages: 3, pad: [231, 16],
-    brief: 'The League says this lighthouse beams healing energy along invisible lines in the ground. Their leaders are meeting here. Knock down the three ley-line antennas and shoot down the Astral Kopter. Its pilot knows the way into the Citrus Citadel.',
-    debrief: 'The pilot talked. The gates of the Citrus Citadel are open, and King Citrus is waiting.',
+      ['slope', 36, { put: [['grunt', 5], ['sniper', 13], ['dog', 20], ['shield', 25], ['target', 32, 0, { skin: 'server' }], ['flag', 35]] }],
+      ['hotel', 40, { put: [['grunt', 8, 12], ['sniper', 8, 4], ['cage', 10, 8], ['heavy', 24, 12], ['target', 26, 4, { skin: 'server' }], ['medic', 30, 8], intelAt(32, 4), ['alarm', 34, 12], ['flag', 39]] }],
+      ['pools', 44, { put: [['grunt', 7], ['target', 13, 0, { skin: 'server' }], ['medic', 14, 9], ['jetpack', 20], ['cage', 27], ['grenadier', 27, 9], ['camdrone', 30], intelAt(34), ['flag', 42]] }],
+      ['cliff', 36, { icicles: true, put: [['grunt', 8, 13], ['rocketeer', 16], ['preacher', 22, 13], ['cage', 28, 13], intelAt(31, 13), ['mortar', 33], ['flag', 35]] }]],
+      { kind: 'vents', boss: 'tank', extra: { name: 'STEAM TANK', sub: 'Runs on hot water and bad ideas.', hpMul: 1.3 } }) },
+  { name: 'LEY LINE LIGHTHOUSE', sub: 'Knock down the antennas, shoot down the Astral Kopter', theme: 'edge', cages: 3, pad: [231, 11],
+    brief: 'The League says this lighthouse beams healing energy along invisible lines in the ground. Their leaders are meeting here. Knock down the three ley-line antennas and shoot down the Astral Kopter. Its pilot knows where the League money goes. Mind the rotten boards on the piers, and the gusts on the cliffs.',
+    debrief: 'The pilot talked. The League money runs through a water works under the city, where they bottle "structured water".',
     objectives: [{ id: 'radio', text: 'Knock down the ley-line antennas', need: 3, req: true }, { id: 'boss', text: 'Shoot down the Astral Kopter', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
-    intel: ['Map: ley lines drawn with a ruler, mostly along motorways.', 'Note: King Citrus wants the lighthouse painted orange.', 'Code for the Citadel gate: 1-2-3-4.'],
+    intel: ['Map: ley lines drawn with a ruler, mostly along motorways.', 'Note: King Citrus wants the lighthouse painted orange.', 'Ledger: lighthouse donations paid into the Structured Water Works.'],
     build: pieces([['camp', 20, { sign: 'FEEL THE LINES' }],
-      ['fort', 40, { put: [['sniper', 9], ['target', 18, 0, { skin: 'radio' }], ['rocketeer', 22], ['cage', 26], ['jetpack', 30], ['pickup', 34, 0, { item: 'intel' }], ['mortar', 35], ['flag', 38]] }],
-      ['chimneys', 36, { put: [['grenadier', 4], ['preacher', 12], ['target', 18, 0, { skin: 'radio' }], ['heavy', 26], ['cage', 30], ['flag', 34]] }],
-      ['yard', 40, { put: [['mechsuit', 2], ['target', 8, 0, { skin: 'radio' }], ['brute', 14], ['camdrone', 18], ['guru', 22], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['flamer', 34], ['flag', 38]] }],
-      ['pit', 40, { put: [['grunt', 12], ['bomber', 20], ['medic', 26], ['pickup', 37, 0, { item: 'intel' }]] }]],
-      { kind: 'towers', boss: 'kopter', extra: { name: 'ASTRAL KOPTER', sub: 'Steered by crystals and vibes.', hpMul: 1.6 } }) },
+      ['cliffs', 36, { put: [['grunt', 6], ['rocketeer', 12], ['sniper', 18], ['target', 21, 0, { skin: 'radio' }], ['jetpack', 26], ['flag', 35]] }],
+      ['lighthouse', 40, { put: [['target', 5, 0, { skin: 'radio' }], ['grunt', 9], ['sniper', 15], ['cage', 19, 8], intelAt(21, 3), ['heavy', 22, 12], ['grenadier', 30], ['mortar', 34], ['flag', 39]] }],
+      ['piers', 40, { put: [['grunt', 5], ['dog', 10], ['shield', 13], ['cage', 19, 13], ['target', 24, 0, { skin: 'radio' }], ['bomber', 30], ['grunt', 33], intelAt(37), ['flag', 39]] }],
+      ['stones', 40, { put: [['guru', 9], ['strike', 11], ['brute', 13], ['camdrone', 20], intelAt(23), ['preacher', 25], ['cage', 27], ['flamer', 34], ['flag', 39]] }]],
+      { kind: 'headland', boss: 'kopter', extra: { name: 'ASTRAL KOPTER', sub: 'Steered by crystals and vibes.', hpMul: 1.6 } }) },
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...MORE_LEVELS); // still before the Citrus Citadel
+// the last stretch before the Citadel: under the city, over its rooftops, through the groves that feed the King
+const LAST_LEVELS = [
+  { name: 'STRUCTURED WATER WORKS', sub: 'Smash the vortex tanks, kill the Sludge Serpent', theme: 'sewer', cages: 3, pad: [230, 12],
+    brief: 'Under the city the League bottles tap water, spins it in vortex tanks and sells it as "structured water" that cures everything. Smash the three vortex tanks and kill the Sludge Serpent in the sump. Watch the cistern: when the siren goes, the acid rises to the red line.',
+    debrief: 'The tanks are drained. The bottles were trucked to a wellness district downtown, where an influencer sells them on giant billboards.',
+    objectives: [{ id: 'vat', text: 'Smash the vortex tanks', need: 3, req: true }, { id: 'boss', text: 'Kill the Sludge Serpent', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Label: structured water. Ingredients: water. Structure: also water.', 'Engineer log: the vortex tank is a washing machine with the label peeled off.', 'Delivery note: 50,000 bottles to the Neon Wellness District.'],
+    build: pieces([['camp', 20, { sign: 'STRUCTURED WATER', ceil: 8 }],
+      ['sluice', 40, { put: [['grunt', 6, 12], ['dog', 11, 12], ['target', 18, 12, { skin: 'vat' }], ['shield', 24, 12], ['cage', 29, 12], ['grenadier', 33, 12], intelAt(36, 12), ['flag', 39, 12]] }],
+      ['assembly', 36, { roof: true, ceil: 3, put: [['grunt', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'vat' }], ['heavy', 22, 5], ['cage', 25, 5], ['medic', 30, 12], ['flag', 35, 12]] }],
+      ['cistern', 44, { put: [['grunt', 14, 4], ['rocketeer', 22, 4], ['target', 28, 4, { skin: 'vat' }], intelAt(31, 4), ['cage', 33, 4], ['flag', 42, 5]] }],
+      ['pumphall', 36, { put: [['grunt', 6, 13], ['target', 10, 4, { skin: 'vat' }], ['cage', 16, 4], ['flamer', 20, 13], ['sniper', 24, 4], ['guru', 28, 9], intelAt(30, 4), ['flag', 35, 4]] }]],
+      { kind: 'cavern', boss: 'crawler', extra: { name: 'SLUDGE SERPENT', sub: 'Lives in the sump. Drinks the product.', hpMul: 1.4 } }) },
+  { name: 'NEON WELLNESS DISTRICT', sub: 'Topple the billboard masts, cancel The Influencer', theme: 'city', cages: 3, pad: [231, 16],
+    brief: 'Downtown, the League\'s best salesman films himself selling cures to millions. Climb the block, cross the rooftops and topple the three masts that beam his ads onto the billboards. Then cancel The Influencer: shoot out his studio lights first. The gondolas are the quick way across.',
+    debrief: 'The Influencer is offline. His sponsor deals all lead to the orange groves that feed the Citrus Citadel.',
+    objectives: [{ id: 'radio', text: 'Topple the billboard masts', need: 3, req: true }, { id: 'boss', text: 'Cancel The Influencer', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Script: smash that like button to cure your cold.', 'Contract: ten percent of every sale to K.C. Paid in oranges.', 'Shipping label: juice pipeline, Orange Groves, for the Citadel.'],
+    build: pieces([['camp', 20, { sign: 'GOOD VIBES ONLY' }],
+      ['facade', 36, { put: [['grunt', 4], ['shield', 9], ['target', 14, 0, { skin: 'radio' }], ['sniper', 20], ['cage', 25], intelAt(30), ['flag', 33]] }],
+      ['rooftops', 44, { put: [['grunt', 4], ['cage', 9, 9], ['rocketeer', 14], intelAt(19, 9), ['target', 24, 0, { skin: 'radio' }], ['jetpack', 26], ['heavy', 34], ['camdrone', 38], ['flag', 41]] }],
+      ['gondola', 36, { put: [['grunt', 3], ['dog', 15, 7], ['grenadier', 20, 7], ['sniper', 32], ['flag', 34]] }],
+      ['billboard', 40, { put: [intelAt(4, 10), ['medic', 9, 13], ['preacher', 12, 7], ['target', 20, 10, { skin: 'radio' }], ['guru', 22, 7], ['brute', 26, 13], ['cage', 30, 10], ['mortar', 34, 13], ['flag', 39, 13]] }]],
+      { kind: 'rooftop', boss: 'director', extra: { name: 'THE INFLUENCER', sub: 'Likes, shares and lies.', hpMul: 1.4 } }) },
+  { name: 'JUICE PIPELINE', sub: 'Wipe the shipping servers, scrap the Zestinator', theme: 'grove', cages: 3, pad: [231, 16],
+    brief: 'The Citrus Citadel drinks from one pipeline that runs out of the orange groves. Wipe the two shipping servers that plan the megadose deliveries, run the pipeline over the juice canyon and scrap the Zestinator, the walking juicer that guards the last bridge. The pressure valves blow; ride them.',
+    debrief: 'The pipeline is dry and the last bridge is ours. Nothing stands between the bros and the Citrus Citadel.',
+    objectives: [{ id: 'server', text: 'Wipe the shipping servers', need: 2, req: true }, { id: 'boss', text: 'Scrap the Zestinator', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Orchard memo: pick them, juice them, call it medicine.', 'Delivery plan: 900 tonnes of vitamin C a day to the Citadel.', 'Guard rota: the Zestinator holds the bridge. The King holds a grudge.'],
+    build: pieces([['camp', 20, { sign: 'AN ORANGE A DAY', decor: 'orange' }],
+      ['grove', 40, { put: [['grunt', 5], ['dog', 8], ['shield', 15], ['target', 18, 0, { skin: 'server' }], ['grenadier', 23], ['cage', 31], ['bomber', 34], intelAt(36), ['flag', 39]] }],
+      ['assembly', 36, { roof: true, put: [['grunt', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'server' }], ['heavy', 22, 5], ['cage', 25, 5], ['flamer', 30, 12], ['flag', 35, 12]] }],
+      ['pipeline', 40, { put: [['grunt', 8], ['sniper', 16], ['jetpack', 22], ['rocketeer', 28], intelAt(31), ['flag', 38]] }],
+      ['depot', 40, { put: [['grunt', 8, 6], intelAt(10), ['heavy', 21, 6], ['target', 22, 0, { skin: 'server' }], ['brute', 27, 6], ['cage', 33, 6], ['mortar', 35, 6], ['flag', 39, 6]] }]],
+      { kind: 'bridge', boss: 'boss', extra: { name: 'THE ZESTINATOR', sub: 'Peels steel. Squeezes bros.', hpMul: 1.6 } }) },
+];
+LEVELS.splice(LEVELS.length - 1, 0, ...LAST_LEVELS); // and the Citadel is still the finale
 LEVELS.forEach((L, i) => { L.map = [26 + Math.round(i * 428 / (LEVELS.length - 1)), 150 + Math.round(Math.sin(i * 1.25) * 50)]; }); // the route on the world map
 // levels outside the campaign: Lab Siege (horde) and the bonus Moon Base
 const EXTRA = [
@@ -1085,6 +1596,177 @@ function shatter(f) {
   sfx('crumble');
 }
 
+// ---------------------------------------------------------------- level mechanics
+// Missions place devices that change how a stretch plays: conveyor belts carry whatever stands on them, wind gusts
+// push you, the quacks and their shots, steam vents throw you upward, lifts carry you, acid floods a cistern and
+// drains again, anti-gravity fields make jumps float, and cracked floors give way a moment after you step on them.
+// Each one shows what it is about to do, and only devices near the camera do any work.
+let devs = [], crumbly = new Uint8Array(LW * LH);
+const RIDERS = { barrel: 1, propane: 1, ammo: 1, strike: 1, pickup: 1, itemcrate: 1, guncrate: 1, dog: 1, bomber: 1 };
+const rides = (e) => !e.dead && (isQuack(e) || RIDERS[e.type] === 1);
+function nudge(b, dx) { if (dx && !rectSolid(b.x + dx, b.y, b.w, b.h)) b.x += dx; } // slide sideways unless a wall is in the way
+const inBox = (b, x0, y0, x1, y1) => b.x + b.w > x0 && b.x < x1 && b.y + b.h > y0 && b.y < y1;
+const devNear = (d) => d.x1 > cam.x - 80 && d.x0 < cam.x + VW + 80;
+function updateDevices(dt) {
+  const me = P.alive && !P.ride;
+  if (me && P.onGround) { // cracked floor: the block under your feet shakes, then drops
+    const r = Math.floor((P.y + P.h + 1) / T);
+    for (let c = Math.floor((P.x + 1) / T); c <= Math.floor((P.x + P.w - 1) / T); c++) {
+      const i = r * LW + c;
+      if (c >= 0 && c < LW && r < LH && crumbly[i] && isSolidT(tiles[i])) { crumbly[i] = 0; shk[i] = 0.45; shakeList.push(i); sfx('creak', c * T); }
+    }
+  }
+  for (const d of devs) {
+    if (!devNear(d)) { if (d.kind === 'lift') d.rider = false; continue; }
+    switch (d.kind) {
+      case 'belt': { // carries whatever stands on it
+        const y = d.r * T, dx = d.dir * d.spd * dt, on = (b) => b.y + b.h > y - 1.5 && b.y + b.h < y + 0.5 && b.x + b.w / 2 >= d.x0 && b.x + b.w / 2 < d.x1;
+        if (me && P.onGround && on(P)) nudge(P, dx);
+        for (const e of ents) if (rides(e) && e.onGround && on(e)) nudge(e, dx);
+        for (const b of bodies) if (b.rest && b.x >= d.x0 && b.x < d.x1 && Math.abs(b.y + b.r - y) < 3) { b.x += dx; if (b.x < d.x0 || b.x >= d.x1) b.rest = false; }
+        break;
+      }
+      case 'wind': { // calm, a short warning of streaks, then a gust that shoves everything one way
+        d.t += dt; const ph = d.t % 7;
+        d.warn = ph >= 3.4 && ph < 4.4; d.pow = approach(d.pow, ph < 3.4 ? 0 : d.warn ? 0.15 : 1, dt * 2.5);
+        if (d.pow < 0.05) break;
+        const v = d.dir * d.spd * d.pow, y0 = d.r0 * T, y1 = (d.r1 + 1) * T;
+        if (me && inBox(P, d.x0, y0, d.x1, y1)) nudge(P, v * dt * (P.onGround ? 1 : 1.25));
+        for (const e of ents) if ((isQuack(e) || e.type === 'dog') && !e.dead && e.type !== 'heavy' && e.type !== 'brute' && inBox(e, d.x0, y0, d.x1, y1)) nudge(e, v * dt * 0.7);
+        for (const b of bullets) if (b.owner === 'e' && b.x > d.x0 && b.x < d.x1 && b.y > y0 && b.y < y1) b.x += v * dt * (b.grav ? 1.6 : 0.8); // the quacks' shots drift; yours fly true
+        for (const b of bodies) if (!b.rest && b.x > d.x0 && b.x < d.x1 && b.y > y0 && b.y < y1) b.vx += v * dt * 2;
+        if (Math.random() < d.pow * 0.5) part(clamp(d.dir > 0 ? cam.x : cam.x + VW, d.x0, d.x1), cam.y + rand(10, VH - 20), v * 2.4, rand(-10, 10), theme.dust, 1.4, 1);
+        break;
+      }
+      case 'vent': { // hisses for a moment, then blows a column of steam that throws you up
+        d.t += dt; const ph = d.t % 3.4, x = d.c * T, y = d.r * T, top = (d.r - d.h) * T;
+        d.st = ph < 1.8 ? 0 : ph < 2.4 ? 1 : 2;
+        if (d.st === 1 && Math.random() < 0.4) part(x + rand(3, 13), y - 1, rand(-8, 8), rand(-50, -20), d.col, 0.5, 2, 0, 'smoke');
+        if (d.st !== 2) { d.on = false; break; }
+        if (!d.on) { d.on = true; sfx('hiss', x); }
+        for (let k = 0; k < 2; k++) part(x + rand(2, 14), y - rand(0, y - top), rand(-15, 15), rand(-260, -160), d.col, rand(0.3, 0.6), rand(3, 6), 0, 'smoke');
+        const box = { x: x - 1, y: top, w: T + 2, h: y - top }, kick = -Math.sqrt(2 * G * (y - top + 10));
+        if (me && overlap(P, box) && P.vy > kick * 0.5) { P.vy = kick; P.pound = 0; P.ladder = false; P.onGround = false; P.coy = 0; }
+        for (const e of ents) if ((isQuack(e) || e.type === 'dog') && !e.dead && overlap(e, box) && e.vy > kick * 0.5) e.vy = kick * 0.9;
+        for (const b of bodies) if (b.x > x && b.x < x + T && b.y > top && b.y < y) { b.vy = kick * 0.8; b.rest = false; }
+        break;
+      }
+      case 'lift': { // a platform that rides between two points and waits at each end; it carries you
+        const L = Math.hypot(d.bx - d.ax, d.by - d.ay) || 1, ox = d.x, oy = d.y;
+        if (d.wait > 0) d.wait -= dt;
+        else { d.s += d.dir * d.spd * dt / L; if (d.s >= 1 || d.s <= 0) { d.s = clamp(d.s, 0, 1); d.dir *= -1; d.wait = d.pause; } }
+        d.x = d.ax + (d.bx - d.ax) * d.s; d.y = d.ay + (d.by - d.ay) * d.s;
+        if (!me) { d.rider = false; break; }
+        const over = P.x + P.w > d.x + 1 && P.x < d.x + d.w - 1, feet = P.y + P.h;
+        if (over && P.vy >= 0 && (d.rider ? Math.abs(feet - oy) < 6 : feet >= oy - 1 && feet - P.vy * dt <= oy + 1)) {
+          nudge(P, d.x - ox);
+          const ny = d.y - P.h - 0.01;
+          if (!rectSolid(P.x, ny, P.w, P.h)) { P.y = ny; P.vy = 0; P.onGround = true; P.pound = 0; d.rider = true; } else d.rider = false;
+        } else d.rider = false;
+        break;
+      }
+      case 'flood': { // acid rises in the cistern once you are in, holds, drains, and comes back while you stay
+        const inside = me && P.x + P.w > d.x0 && P.x < d.x1;
+        if (d.state === 'idle') { if (inside && P.x > d.trig * T) { d.state = 'rise'; showBanner('FLOOD!', 'get above the red line', 1.6); sfx('siren'); } }
+        else if (d.state === 'rise') { d.lv = Math.max(d.top, d.lv - d.spd * dt); if (d.lv <= d.top) { d.state = 'hold'; d.t = 4; } }
+        else if (d.state === 'hold') { d.t -= dt; if (d.t <= 0) d.state = 'drain'; }
+        else if (d.state === 'drain') { d.lv = Math.min(d.bot, d.lv + 1.5 * dt); if (d.lv >= d.bot) { d.state = 'rest'; d.t = 5; } }
+        else if (d.state === 'rest') { d.t -= dt; if (d.t <= 0) d.state = 'idle'; }
+        const want = Math.ceil(d.lv - 0.001); // every open cell at or below this row holds acid
+        while (d.row > want) { d.row--; const wet = (d.wet[d.row] = []); for (let c = d.c0; c <= d.c1; c++) { const i = d.row * LW + c; if (tiles[i] === EMPTY) { tiles[i] = ACID; wet.push(i); } } miniDirty = true; }
+        while (d.row < want) { for (const i of d.wet[d.row] || []) if (tiles[i] === ACID) tiles[i] = EMPTY; d.wet[d.row] = null; d.row++; miniDirty = true; }
+        if (me && d.lv % 1 > 0.05 && inBox(P, d.x0, d.lv * T + 3, d.x1, d.row * T) && tileAt(Math.floor((P.x + P.w / 2) / T), Math.floor((P.y + P.h - 2) / T)) === EMPTY) { splash(P.x + 5, d.lv * T, 14); P.inv = 0; killPlayer(); }
+        break;
+      }
+      case 'grav': // anti-gravity: you fall slowly inside the field, so every jump floats
+        if (me && !P.onGround && inBox(P, d.x0, d.y0, d.x1, d.y1)) { P.vy -= G * d.k * dt; if (P.vy > 150) P.vy = 150; }
+        for (const b of bodies) if (!b.rest && b.x > d.x0 && b.x < d.x1 && b.y > d.y0 && b.y < d.y1) b.vy -= G * d.k * dt;
+        break;
+    }
+  }
+}
+function drawDevices(t) {
+  const [vc0, vc1, vr0, vr1] = viewTiles();
+  ctx.fillStyle = 'rgba(20,14,10,0.6)'; // cracks on floors that will give way
+  for (let r = vr0; r <= vr1; r++) for (let c = vc0; c <= vc1; c++) {
+    const i = r * LW + c; if (!crumbly[i] || !isSolidT(tiles[i])) continue;
+    const x = c * T, y = r * T, k = (c * 5 + r * 3) % 4;
+    ctx.fillRect(x + 3 + k, y + 1, 1, 5); ctx.fillRect(x + 4 + k, y + 5, 3, 1); ctx.fillRect(x + 7 + k, y + 6, 1, 4); ctx.fillRect(x + 12 - k, y + 2, 1, 4); ctx.fillRect(x + 10 - k, y + 5, 2, 1); ctx.fillRect(x + 1, y + 11, 4, 1);
+  }
+  for (const d of devs) {
+    if (!devNear(d)) continue;
+    switch (d.kind) {
+      case 'belt': { // a dark belt with moving chevrons, and a roller at each end
+        const y = d.r * T, off = ((t * d.spd * d.dir) % 8 + 8) % 8;
+        ctx.fillStyle = '#25223a'; ctx.fillRect(d.x0, y, d.x1 - d.x0, 4); ctx.fillStyle = '#3d3a58'; ctx.fillRect(d.x0, y + 4, d.x1 - d.x0, 1);
+        ctx.fillStyle = '#f2c94c';
+        for (let x = d.x0 + off - 8; x < d.x1 - 3; x += 8) if (x > d.x0 && x > cam.x - 8 && x < cam.x + VW + 8) { const a = d.dir > 0 ? x : x + 2, b = d.dir > 0 ? x + 2 : x; ctx.fillRect(a, y, 1, 1); ctx.fillRect((a + b) >> 1, y + 1, 1, 1); ctx.fillRect(b, y + 2, 1, 1); ctx.fillRect((a + b) >> 1, y + 3, 1, 1); ctx.fillRect(a, y + 3, 1, 1); }
+        for (const x of [d.x0 + 4, d.x1 - 4]) { ctx.fillStyle = '#5c6480'; ctx.beginPath(); ctx.arc(x, y + 9, 4, 0, 7); ctx.fill(); ctx.fillStyle = '#b4bed0'; const a = t * d.dir * d.spd / 4; ctx.fillRect(Math.round(x + Math.cos(a) * 3) - 1, Math.round(y + 9 + Math.sin(a) * 3) - 1, 2, 2); }
+        break;
+      }
+      case 'wind': {
+        for (const c of d.socks || []) { // a windsock: hangs limp when calm, stands out straight in a gust
+          const x = c * T + 8, y = surf(c, 0) * T, a = (1 - d.pow) * 1.25 + Math.sin(t * 9 + c) * 0.08 * (0.3 + d.pow);
+          ctx.fillStyle = '#5c6480'; ctx.fillRect(x - 1, y - 22, 2, 22);
+          for (let k = 0; k < 4; k++) { ctx.fillStyle = k % 2 ? '#e6e2f0' : '#d9534f'; ctx.fillRect(Math.round(x + d.dir * (2 + k * 3.5) * Math.cos(a)) - 2, Math.round(y - 21 + (2 + k * 3.5) * Math.sin(a)), 4, 3 - (k >> 1)); }
+        }
+        if (d.pow < 0.02) break;
+        const span = d.x1 - d.x0, hh = (d.r1 - d.r0 + 1) * T;
+        ctx.strokeStyle = 'rgba(235,240,255,' + (0.1 + 0.25 * d.pow).toFixed(2) + ')'; ctx.lineWidth = 1; ctx.beginPath();
+        for (let k = 0; k < 30; k++) {
+          const sx = d.x0 + (((k * 137 + d.t * d.dir * 320 * (0.6 + (k % 3) * 0.2)) % span) + span) % span, sy = d.r0 * T + ((k * 53 + Math.floor(d.t * 0.5) * 29) % hh);
+          if (sx < cam.x - 20 || sx > cam.x + VW + 20 || sy < cam.y || sy > cam.y + VH) continue;
+          ctx.moveTo(sx, sy); ctx.lineTo(sx - d.dir * (6 + (k % 3) * 7) * (0.3 + d.pow), sy);
+        }
+        ctx.stroke();
+        break;
+      }
+      case 'vent': {
+        const x = d.c * T, y = d.r * T, sh = d.st === 1 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+        ctx.fillStyle = '#25223a'; ctx.fillRect(x + 1 + sh, y, 14, 3);
+        ctx.fillStyle = d.st ? '#ff8a4a' : '#5c6480'; for (let k = 3; k < 14; k += 3) ctx.fillRect(x + k + sh, y, 1, 2); // the grate glows before it blows
+        if (d.st === 2) { ctx.globalAlpha = 0.2; ctx.fillStyle = d.col; ctx.fillRect(x + 2, (d.r - d.h) * T, 12, d.h * T); ctx.globalAlpha = 1; }
+        break;
+      }
+      case 'lift': {
+        const x = Math.round(d.x), y = Math.round(d.y);
+        ctx.strokeStyle = '#5c6480'; ctx.beginPath(); // cables up to the pulley (vertical lifts) or hangers to the rail (sideways ones)
+        if (d.ax === d.bx) { const top = Math.min(d.ay, d.by) - d.cab * T; ctx.moveTo(x + 2.5, y); ctx.lineTo(x + 2.5, top); ctx.moveTo(x + d.w - 2.5, y); ctx.lineTo(x + d.w - 2.5, top); }
+        else if (d.cab) { const top = Math.min(d.ay, d.by) - d.cab * T; ctx.moveTo(x + d.w / 2, y); ctx.lineTo(x + d.w / 2, top); ctx.moveTo(Math.min(d.ax, d.bx), top + 0.5); ctx.lineTo(Math.max(d.ax, d.bx) + d.w, top + 0.5); }
+        ctx.stroke();
+        ctx.fillStyle = '#4f5a70'; ctx.fillRect(x, y, d.w, 6); ctx.fillStyle = '#93a0b8'; ctx.fillRect(x, y, d.w, 1);
+        for (let k = 0; k < d.w; k += 6) { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + k, y + 4, 3, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(x + k + 3, y + 4, 3, 2); }
+        ctx.fillStyle = d.wait > 0 ? '#a6d854' : Math.floor(t * 4) % 2 ? '#ff5a4a' : '#8e2b3c'; ctx.fillRect(x + d.w / 2 - 1, y + 1, 2, 2); // green while it waits, blinking red while it moves
+        break;
+      }
+      case 'flood': { // a gauge on the wall: the red line is where the acid stops
+        const x = d.gx * T + 6, yt = d.top * T, yb = d.bot * T, x0 = Math.max(d.x0, cam.x - 8), x1 = Math.min(d.x1, cam.x + VW + 8);
+        ctx.fillStyle = '#25223a'; ctx.fillRect(x, yt - 4, 4, yb - yt + 4);
+        ctx.fillStyle = '#5c6480'; for (let y = yt; y < yb; y += T) ctx.fillRect(x - 2, y, 2, 1);
+        ctx.fillStyle = theme.acid[1]; ctx.fillRect(x + 1, d.lv * T, 2, yb - d.lv * T);
+        ctx.fillStyle = d.state === 'rise' && Math.floor(t * 6) % 2 ? '#ffffff' : '#ff3a2a'; ctx.fillRect(x - 6, yt - 1, 14, 2); ctx.fillRect(x, yt - 6, 4, 3);
+        if (d.lv % 1 > 0.05) { // the creeping edge between whole rows of acid
+          const r = Math.floor(d.lv), y = d.lv * T, h = (r + 1) * T - y;
+          for (let c = Math.floor(x0 / T); c <= Math.floor(x1 / T); c++) if (c >= d.c0 && c <= d.c1 && tileAt(c, r) === EMPTY) {
+            ctx.fillStyle = theme.acid[0]; ctx.fillRect(c * T, y, T, h); ctx.fillStyle = theme.acid[1]; ctx.fillRect(c * T, y, T, 2 + Math.round(Math.sin(t * 5 + c) * 1));
+          }
+        }
+        break;
+      }
+      case 'grav': { // a faint violet field with sparks drifting up, and emitter pads on its floor
+        const w = d.x1 - d.x0, h = d.y1 - d.y0;
+        ctx.globalAlpha = 0.11 + Math.sin(t * 2) * 0.03; ctx.fillStyle = '#b3a6ff'; ctx.fillRect(Math.max(d.x0, cam.x), d.y0, Math.min(d.x1, cam.x + VW) - Math.max(d.x0, cam.x), h);
+        ctx.globalAlpha = 0.5; for (const x of [d.x0, d.x1 - 1]) for (let y = d.y0 + ((t * 30) % 8); y < d.y1; y += 8) ctx.fillRect(x, y, 1, 4); // the field's edges crawl upward
+        ctx.globalAlpha = 0.85; ctx.fillStyle = '#e8dcff';
+        for (let k = 0; k < Math.min(90, w / 5); k++) { const px = d.x0 + ((k * 71) % w), py = d.y1 - ((t * (18 + (k % 4) * 6) + k * 37) % h); if (px > cam.x && px < cam.x + VW) ctx.fillRect(px, py, 1, (k % 3) + 2); }
+        ctx.globalAlpha = 1;
+        for (let x = d.x0 + 8; x < d.x1; x += 3 * T) { ctx.fillStyle = '#5c6480'; ctx.fillRect(x - 4, d.y1 - 3, 8, 3); ctx.fillStyle = Math.sin(t * 4 + x) > 0 ? '#e8dcff' : '#b3a6ff'; ctx.fillRect(x - 2, d.y1 - 4, 4, 1); }
+        break;
+      }
+    }
+  }
+}
+
 // ---------------------------------------------------------------- audio
 let AC = null, muted = false, noiseBuf = null, master = null, echo = null;
 // every sound goes through one master bus: a compressor keeps loud moments from clipping, a short echo
@@ -1131,7 +1813,7 @@ function startAmbience() {
   if (!AC || !theme) return;
   try {
     if (amb) { amb.src.stop(); amb = null; }
-    const kind = theme.rain ? 'rain' : theme.name === 'plant' || theme.name === 'rust' ? 'hum' : theme.name === 'cave' ? 'cave' : theme.name === 'moon' ? null : 'wind';
+    const kind = theme.rain ? 'rain' : theme.name === 'plant' || theme.name === 'rust' ? 'hum' : theme.name === 'cave' || theme.name === 'sewer' ? 'cave' : theme.name === 'moon' ? null : 'wind';
     if (!kind) return;
     const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
     src.buffer = noiseBuf; src.loop = true;
@@ -1451,7 +2133,7 @@ function updateSiege(dt) {
   }
 }
 // ---- Boss Rush: every boss in a row against the clock
-const RUSH = [[0, 179, 'boss'], [1, 85, 'kopter'], [1, 178, 'crawler'], [2, 179, 'tank'], [3, 183, 'engine'], [4, 167, 'blimp'], [5, 178, 'kopter'], [6, 179, 'crawler'], [7, 178, 'tank'], [8, 178, 'boss'], [9, 178, 'director'], [10, 178, 'blimp'], [11, 179, 'crawler'], [12, 178, 'tank'], [13, 178, 'kopter'], [LEVELS.length - 1, 181, 'citrus']];
+const RUSH = [[0, 179, 'boss'], [1, 85, 'kopter'], [1, 178, 'crawler'], [2, 179, 'tank'], [3, 183, 'engine'], [4, 167, 'blimp'], [5, 178, 'kopter'], [6, 179, 'crawler'], [7, 178, 'tank'], [8, 178, 'boss'], [9, 178, 'director'], [10, 178, 'blimp'], [11, 179, 'crawler'], [12, 178, 'tank'], [13, 178, 'kopter'], [14, 179, 'crawler'], [15, 178, 'director'], [16, 178, 'boss'], [LEVELS.length - 1, 181, 'citrus']];
 const rush = { i: 0, t: 0, nextT: 0, best: 0 };
 try { rush.best = +localStorage.getItem('sciencebros.rush') || 0; } catch (e) { /* storage blocked */ }
 function loadRush(i) {
@@ -1459,7 +2141,7 @@ function loadRush(i) {
   const [lvl, col, type] = RUSH[i];
   startLevel(lvl); objectives = []; ceasefire = 0;
   ents = ents.filter((e) => e.type === type || e.type === 'flag'); boss = ents.find((e) => e.type === type);
-  P.x = col * T + 3; P.y = surf(col, 0) * T - 16; P.inv = 2; checkpoint = { x: P.x, y: P.y };
+  P.x = col * T + 3; P.y = surf(col, openRow(col)) * T - 16; P.inv = 2; checkpoint = { x: P.x, y: P.y };
   showBanner('BOSS ' + (i + 1) + ' / ' + RUSH.length, bname(boss), 1.6);
 }
 function updateRush(dt) {
@@ -1631,7 +2313,7 @@ function makeEnt(s) {
   if (s.type === 'itemcrate') e.item = s.item;
   if (s.type === 'guncrate') e.gun = s.gun;
   if (s.type === 'target') { e.skin = s.skin; if (s.skin === 'radio') { e.h = 56; e.y = surf(s.c, s.from) * T - 56; } }
-  if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; }
+  if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; e.rock = !!s.rock; } // rock: a stalactite in a cave
   if (s.type === 'flag') e.on = false;
   if (BOSS[s.type]) {
     Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate, bossName: s.name, bossSub: s.sub });
@@ -1679,7 +2361,7 @@ function callChopper() {
 function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; dossier = []; }
 function startLevel(n) {
   level = n;
-  buildTiles(THEMES[levelDef(n).theme]);
+  buildTiles(levelDef(n).look ? Object.assign({}, THEMES[levelDef(n).theme], levelDef(n).look) : THEMES[levelDef(n).theme]); // a level can twist its theme's look
   buildLevel();
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
@@ -1690,7 +2372,7 @@ function startLevel(n) {
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
   G = levelDef(n).grav || 900;
   objectives = (levelDef(n).objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; grace = 0; ceasefire = levelDef(n).ceasefire !== undefined ? levelDef(n).ceasefire : 10;
-  checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
+  checkpoint = { x: 3 * T, y: surf(3, openRow(3)) * T - 16 }; // under the rock roof, if there is one
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
   cam.x = 0; cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
@@ -2351,6 +3033,7 @@ function step(dt) {
   for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const t = timers.splice(i, 1)[0]; t.fn(); } }
 
   updatePlayer(dt);
+  updateDevices(dt);
   for (const e of ents) if (!e.dead) updateEnt(e, e.type === 'boss' || HITTABLE[e.type] ? edt : dt);
   ents = ents.filter((e) => !e.dead || e === boss);
   updateBullets(dt, edt);
@@ -3817,7 +4500,7 @@ function updateIcicle(e, dt) {
 }
 function shatterIcicle(e) {
   e.dead = true; sfx('glass');
-  for (let i = 0; i < 8; i++) chunk(e.x + e.w / 2, e.y + rand(0, e.h), rand(-140, 140), rand(-200, -40), i % 2 ? '#dff4ff' : '#8fc7e8');
+  for (let i = 0; i < 8; i++) chunk(e.x + e.w / 2, e.y + rand(0, e.h), rand(-140, 140), rand(-200, -40), e.rock ? (i % 2 ? theme.dirt[3] : theme.dirt[0]) : i % 2 ? '#dff4ff' : '#8fc7e8');
 }
 
 // ---------------------------------------------------------------- projectiles
@@ -4104,7 +4787,7 @@ function updateProps(dt) {
 }
 function topple(d) {
   const x = d.c * T + 8, y = d.kind === 'plaque' ? d.r * T + 8 : d.r * T - 8;
-  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'] }[d.kind];
+  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'], scarecrow: ['#8e2b3c', '#d9b45a', '#5a4226'], orange: ['#2f6a2a', '#ff9a2a', '#5a3a22'], neon: ['#ff4fa3', '#4ff0ff', '#25223a'] }[d.kind];
   const n = d.kind === 'palm' ? 12 : 6;
   for (let i = 0; i < n; i++) chunk(x + rand(-6, 6), y - (d.kind === 'palm' ? rand(0, 40) : rand(0, 8)), rand(-120, 120), rand(-200, -40), cols[i % cols.length]);
 }
@@ -4223,12 +4906,29 @@ function drawBackground(t) {
     ctx.fillRect(x - cw * 0.45, y, cw * 0.9, cw * 0.12);
   }
   ctx.globalAlpha = 1;
-  // far hills
+  if (th.trails) { // chemtrails: long white streaks, each drawn by a tiny plane at its head
+    for (let k = 0; k < 3; k++) {
+      const span = VW + 400, sl = k === 1 ? -0.06 : 0.05, hx = ((t * (14 + k * 5) + k * 230 - cam.x * 0.03) % span + span) % span - 200, hy = 30 + k * 34 - cam.y * 0.04 + (hx - 200) * sl;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - 260, hy - 260 * sl); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#5c6480'; ctx.fillRect(hx, hy - 1, 5, 2); ctx.fillRect(hx + 1, hy - 3, 2, 5);
+    }
+  }
+  // far hills: rolling by default, smooth dunes in the desert, sharp peaks in the mountains
   ctx.fillStyle = th.hill;
   ctx.beginPath(); ctx.moveTo(0, VH);
-  for (let x = 0; x <= VW; x += 8) { const wx = x + cam.x * 0.2; ctx.lineTo(x, 170 - cam.y * 0.15 + Math.sin(wx * 0.013) * 22 + Math.sin(wx * 0.031) * 9); }
+  for (let x = 0; x <= VW; x += 8) {
+    const wx = x + cam.x * 0.2, y0 = 170 - cam.y * 0.15;
+    if (th.hills === 'peaks') { const u = ((wx / 64) % 2 + 2) % 2; ctx.lineTo(x, y0 + 26 - (1 - Math.abs(u - 1)) * (44 + Math.sin(Math.floor(wx / 128) * 2.7) * 14)); }
+    else if (th.hills === 'dunes') ctx.lineTo(x, y0 + 12 + Math.sin(wx * 0.007) * 18 + Math.sin(wx * 0.019 + 1) * 5);
+    else ctx.lineTo(x, y0 + Math.sin(wx * 0.013) * 22 + Math.sin(wx * 0.031) * 9);
+  }
   ctx.lineTo(VW, VH); ctx.fill();
-  if (th.orb !== 'none') { // nearer, darker hills with a lit ridge
+  if (th.hills === 'sea') { // the sea out to the horizon, with glints that drift
+    const sy = 152 - cam.y * 0.22;
+    ctx.fillStyle = mixHex(th.hill, th.acid[0], 0.5); ctx.fillRect(0, sy, VW, VH - sy);
+    ctx.fillStyle = mixHex(th.acid[1], th.sky[2], 0.3);
+    for (let k = 0; k < 40; k++) { const gx = ((k * 53 - cam.x * 0.3 + Math.sin(t + k) * 6) % VW + VW) % VW, gy = sy + 3 + (k * 7) % Math.max(1, Math.round(VH - sy - 4)); if (Math.sin(t * 2 + k) > 0) ctx.fillRect(gx, gy, 3 + (k % 3), 1); }
+  } else if (th.orb !== 'none') { // nearer, darker hills with a lit ridge
     const near = mixHex(th.hill, th.dark, 0.35);
     ctx.fillStyle = near; ctx.beginPath(); ctx.moveTo(0, VH);
     const ridge = (x) => { const wx = x + cam.x * 0.32; return 205 - cam.y * 0.22 + Math.sin(wx * 0.009 + 1) * 18 + Math.sin(wx * 0.027) * 7; };
@@ -4245,13 +4945,90 @@ function drawBackground(t) {
     ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + Math.cos(a - 0.07) * 340, by + Math.sin(a - 0.07) * 340); ctx.lineTo(bx + Math.cos(a + 0.07) * 340, by + Math.sin(a + 0.07) * 340); ctx.fill();
   }
   ctx.globalAlpha = 1;
-  // skyline: labs on the island, flat-topped mesas in the desert
+  // skyline: each theme has its own silhouettes (labs, pyramids, a lighthouse at sea, silos, crystals, neon towers...)
   const off = cam.x * 0.4;
+  if (th.cityKind === 'pipes') { // under the city: big pipes run along the tunnel walls
+    for (const [py, ph] of [[60, 14], [120, 10]]) { const y = py - cam.y * 0.3; ctx.fillStyle = th.city; ctx.fillRect(0, y, VW, ph); ctx.fillStyle = th.hill; ctx.fillRect(0, y, VW, 2); for (let k = 0; k < 8; k++) ctx.fillRect(((k * 97 - off * 0.8) % VW + VW) % VW, y - 2, 4, ph + 4); }
+  }
   for (const L of LABS) {
     const x = Math.round(L.x - (off % 2640)), base = 230 - cam.y * 0.3;
     for (const xx of [x, x + 2640]) {
       if (xx > VW + 30 || xx + L.w < -30) continue;
       ctx.fillStyle = th.city;
+      const mx = xx + L.w / 2;
+      if (th.cityKind === 'pyramids') { // pyramids with a lit face, and the odd mesa
+        if (L.dome || L.ant) { const ph = L.h * 1.1; ctx.beginPath(); ctx.moveTo(mx - ph, base + 60); ctx.lineTo(mx, base - ph); ctx.lineTo(mx + ph, base + 60); ctx.fill(); ctx.fillStyle = th.hill; ctx.beginPath(); ctx.moveTo(mx, base - ph); ctx.lineTo(mx + ph, base + 60); ctx.lineTo(mx + ph * 0.25, base + 60); ctx.fill(); }
+        else { ctx.beginPath(); ctx.moveTo(xx - 14, base + 60); ctx.lineTo(xx, base - L.h * 0.8); ctx.lineTo(xx + L.w, base - L.h * 0.8); ctx.lineTo(xx + L.w + 14, base + 60); ctx.fill(); }
+        continue;
+      }
+      if (th.cityKind === 'sea') { // a lighthouse sweeping its beam, sea stacks, a ship or two
+        const sea = 152 - cam.y * 0.22;
+        if (L.ant && L.dome) { ctx.fillRect(mx - 4, sea - L.h, 8, L.h + 80); ctx.fillRect(mx - 6, sea - L.h - 4, 12, 4); ctx.fillStyle = '#fff6c2'; ctx.fillRect(mx - 2, sea - L.h - 9, 4, 5); const a = t * 1.3; ctx.globalAlpha = 0.12; ctx.beginPath(); ctx.moveTo(mx, sea - L.h - 7); ctx.lineTo(mx + Math.cos(a) * 160, sea - L.h - 7 + Math.sin(a) * 12 - 14); ctx.lineTo(mx + Math.cos(a) * 160, sea - L.h - 7 + Math.sin(a) * 12 + 14); ctx.fill(); ctx.globalAlpha = 1; }
+        else if (L.dome) { ctx.beginPath(); ctx.moveTo(xx, sea + 2); ctx.lineTo(xx + 6, sea - L.h * 0.3); ctx.lineTo(xx + L.w * 0.5, sea - L.h * 0.35); ctx.lineTo(xx + L.w * 0.6, sea + 2); ctx.fill(); }
+        else if (L.ant) { const bob = Math.sin(t * 1.5 + L.x) * 1.5; ctx.fillRect(xx, sea - 6 + bob, L.w * 0.6, 5); ctx.fillRect(xx + L.w * 0.2, sea - 22 + bob, 2, 16); ctx.fillRect(xx + L.w * 0.25, sea - 12 + bob, L.w * 0.2, 6); }
+        continue;
+      }
+      if (th.cityKind === 'hangars') { // arched hangars and a control tower by the runway
+        if (L.ant && !L.dome) { const th2 = L.h * 1.2; ctx.fillRect(mx - 3, base - th2, 6, th2 + 60); ctx.fillRect(mx - 9, base - th2 - 10, 18, 10); ctx.fillStyle = th.win[0]; ctx.fillRect(mx - 7, base - th2 - 8, 14, 3); }
+        else { const hy = base - L.h * 0.45; ctx.beginPath(); ctx.ellipse(mx, hy, L.w * 0.9, L.h * 0.5, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(mx - L.w * 0.9, hy, L.w * 1.8, base - hy + 60); ctx.fillStyle = th.hill; ctx.fillRect(mx - L.w * 0.45, hy - L.h * 0.15, L.w * 0.9, base - hy + 60); }
+        continue;
+      }
+      if (th.cityKind === 'farm') { // grain silos, barns and turning wind turbines
+        if (L.dome) { for (const k of [-7, 7]) { ctx.fillRect(mx + k - 6, base - L.h * 1.1, 12, L.h * 1.1 + 60); ctx.beginPath(); ctx.arc(mx + k, base - L.h * 1.1, 6, Math.PI, 0); ctx.fill(); } }
+        else if (L.ant) { ctx.fillRect(mx - 1, base - L.h * 1.2, 3, L.h * 1.2 + 60); for (let k = 0; k < 3; k++) { ctx.save(); ctx.translate(mx + 0.5, base - L.h * 1.2); ctx.rotate(t * 1.2 + L.x + k * 2.094); ctx.fillRect(0, -1, 18, 2); ctx.restore(); } }
+        else { ctx.beginPath(); ctx.moveTo(xx, base - L.h * 0.6); ctx.lineTo(mx, base - L.h * 0.9); ctx.lineTo(xx + L.w, base - L.h * 0.6); ctx.lineTo(xx + L.w, base + 60); ctx.lineTo(xx, base + 60); ctx.fill(); ctx.fillStyle = th.hill; ctx.fillRect(mx - 5, base - L.h * 0.45, 10, L.h * 0.45 + 60); }
+        continue;
+      }
+      if (th.cityKind === 'crystals') { // stalactites hang from the dark, crystal clusters glow on the floor below
+        const top = -cam.y * 0.3; ctx.beginPath(); ctx.moveTo(xx, top); ctx.lineTo(mx, top + L.h * 0.9); ctx.lineTo(xx + L.w, top); ctx.fill();
+        ctx.globalAlpha = 0.35 + Math.sin(t * 1.5 + L.x) * 0.15; ctx.fillStyle = L.dome ? th.win[1] : th.win[0];
+        for (const [ox, h] of [[-7, 0.6], [0, 1], [7, 0.5]]) { ctx.beginPath(); ctx.moveTo(mx + ox - 5, base + 10); ctx.lineTo(mx + ox, base + 10 - L.h * h); ctx.lineTo(mx + ox + 5, base + 10); ctx.fill(); }
+        ctx.globalAlpha = 1; continue;
+      }
+      if (th.cityKind === 'swamp') { // dead trees with hanging moss, a hut on stilts
+        if (L.dome) { ctx.fillRect(xx + 4, base - L.h * 0.8, 2, L.h + 60); ctx.fillRect(xx + L.w - 6, base - L.h * 0.8, 2, L.h + 60); ctx.fillRect(xx, base - L.h, L.w, L.h * 0.22); ctx.beginPath(); ctx.moveTo(xx - 4, base - L.h); ctx.lineTo(mx, base - L.h * 1.25); ctx.lineTo(xx + L.w + 4, base - L.h); ctx.fill(); }
+        else { ctx.fillRect(mx - 2, base - L.h, 4, L.h + 60); ctx.strokeStyle = th.city; ctx.lineWidth = 2; ctx.beginPath(); for (const k of [-1, 1]) { ctx.moveTo(mx, base - L.h * 0.6 + k * 8); ctx.lineTo(mx + k * 16, base - L.h * 0.8 + k * 4); ctx.lineTo(mx + k * 22, base - L.h * 0.7); } ctx.stroke(); ctx.lineWidth = 1; ctx.fillStyle = th.hill; for (const k of [-12, 9, 15]) ctx.fillRect(mx + k, base - L.h * 0.74, 1, 10 + Math.abs(Math.round(L.x + k)) % 9); }
+        continue;
+      }
+      if (th.cityKind === 'observatory') { // domes with a slit of light, radio dishes on stalks
+        if (L.dome || !L.ant) { const dy = base - L.h * 0.85; ctx.beginPath(); ctx.arc(mx, dy, L.w / 2, Math.PI, 0); ctx.fill(); ctx.fillRect(xx, dy, L.w, base - dy + 60); ctx.fillStyle = th.win[0]; ctx.globalAlpha = 0.5; ctx.fillRect(mx - 1, dy - L.w / 2, 3, L.w / 2); ctx.globalAlpha = 1; }
+        else { ctx.fillRect(mx - 1, base - L.h, 3, L.h + 60); ctx.save(); ctx.translate(mx, base - L.h); ctx.rotate(-0.6 + Math.sin(t * 0.2 + L.x) * 0.2); ctx.beginPath(); ctx.ellipse(0, 0, 14, 5, 0, 0, Math.PI); ctx.fill(); ctx.restore(); }
+        continue;
+      }
+      if (th.cityKind === 'gears') { // smokestacks and great turning cogs
+        if (L.dome) { const r = L.w * 0.45, cy = base - L.h * 0.9, a0 = t * 0.4 * (L.ant ? 1 : -1); ctx.beginPath(); ctx.arc(mx, cy, r, 0, 7); ctx.fill(); for (let k = 0; k < 8; k++) { const a = a0 + k * 0.785; ctx.save(); ctx.translate(mx + Math.cos(a) * r, cy + Math.sin(a) * r); ctx.rotate(a); ctx.fillRect(-3, -3, 7, 6); ctx.restore(); } ctx.fillStyle = th.hill; ctx.beginPath(); ctx.arc(mx, cy, r * 0.35, 0, 7); ctx.fill(); }
+        else { ctx.fillRect(xx, base - L.h * 0.5, L.w, L.h + 60); ctx.fillRect(mx - 4, base - L.h - 20, 8, L.h * 0.6 + 20); ctx.globalAlpha = 0.25; ctx.fillStyle = '#5a5a52'; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(mx + k * 9 + Math.sin(t + k) * 2, base - L.h - 24 - k * 9, 5 + k * 2, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
+        continue;
+      }
+      if (th.cityKind === 'cooling') { // cooling towers with steam rolling off the top
+        const w2 = L.w * 0.55, top = base - L.h * 0.9;
+        ctx.beginPath(); ctx.moveTo(mx - w2, base + 60); ctx.quadraticCurveTo(mx - w2 * 0.45, base - L.h * 0.4, mx - w2 * 0.6, top); ctx.lineTo(mx + w2 * 0.6, top); ctx.quadraticCurveTo(mx + w2 * 0.45, base - L.h * 0.4, mx + w2, base + 60); ctx.fill();
+        ctx.globalAlpha = 0.18; ctx.fillStyle = '#c9c4b4'; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(mx + Math.sin(t * 0.5 + k + L.x) * 4 + k * 5, top - 6 - k * 10, w2 * 0.5 + k * 3, 0, 7); ctx.fill(); } ctx.globalAlpha = 1;
+        continue;
+      }
+      if (th.cityKind === 'spa') { // snowy pines, and spa domes breathing steam
+        if (L.dome) { const dy = base - L.h * 0.6; ctx.beginPath(); ctx.arc(mx, dy, L.w / 2, Math.PI, 0); ctx.fill(); ctx.fillRect(xx, dy, L.w, base - dy + 60); ctx.fillStyle = th.win[0]; ctx.globalAlpha = 0.5; for (let k = 6; k < L.w - 4; k += 8) ctx.fillRect(xx + k, dy + 2, 3, 4); ctx.globalAlpha = 0.16; ctx.fillStyle = '#e6eef8'; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(mx + Math.sin(t * 0.6 + k) * 5, dy - L.w / 2 - 12 - k * 12 - (t * 6 % 12), 6 + k * 3, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
+        else for (let k = 0; k < 3; k++) { const px = xx + k * L.w / 2, ph = L.h * (0.5 + 0.2 * k); ctx.fillStyle = th.city; ctx.beginPath(); ctx.moveTo(px - 12, base + 60); ctx.lineTo(px, base - ph); ctx.lineTo(px + 12, base + 60); ctx.fill(); ctx.fillStyle = 'rgba(230,238,248,0.35)'; ctx.fillRect(px - 4, base - ph + 10, 8, 2); }
+        continue;
+      }
+      if (th.cityKind === 'pipes') { // brick arches along the tunnel, and drips falling through them
+        ctx.fillRect(xx, base - L.h, 8, L.h + 60); ctx.beginPath(); ctx.arc(xx + L.w / 2 + 4, base - L.h, L.w / 2 + 4, Math.PI, 0); ctx.arc(xx + L.w / 2 + 4, base - L.h, L.w / 2 - 4, 0, Math.PI, true); ctx.fill();
+        ctx.fillStyle = th.win[0]; ctx.globalAlpha = 0.6; ctx.fillRect(xx + L.w / 2, base - L.h + ((t * 40 + L.x) % (L.h + 40)), 1, 3); ctx.globalAlpha = 1;
+        continue;
+      }
+      if (th.cityKind === 'neon') { // towers with lit windows and blinking neon on the roofs
+        const h = L.h * 1.3; ctx.fillRect(xx, base - h, L.w, h + 60);
+        if (L.ant) { ctx.fillRect(mx, base - h - 20, 1, 20); ctx.fillStyle = Math.sin(t * 4 + L.x) > 0 ? th.win[0] : th.city; ctx.fillRect(mx - 1, base - h - 22, 3, 3); }
+        ctx.globalAlpha = 0.45; for (let wy = base - h + 6; wy < base - 4; wy += 8) for (let wx = xx + 4; wx < xx + L.w - 4; wx += 6) if (((wx * 7 + wy * 13) | 0) % 4 === 0) { ctx.fillStyle = (wx + wy) % 3 ? th.win[1] : th.win[0]; ctx.fillRect(wx, wy, 2, 3); }
+        ctx.globalAlpha = 1;
+        if (L.dome) { ctx.globalAlpha = Math.sin(t * 9 + L.x) > -0.8 ? 0.8 : 0.2; ctx.strokeStyle = th.win[(L.x | 0) & 1]; ctx.strokeRect(xx + 3.5, base - h - 8.5, L.w - 7, 6); ctx.globalAlpha = 1; }
+        continue;
+      }
+      if (th.cityKind === 'orchard') { // rows of orange trees on the slopes, and far off the Citadel on its hill
+        if (L.dome && L.ant) { ctx.fillStyle = mixHex(th.city, th.sky[2], 0.35); ctx.fillRect(mx - 14, base - L.h, 28, L.h + 60); for (const k of [-14, 6]) { ctx.fillRect(mx + k, base - L.h - 16, 8, 16); for (let b = 0; b < 8; b += 4) ctx.fillRect(mx + k + b, base - L.h - 20, 2, 4); } }
+        else { const hy = base - L.h * 0.55; ctx.fillStyle = mixHex(th.hill, th.city, 0.5); ctx.beginPath(); ctx.ellipse(mx, hy + 14, L.w, 18, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(mx - L.w, hy + 14, L.w * 2, base - hy + 50); for (let k = 0; k < 3; k++) { const tx = xx + k * L.w / 2.5, ty = hy + 2 - (k % 2) * 4; ctx.fillStyle = th.city; ctx.fillRect(tx - 1, ty, 2, 10); ctx.beginPath(); ctx.arc(tx, ty - 4, 7, 0, 7); ctx.fill(); ctx.fillStyle = th.win[0]; ctx.fillRect(tx - 3, ty - 6, 2, 2); ctx.fillRect(tx + 2, ty - 3, 2, 2); } }
+        continue;
+      }
       if (th.cityKind === 'domes') { // radar domes and dishes
         ctx.beginPath(); ctx.arc(xx + L.w / 2, base - L.h * 0.3, L.w / 2, Math.PI, 0); ctx.fill(); ctx.fillRect(xx, base - L.h * 0.3, L.w, L.h + 60);
         ctx.fillRect(xx + L.w / 2 - 1, base - L.h * 0.3 - L.w / 2 - 14, 2, 14); ctx.beginPath(); ctx.arc(xx + L.w / 2, base - L.h * 0.3 - L.w / 2 - 14, 7, 0.3, Math.PI - 0.3); ctx.fill();
@@ -4261,23 +5038,6 @@ function drawBackground(t) {
         ctx.fillRect(xx, base - L.h, L.w, L.h + 60);
         for (let k = 0; k < L.w; k += 8) ctx.fillRect(xx + k, base - L.h - 6, 5, 6);
         if (Math.sin(t * 2 + L.x) > 0.3) { ctx.fillStyle = th.win[1]; ctx.fillRect(xx + L.w / 2 - 2, base - L.h + 12, 4, 6); }
-        continue;
-      }
-      if (th.cityKind === 'factory') { // chimneys with smoke drifting off them
-        ctx.fillRect(xx, base - L.h * 0.6, L.w, L.h + 60); ctx.fillRect(xx + L.w / 2 - 4, base - L.h - 20, 8, L.h * 0.5 + 20);
-        ctx.globalAlpha = 0.25; ctx.fillStyle = '#5a5a52';
-        for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(xx + L.w / 2 + k * 9 + Math.sin(t + k) * 2, base - L.h - 24 - k * 9, 5 + k * 2, 0, 7); ctx.fill(); }
-        ctx.globalAlpha = 1;
-        if (Math.sin(t * 3 + L.x) > 0.6) { ctx.fillStyle = th.win[1]; ctx.fillRect(xx + L.w / 2 - 1, base - L.h - 22, 2, 2); }
-        continue;
-      }
-      if (th.cityKind === 'pines') { // a ridge of pine silhouettes
-        for (let k = 0; k < 3; k++) { const px = xx + k * L.w / 2, ph = L.h * (0.5 + 0.2 * k); ctx.beginPath(); ctx.moveTo(px - 12, base + 60); ctx.lineTo(px, base - ph); ctx.lineTo(px + 12, base + 60); ctx.fill(); }
-        continue;
-      }
-      if (th.cityKind === 'mesas') {
-        ctx.beginPath(); ctx.moveTo(xx - 14, base + 60); ctx.lineTo(xx, base - L.h * 0.7); ctx.lineTo(xx + L.w, base - L.h * 0.7); ctx.lineTo(xx + L.w + 14, base + 60); ctx.fill();
-        ctx.fillStyle = th.hill; ctx.fillRect(xx + 3, base - L.h * 0.7 + 8, L.w - 6, 2);
         continue;
       }
       ctx.fillRect(xx, base - L.h, L.w, L.h + 60);
@@ -4465,6 +5225,24 @@ function drawDecor(t) {
       ctx.globalAlpha = 0.25 + Math.sin(t * 2 + d.seed) * 0.1; ctx.fillStyle = '#e78ac3'; ctx.beginPath(); ctx.arc(x, y - 7, 11, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
       for (const [ox, h, col] of [[-5, 9, '#b3a6ff'], [0, 15, '#e78ac3'], [5, 7, '#b3a6ff']]) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + ox - 3, y); ctx.lineTo(x + ox, y - h); ctx.lineTo(x + ox + 3, y); ctx.fill(); }
       ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 12, 1, 3);
+    } else if (d.kind === 'scarecrow') { // a scarecrow in a straw hat
+      const l = Math.round(sway * 10);
+      ctx.fillStyle = '#5a4226'; ctx.fillRect(x - 1, y - 22, 2, 22); ctx.fillRect(x - 9 + l, y - 17, 18, 2);
+      ctx.fillStyle = '#8e2b3c'; ctx.fillRect(x - 4 + l, y - 18, 8, 9); ctx.fillStyle = '#d9b45a'; ctx.fillRect(x - 10 + l, y - 16, 2, 3); ctx.fillRect(x + 8 + l, y - 16, 2, 3);
+      ctx.fillStyle = '#e6d6a0'; ctx.fillRect(x - 3 + l, y - 24, 6, 6); ctx.fillStyle = '#25223a'; ctx.fillRect(x - 2 + l, y - 22, 1, 1); ctx.fillRect(x + 1 + l, y - 22, 1, 1);
+      ctx.fillStyle = '#c99a3a'; ctx.fillRect(x - 6 + l, y - 26, 12, 2); ctx.fillRect(x - 3 + l, y - 28, 6, 2);
+    } else if (d.kind === 'orange') { // an orange tree: a round crown with fruit
+      const h = 14 + (d.seed * 2 | 0), l = Math.round(sway * 12);
+      ctx.fillStyle = '#5a3a22'; ctx.fillRect(x - 1, y - h, 3, h);
+      ctx.fillStyle = '#2f6a2a'; ctx.beginPath(); ctx.arc(x + l, y - h - 6, 11, 0, 7); ctx.fill();
+      ctx.fillStyle = '#4f8f2f'; ctx.beginPath(); ctx.arc(x - 3 + l, y - h - 9, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ff9a2a'; for (let k = 0; k < 6; k++) ctx.fillRect(Math.round(x + l + Math.cos(k * 2.1 + d.seed) * 7) - 1, Math.round(y - h - 6 + Math.sin(k * 2.1 + d.seed) * 6) - 1, 3, 3);
+    } else if (d.kind === 'neon') { // a neon sign that flickers now and then; `back` stands it on poles, otherwise it is painted on a board
+      ctx.font = '8px ' + FONT; ctx.textAlign = 'center';
+      const w = d.text.length * 6 + 10, top = d.back ? y - 44 : y + 10, on = Math.sin(t * 13 + d.seed * 7) < 0.96;
+      if (d.back) { ctx.fillStyle = '#25223a'; ctx.fillRect(x - w / 2 + 6, top + 16, 2, y - top - 16); ctx.fillRect(x + w / 2 - 8, top + 16, 2, y - top - 16); }
+      ctx.fillStyle = '#1a1030'; ctx.fillRect(x - w / 2, top, w, 16); ctx.strokeStyle = on ? '#4ff0ff' : '#2a6070'; ctx.strokeRect(x - w / 2 + 1.5, top + 1.5, w - 3, 13);
+      ctx.fillStyle = on ? '#ff4fa3' : '#6a2a50'; ctx.fillText(d.text, x, top + 11);
     } else if (d.kind === 'sandbags') {
       for (let k = 0; k < 5; k++) { const bx = x - 12 + (k % 3) * 8 + (k > 2 ? 4 : 0), by = y - (k > 2 ? 10 : 5); ctx.fillStyle = '#8b7a55'; ctx.fillRect(bx, by, 8, 5); ctx.fillStyle = '#6e6043'; ctx.fillRect(bx, by + 4, 8, 1); ctx.fillRect(bx + 3, by + 1, 1, 2); }
     }
@@ -4825,8 +5603,8 @@ function drawEnt(e, t) {
     case 'icicle': {
       const sh = e.warn > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
       ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.moveTo(x - 1 + sh, y); ctx.lineTo(x + e.w + 1 + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h + 1); ctx.fill();
-      ctx.fillStyle = '#b6defa'; ctx.beginPath(); ctx.moveTo(x + sh, y); ctx.lineTo(x + e.w + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 1 + sh, y + 1, 1, 6);
+      ctx.fillStyle = e.rock ? theme.dirt[3] : '#b6defa'; ctx.beginPath(); ctx.moveTo(x + sh, y); ctx.lineTo(x + e.w + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h); ctx.fill();
+      ctx.fillStyle = e.rock ? theme.dirt[2] : '#ffffff'; ctx.fillRect(x + 1 + sh, y + 1, 1, 6);
       break;
     }
     case 'mechsuit':
@@ -5350,6 +6128,7 @@ function render(t) {
   drawLamps(t);
   drawCrawlers(t);
   drawTiles(t);
+  drawDevices(t);
   drawShadows();
   drawPlants(t);
   drawCritters(t);
@@ -5474,6 +6253,9 @@ const LIFE = {
   plant: { plants: ['weed'], critters: ['rat', 'rat', 'bird'], bird: ['#3a3a3a', '#6a6a6a'] },
   snow: { plants: ['shrub', 'shrub'], critters: ['bird', 'hare'], bird: ['#16161f', '#3a3a4a'] },
   moon: { plants: [], critters: [] },
+  sewer: { plants: ['mushroom', 'mushroom', 'tuft'], vines: 0.18, critters: ['rat', 'rat', 'bat'] },
+  city: { plants: ['weed', 'tuft'], critters: ['rat', 'bird', 'bird'], bird: ['#5c5c6c', '#8a8a9a'] },
+  grove: { plants: ['tuft', 'flower', 'bush', 'fern', 'flower'], vines: 0.05, critters: ['bird', 'butterfly', 'butterfly', 'lizard'], bird: ['#f2c94c', '#e8862a'] },
 };
 const PLANT_H = { tuft: 8, fern: 11, flower: 10, bush: 10, shrub: 8, reed: 18, mushroom: 7, weed: 6 };
 const FLOWER_COL = ['#e78ac3', '#f2c94c', '#8fd3ff', '#ffffff', '#ff6a4a'];
@@ -5806,5 +6588,6 @@ if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt,
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();
+if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 })();
 </script>

@@ -16,7 +16,7 @@ const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + 
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
 
 const N = S.nLevels;
-check('the campaign has 15 missions', N === 15, N);
+check('the campaign has 18 missions', N === 18, N);
 check('King Citrus is still the last mission', S.levelDef(N - 1).name === 'CITRUS CITADEL');
 check('Lab Siege and Moon Base come right after the campaign', S.levelDef(S.SIEGE).name === 'LAB SIEGE' && S.levelDef(S.MOON).name === 'MOON BASE');
 const names = Array.from({ length: N }, (_, i) => S.levelDef(i).name);

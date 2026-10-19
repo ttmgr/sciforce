@@ -89,7 +89,7 @@ check('running out of bros ends the siege', over, S.state + ' lives ' + S.lives)
 // ---- Boss Rush
 S.startMode('rush');
 check('Boss Rush starts with the first boss', S.state === 'play' && S.mode === 'rush' && S.rush.i === 0);
-check('Boss Rush has 16 bosses including the new ones', S.RUSH.length === 16, S.RUSH.length);
+check('Boss Rush has 19 bosses including the new ones', S.RUSH.length === 19, S.RUSH.length);
 let names = [];
 for (let i = 0; i < S.RUSH.length; i++) {
   const B = S.ents.find((e) => e.type === S.RUSH[i][2] && !e.dead);
@@ -101,7 +101,7 @@ for (let i = 0; i < S.RUSH.length; i++) {
   for (let k = 0; k < 60 * 4 && S.rush.i === i && S.state === 'play'; k++) { S.P.inv = 1e9; run(1); }
 }
 check('beating every boss finishes the rush', S.state === 'modedone', S.state + ' at ' + S.rush.i);
-check('the rush includes the new bosses', ['CHEMTRAIL COPTER', 'QUARTZ QUEEN', 'MIASMA MACHINE', 'ZODIAC MECH', 'THE PITCHMAN', 'UFO HOAX BALLOON', 'SAND SCARAB', 'STEAM TANK', 'ASTRAL KOPTER'].every((n) => names.includes(n)), names.join(','));
+check('the rush includes the new bosses', ['CHEMTRAIL COPTER', 'QUARTZ QUEEN', 'MIASMA MACHINE', 'ZODIAC MECH', 'THE PITCHMAN', 'UFO HOAX BALLOON', 'SAND SCARAB', 'STEAM TANK', 'ASTRAL KOPTER', 'SLUDGE SERPENT', 'THE INFLUENCER', 'THE ZESTINATOR'].every((n) => names.includes(n)), names.join(','));
 check('clearing the rush unlocks BOSS RUSHER', !!S.trophies.rush);
 check('the finish screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());
 
