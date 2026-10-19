@@ -10,7 +10,7 @@ const sb={window:win,document:doc,addEventListener:noop,performance:{now:()=>Dat
 vm.createContext(sb); vm.runInContext(src,sb);
 const S=win.__SB__;
 let t=0; const run=(n,keys={})=>{for(let i=0;i<n;i++){Object.assign(S.keys,keys);S.step(1/60);for(const k in S.pressed)S.pressed[k]=false;t+=1/60; if(i%10==0)S.render(t);}};
-S.pressed.start=true; run(1); console.log('state',S.state, 'P',S.P.x|0,S.P.y|0);
+for(let k=0;k<3;k++){S.pressed.start=true; run(1);} // title -> world map -> briefing -> play console.log('state',S.state, 'P',S.P.x|0,S.P.y|0);
 // walk right firing, jumping periodically, cycle specials
 let maxX=0;
 for(let i=0;i<9000 && S.state==='play';i++){

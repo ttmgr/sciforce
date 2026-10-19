@@ -80,7 +80,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
       <li><kbd>C</kbd> / <kbd>L</kbd> punch; <kbd>↓</kbd> + punch in the air slams down</li>
       <li><kbd>Shift</kbd> / <kbd>V</kbd> dash-roll (dodges bullets)</li>
       <li>Jump off a wall to wall-jump · gamepad works too</li>
-      <li><kbd>P</kbd> pause · <kbd>M</kbd> sound</li>
+      <li><kbd>Tab</kbd> hold for the map · <kbd>P</kbd> pause menu · <kbd>M</kbd> sound</li>
     </ul>
     <button class="ui" id="fs" type="button">Fullscreen</button>
   </div>
@@ -98,8 +98,8 @@ const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 const T = 16, VW = 480, VH = 270, LW = 236, LH = 22, G = 900;
-const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6;
-const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2];
+const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
+const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
 const BG_EARTH = 1, BG_BRICK = 2;
 const FONT = '"Silkscreen", "Courier New", monospace';
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -361,6 +361,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(0, 20, 16); ground(21, 26, 14); ground(27, 33, 15); ground(34, 43, 13);
   fill(38, 11, 40, 12, DIRT);
   sp('grunt', 17); sp('propane', 22); sp('grunt', 24); sp('ammo', 26); sp('barrel', 29); sp('grunt', 31); sp('dog', 33); sp('cage', 36, 0, { bro: 'curie' }); sp('grunt', 42);
+  sp('pickup', 35, 0, { item: 'intel' }); sp('spring', 32);
   dc('palm', 2); dc('palm', 9, { lean: -1 }); dc('sign', 12, { text: '100% NATURAL' }); dc('palm', 19); dc('palm', 30, { lean: -1 }); dc('sandbags', 41);
 
   // 2. Bunker
@@ -370,7 +371,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(67, 13, 67, 15, EMPTY); fill(68, 13, 68, 15, CRATE);
   fill(55, 9, 57, 9, STEEL); // girder: the roof holds as long as it is linked to this or a wall
   bgFill(45, 11, 67, 15, BG_BRICK);
-  sp('scout', 47, 11); sp('grunt', 50, 11); sp('barrel', 53, 11); sp('grunt', 56, 11); sp('barrel', 59, 11); sp('propane', 60, 11); sp('grunt', 62, 11); sp('cage', 64, 11, { bro: 'tesla' });
+  sp('target', 55, 11, { skin: 'vat' }); sp('alarm', 47); sp('scout', 47, 11); sp('grunt', 50, 11); sp('barrel', 53, 11); sp('grunt', 56, 11); sp('barrel', 59, 11); sp('propane', 60, 11); sp('grunt', 62, 11); sp('cage', 64, 11, { bro: 'tesla' });
   lamp(49, 10); lamp(56, 10); lamp(63, 10);
   dc('plaque', 52, { r: 10, text: 'QUACK HQ' });
   sp('grunt', 52); sp('medic', 58); sp('turret', 66);
@@ -382,12 +383,13 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(77, 16, 100, 16, CRATE);
   for (const c of [80, 84, 88, 92, 96]) fill(c, 17, c, 20, STEEL); // steel piles: hop across them if the crates burn away
   fill(88, 12, 89, 15, BRICK);
-  sp('shield', 71); sp('ammo', 74); sp('grunt', 81); sp('turret', 88); sp('grunt', 95); sp('bomber', 99);
+  sp('shield', 71); sp('ammo', 74); sp('itemcrate', 76); sp('grunt', 81); sp('turret', 88); sp('grunt', 95); sp('bomber', 99);
   dc('sign', 74, { text: 'ACID' }); dc('sandbags', 70);
 
   // 4. Cliff with a cave and a watchtower
   ground(101, 105, 16); ground(106, 108, 13); ground(109, 140, 8);
   sp('jetpack', 103); sp('sniper', 112);
+  fill(108, 8, 108, 12, LADDER); sp('target', 113, 11, { skin: 'vat' }); sp('pickup', 121, 11, { item: 'intel' });
   fill(112, 11, 125, 13, EMPTY);
   fill(124, 4, 128, 4, BRICK); fill(124, 5, 124, 7, CRATE); fill(128, 5, 128, 7, CRATE); // watchtower on wooden legs
   sp('grenadier', 111); sp('grunt', 114); sp('barrel', 118); sp('grunt', 120); sp('barrel', 123); sp('grunt', 126);
@@ -400,7 +402,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(141, 150, 12); ground(151, 175, 16);
   fill(160, 9, 161, 15, BRICK);
   sp('mechsuit', 142); sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
-  sp('flamer', 156); sp('brute', 163); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
+  sp('flamer', 156); sp('fueltank', 154); sp('mine', 159); sp('mine', 162); sp('brute', 163); sp('target', 165, 0, { skin: 'vat' }); sp('pickup', 149, 0, { item: 'intel' }); sp('itemcrate', 143); sp('alarm', 152); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
   dc('sandbags', 146); dc('sandbags', 153); dc('palm', 164, { lean: -1 }); dc('sign', 171, { text: 'NO SCIENCE' });
 
   // 6. Boss arena and extraction pad
@@ -414,7 +416,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
 function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Dunes
   ground(0, 14, 15); ground(15, 20, 14); ground(21, 27, 13); ground(28, 36, 15);
-  sp('grunt', 12); sp('dog', 18); sp('cage', 22, 0, { bro: 'ada' }); sp('scout', 26); sp('ammo', 30); sp('grunt', 33);
+  sp('grunt', 12); sp('dog', 18); sp('cage', 22, 0, { bro: 'ada' }); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
   dc('cactus', 3); dc('sign', 7, { text: 'DETOX 4 LIFE' }); dc('cactus', 11); dc('crystal', 16); dc('cactus', 25); dc('palm', 35, { lean: -1 });
 
   // 2. The Wellness Retreat: two floors, crate doors, a hole in the middle floor to climb through
@@ -422,8 +424,9 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(39, 8, 59, 15, BRICK); fill(41, 12, 57, 15, EMPTY); fill(41, 9, 57, 10, EMPTY);
   fill(39, 13, 39, 15, CRATE); fill(40, 13, 40, 15, EMPTY); fill(59, 13, 59, 15, CRATE); fill(58, 13, 58, 15, EMPTY);
   fill(49, 11, 50, 11, EMPTY); fill(48, 8, 50, 8, STEEL);
+  fill(49, 12, 49, 15, LADDER); fill(38, 8, 38, 15, LADDER);
   bgFill(40, 9, 58, 15, BG_BRICK);
-  sp('shield', 45, 12); sp('medic', 51, 12); sp('grunt', 53, 12); sp('barrel', 55, 12); sp('grenadier', 43, 9); sp('ammo', 47, 9); sp('grunt', 55, 9);
+  sp('pickup', 54, 9, { item: 'intel' }); sp('alarm', 61); sp('shield', 45, 12); sp('medic', 51, 12); sp('grunt', 53, 12); sp('barrel', 55, 12); sp('grenadier', 43, 9); sp('ammo', 47, 9); sp('grunt', 55, 9);
   sp('guru', 52); sp('rocketeer', 57);
   lamp(45, 11); lamp(53, 11); lamp(44, 8); lamp(55, 8);
   dc('plaque', 49, { r: 8, text: 'WELLNESS SPA' }); dc('cactus', 38);
@@ -431,14 +434,14 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
 
   // 3. Oil field
   fill(74, 13, 77, 15, DIRT);
-  sp('strike', 63); sp('jetpack', 69); sp('barrel', 65); sp('barrel', 66); sp('dog', 68); sp('propane', 70); sp('barrel', 72); sp('rocketeer', 75); sp('heavy', 80);
+  sp('strike', 63); sp('fueltank', 67); sp('itemcrate', 76); sp('fueltank', 79); sp('jetpack', 69); sp('barrel', 65); sp('barrel', 66); sp('dog', 68); sp('propane', 70); sp('barrel', 72); sp('rocketeer', 75); sp('heavy', 80);
   dc('sandbags', 64); dc('crystal', 71); dc('sign', 79, { text: 'TOXINS OUT' });
 
   // 4. Detoxkopter arena: towers to climb so you can reach it
   ground(83, 125, 16);
   fill(92, 12, 93, 15, BRICK); fill(104, 11, 105, 15, BRICK); fill(116, 12, 117, 15, BRICK);
   fill(124, 0, 125, 15, STEEL);
-  sp('ammo', 98); sp('ammo', 110);
+  sp('ammo', 98); sp('ammo', 110); sp('spring', 96); sp('spring', 112); sp('target', 86, 0, { skin: 'radio' });
   sp('kopter', 110, 0, { ax0: 85, ax1: 122, trig: 87, gate: [124, 125, 0, 15] });
   dc('sandbags', 88); dc('sandbags', 99); dc('sandbags', 111); dc('sign', 85, { text: 'HELIPAD' });
 
@@ -448,7 +451,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(135, 21, 150, 21, STEEL); fill(135, 17, 150, 20, ACID); fill(135, 16, 150, 16, CRATE);
   for (const c of [138, 142, 146, 149]) fill(c, 17, c, 20, STEEL);
   ground(151, 172, 14); fill(158, 11, 161, 13, DIRT);
-  sp('grunt', 130); sp('dog', 132); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
+  sp('mine', 128); sp('mine', 131); sp('grunt', 130); sp('dog', 132); sp('pickup', 160, 11, { item: 'intel' }); sp('itemcrate', 168); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
   sp('flamer', 133); sp('ammo', 153); sp('strike', 154); sp('heavy', 155); sp('brute', 157); sp('sniper', 160); sp('rocketeer', 159); sp('cage', 164, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 170);
   dc('sign', 128, { text: 'ACID' }); dc('cactus', 152); dc('crystal', 157); dc('cactus', 166);
   sp('flag', 171);
@@ -464,7 +467,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Snowy slopes with a frozen pond (ice is slippery)
   ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
   fill(12, 14, 17, 14, ICE);
-  sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('scout', 25); sp('ammo', 30); sp('grenadier', 33);
+  sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
   dc('pine', 3); dc('sign', 6, { text: 'COLD CURES ALL' }); dc('pine', 9); dc('snowman', 20); dc('pine', 29); dc('pine', 35);
 
   // 2. The Cryo Spa: brick, crate doors, an ice floor, a mech parked outside
@@ -474,7 +477,8 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(53, 8, 55, 8, STEEL); fill(44, 16, 64, 16, ICE);
   bgFill(43, 10, 65, 15, BG_BRICK);
   sp('mechsuit', 38);
-  sp('shield', 48, 10); sp('medic', 52, 10); sp('heavy', 56, 10); sp('barrel', 59, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'galileo' });
+  sp('target', 45, 10, { skin: 'server' }); sp('target', 59, 10, { skin: 'server' }); sp('alarm', 67);
+  sp('shield', 48, 10); sp('medic', 52, 10); sp('heavy', 56, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'galileo' });
   sp('guru', 50); sp('rocketeer', 62);
   lamp(47, 9); lamp(54, 9); lamp(61, 9);
   dc('plaque', 54, { r: 8, text: 'CRYO SPA' }); dc('snowman', 69);
@@ -485,10 +489,11 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(76, 21, 104, 21, STEEL); fill(76, 17, 104, 20, ACID); fill(76, 16, 104, 16, ICE);
   for (const c of [79, 83, 87, 91, 95, 99, 103]) fill(c, 17, c, 20, STEEL);
   sp('grunt', 82); sp('jetpack', 88); sp('shield', 90); sp('dog', 96); sp('jetpack', 98); sp('bomber', 101);
-  dc('sign', 74, { text: 'THIN ICE' });
+  dc('sign', 74, { text: 'THIN ICE' }); sp('spring', 75);
 
   // 4. Cliff with a tunnel underneath: icicles hang from the tunnel roof, rocketeers wait on top
   ground(105, 112, 16); ground(113, 150, 10);
+  fill(112, 10, 112, 15, LADDER); sp('pickup', 137, 13, { item: 'intel' }); sp('itemcrate', 150);
   fill(113, 13, 150, 15, EMPTY);
   for (const c of [120, 132, 144]) fill(c, 10, c, 10, STEEL); // bedrock studs hold the tunnel roof up
   for (const c of [118, 123, 129, 135, 141]) sp('icicle', c, 0, { hang: 12 });
@@ -498,7 +503,8 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
 
   // 5. Snow fort
   ground(151, 176, 16);
-  fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK);
+  fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK); fill(169, 8, 169, 15, LADDER);
+  sp('pickup', 158, 0, { item: 'intel' }); sp('mine', 157); sp('mine', 164); sp('fueltank', 166); sp('alarm', 154);
   sp('flag', 152); sp('flamer', 155); sp('shield', 156); sp('brute', 163); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
   dc('sandbags', 154); dc('snowman', 163);
 
@@ -509,16 +515,31 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('tank', 212, 0, { ax0: 178, ax1: 223, trig: 182, final: true, gate: [224, 225, 4, 15] });
   dc('sign', 180, { text: 'SNAKE OIL CO' }); dc('pine', 228); dc('snowman', 232);
 }
+// the campaign: Operation Infinite Dilution. Each level has a briefing, objectives (required ones gate the
+// chopper), three intel files that tell the story, a debrief, and a spot on the world map.
 const LEVELS = [
-  { name: 'PLACEBO ISLAND', sub: 'Free 4 scientists, destroy the Homeopathitron', theme: 'island', build: buildIsland, cages: 4, pad: [227, 16] },
-  { name: 'DETOX DESERT', sub: 'Free 2 scientists, down the Detoxkopter, kill the Crystal Crawler', theme: 'desert', build: buildDesert, cages: 2, pad: [230, 12] },
-  { name: 'CRYO SUMMIT', sub: 'Free 2 scientists, stop Dr. Placebo and his Snake Oil Tank', theme: 'snow', build: buildCryo, cages: 2, pad: [230, 16] },
+  { name: 'PLACEBO ISLAND', sub: 'Smash the vats, destroy the Homeopathitron', theme: 'island', build: buildIsland, cages: 4, pad: [227, 16], map: [118, 168],
+    brief: 'Dr. Placebo has taken Placebo Island and is brewing medicine that is 100% water. He is holding four of our scientists in cages. Smash his three placebo vats, free our people and take down his walking pill, the Homeopathitron.',
+    debrief: 'The island is clear. The shipping logs point to a spa out in the Detox Desert.',
+    objectives: [{ id: 'vat', text: 'Smash the placebo vats', need: 3, req: true }, { id: 'boss', text: 'Destroy the Homeopathitron', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Shipping log: all vats go to the Wellness Spa, Detox Desert.', 'Memo: the more you dilute it, the stronger it gets. - Dr. P', 'Map scrap: a mountain lab marked CRYO, a factory marked DILUTION PLANT.'] },
+  { name: 'DETOX DESERT', sub: 'Topple the mast, down the kopter, kill the Crawler', theme: 'desert', build: buildDesert, cages: 2, pad: [230, 12], map: [212, 118],
+    brief: 'The Wellness Spa sells detox to millions and pumps the ads out over a radio mast. Topple the mast, shoot down the Detoxkopter that guards the airspace and kill the Crystal Crawler that lives under the sand.',
+    debrief: 'The ads are off the air. An invoice in the spa office was addressed to Dr. Placebo, Cryo Summit.',
+    objectives: [{ id: 'radio', text: 'Topple the radio mast', req: true }, { id: 'kopter', text: 'Shoot down the Detoxkopter', req: true }, { id: 'boss', text: 'Kill the Crystal Crawler', req: true }, { id: 'cage', text: 'Free the scientists', need: 2 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Spa brochure: our crystals absorb toxins. And radio waves. And scientists.', 'Radio script: ice baths cure everything. Visit Cryo Summit.', 'Invoice: one Snake Oil Tank, delivered to Dr. Placebo, Cryo Summit.'] },
+  { name: 'CRYO SUMMIT', sub: 'Wipe the servers, stop the Snake Oil Tank', theme: 'snow', build: buildCryo, cages: 2, pad: [230, 16], map: [300, 78],
+    brief: 'Dr. Placebo himself is hiding at Cryo Summit. Wipe the two server racks that hold his customer list, free our people and stop his Snake Oil Tank.',
+    debrief: 'Dr. Placebo bailed out of the tank in an escape pod. The diary says he has gone to the Dilution Plant to start the Engine.',
+    objectives: [{ id: 'server', text: 'Wipe the server racks', need: 2, req: true }, { id: 'boss', text: 'Stop the Snake Oil Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 2 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Server log: customer list 4.2 million. Repeat customers: all of them.', 'Diary: if the summit falls, I flee to the Dilution Plant and start the Engine.', 'Blueprint: the Succussion Engine. Three stabiliser vats feed its core.'] },
 ];
+const ENDING = 'The Succussion Engine is scrap and the water is safe. Dr. Placebo is on his way to a very long, very real trial. Science wins.';
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
 // ---------------------------------------------------------------- tile physics
 const tileAt = (c, r) => (c < 0 || c >= LW ? STEEL : r < 0 || r >= LH ? EMPTY : tiles[r * LW + c]);
-const isSolidT = (v) => v !== EMPTY && v !== ACID;
+const isSolidT = (v) => v !== EMPTY && v !== ACID && v !== LADDER;
 const solidPx = (x, y) => isSolidT(tileAt(Math.floor(x / T), Math.floor(y / T)));
 function rectHas(x, y, w, h, test) {
   const c0 = Math.floor(x / T), c1 = Math.floor((x + w - 0.01) / T), r0 = Math.floor(y / T), r1 = Math.floor((y + h - 0.01) / T);
@@ -560,7 +581,7 @@ function damageTile(c, r, d) {
 function breakTile(c, r) {
   const i = r * LW + c, v = tiles[i];
   if (!isSolidT(v)) return;
-  tiles[i] = EMPTY; decals.delete(i); shk[i] = 0;
+  tiles[i] = EMPTY; decals.delete(i); shk[i] = 0; miniDirty = true;
   const cols = TILE_COL[v];
   for (let k = 0; k < 4; k++) chunk(c * T + rand(3, 13), r * T + rand(3, 13), rand(-110, 110), rand(-230, -40), cols[k % 2]);
   part(c * T + 8, r * T + 8, rand(-10, 10), rand(-30, -10), '#4b4766', rand(0.4, 0.8), rand(3, 5), 0, 'smoke');
@@ -601,7 +622,7 @@ function updateCollapse(dt) {
     shakeList.splice(k, 1); shk[i] = 0;
     if (!isSolidT(tiles[i])) continue;
     falling.push({ c, x: c * T, y: r * T, r0: r, vy: 0, v: tiles[i], hp: thp[i], dec: decals.get(i) });
-    tiles[i] = EMPTY; decals.delete(i);
+    tiles[i] = EMPTY; decals.delete(i); miniDirty = true;
   }
   if (!falling.length) return;
   falling.sort((a, b) => b.y - a.y); // lowest first, so stacked blocks land on each other in order
@@ -622,7 +643,7 @@ function updateCollapse(dt) {
     if (isSolidT(tileAt(f.c, rb))) {
       const rl = rb - 1, i = rl * LW + f.c;
       if (rl < 0 || tiles[i] !== EMPTY) { shatter(f); continue; }
-      tiles[i] = f.v; thp[i] = f.hp; f.dead = true; collapseDirty = true;
+      tiles[i] = f.v; thp[i] = f.hp; f.dead = true; collapseDirty = true; miniDirty = true;
       if (f.dec) decals.set(i, f.dec.map(([x, y, col, sz]) => [x, y + (rl - f.r0) * T, col, sz]));
       if (f.vy > 90) {
         sfx('thud'); shake = Math.min(10, shake + 1.2);
@@ -713,6 +734,8 @@ function sfx(n) {
       case 'skid': noise(0.12, 0.04, 2500); break;
       case 'drill': noise(0.08, 0.05, 3500); tone(180, 220, 0.08, 'sawtooth', 0.02); break;
       case 'sniper': noise(0.3, 0.2, 5000); tone(1200, 200, 0.2, 'square', 0.04); break;
+      case 'boing': tone(200, 700, 0.15, 'square', 0.04); break;
+      case 'siren': tone(700, 1100, 0.24, 'square', 0.03); break;
       case 'squish': noise(0.1, 0.12, 900); tone(200, 80, 0.12, 'sine', 0.05); break;
     }
   } catch (e) { /* audio is optional */ }
@@ -753,7 +776,7 @@ function updateMusic() {
 // ---------------------------------------------------------------- input
 const keys = {}, pressed = {};
 const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump', ArrowDown: 'down', KeyS: 'down',
-  KeyZ: 'fire', KeyJ: 'fire', KeyX: 'special', KeyK: 'special', KeyC: 'melee', KeyL: 'melee', ShiftLeft: 'dash', ShiftRight: 'dash', KeyV: 'dash', KeyI: 'dash',
+  Tab: 'map', KeyZ: 'fire', KeyJ: 'fire', KeyX: 'special', KeyK: 'special', KeyC: 'melee', KeyL: 'melee', ShiftLeft: 'dash', ShiftRight: 'dash', KeyV: 'dash', KeyI: 'dash',
   Enter: 'start', KeyP: 'pause', Escape: 'pause', KeyM: 'mute' };
 addEventListener('keydown', (e) => {
   const a = KEYMAP[e.code]; if (!a) return;
@@ -803,7 +826,7 @@ document.getElementById('fs').addEventListener('click', () => {
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
-const settings = { shake: true, scanlines: false, music: true, lighting: true };
+const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
 let hiScore = 0;
 try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
@@ -814,7 +837,7 @@ function bankScore() {
   if (runScore > hiScore) { hiScore = runScore; stats.newHi = true; try { localStorage.setItem('sciencebros.hiscore', String(hiScore)); } catch (e) { /* storage blocked */ } }
 }
 const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
-const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
+const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
   if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
@@ -822,7 +845,7 @@ function pauseMenu() {
   if (pressed.fire || pressed.start || pressed.melee) {
     const [, key] = MENU[menuSel];
     if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
-    else if (menuSel === 4) { paused = false; startLevel(level); }
+    else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); }
     else { paused = false; state = 'title'; init(); }
   }
 }
@@ -936,7 +959,8 @@ const DIMS = {
   jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
-  cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], icicle: [6, 14, 1], tank: [64, 30, 180], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
+  cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1],
+  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -955,6 +979,9 @@ function makeEnt(s) {
   if (s.type === 'turret') { e.cool = rand(0.5, 1.5); e.burst = 0; e.ang = Math.PI; }
   if (s.type === 'bomber') { e.run = false; e.fuse = 2.6; }
   if (s.type === 'cage') e.bro = s.bro;
+  if (s.type === 'pickup') { e.item = s.item; e.keep = !!s.item; }
+  if (s.type === 'itemcrate') e.item = s.item;
+  if (s.type === 'target') { e.skin = s.skin; if (s.skin === 'radio') { e.h = 56; e.y = surf(s.c, s.from) * T - 56; } }
   if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; }
   if (s.type === 'flag') e.on = false;
   if (BOSS[s.type]) {
@@ -970,16 +997,32 @@ function newPlayer(x, y, bro) {
   return { x, y, w: 10, h: 15, vx: 0, vy: 0, face: 1, bro, alive: true, onGround: false, wall: 0, coy: 0, jbuf: 0, cool: 0, mcool: 0, punch: 0, spec: 3, inv: 2, anim: 0, ride: false, squash: 0, stepT: 0, recoil: 0, rp: 0, climb: false,
     dash: 0, dcool: 0, dashDir: 1, wlock: 0, pound: 0, layers: 0 };
 }
+// objectives: each level lists them; required ones must be done before the chopper comes
+let objectives = [], extractPending = false, dossier = [], objShowT = 0;
+const objective = (id) => objectives.find((o) => o.id === id);
+const reqDone = () => objectives.every((o) => !o.req || o.n >= o.need);
+function objHit(id, n = 1) {
+  const o = objective(id); if (!o || o.n >= o.need) return;
+  o.n = Math.min(o.need, o.n + n); objShowT = 4;
+  if (o.n >= o.need) { floatText(P.x + 5, P.y - 12, 'OBJECTIVE DONE', '#a6d854'); sfx('flag'); if (!o.req) addScore(2000, false); }
+  if (extractPending && reqDone()) { extractPending = false; callChopper(); }
+}
+function callChopper() {
+  const [pc, pr] = LEVELS[level].pad;
+  chopper = { x: LW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
+  showBanner('GET TO THE CHOPPER', 'Extraction pad, east side', 4);
+}
 // a new run: only Einstein, three bros in reserve
-function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; }
+function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; dossier = []; }
 function startLevel(n) {
   level = n;
   buildTiles(THEMES[LEVELS[n].theme]);
   buildLevel();
-  ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0;
+  ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
   boss = ents.find((e) => e.final); chopper = null;
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
+  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 6;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[n === 0 ? 'einstein' : unlocked[(Math.random() * unlocked.length) | 0]]);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
@@ -989,10 +1032,11 @@ function startLevel(n) {
 function init() { newGame(); startLevel(0); }
 
 // ---------------------------------------------------------------- combat
-const HITTABLE = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1 };
+const HITTABLE = { mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
 const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, mine: 1, alarm: 1, target: 1 };
 const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
+const foe = (e) => live(e) && !OBJ[e.type];
 // how: 'shot' and 'blast' leave a ragdoll, 'gib' and 'crush' tear the body apart, 'burn' leaves a charred body, 'punch' sends it flying
 function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (e.dead || (BOSS[e.type] && (e.doomed || !e.active))) return;
@@ -1025,13 +1069,25 @@ function spawnPickup(x, y, strike = false) {
   const p = makeEnt({ type: 'pickup', c: 0, y: y - 4 });
   p.x = x - 4; p.vy = -220; p.kx = rand(-40, 40); p.strike = strike;
   ents.push(p);
+  return p;
 }
+const ITEM_COL = { special: '#a6d854', strike: '#d9534f', shield: '#8fd3ff', overclock: '#f2c94c', jetpack: '#b4bed0', life: '#e78ac3', intel: '#f2c94c' };
 function killEnemy(e, how = 'shot') {
   if (BOSS[e.type]) { bossDying(e); return; }
   e.dead = true;
   const [cx, cy] = center(e), f = e.face > 0 ? 0 : 1;
   if (e.type === 'barrel') { explode(cx, cy, 44, 6, 'env', 4); return; }
   if (e.type === 'propane') { explode(cx, cy, 40, 6, 'env', 4); return; }
+  if (e.type === 'fueltank') { explode(cx, cy, 72, 8, 'env', 5); ignite(cx, cy, 6, 60); shake += 6; return; }
+  if (e.type === 'mine') { explode(cx, cy, 30, 6, 'env', 2); return; }
+  if (e.type === 'alarm') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-120, 120), rand(-200, -60), i % 2 ? '#d9534f' : '#5c6480'); floatText(cx, cy - 10, 'ALARM DOWN', '#a6d854'); return; }
+  if (e.type === 'itemcrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#3a7a9a' : '#bfe9ff'); const pk = spawnPickup(cx, cy); pk.item = e.item || ['shield', 'overclock', 'jetpack', 'life'][(Math.random() * 4) | 0]; return; }
+  if (e.type === 'target') { // objective target: vat, radio mast or server rack
+    explode(cx, cy, 40, 6, 'p', 3); objHit(e.skin);
+    for (let i = 0; i < 14; i++) chunk(cx + rand(-8, 8), cy + rand(-12, 12), rand(-200, 200), rand(-300, -60), { vat: ['#a6d854', '#bfe9ff'], radio: ['#8b93ad', '#d9534f'], server: ['#25223a', '#66c2a5'] }[e.skin][i % 2]);
+    if (e.skin === 'vat') splash(cx, cy, 24);
+    return;
+  }
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
   if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, 'env', 3); return; }
@@ -1071,6 +1127,18 @@ function airstrike() {
   fx.push({ kind: 'jet', x: P.x - dir * 300, y: cam.y + 26, dir, from: Math.min(x0, x0 + dir * 420), to: Math.max(x0, x0 + dir * 420), drop: 0, t: 3, max: 3 });
   showBanner('AIRSTRIKE INBOUND', 'keep your head down', 1.6); sfx('jet');
 }
+// what each pickup does
+function givePickup(item, e) {
+  switch (item) {
+    case 'strike': airstrike(); break;
+    case 'shield': P.shield = 20; showBanner('SHIELD', 'stops one killing blow, 20 s', 1.2); break;
+    case 'overclock': P.over = 9; showBanner('OVERCLOCK', 'double fire rate, 9 s', 1.2); break;
+    case 'jetpack': P.jet = 7; showBanner('JETPACK', 'hold jump in the air to fly, 7 s', 1.2); break;
+    case 'life': lives++; floatText(e.x + 4, e.y - 6, '+1 BRO', '#e78ac3'); break;
+    case 'intel': objHit('intel'); { const lines = LEVELS[level].intel || []; const k = Math.min(lines.length - 1, (objective('intel') || { n: 1 }).n - 1); if (lines[k]) { showBanner('INTEL FOUND', lines[k], 3.2); dossier.push(lines[k]); } } break;
+    default: P.spec = Math.min(3, P.spec + 1); showBanner('+1 SPECIAL', P.bro.special, 1);
+  }
+}
 function dropChute(e) {
   e.chute = false;
   body({ kind: 'chunk', x: e.x + 5, y: e.y - 14, vx: rand(-30, 30), vy: -40, col: '#e6e2f0', s: 6, r: 3, bounce: 0.1, fric: 0.3, vr: rand(-3, 3), life: 4 });
@@ -1086,10 +1154,10 @@ function bossDying(e) {
 function bossDown(e) {
   e.dead = true; addScore(5000);
   if (e.gate) { const [c0, c1, r0, r1] = e.gate; for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) breakTile(c, r); }
+  objHit(e.final ? 'boss' : e.type);
   if (e.final) {
-    const [pc, pr] = LEVELS[level].pad;
-    chopper = { x: LW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
-    showBanner('GET TO THE CHOPPER', 'Extraction pad, east side', 4);
+    if (reqDone()) callChopper();
+    else { extractPending = true; showBanner('NOT DONE YET', 'Finish the objectives, then the chopper comes', 3); objShowT = 6; }
   } else showBanner('THE WAY IS OPEN', 'Keep moving east', 2.5);
 }
 // small fires on the floor around a blast: they set quacks alight and eat through wooden crates
@@ -1119,6 +1187,7 @@ function explode(x, y, r, dmg, owner, tp) {
     for (let rr = r0; rr <= r1; rr++) for (let c = c0; c <= c1; c++) {
       const d = Math.hypot(c * T + 8 - x, rr * T + 8 - y);
       if (d < r) damageTile(c, rr, tp * (1.25 - d / r));
+      if (tileAt(c, rr) === LADDER && d < r * 0.8) { tiles[rr * LW + c] = EMPTY; for (let k = 0; k < 3; k++) chunk(c * T + 8, rr * T + 8, rand(-120, 120), rand(-200, -40), '#7a5c36'); }
       const i = rr * LW + c; // blow holes in the back walls too, so the sky shows through
       if (c >= 0 && c < LW && rr >= 0 && rr < LH && bg[i] && !isSolidT(tiles[i]) && d < r * 0.7 && Math.random() < 0.85) {
         bg[i] = 0;
@@ -1340,6 +1409,11 @@ function useSpecial() {
 function killPlayer(how = 'shot', dir = 0) {
   if (!P.alive || P.ride) return;
   if (P.dash > 0 && how === 'shot') return; // the roll dodges bullets and bites
+  if (P.shield > 0 && !P.mech && P.y < LH * T) { // the shield pops instead of the bro
+    P.shield = 0; P.inv = 1.2; sfx('glass'); fx.push({ kind: 'ring', x: P.x + 5, y: P.y + 8, r: 16, t: 0.3, max: 0.3 });
+    for (let i = 0; i < 10; i++) part(P.x + 5, P.y + 8, rand(-120, 120), rand(-120, 60), '#8fd3ff', 0.4, 2);
+    return;
+  }
   if (P.mech) { // the mech takes the hit instead
     P.mech.hp -= how === 'shot' ? 1 : how === 'gib' ? 5 : how === 'crush' ? 99 : 2; P.mech.hurt = 0.1; sfx('ting');
     if (P.mech.hp <= 0) ejectMech(true);
@@ -1371,7 +1445,7 @@ function respawn() {
 
 // ---------------------------------------------------------------- update
 // title screen: the camera drifts along the level while things blow up in the background
-let attractT = 1;
+let attractT = 1, mapT = 0;
 function attract(dt) {
   if (state === 'title') {
     cam.x += 26 * dt; if (cam.x > LW * T - VW) cam.x = 0;
@@ -1391,11 +1465,14 @@ function step(dt) {
   if (pressed.mute) muted = !muted;
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
-      if (state === 'win') startLevel(level + 1); // next level, bros and reserve carry over
-      else if (state === 'over') { lives = 3; startLevel(level); } // retry this level
-      else init();
-      state = 'play';
+      if (state === 'title' || state === 'done') { newGame(); level = 0; state = 'map'; mapT = 0; }
+      else if (state === 'map') { state = 'brief'; }
+      else if (state === 'brief') { startLevel(level); state = 'play'; }
+      else if (state === 'win') { level++; state = 'map'; mapT = 0; } // bros and reserve carry over
+      else if (state === 'over') { lives = 3; startLevel(level); state = 'play'; } // retry this level
+      sfx('flag');
     }
+    mapT += dt;
     attract(dt);
     return;
   }
@@ -1409,7 +1486,7 @@ function step(dt) {
     if (pressed.dash) P.wantDash = true;
     return;
   }
-  stats.time += dt;
+  stats.time += dt; objShowT = Math.max(0, objShowT - dt);
   combo.t -= dt; combo.pop = Math.max(0, combo.pop - dt);
   const edt = slowT > 0 ? dt * 0.3 : dt;
   if (slowT > 0) slowT -= dt;
@@ -1450,6 +1527,11 @@ function updatePlayer(dt) {
   P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
   if (P.mech) { updateMechSuit(dt); return; }
   P.flip = Math.max(0, (P.flip || 0) - dt); P.aimT = Math.max(0, (P.aimT || 0) - dt);
+  P.shield = Math.max(0, (P.shield || 0) - dt); P.over = Math.max(0, (P.over || 0) - dt); P.jet = Math.max(0, (P.jet || 0) - dt);
+  if (P.jet > 0 && keys.jump && !P.onGround && P.coy <= 0 && !P.ladder) { // jetpack thrust
+    P.vy = Math.max(P.vy - 2300 * dt, -170);
+    part(P.x + 5 - P.face * 4, P.y + 13, rand(-10, 10), rand(60, 120), '', rand(0.15, 0.3), 2, 0, 'fire');
+  }
   if (P.chute) { // drifting down under a canopy; steer left and right, land to drop it
     P.vy = Math.min(P.vy + G * dt, 70); P.vx = approach(P.vx, ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)) * 70, 400 * dt);
     moveBody(P, dt); P.inv = Math.max(P.inv, 1);
@@ -1482,7 +1564,7 @@ function updatePlayer(dt) {
       for (let i = 0; i < 5; i++) part(away > 0 ? P.x : P.x + P.w, P.y + 8 + rand(-4, 4), away * rand(10, 60), rand(-40, 20), theme.dust, 0.35, 2, 0, 'smoke');
     }
   }
-  if (!keys.jump && P.vy < -150 && P.wlock <= 0) P.vy = -150;
+  if (!keys.jump && P.vy < -150 && P.wlock <= 0 && !(P.jet > 0)) P.vy = -150;
   P.vy = Math.min(P.vy + G * dt, P.pound > 0 ? 720 : 520);
 
   // dash-roll: a quick burst that slips under bullets
@@ -1497,6 +1579,19 @@ function updatePlayer(dt) {
   // ground pound: down + punch in the air slams straight down and smashes what you land on
   if (!P.onGround && keys.down && (pressed.melee || P.wantMelee) && P.pound <= 0) { P.pound = 1; P.layers = 0; P.vx = 0; P.vy = 420; P.wantMelee = false; pressed.melee = false; sfx('dash'); }
 
+  // ladders: up or down grabs on; climb, slide sideways off, or hop off the top
+  const onLadder = rectHas(P.x + 3, P.y + 2, P.w - 6, P.h - 2, (v) => v === LADDER);
+  if (onLadder && (keys.jump || keys.down) && P.pound <= 0 && P.dash <= 0) P.ladder = true;
+  if (P.ladder) {
+    if (!onLadder) { P.ladder = false; if (keys.jump) P.vy = -230; }
+    else {
+      P.vy = keys.jump ? -105 : keys.down ? 105 : 0; P.vx = dir * 60; P.coy = 0; P.jbuf = 0; P.climb = true; P.anim += keys.jump || keys.down ? dt : 0;
+      moveBody(P, dt); P.rp += Math.abs(P.vy) * dt * 0.09;
+      if (pressed.dash) { P.ladder = false; P.vy = -250; P.vx = P.face * 150; }
+      P.cool -= dt; if (keys.fire && P.cool <= 0) { fireWeapon(); P.aimT = 0.4; }
+      return;
+    }
+  }
   // wall climb: hold toward a wall in the air; hold jump to climb up
   P.climb = false;
   if (!P.onGround && dir !== 0 && P.dash <= 0 && P.pound <= 0 && (dir > 0 ? wallR : wallL)) {
@@ -1518,7 +1613,7 @@ function updatePlayer(dt) {
   if (P.onGround && Math.abs(P.vx) > 70) { P.stepT -= dt; if (P.stepT <= 0) { P.stepT = 0.22; part(P.x + 5 - P.face * 4, P.y + P.h, -P.face * 20, -12, theme.dust, 0.3, 2, 0, 'smoke'); } }
 
   P.cool -= dt;
-  if (keys.fire && P.cool <= 0 && P.dash <= 0) { fireWeapon(); P.aimT = 0.4; }
+  if (keys.fire && P.cool <= 0 && P.dash <= 0) { fireWeapon(); P.aimT = 0.4; if (P.over > 0) P.cool *= 0.5; }
   if ((pressed.special || P.wantSpec) && P.spec > 0) useSpecial();
   if ((pressed.melee || P.wantMelee) && P.mcool <= 0 && P.pound <= 0) punch();
   P.wantSpec = P.wantMelee = P.wantDash = false;
@@ -1606,14 +1701,38 @@ function updateEnt(e, dt) {
     case 'barrel': case 'ammo': case 'strike': e.vx = e.kx; moveBody(e, dt); break;
     case 'pickup':
       e.vx = e.kx; moveBody(e, dt);
-      if (Math.random() < 0.1) part(e.x + rand(0, 8), e.y + rand(0, 8), 0, -20, '#a6d854', 0.4, 1);
-      if (P.alive && overlap(P, e)) {
-        e.dead = true; sfx('pickup');
-        for (let i = 0; i < 10; i++) part(e.x + 4, e.y + 4, rand(-80, 80), rand(-120, -20), e.strike ? '#d9534f' : '#a6d854', 0.5, 2);
-        if (e.strike) airstrike(); else { P.spec = Math.min(3, P.spec + 1); showBanner('+1 SPECIAL', P.bro.special, 1); }
-      }
-      if (e.t > 15) e.dead = true;
+      { const item = e.item || (e.strike ? 'strike' : 'special');
+        if (Math.random() < 0.1) part(e.x + rand(0, 8), e.y + rand(0, 8), 0, -20, ITEM_COL[item], 0.4, 1);
+        if (P.alive && overlap(P, e)) {
+          e.dead = true; sfx('pickup');
+          for (let i = 0; i < 10; i++) part(e.x + 4, e.y + 4, rand(-80, 80), rand(-120, -20), ITEM_COL[item], 0.5, 2);
+          givePickup(item, e);
+        }
+        if (e.t > 15 && !e.keep) e.dead = true; }
       break;
+    case 'spring': // bounce pad: launches whatever lands on it
+      e.vx = 0; moveBody(e, dt); e.squish = Math.max(0, (e.squish || 0) - dt);
+      if (P.alive && !P.mech && P.vy > 0 && P.y + P.h < e.y + 8 && overlap(P, e)) { P.vy = -590; P.pound = 0; P.squash = -0.2; e.squish = 0.15; sfx('boing'); }
+      for (const o of ents) if (o !== e && isQuack(o) && !o.dead && o.vy > 0 && overlap(o, e)) { o.vy = -520; e.squish = 0.15; sfx('boing'); }
+      for (const b of bodies) if (b.vy >= 0 && Math.abs(b.x - e.x - 6) < 7 && Math.abs(b.y - e.y) < 6) { b.vy = -480; b.rest = false; }
+      break;
+    case 'mine': // beeps when something steps near, then goes off
+      e.vx = 0; moveBody(e, dt);
+      if (!e.armed) {
+        const near = (o) => Math.abs(o.x + o.w / 2 - (e.x + 4)) < 11 && Math.abs(o.y + o.h - e.y - 3) < 8;
+        if ((P.alive && near(P)) || ents.some((o) => (isQuack(o) || o.type === 'dog') && !o.dead && near(o))) { e.armed = 0.35; sfx('alert'); }
+      } else { e.armed -= dt; if (e.armed <= 0) killEnemy(e); }
+      break;
+    case 'alarm': // a quack that spots you within earshot sets it off: siren, everyone wakes, troopers drop in
+      e.vx = 0; moveBody(e, dt);
+      if (!e.rung && ents.some((o) => isQuack(o) && o.aware && !o.dead && !o.hacked && Math.abs(o.x - e.x) < 220 && Math.abs(o.y - e.y) < 100)) {
+        e.rung = 6; showBanner('ALARM!', 'reinforcements inbound', 1.4);
+        for (const o of ents) if (isQuack(o) && !o.dead && Math.abs(o.x - e.x) < 400) { o.aware = true; o.react = Math.min(o.react || 0.5, 0.5); }
+        callParas(e);
+      }
+      if (e.rung > 0) { e.rung -= dt; if (Math.floor(e.rung * 4) !== Math.floor((e.rung + dt) * 4)) sfx('siren'); }
+      break;
+    case 'fueltank': case 'itemcrate': case 'target': e.vx = e.kx * 0.2; moveBody(e, dt); break;
     case 'drone': updateDrone(e, dt); break;
     case 'mechsuit':
       e.vx = 0; moveBody(e, dt);
@@ -1926,7 +2045,7 @@ function updateDrone(e, dt) {
   e.cool = 0.22; e.aimA = a; sfx('shot');
 }
 function rescue(cage) {
-  cage.dead = true; lives++; stats.rescued++; addScore(1000, false); sfx('rescue');
+  cage.dead = true; lives++; stats.rescued++; addScore(1000, false); sfx('rescue'); objHit('cage');
   if (!unlocked.includes(cage.bro)) unlocked.push(cage.bro);
   const bro = BRO[cage.bro];
   P.bro = bro; P.spec = 3; P.inv = 1; if (!P.mech) { P.x = cage.x + 3; P.y = cage.y; P.vy = -260; P.flip = 0.45; }
@@ -2285,8 +2404,8 @@ function updateTank(b, dt) {
       explode(cx, b.y + b.h / 2, 76, 0, 'p', 2);
       for (let i = 0; i < 30; i++) chunk(cx + rand(-24, 24), b.y + rand(0, 20), rand(-260, 260), rand(-400, -80), ['#4b5a3a', '#25223a', '#8b93ad', '#c9a227'][i % 4]);
       body({ kind: 'chunk', x: px, y: py, vx: rand(-160, 160), vy: -460, col: '#3a4a2c', s: 10, r: 5, vr: 18, life: 9, bounce: 0.35 }); // the turret flies off
-      spriteBody('corpse', RIG.guru.still[b.face > 0 ? 0 : 1], cx, b.y, -b.face * 140, -420, { sw: 14, sh: 18, vr: 14, bleed: 1, life: 14 });
-      bossDown(b);
+      fx.push({ kind: 'pod', x: cx, y: b.y, vy: -380, t: 3, max: 3 }); // Dr. Placebo pops out in an escape pod
+      bossDown(b); showBanner('DR. PLACEBO ESCAPES', 'his pod is heading for the Dilution Plant', 3);
     }
     return;
   }
@@ -2561,6 +2680,7 @@ function updateFx(dt, edt) {
       if (Math.random() < 0.6) part(f.x + rand(-3, 3), f.y + rand(-3, 3), rand(-20, 20), rand(-30, 0), '', 0.3, 2, 0, 'fire');
       if (f.hitT <= 0) { f.hitT = 0.15; for (const e of ents) if (live(e) && Math.hypot(center(e)[0] - f.x, center(e)[1] - f.y) < 12) { hitEnemy(e, 1, Math.sign(center(e)[0] - f.x) * 60); setBurn(e); } }
       const c = Math.floor(f.x / T), r = Math.floor(f.y / T); if (isSolidT(tileAt(c, r))) damageTile(c, r, 2 * dt);
+    } else if (f.kind === 'pod') { f.vy -= 60 * dt; f.y += f.vy * dt; f.x += 30 * dt; if (Math.random() < 0.8) part(f.x, f.y + 6, rand(-10, 10), rand(40, 90), '', 0.3, 2, 0, 'fire');
     } else if (f.kind === 'jet') {
       f.x += f.dir * 560 * dt; f.drop -= dt;
       if (f.x > f.from && f.x < f.to && f.drop <= 0) { f.drop = 0.075; bullets.push({ x: f.x, y: f.y + 6, vx: f.dir * 140, vy: 80, grav: 700, owner: 'p', dmg: 8, life: 4, kind: 'bomb', explode: 34, tp: 4 }); }
@@ -2752,6 +2872,11 @@ function drawTiles(t) {
     if (!v) continue;
     const sh = shk[r * LW + c] > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0; // shaking before it falls
     const x = c * T + sh, y = r * T;
+    if (v === LADDER) { // wooden rails and rungs
+      ctx.fillStyle = '#5a4226'; ctx.fillRect(x + 3, y, 2, T); ctx.fillRect(x + 11, y, 2, T);
+      ctx.fillStyle = '#7a5c36'; for (let k = 2; k < T; k += 5) ctx.fillRect(x + 3, y + k, 10, 2);
+      continue;
+    }
     if (v === ACID) {
       const top = tileAt(c, r - 1) !== ACID;
       ctx.fillStyle = theme.acid[0]; ctx.fillRect(x, y, T, T);
@@ -2883,6 +3008,8 @@ function drawPlayer() {
   if (!P.alive && !P.ride) return;
   if (P.inv > 0 && Math.floor(P.inv * 15) % 2 && !P.ride) return;
   if (P.mech) { drawBroMech(P.x, P.y, P.face, P.mech.wp, P.onGround, P.vx, P.bro, P.mech.hurt > 0, P.mech.kick, P.punch); return; }
+  if (P.shield > 0 && (P.shield > 3 || Math.floor(P.shield * 6) % 2)) { ctx.globalAlpha = 0.3 + Math.sin(anim0() * 6) * 0.08; ctx.strokeStyle = '#8fd3ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(P.x + 5, P.y + 8, 12, 0, 7); ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1; }
+  if (P.jet > 0) { ctx.fillStyle = '#b4bed0'; ctx.fillRect(Math.round(P.x + (P.face > 0 ? -1 : P.w - 3)), Math.round(P.y + 5), 4, 8); }
   const rig = P.bro.rig, cx = P.x + P.w / 2, feet = P.y + P.h + 1;
   const pose = P.ride ? { leg: 'climb', fr: 0, bob: 0 } : poseOf(P);
   if (P.chute) drawChute(cx, Math.round(P.y), anim0());
@@ -3044,6 +3171,38 @@ function drawEnt(e, t) {
       ctx.fillStyle = '#a6d854'; ctx.fillRect(x + 5, y + 3, 2, 6); ctx.fillRect(x + 3, y + 5, 6, 2);
       break;
     }
+    case 'spring': {
+      const sq = e.squish > 0 ? 3 : 0;
+      ctx.fillStyle = '#5c6480'; ctx.fillRect(x, y + 4, 12, 2);
+      ctx.fillStyle = '#8b93ad'; for (let k = 0; k < 3; k++) ctx.fillRect(x + 2 + (k % 2) * 2, y + 1 + k + sq / 2, 6, 1);
+      ctx.fillStyle = '#d9534f'; ctx.fillRect(x - 1, y - 1 + sq, 14, 2);
+      break;
+    }
+    case 'mine': {
+      ctx.fillStyle = '#3d3d3d'; ctx.fillRect(x, y, 8, 3); ctx.fillStyle = '#25223a'; ctx.fillRect(x + 1, y - 1, 6, 1);
+      if (Math.floor(t * (e.armed ? 16 : 2)) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(x + 3, y - 2, 2, 1); }
+      break;
+    }
+    case 'alarm': {
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#5c6480'; ctx.fillRect(x, y + 2, 8, 10); ctx.fillStyle = '#25223a'; ctx.fillRect(x + 1, y + 6, 6, 5);
+      ctx.fillStyle = e.rung > 0 && Math.floor(t * 8) % 2 ? '#ff3a2a' : '#8e2b3c'; ctx.fillRect(x + 1, y - 1, 6, 4);
+      ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x + 3, y + 7, 2, 2);
+      break;
+    }
+    case 'fueltank': {
+      ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y + 3, e.w + 2, e.h - 3);
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#d9534f'; ctx.fillRect(x, y + 4, e.w, e.h - 5); ctx.beginPath(); ctx.arc(x + e.w / 2, y + 5, e.w / 2, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x + 2, y + 9, e.w - 4, 4); ctx.fillStyle = '#25223a'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('FUEL', x + e.w / 2, y + 14);
+      ctx.fillStyle = '#5c6480'; ctx.fillRect(x + 2, y + e.h - 2, 4, 2); ctx.fillRect(x + e.w - 6, y + e.h - 2, 4, 2);
+      break;
+    }
+    case 'itemcrate': {
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#3a7a9a'; ctx.fillRect(x, y, e.w, e.h);
+      ctx.fillStyle = '#25506a'; ctx.fillRect(x, y, e.w, 2); ctx.fillRect(x, y + e.h - 2, e.w, 2);
+      ctx.fillStyle = '#bfe9ff'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('?', x + 6, y + 10);
+      break;
+    }
+    case 'target': drawTarget(e, t); break;
     case 'strike': { // red airstrike crate
       ctx.fillStyle = e.flash > 0 ? '#fff' : '#8e2b3c'; ctx.fillRect(x, y, e.w, e.h);
       ctx.fillStyle = '#5a1a26'; ctx.fillRect(x, y, e.w, 2); ctx.fillRect(x, y + e.h - 2, e.w, 2);
@@ -3052,6 +3211,12 @@ function drawEnt(e, t) {
     }
     case 'pickup': {
       const by = y + Math.round(Math.sin(e.t * 5) * 1.5);
+      const item = e.item || (e.strike ? 'strike' : 'special');
+      if (item === 'shield') { ctx.strokeStyle = '#8fd3ff'; ctx.beginPath(); ctx.arc(x + 4, by + 4, 4, 0, 7); ctx.stroke(); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x + 3, by + 2, 2, 2); break; }
+      if (item === 'overclock') { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 4, by, 2, 4); ctx.fillRect(x + 2, by + 3, 4, 2); ctx.fillRect(x + 2, by + 5, 2, 3); break; }
+      if (item === 'jetpack') { ctx.fillStyle = '#b4bed0'; ctx.fillRect(x + 1, by + 1, 6, 6); ctx.fillStyle = '#d9534f'; ctx.fillRect(x + 2, by + 7, 1, 2); ctx.fillRect(x + 5, by + 7, 1, 2); break; }
+      if (item === 'life') { ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 8, x - 2, by, 12, 8); break; }
+      if (item === 'intel') { ctx.fillStyle = '#d9b36a'; ctx.fillRect(x, by + 1, 9, 7); ctx.fillStyle = '#c99a4a'; ctx.fillRect(x, by, 4, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(x + 4, by + 3, 4, 2); break; }
       if (e.strike) { ctx.fillStyle = '#d9534f'; ctx.fillRect(x, by + 2, 8, 4); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x + 3, by, 2, 8); ctx.fillRect(x + 1, by + 6, 6, 1); break; }
       ctx.globalAlpha = 0.35; ctx.fillStyle = '#a6d854'; ctx.beginPath(); ctx.arc(x + 4, by + 4, 7, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
       ctx.fillStyle = '#e9eef6'; ctx.fillRect(x + 3, by, 2, 2); ctx.fillStyle = '#a6d854'; ctx.fillRect(x + 1, by + 2, 6, 6);
@@ -3122,6 +3287,29 @@ function drawEnt(e, t) {
       if (Math.floor(t * 2) % 2) { ctx.fillStyle = '#a6d854'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('GET IN', x + 10, y - 4); }
       break;
   }
+}
+// objective targets: a bubbling placebo vat, a radio mast with a blinking light, a server rack
+function drawTarget(e, t) {
+  const x = Math.round(e.x), y = Math.round(e.y), fl = e.flash > 0, dmg = 1 - e.hp / e.max;
+  if (e.skin === 'vat') {
+    ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y - 1, 22, 30);
+    ctx.fillStyle = fl ? '#fff' : '#5c6480'; ctx.fillRect(x, y, 20, 4); ctx.fillRect(x, y + 24, 20, 4);
+    ctx.fillStyle = '#2a4a5a'; ctx.fillRect(x + 1, y + 4, 18, 20);
+    const lvl = 6 + Math.sin(t * 2) * 1; ctx.fillStyle = '#a6d854'; ctx.fillRect(x + 1, y + 4 + lvl, 18, 20 - lvl);
+    ctx.fillStyle = '#e8ffc0'; for (let k = 0; k < 3; k++) ctx.fillRect(x + 4 + k * 5, y + 22 - ((t * 20 + k * 7) % 14), 2, 2); // bubbles
+    ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x + 3, y + 12, 14, 5); ctx.fillStyle = '#25223a'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('30C', x + 10, y + 17);
+  } else if (e.skin === 'radio') {
+    ctx.fillStyle = fl ? '#fff' : '#8b93ad';
+    ctx.fillRect(x + 9, y, 2, e.h); for (let k = 0; k < e.h; k += 8) { ctx.fillRect(x + 4 + k / 14, y + k, 12 - k / 7, 1); }
+    ctx.fillRect(x + 2, y + e.h - 2, 16, 2);
+    ctx.fillStyle = Math.floor(t * 2) % 2 ? '#ff3a2a' : '#8e2b3c'; ctx.fillRect(x + 8, y - 3, 4, 3);
+    ctx.strokeStyle = '#8b93ad'; ctx.beginPath(); ctx.arc(x + 10, y + 6, 6, -2.4, -0.7); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y - 1, 22, 30);
+    ctx.fillStyle = fl ? '#fff' : '#25223a'; ctx.fillRect(x, y, 20, 28);
+    for (let k = 0; k < 6; k++) { ctx.fillStyle = '#3d4560'; ctx.fillRect(x + 2, y + 2 + k * 4, 16, 3); ctx.fillStyle = Math.sin(t * 9 + k * 2 + x) > 0 ? '#66c2a5' : '#f2c94c'; ctx.fillRect(x + 14, y + 3 + k * 4, 2, 1); }
+  }
+  if (dmg > 0.4 && Math.random() < 0.1) part(x + rand(2, 18), y + rand(2, 20), rand(-10, 10), -30, '#4b4766', 0.8, 3, 0, 'smoke');
 }
 function drawMech(b, t) {
   if (b.dead) return;
@@ -3277,6 +3465,8 @@ function drawFx() {
       ctx.fillRect(-18, -9, 4, 7); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(6, -3, 6, 2);
       ctx.fillStyle = Math.random() < 0.5 ? '#fff6c2' : '#f29e4c'; ctx.fillRect(-24, -1, 6, 3);
       ctx.restore();
+    } else if (f.kind === 'pod') {
+      ctx.fillStyle = '#e6e2f0'; ctx.beginPath(); ctx.arc(f.x, f.y, 5, Math.PI, 0); ctx.fill(); ctx.fillRect(f.x - 5, f.y, 10, 5); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(f.x - 2, f.y - 3, 4, 3);
     } else if (f.kind === 'sun') {
       const r = 5 + Math.sin(f.t * 20) * 0.8;
       ctx.fillStyle = '#f29e4c'; ctx.beginPath(); ctx.arc(f.x, f.y, r + 2, 0, 7); ctx.fill();
@@ -3343,6 +3533,17 @@ function drawHud(t) {
   text(fmtTime(stats.time), VW - 10, 15, 8, '#a3abd0', 'right');
   text('KILLS ' + stats.kills, VW - 126, 27, 8, '#e7eaf6');
   text('FREED ' + stats.rescued + '/' + LEVELS[level].cages, VW - 10, 27, 8, '#a6d854', 'right');
+  // objectives: shown for a few seconds at the start and whenever one moves, and while the map is open
+  if (objShowT > 0 || keys.map) {
+    const a = keys.map ? 1 : Math.min(1, objShowT * 2);
+    ctx.globalAlpha = a; ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 42, 190, 8 + objectives.length * 10);
+    objectives.forEach((o, i) => {
+      const done = o.n >= o.need, y = 51 + i * 10;
+      ctx.fillStyle = done ? '#a6d854' : o.req ? '#f2c94c' : '#5c6480'; ctx.fillRect(8, y - 5, 4, 4);
+      text((o.req ? '' : 'BONUS: ') + o.text.toUpperCase() + (o.need > 1 ? ' ' + o.n + '/' + o.need : ''), 16, y, 8, done ? '#a6d854' : o.req ? '#e7eaf6' : '#a3abd0');
+    });
+    ctx.globalAlpha = 1;
+  }
   if (combo.n >= 2 && combo.t > 0) { // combo counter pops on each kill
     const sc = 1 + combo.pop * 2;
     ctx.save(); ctx.translate(VW / 2, 30); ctx.scale(sc, sc);
@@ -3353,8 +3554,8 @@ function drawHud(t) {
   if (slowT > 0) { ctx.fillStyle = 'rgba(141,160,203,0.12)'; ctx.fillRect(0, 0, VW, VH); text('TIME DILATION ' + slowT.toFixed(1) + ' S', VW / 2, 46, 8, '#8da0cb', 'center'); }
   const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !e.doomed);
   if (B) {
-    const w = 220, x = (VW - w) / 2, y = VH - 18;
-    text(BOSS_NAME[B.type], VW / 2, y - 4, 8, '#e6e2f0', 'center');
+    const w = 200, x = (VW - w) / 2 - 50, y = VH - 18;
+    text(BOSS_NAME[B.type], x + w / 2, y - 4, 8, '#e6e2f0', 'center');
     ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
     ctx.fillStyle = B.p2 ? '#b0507a' : '#7570b3'; ctx.fillRect(x, y, w * Math.max(0, B.hp) / B.max, 5);
   }
@@ -3385,6 +3586,8 @@ function drawScreen(t) {
     const rows = [['SCORE', String(stats.score) + (stats.newHi ? '  NEW BEST' : '')], ['RUN TOTAL', String(runScore)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LEVELS[level].cages], ['BROS LOST', String(stats.deaths)]];
     rows.forEach(([k, v], i) => { text(k, VW / 2 - 100, y0 + i * 12, 8, '#a3abd0'); text(v, VW / 2 + 100, y0 + i * 12, 8, '#e7eaf6', 'right'); });
   };
+  if (state === 'map') { drawWorldMap(t); return; }
+  if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
     text('3 LEVELS · 7 BROS · 4 BOSSES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
@@ -3397,16 +3600,104 @@ function drawScreen(t) {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
     text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LEVELS[level].cages, VW / 2, 126, 8, '#a3abd0', 'center');
     if (blink) text('PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
-  } else if (state === 'win') {
-    text(LEVELS[level].name + ' LIBERATED', VW / 2, 78, 20, '#a6d854', 'center');
-    statRows(104);
-    if (blink) text('PRESS ENTER FOR LEVEL ' + (level + 2) + ' · ' + LEVELS[level + 1].name, VW / 2, 196, 8, '#e7eaf6', 'center');
+  } else if (state === 'win') { // debrief: what happened, what got done, the numbers
+    text(LEVELS[level].name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
+    wrap(LEVELS[level].debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
+    objectives.forEach((o, i) => { const done = o.n >= o.need; text((done ? '+ ' : '- ') + o.text.toUpperCase() + (o.req ? '' : '  BONUS'), VW / 2 - 100, 82 + i * 10, 8, done ? '#a6d854' : '#5c6480'); });
+    statRows(140);
+    if (blink) text('PRESS ENTER TO CONTINUE', VW / 2, 252, 8, '#e7eaf6', 'center');
   } else if (state === 'done') {
-    text('SCIENCE WINS', VW / 2, 80, 28, '#a6d854', 'center');
-    text('Dr. Placebo\'s empire is diluted to nothing', VW / 2, 98, 8, '#8da0cb', 'center');
-    statRows(114);
+    text('SCIENCE WINS', VW / 2, 50, 28, '#a6d854', 'center');
+    wrap(ENDING, 70).forEach((ln, i) => text(ln, VW / 2, 70 + i * 11, 8, '#8da0cb', 'center'));
+    text('INTEL FOUND ' + dossier.length + ' / ' + LEVELS.length * 3, VW / 2, 106, 8, '#f2c94c', 'center');
+    statRows(124);
     if (blink) text('PRESS ENTER TO PLAY AGAIN', VW / 2, 196, 8, '#e7eaf6', 'center');
   }
+}
+// ---------------------------------------------------------------- maps
+// The level is drawn once into a 1-pixel-per-tile canvas (redrawn when blocks change); the minimap shows a
+// window of it around you, and holding Tab shows the whole level with markers and the objectives.
+const MINI = mk(LW, LH), mctx = MINI.getContext('2d');
+let miniDirty = true;
+const MINI_COL = [null, null, '#5a6788', '#8b93ad', '#7a5c36', null, '#8fc7e8', '#a07a46'];
+function updateMini() {
+  miniDirty = false; mctx.clearRect(0, 0, LW, LH);
+  for (let r = 0; r < LH; r++) for (let c = 0; c < LW; c++) {
+    const v = tiles[r * LW + c]; if (!v) continue;
+    mctx.fillStyle = v === DIRT ? theme.dirt[3] : v === ACID ? theme.acid[1] : MINI_COL[v]; mctx.fillRect(c, r, 1, 1);
+  }
+}
+function mapMarks(g, ox, oy, k, c0, c1, blink) {
+  const dot = (x, y, col, sz = 1) => { const c = x / T; if (c < c0 || c > c1) return; g.fillStyle = col; g.fillRect(Math.round(ox + (c - c0) * k - (sz - 1) / 2), Math.round(oy + (y / T) * k - (sz - 1) / 2), sz, sz); };
+  for (const e of ents) {
+    if (e.dead) continue;
+    if (e.type === 'cage') dot(e.x + 8, e.y + 8, '#a6d854', 2 * k);
+    else if (e.type === 'target') dot(e.x + 10, e.y + 10, '#f2c94c', 2 * k);
+    else if (e.type === 'pickup' && e.item === 'intel') dot(e.x + 4, e.y + 4, '#d9b36a', 2 * k);
+    else if (e.type === 'flag') dot(e.x, e.y + 8, e.on ? '#a6d854' : '#8da0cb', k);
+    else if (e.type === 'mechsuit') dot(e.x + 10, e.y + 12, '#f2c94c', k);
+    else if (BOSS[e.type]) dot(e.x + e.w / 2, e.y + e.h / 2, '#e78ac3', 3 * k);
+    else if (foe(e)) dot(e.x + e.w / 2, e.y + e.h / 2, '#ff5a4a', k);
+  }
+  if (chopper) dot(chopper.x, chopper.y + 20, '#ffffff', 2 * k);
+  if (P.alive && blink) dot(P.x + 5, P.y + 8, '#ffffff', 2 * k);
+}
+function drawMinimap(t) {
+  if (miniDirty) updateMini();
+  const w = 104, h = LH, ox = VW - w - 6, oy = VH - h - 8, c0 = clamp(Math.floor(P.x / T) - w / 2, 0, LW - w);
+  ctx.fillStyle = 'rgba(11,14,31,0.7)'; ctx.fillRect(ox - 2, oy - 2, w + 4, h + 4);
+  ctx.drawImage(MINI, c0, 0, w, LH, ox, oy, w, h);
+  mapMarks(ctx, ox, oy, 1, c0, c0 + w, Math.floor(t * 4) % 2);
+}
+function drawFullMap(t) {
+  if (miniDirty) updateMini();
+  const k = 2, w = LW * k, h = LH * k, ox = Math.round((VW - w) / 2), oy = 120;
+  ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(MINI, ox, oy, w, h);
+  mapMarks(ctx, ox, oy, k, 0, LW, Math.floor(t * 4) % 2);
+  text('MAP · ' + LEVELS[level].name, VW / 2, oy - 14, 8, '#a6d854', 'center');
+  const leg = [['#ffffff', 'YOU'], ['#ff5a4a', 'QUACKS'], ['#a6d854', 'CAGES'], ['#f2c94c', 'TARGETS'], ['#d9b36a', 'INTEL'], ['#e78ac3', 'BOSS']];
+  leg.forEach(([col, lab], i) => { const lx = 40 + i * 70; ctx.fillStyle = col; ctx.fillRect(lx, oy + h + 14, 4, 4); text(lab, lx + 8, oy + h + 19, 8, '#a3abd0'); });
+}
+function wrap(str, n) { // split a sentence into lines of at most n characters
+  const out = []; let line = '';
+  for (const w of str.split(' ')) { if ((line + ' ' + w).trim().length > n) { out.push(line.trim()); line = w; } else line += ' ' + w; }
+  if (line.trim()) out.push(line.trim());
+  return out;
+}
+// world map: the four stops of the campaign joined by a dotted route; done ones are ticked, the next one pulses
+function drawWorldMap(t) {
+  ctx.fillStyle = '#0d1a33'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = '#12244a'; for (let y = 0; y < VH; y += 6) ctx.fillRect(0, y, VW, 1); // sea lines
+  const land = [[60, 140, 110, 60], [170, 90, 120, 70], [260, 40, 120, 60], [330, 150, 110, 70]];
+  ctx.fillStyle = '#2b3a52'; for (const [x, y, w, h] of land) { ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 7); ctx.fill(); }
+  const stops = LEVELS.map((L) => L.map);
+  ctx.fillStyle = '#5c6480'; for (let i = 0; i < stops.length - 1; i++) { const [x0, y0] = stops[i], [x1, y1] = stops[i + 1]; for (let k = 0; k <= 20; k += 2) ctx.fillRect(Math.round(x0 + (x1 - x0) * k / 20), Math.round(y0 + (y1 - y0) * k / 20), 2, 2); }
+  LEVELS.forEach((L, i) => {
+    const [x, y] = L.map, done = i < level, cur = i === level;
+    if (cur) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = done ? '#a6d854' : cur ? '#f2c94c' : '#5c6480'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+    text((i + 1) + ' ' + L.name, x, y - 12, 8, done ? '#a6d854' : cur ? '#f2c94c' : '#a3abd0', 'center');
+    if (done) text('LIBERATED', x, y + 16, 8, '#a6d854', 'center');
+  });
+  const [px, py] = LEVELS[level].map, bob = Math.sin(t * 3) * 2; // the bros' plane
+  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 6, py - 26 + bob, 12, 3); ctx.fillRect(px - 2, py - 30 + bob, 4, 11);
+  text('OPERATION INFINITE DILUTION', VW / 2, 20, 16, '#a6d854', 'center');
+  text('BROS ' + unlocked.length + ' / ' + BROS.length + ' · RESERVE ' + lives + ' · INTEL ' + dossier.length + ' / ' + LEVELS.length * 3 + ' · RUN ' + runScore, VW / 2, 34, 8, '#a3abd0', 'center');
+  if (Math.floor(t * 2) % 2) text('PRESS ENTER FOR THE BRIEFING', VW / 2, 256, 8, '#e7eaf6', 'center');
+}
+// briefing from HQ: the mission, the objectives, then deploy
+function drawBriefing(t) {
+  const L = LEVELS[level];
+  ctx.fillStyle = '#0b0e1f'; ctx.fillRect(0, 0, VW, VH);
+  text('MISSION ' + (level + 1) + ' · ' + L.name, VW / 2, 30, 16, '#a6d854', 'center');
+  ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
+  text('PROF. PEER REVIEW, HQ', 72, 54, 8, '#8da0cb');
+  const lines = wrap(L.brief, 62), shown = Math.min(lines.length, Math.floor(mapT * 2.2) + 1); // typed out line by line
+  lines.slice(0, shown).forEach((ln, i) => text(ln, 72, 68 + i * 11, 8, '#e7eaf6'));
+  text('OBJECTIVES', 24, 150, 8, '#f2c94c');
+  (L.objectives || []).forEach((o, i) => text((o.req ? '> ' : '  BONUS: ') + o.text.toUpperCase() + ((o.need || 1) > 1 ? ' (' + o.need + ')' : ''), 32, 164 + i * 11, 8, o.req ? '#e7eaf6' : '#a3abd0'));
+  if (Math.floor(t * 2) % 2) text('PRESS ENTER TO DEPLOY', VW / 2, 252, 8, '#a6d854', 'center');
 }
 function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -3430,7 +3721,7 @@ function render(t) {
   if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
-  if (state === 'play') drawHud(t); else drawScreen(t);
+  if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawHud(t); } else drawScreen(t);
   if (settings.scanlines) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < VH; y += 2) ctx.fillRect(0, y, VW, 1); }
 }
 
@@ -3588,7 +3879,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

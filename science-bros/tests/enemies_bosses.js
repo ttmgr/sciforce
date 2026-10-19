@@ -143,7 +143,7 @@ const crawl = S.ents.find((o) => o.type === 'crawler'); S.P.x = 185 * T; S.P.y =
 check('Crystal Crawler activates', crawl.active && crawl.segs.length === 14);
 let surfaced = false; for (let i = 0; i < 900 && !surfaced; i++) { S.P.inv = 1e9; run(1); surfaced = crawl.hy < crawl.surfY - 10; }
 check('Crystal Crawler surfaces', surfaced);
-S.hitEnemy(crawl, 999, 0); k = 0; for (; k < 600 && !crawl.dead; k++) run(1);
+S.finishObjectives(); S.hitEnemy(crawl, 999, 0); k = 0; for (; k < 600 && !crawl.dead; k++) run(1);
 check('Crystal Crawler dies', crawl.dead && !!S.chopper, k + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
 check('extraction on level 2 leads on to level 3', S.state === 'win', S.state);
@@ -169,7 +169,7 @@ const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = 186 * T; S.P.y = 16 
 check('Snake Oil Tank activates', tank.active);
 let shot = false; for (let i = 0; i < 900 && !shot; i++) { S.P.inv = 1e9; run(1); shot = S.bullets.some((b) => b.owner === 'e' && b.kind === 'bomb') || tank.state === 'flame'; }
 check('Snake Oil Tank attacks', shot, tank.state);
-S.hitEnemy(tank, 999, 0); k3 = 0; for (; k3 < 600 && !tank.dead; k3++) run(1);
+S.finishObjectives(); S.hitEnemy(tank, 999, 0); k3 = 0; for (; k3 < 600 && !tank.dead; k3++) run(1);
 check('Snake Oil Tank dies and the chopper comes', tank.dead && !!S.chopper, k3 + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
 check('extraction on level 3 ends the game', S.state === 'done', S.state);
