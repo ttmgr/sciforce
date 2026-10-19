@@ -172,7 +172,24 @@ check('Snake Oil Tank attacks', shot, tank.state);
 S.finishObjectives(); S.hitEnemy(tank, 999, 0); k3 = 0; for (; k3 < 600 && !tank.dead; k3++) run(1);
 check('Snake Oil Tank dies and the chopper comes', tank.dead && !!S.chopper, k3 + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
-check('extraction on level 3 ends the game', S.state === 'done', S.state);
+check('extraction on level 3 leads on to level 4', S.state === 'win', S.state);
+
+// level 4: the Succussion Engine
+S.startLevel(3); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
+check('level 4 has 3 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 3 && S.ents.some((o) => o.type === 'engine'));
+run(1); S.ents.forEach((o) => { if (!['engine', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = 192 * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
+check('Succussion Engine activates', eng.active);
+const hp0 = eng.hp; S.hitEnemy(eng, 50, 0); check('its core is shielded while the vats stand', eng.hp === hp0);
+let slammed = false; for (let i = 0; i < 400 && !slammed; i++) { S.P.inv = 1e9; run(1); slammed = eng.hammers.some((h) => h.state === 'rise'); }
+check('a hammer slams down', slammed);
+for (const v of eng.vats) v.hp = 1;
+for (const v of eng.vats) S.bullets.push({ x: v.x + 10, y: v.y + 14, vx: 1, vy: 0, owner: 'p', dmg: 2, tdmg: 0, life: 0.2, kind: 'photon' });
+run(3); check('shooting the stabiliser vats breaks them', eng.vats.every((v) => v.dead));
+S.finishObjectives(); S.hitEnemy(eng, 999, 0); k3 = 0; for (; k3 < 600 && !eng.dead; k3++) { S.P.inv = 1e9; run(1); }
+check('with the vats gone the core can be destroyed', eng.dead && !!S.chopper, k3 + ' frames');
+for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
+check('extraction on level 4 ends the game', S.state === 'done', S.state);
 drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); }
 check('game-complete screen draws', drew);
 

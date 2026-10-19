@@ -54,10 +54,10 @@ check('blast holes the bunker back wall', wall0 === 9 && wall1 <= 4, wall0 + ' -
 
 // fire creeps along a crate bridge
 lone(); S.P.x = 2 * T; S.P.inv = 1e9;
-S.explode(82 * T, 15 * T, 30, 0, 'p', 0.01); // small blast: no damage, just sets fire nearby
+S.ignite(82 * T + 8, 15 * T, 1, 0); S.ignite(95 * T + 8, 15 * T, 1, 0); // light two crates
 let burnt = 0; for (let i = 0; i < 900; i++) { run(1); }
 for (let c = 77; c <= 100; c++) if (!solid(c, 16)) burnt++;
-check('fire spreads along the crates and burns some away', burnt >= 2, burnt + ' crates gone');
+check('fire spreads along the crates and burns them away', burnt >= 3, burnt + ' crates gone from 2 fires');
 check('steel piles survive the fire', solid(80, 17) && solid(84, 17));
 
 // airstrike pickup carpet-bombs ahead

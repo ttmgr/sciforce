@@ -2,11 +2,24 @@
 
 ## Science Bros
 
-Broforce-style run-and-gun platformer: 7 scientist bros, 3 levels (Placebo Island, Detox Desert, Cryo Summit), 9 enemy types, 4 bosses and a drivable mech. Single self-contained HTML file, no build step.
+Broforce-style run-and-gun platformer: a 4-mission campaign (Operation Infinite Dilution), 12 scientist bros, 14 quack types, 5 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
 
 - Game: `science-bros/index.html`. Open it in a browser.
-- Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; Shift or V dash-roll (also jumps out of the mech); P pause menu; M mute.
+- Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; Shift or V dash-roll, keep holding to sprint (also jumps out of the mech); Up/Down on a ladder climbs; hold Tab for the map; P pause menu; M mute.
 - Gamepad (standard mapping): stick or d-pad move, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause. Explosions rumble pads that support it.
+
+### Campaign
+
+Title, then a world map of the four stops, then a briefing from HQ (Prof. Peer Review) with the mission's objectives. Each level has required objectives (they must be done before the extraction chopper comes) and bonus ones (free every scientist, find the three intel files; each bonus is worth 2000 points). Intel files tell the story; the debrief after each level moves it on and the ending wraps it up. Lives and freed bros carry over between missions. Checkpoint flags refill your specials, and the next bro parachutes in over the last flag you raised.
+
+- **Mission 1, Placebo Island:** smash 3 placebo vats, destroy the Homeopathitron.
+- **Mission 2, Detox Desert:** topple the radio mast, shoot down the Detoxkopter, kill the Crystal Crawler.
+- **Mission 3, Cryo Summit:** wipe 2 server racks, stop the Snake Oil Tank (Dr. Placebo escapes in a pod).
+- **Mission 4, Dilution Plant:** smash 2 dilution vats, shut down the **Succussion Engine**: two hammers drop where you stand (a red column warns you), it sprays diluted solution and spits out quacks; its core is shielded until you break its three stabiliser vats, then it shakes rubble down from the roof.
+
+### Maps
+
+A minimap in the bottom-right corner shows the level around you. Hold Tab for the whole level with markers for you, quacks, cages, targets, intel and the boss, plus the objective list.
 
 ### Levels, enemies and bosses
 
@@ -16,8 +29,10 @@ Broforce-style run-and-gun platformer: 7 scientist bros, 3 levels (Placebo Islan
 - Ice blocks are slippery and shatter easily.
 - Lives and freed bros carry over between levels. Game over restarts the current level.
 - **Quacks:** grunt, riot shield (blocks shots from the front; punch the shield away), heavy (20 hp, spins up a minigun), scout (runs off whistling and wakes every quack nearby), grenadier (punch grenades back), rocketeer (kneels and aims; shoot the rocket down), guru (calls in paratroopers), paratrooper, suicide bomber, attack dog (leaps at you), plus turrets.
-- **Bros:** Einstein, Curie, Tesla, Newton and Franklin on level 1. Level 2 adds Ada Lovebro (three-card spread; special: a drone that guards you for 8 s) and Charles Darbro (homing finches; special: natural selection, weak quacks on screen drop dead).
-- Supply crates refill one special. Steel piles under the acid bridges stay up even if the crates burn away.
+- **Bros (12):** Einstein, Curie, Tesla, Newton and Franklin on mission 1. Mission 2 adds Ada Lovebro (three-card spread; drone) and Charles Darbro (homing finches; natural selection). Mission 3 adds Galileo Galilbro (a sun lens that sets things alight; a sun that orbits you) and Alan Turbro (ricochet rounds; hacks the quacks on screen into fighting each other). Mission 4 adds Katherine Johnbro (shells that land on the nearest quack; orbital strikes), Lise Meitbro (fission shots that split twice; a chain reaction that marches ahead) and Archimedes Bro (a screw drill that bores through rock; a lever that throws everything on screen into the air).
+- **More quacks:** jetpack troopers hover and shoot down; snipers track you with a laser sight that locks before one fast shot; flamethrower troopers burn what is in front of them and their tanks blow when they die; brutes charge through walls and other quacks and are dazed when they hit one; medics revive fresh quack corpses (three times at most), so shoot them first.
+- **Objects and items:** ladders, bounce pads, proximity mines, alarm boxes (once a quack nearby spots you, it calls paratroopers; shoot it first), fuel tanks (huge blasts), blue item crates (shield that stops one killing blow, overclock for double fire rate, jetpack, extra bro), intel files, and objective targets.
+- Supply crates refill one special. Animations: holding Shift sprints with a lean and dust, turning at speed skids, the gun swings with the stride when you're not shooting, hit quacks flinch, freed bros flip out of the cage. Steel piles under the acid bridges stay up even if the crates burn away.
 
 ### Moves
 
@@ -73,6 +88,8 @@ node science-bros/tests/climb_boss_extraction.js science-bros/index.html
 node science-bros/tests/physics.js science-bros/index.html
 node science-bros/tests/enemies_bosses.js science-bros/index.html
 node science-bros/tests/controls_destruction.js science-bros/index.html
+node science-bros/tests/bros.js science-bros/index.html
+node science-bros/tests/objects_quest.js science-bros/index.html
 ```
 
-The first runs a scripted player through the level until it wins or runs out of bros. The second checks the cliff climb, the boss kill and the chopper extraction. The third checks the physics: nothing floats at the start, the watchtower, bunker roof and acid tower collapse when cut loose, ragdolls come to rest on the floor, explosions make gibs, punches launch bodies and propane tanks fly. The fourth checks each enemy type's behaviour, both new bros, the three bosses (activation, attacks, death, gates), the level 2 ending and that bros carry over between levels. The fifth checks the dash (and that it dodges a bullet), the wall jump, the ground pound drilling through layers, blast debris, blasted back walls, fire spreading along the crate bridge, the airstrike, the combo score, the mech (boarding, armour, bulldozing, jumping out, being thrown clear) and the pause menu. The fourth also covers Level 3: icicles, slippery ice, the tank fight and the game ending. The last three exit with code 1 on any failure.
+The first runs a scripted player through the level until it wins or runs out of bros. The second checks the cliff climb, the boss kill and the chopper extraction. The third checks the physics: nothing floats at the start, the watchtower, bunker roof and acid tower collapse when cut loose, ragdolls come to rest on the floor, explosions make gibs, punches launch bodies and propane tanks fly. The fourth checks each enemy type's behaviour, both new bros, the three bosses (activation, attacks, death, gates), the level 2 ending and that bros carry over between levels. The fifth checks the dash (and that it dodges a bullet), the wall jump, the ground pound drilling through layers, blast debris, blasted back walls, fire spreading along the crate bridge, the airstrike, the combo score, the mech (boarding, armour, bulldozing, jumping out, being thrown clear) and the pause menu. The fourth also covers Level 3: icicles, slippery ice, the tank fight and the game ending. The sixth checks that each of the 12 bros' weapons kills a quack and that the new specials work. The seventh checks the objects, items, objectives, objective-gated extraction and the campaign screens. The fourth also covers the new quacks and Level 4. Tests three to seven exit with code 1 on any failure.

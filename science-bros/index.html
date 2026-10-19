@@ -59,9 +59,9 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 <div class="wrap">
   <header>
     <h1>Science Bros</h1>
-    <div class="lvl">Placebo Island · Detox Desert · Cryo Summit</div>
+    <div class="lvl">Operation Infinite Dilution · 4 missions</div>
   </header>
-  <p class="premise">Dr. Placebo's quack army holds eight scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. Each freed scientist adds one bro to your reserve.</p>
+  <p class="premise">Dr. Placebo wants to dilute the world's water until no medicine works. His quack army holds eleven scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. Each freed scientist adds one bro to your reserve.</p>
 
   <div class="stage">
     <canvas id="game" width="480" height="270" tabindex="0" aria-label="Science Bros game screen"></canvas>
@@ -301,6 +301,8 @@ const THEMES = {
     dirt: ['#3b3247', '#4a3f57', '#2e2738', '#514560'], top: ['#5f9a2c', '#8cc63f'], dust: '#8b84a6', ambient: 0.42, dark: '#05051a', rain: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
   desert: { sky: ['#2b1d3a', '#8a3f55', '#e8875a'], stars: false, orb: 'sun', hill: '#6a3048', city: '#4a2238', cityKind: 'mesas', win: ['#f2c94c', '#e78ac3'], beam: '#ffd9a0',
     dirt: ['#9a6a3e', '#b07a4a', '#86592f', '#c48c56'], top: ['#d9a35c', '#f2c98c'], dust: '#c9a27a', ambient: 0.28, dark: '#2a0c22', sand: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
+  plant: { sky: ['#0d1410', '#1c2a24', '#3a3a2c'], stars: false, orb: 'moon', hill: '#1a2420', city: '#141c18', cityKind: 'factory', win: ['#f2c94c', '#ff6a4a'], beam: '#ff9a6a',
+    dirt: ['#4a4a52', '#56565e', '#3e3e46', '#62626c'], top: ['#6b5a4a', '#8a7560'], dust: '#8a8a92', ambient: 0.5, dark: '#050806', ash: true, acid: ['#1f6a7a', '#7de0f0', '#dff8ff'] },
   snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'pines', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
     dirt: ['#4a5068', '#59617c', '#3b4057', '#646d8a'], top: ['#c9d8ea', '#ffffff'], dust: '#cfd8e8', ambient: 0.45, dark: '#030818', snow: true, acid: ['#1f5a86', '#6fc3f0', '#dff4ff'] },
 };
@@ -463,6 +465,51 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('crawler', 200, 0, { ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] });
   dc('sign', 175, { text: 'CRYSTAL HEALING' }); dc('crystal', 186); dc('crystal', 201); dc('crystal', 214); dc('palm', 229); dc('cactus', 233);
 }
+function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
+  // 1. Loading yard: container stacks, fuel tanks, mines
+  ground(0, 40, 16);
+  fill(14, 13, 17, 15, BRICK); fill(26, 12, 31, 15, BRICK); fill(28, 10, 30, 11, CRATE);
+  sp('grunt', 9); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
+  dc('sign', 4, { text: 'DILUTION PLANT' }); dc('sandbags', 21);
+
+  // 2. Factory hall: catwalk with a ladder, two dilution vats on the floor
+  ground(41, 82, 16);
+  fill(44, 6, 76, 15, BRICK); fill(46, 8, 74, 15, EMPTY);
+  fill(44, 13, 44, 15, CRATE); fill(45, 13, 45, 15, EMPTY); fill(76, 13, 76, 15, CRATE); fill(75, 13, 75, 15, EMPTY);
+  fill(58, 6, 60, 6, STEEL); fill(46, 11, 60, 11, STEEL); fill(61, 11, 61, 15, LADDER);
+  bgFill(45, 8, 75, 15, BG_BRICK);
+  sp('target', 52, 12, { skin: 'vat' }); sp('target', 69, 12, { skin: 'vat' });
+  sp('cage', 49, 8, { bro: 'meitner' }); sp('pickup', 56, 8, { item: 'intel' }); sp('sniper', 54, 8);
+  sp('heavy', 64, 12); sp('medic', 66, 12); sp('grunt', 72, 12); sp('alarm', 47, 12);
+  sp('jetpack', 58); sp('rocketeer', 70);
+  lamp(50, 7); lamp(57, 10); lamp(66, 7); lamp(72, 7);
+  dc('plaque', 60, { r: 6, text: 'DILUTION HALL' });
+  sp('flag', 80);
+
+  // 3. Toxic channels: jump the gaps of diluted solution; a mech is parked at the start
+  ground(83, 88, 16); fill(89, 21, 91, 21, STEEL); fill(89, 17, 91, 20, ACID);
+  ground(92, 100, 16); fill(101, 21, 103, 21, STEEL); fill(101, 17, 103, 20, ACID);
+  ground(104, 112, 15); fill(113, 21, 115, 21, STEEL); fill(113, 17, 115, 20, ACID);
+  ground(116, 130, 16);
+  sp('mechsuit', 84); sp('dog', 94); sp('brute', 98); sp('itemcrate', 95); sp('rocketeer', 108); sp('strike', 107); sp('fueltank', 110);
+  sp('grunt', 119); sp('alarm', 118); sp('flamer', 122); sp('pickup', 124, 0, { item: 'intel' }); sp('spring', 126);
+  dc('sign', 87, { text: 'DO NOT DRINK' });
+  sp('flag', 128);
+
+  // 4. Chimney yard: cut a chimney at the base and it comes down
+  ground(131, 180, 16);
+  fill(140, 2, 141, 15, BRICK); fill(156, 2, 157, 15, BRICK); fill(146, 12, 150, 15, BRICK); fill(164, 10, 165, 15, BRICK);
+  sp('grunt', 136); sp('shield', 144); sp('sniper', 148); sp('jetpack', 152); sp('heavy', 160); sp('grenadier', 164); sp('medic', 167); sp('cage', 172, 0, { bro: 'archimedes' }); sp('itemcrate', 175);
+  dc('sandbags', 134); dc('sandbags', 170);
+  sp('flag', 178);
+
+  // 5. The Succussion Engine: a steel floor with a crumbly concrete top, a gantry with a platform and a ladder
+  fill(181, 15, 230, 17, DIRT); fill(181, 18, 235, 21, STEEL);
+  fill(205, 11, 209, 11, STEEL); fill(213, 9, 228, 9, STEEL); fill(212, 9, 212, 14, LADDER);
+  fill(229, 0, 230, 17, STEEL); fill(231, 15, 235, 17, STEEL);
+  sp('engine', 220, 0, { ax0: 182, ax1: 228, trig: 186, final: true, gate: [229, 230, 0, 14] });
+  dc('sign', 183, { text: 'SHAKE WELL' });
+}
 function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Snowy slopes with a frozen pond (ice is slippery)
   ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
@@ -533,8 +580,13 @@ const LEVELS = [
     debrief: 'Dr. Placebo bailed out of the tank in an escape pod. The diary says he has gone to the Dilution Plant to start the Engine.',
     objectives: [{ id: 'server', text: 'Wipe the server racks', need: 2, req: true }, { id: 'boss', text: 'Stop the Snake Oil Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 2 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Server log: customer list 4.2 million. Repeat customers: all of them.', 'Diary: if the summit falls, I flee to the Dilution Plant and start the Engine.', 'Blueprint: the Succussion Engine. Three stabiliser vats feed its core.'] },
+  { name: 'DILUTION PLANT', sub: 'Smash the vats, shut down the Succussion Engine', theme: 'plant', build: buildPlant, cages: 3, pad: [233, 15], map: [388, 186],
+    brief: 'This is it. The Succussion Engine will shake a drop of nothing into the world water supply until no medicine works. Free our last three scientists, smash the two dilution vats in the hall, then knock out the Engine: its three stabiliser vats first, then the core.',
+    debrief: 'The Engine is scrap and Dr. Placebo is in handcuffs.',
+    objectives: [{ id: 'vat', text: 'Smash the dilution vats', need: 2, req: true }, { id: 'boss', text: 'Shut down the Succussion Engine', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Recipe card: one drop of nothing, shaken one hundred times. Repeat.', 'Sticky note: who needs evidence when you have testimonials?', 'Final page: peer review is just other people\'s opinions. (It is not.)'] },
 ];
-const ENDING = 'The Succussion Engine is scrap and the water is safe. Dr. Placebo is on his way to a very long, very real trial. Science wins.';
+const ENDING = 'The Succussion Engine is scrap and the water is safe. Dr. Placebo is on his way to a very long, very real trial, with real evidence. Science wins.';
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
 // ---------------------------------------------------------------- tile physics
@@ -952,15 +1004,15 @@ const floatText = (x, y, txt, col = '#f2c94c') => fx.push({ kind: 'text', x, y, 
 
 // quacks share one brain (patrol, spot, alert, attack); each type adds its own attack
 const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, jetpack: 1, sniper: 1, flamer: 1, brute: 1, medic: 1 };
-const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1 };
-const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK' };
+const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1 };
+const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK', engine: 'SUCCUSSION ENGINE' };
 const isQuack = (e) => QUACK[e.type] === 1;
 const DIMS = {
   jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
   cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1],
-  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
+  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -988,6 +1040,10 @@ function makeEnt(s) {
     Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate });
     if (s.type === 'boss') e.wp = 0;
     if (s.type === 'tank') { e.ang = -Math.PI / 2; e.tread = 0; }
+    if (s.type === 'engine') { // the core sits on the gantry platform between two vats; a third vat stands on the floor
+      e.x = 219 * T; e.y = 9 * T - 34; e.vats = [[215, 9], [225, 9], [208, 15]].map(([c, r]) => ({ x: c * T - 2, y: r * T - 28, w: 20, h: 28, hp: 30, max: 30, dead: false, flash: 0 }));
+      e.hammers = [{ x: 195 * T, y: 0, state: 'up', t: 1.5 }, { x: 210 * T, y: 0, state: 'up', t: 2.6 }]; e.sprayT = 2; e.spawnT = 6; e.quakeT = 6;
+    }
     if (s.type === 'kopter') { e.rot = 0; e.tx = e.x; e.ty = e.y; }
     if (s.type === 'crawler') { e.segs = []; e.hx = e.x + 10; e.hy = e.fy + 56; e.surfY = e.fy; }
   }
@@ -1022,7 +1078,7 @@ function startLevel(n) {
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
   boss = ents.find((e) => e.final); chopper = null;
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
-  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 6;
+  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[n === 0 ? 'einstein' : unlocked[(Math.random() * unlocked.length) | 0]]);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
@@ -1032,7 +1088,7 @@ function startLevel(n) {
 function init() { newGame(); startLevel(0); }
 
 // ---------------------------------------------------------------- combat
-const HITTABLE = { mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1 };
+const HITTABLE = { mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
 const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, mine: 1, alarm: 1, target: 1 };
 const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
@@ -1042,6 +1098,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (e.dead || (BOSS[e.type] && (e.doomed || !e.active))) return;
   if (e.type === 'propane') { if (how === 'crush') killEnemy(e); else lightPropane(e, kx, 0.3); return; }
   if (e.type === 'icicle') { if (!e.falling) { e.falling = true; sfx('glass'); } return; }
+  if (e.type === 'engine' && e.vats.some((v) => !v.dead)) { sfx('ting'); for (let i = 0; i < 3; i++) part(e.x + e.w / 2, e.y + e.h / 2, rand(-120, 120), rand(-100, 20), '#8fd3ff', 0.25, 1, G); return; } // shielded until the vats are gone
   if (e.type === 'shield' && e.shield > 0 && how === 'shot' && kx && Math.sign(kx) === -e.face) { // the riot shield takes shots from the front
     e.shield -= dmg; e.kx += kx * 0.25; sfx('ting');
     const [cx, cy] = center(e);
@@ -1207,6 +1264,7 @@ function explode(x, y, r, dmg, owner, tp) {
       hitEnemy(e, dmg, Math.sign(cx - x) * 160, d < r * 0.75 ? 'gib' : 'blast');
       if (!BOSS[e.type] && e.type !== 'turret' && e.type !== 'heavy' && !e.dead) e.vy = -200;
     } else if (isQuack(e) && d < r * 1.8 && tp > 0) setBurn(e);
+    if (e.type === 'engine' && live(e)) for (const v of e.vats) if (!v.dead && Math.hypot(v.x + 10 - x, v.y + 14 - y) < r + 12) hitVat(e, v, dmg);
     if (e.type === 'crawler' && live(e)) { let n = 0; for (const sg of e.segs) if (Math.hypot(sg.x - x, sg.y - y) < r + 8) n++; if (n) hitEnemy(e, Math.min(3, n) * dmg * 0.35); }
   }
   pushBodies(x, y, r * 2.2, 430);
@@ -1771,6 +1829,7 @@ function updateEnt(e, dt) {
     case 'kopter': updateKopter(e, dt); break;
     case 'crawler': updateCrawler(e, dt); break;
     case 'tank': updateTank(e, dt); break;
+    case 'engine': updateEngine(e, dt); break;
     case 'icicle': updateIcicle(e, dt); break;
   }
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > LH * T) && !e.dead) {
@@ -2500,6 +2559,99 @@ function drawTank(b, t) {
   ctx.restore();
   if (b.dying > 0 && Math.floor(t * 20) % 2) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(x, y, b.w, b.h); }
 }
+// Succussion Engine: the final machine. Two hammers drop on wherever you stand (a shadow warns you), it sprays
+// diluted solution and spits out quacks. Its core is shielded until the three stabiliser vats are smashed;
+// then it shakes the whole plant, dropping rubble from the roof.
+function hitVat(e, v, dmg) {
+  v.hp -= dmg; v.flash = 0.08;
+  if (v.hp <= 0 && !v.dead) {
+    v.dead = true; explode(v.x + 10, v.y + 14, 36, 0, 'p', 2); splash(v.x + 10, v.y + 10, 20); sfx('glass');
+    const left = e.vats.filter((o) => !o.dead).length;
+    showBanner(left ? 'STABILISER DOWN' : 'CORE EXPOSED', left ? left + ' to go' : 'hit the core!', 1.6);
+  }
+}
+function updateEngine(b, dt) {
+  b.anim += dt; for (const v of b.vats) v.flash -= dt;
+  if (!b.active) { if (P.alive && P.x > b.trig * T) activateBoss(b, 'Dr. Placebo at the controls. Shake well before use.'); return; }
+  const floorY = (r) => { let rr = 1; while (rr < LH - 1 && !isSolidT(tileAt(Math.floor(r / T), rr))) rr++; return rr * T; };
+  if (b.dying > 0) {
+    b.dying -= dt; b.boomT -= dt;
+    if (b.boomT <= 0) { b.boomT = 0.1; explode(rand(206, 228) * T, rand(3, 15) * T, rand(20, 34), 0, 'p', 1); }
+    if (b.dying <= 0) { explode(b.x + b.w / 2, b.y + b.h / 2, 90, 0, 'p', 3); bossDown(b); showBanner('DR. PLACEBO ARRESTED', 'the Engine is scrap', 4); }
+    return;
+  }
+  const exposed = b.vats.every((v) => v.dead), fast = exposed ? 0.6 : 1;
+  for (const h of b.hammers) { // each hammer: wait, track you, warn, slam, rise
+    h.t -= dt;
+    if (h.state === 'up') { h.y = 0; if (h.t <= 0) { h.state = 'track'; h.t = 1.1 * fast; } }
+    else if (h.state === 'track') { h.x = approach(h.x, clamp(P.x + P.w / 2 - 12, b.ax0 * T, 216 * T), 260 * dt); if (h.t <= 0) { h.state = 'warn'; h.t = 0.55 * fast + 0.15; sfx('creak'); } }
+    else if (h.state === 'warn') { if (h.t <= 0) { h.state = 'slam'; h.vy = 200; } }
+    else if (h.state === 'slam') {
+      h.vy += 2600 * dt; h.y += h.vy * dt;
+      const fy = floorY(h.x + 12);
+      if (h.y + 40 >= fy) { // impact: crack the concrete, throw everything, crush whoever is under it
+        h.y = fy - 40; h.state = 'rise'; h.t = 0.6; shake = Math.min(12, shake + 7); sfx('boom'); sfx('thud'); rumble(0.8, 200);
+        for (let c = Math.floor(h.x / T); c <= Math.floor((h.x + 23) / T); c++) damageTile(c, Math.floor(fy / T), 3);
+        if (P.alive && P.inv <= 0 && overlap(P, { x: h.x, y: fy - 44, w: 24, h: 44 })) killPlayer('crush');
+        for (const e of ents) if (e !== b && live(e) && !BOSS[e.type] && overlap(e, { x: h.x - 4, y: fy - 44, w: 32, h: 44 })) hitEnemy(e, 99, 0, 'crush');
+        for (const s of [-1, 1]) bullets.push({ x: h.x + 12 + s * 16, y: fy - 7, vx: s * 200, vy: 0, owner: 'e', dmg: 1, tdmg: 0, life: 1.4, kind: 'wave' });
+        pushBodies(h.x + 12, fy, 80, 400);
+        for (let i = 0; i < 16; i++) part(h.x + rand(0, 24), fy - 2, rand(-160, 160), rand(-140, -20), theme.dust, rand(0.4, 0.8), rand(3, 5), 0, 'smoke');
+      }
+    } else if (h.state === 'rise') { h.y = Math.max(0, h.y - 220 * dt); if (h.t <= 0 && h.y <= 0) { h.state = 'up'; h.t = rand(0.6, 1.4) * fast; } }
+  }
+  b.sprayT -= dt;
+  if (b.sprayT <= 0) { b.sprayT = exposed ? 1.6 : 2.6; spit({ hx: b.x + 4, hy: b.y + 10 }, exposed ? 3 : 2); }
+  b.spawnT -= dt;
+  if (b.spawnT <= 0) { // a hatch at the foot of the machine spits out quacks
+    b.spawnT = exposed ? 7 : 9;
+    if (ents.filter((e) => isQuack(e) && !e.dead && e.x > b.ax0 * T).length < 4) for (const type of ['grunt', Math.random() < 0.5 ? 'shield' : 'flamer']) {
+      const q = makeEnt({ type, c: 0, y: 14 * T - 16 }); q.x = 212 * T; q.kx = -rand(80, 200); q.vy = -200; q.aware = true; q.react = 0.6; q.face = -1; ents.push(q);
+    }
+  }
+  if (exposed) { // succussion: the whole plant shakes and rubble falls from the roof
+    b.quakeT -= dt;
+    if (b.quakeT <= 0) { b.quakeT = 5; shake = Math.min(14, shake + 9); sfx('roar'); for (let k = 0; k < 6; k++) bullets.push({ x: rand(b.ax0, 214) * T, y: cam.y - 10 - k * 30, vx: 0, vy: 40, grav: 600, owner: 'e', kind: 'rock', life: 4, dmg: 1 }); }
+  }
+}
+function drawEngine(b, t) {
+  if (b.dead) return;
+  const fl = b.flash > 0, sh = b.dying > 0 ? rand(-2, 2) : Math.sin(t * 40) * (b.active ? 0.6 : 0);
+  // gantry frame and pipes behind everything
+  ctx.fillStyle = '#25283a'; ctx.fillRect(213 * T, 2 * T, 2, 13 * T); ctx.fillRect(228 * T, 2 * T, 2, 13 * T); ctx.fillRect(213 * T, 2 * T, 15 * T + 2, 3);
+  ctx.fillStyle = '#3d4560'; for (let k = 0; k < 6; k++) ctx.fillRect(213 * T + k * 40, 2 * T, 2, 7 * T);
+  // the core: a glass sphere churning with nothing, shielded until the vats are gone
+  const cx = b.x + b.w / 2 + sh, cy = b.y + b.h / 2;
+  ctx.fillStyle = '#5c6480'; ctx.fillRect(b.x - 2 + sh, b.y + b.h - 6, b.w + 4, 6);
+  ctx.fillStyle = fl ? '#fff' : '#bfe9ff'; ctx.beginPath(); ctx.arc(cx, cy - 2, 13, 0, 7); ctx.fill();
+  ctx.fillStyle = '#7de0f0'; for (let k = 0; k < 5; k++) { const a = t * 6 + k * 1.3; ctx.fillRect(Math.round(cx + Math.cos(a) * 7), Math.round(cy - 2 + Math.sin(a * 1.3) * 7), 2, 2); }
+  if (b.vats.some((v) => !v.dead)) { ctx.strokeStyle = '#8fd3ff'; ctx.globalAlpha = 0.4 + Math.sin(t * 8) * 0.2; ctx.beginPath(); ctx.arc(cx, cy - 2, 17, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  // Dr. Placebo's control booth above the core
+  ctx.fillStyle = '#25223a'; ctx.fillRect(217 * T, 3 * T, 4 * T, 2 * T); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(217 * T + 4, 3 * T + 4, 4 * T - 8, 12);
+  ctx.drawImage(RIG.guru.still[P.x > cx ? 0 : 1], 0, 0, 14, 10, 218.5 * T, 3 * T + 6, 14, 10);
+  // the stabiliser vats
+  for (const v of b.vats) {
+    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 2, v.y + v.h - 6, 16, 6); continue; }
+    ctx.fillStyle = '#0d0b18'; ctx.fillRect(v.x - 1, v.y - 1, v.w + 2, v.h + 2);
+    ctx.fillStyle = v.flash > 0 ? '#fff' : '#5c6480'; ctx.fillRect(v.x, v.y, v.w, 4); ctx.fillRect(v.x, v.y + v.h - 4, v.w, 4);
+    ctx.fillStyle = '#1f6a7a'; ctx.fillRect(v.x + 1, v.y + 4, v.w - 2, v.h - 8);
+    const lvl = (1 - v.hp / v.max) * (v.h - 8); ctx.fillStyle = '#7de0f0'; ctx.fillRect(v.x + 1, v.y + 4 + lvl, v.w - 2, v.h - 8 - lvl);
+    ctx.fillStyle = '#dff8ff'; ctx.fillRect(v.x + 4, v.y + v.h - 8 - ((t * 25) % 14), 2, 2);
+  }
+  // hammers: a piston from the roof, with a shadow and a red line where it is about to land
+  for (const h of b.hammers) {
+    if (h.state === 'track' || h.state === 'warn') {
+      ctx.globalAlpha = h.state === 'warn' ? 0.5 + Math.sin(t * 40) * 0.3 : 0.25; ctx.fillStyle = '#ff3a2a';
+      ctx.fillRect(Math.round(h.x), cam.y, 24, VH); ctx.globalAlpha = 1;
+    }
+    const hy = Math.round(Math.max(cam.y - 10, h.y - 30) );
+    ctx.fillStyle = '#3d4560'; ctx.fillRect(Math.round(h.x) + 8, cam.y - 10, 8, Math.max(0, h.y - cam.y + 10));
+    ctx.fillStyle = '#0d0b18'; ctx.fillRect(Math.round(h.x) - 1, Math.round(h.y) - 1, 26, 42);
+    ctx.fillStyle = '#8b93ad'; ctx.fillRect(Math.round(h.x), Math.round(h.y), 24, 40);
+    ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) ctx.fillRect(Math.round(h.x) + 2 + k * 8, Math.round(h.y) + 34, 4, 4);
+    void hy;
+  }
+}
 // icicle: hangs under a tile, shakes when you walk beneath it, then drops and shatters on whatever it hits
 function updateIcicle(e, dt) {
   const [ac, ar] = e.anchor;
@@ -2602,6 +2754,7 @@ function updateBullets(dt, edt) {
     if (solidPx(b.x, b.y) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
       b.dead = true;
       if (b.kind === 'glob') { splash(b.x, b.y - 2, 6); acidPool(b.x - b.vx * d, b.y - b.vy * d); continue; }
+      if (b.kind === 'rock') { for (let i = 0; i < 4; i++) chunk(b.x, b.y - 2, rand(-100, 100), rand(-150, -40), '#62626c'); sfx('crumble'); continue; }
       if (b.explode) { explode(b.x - b.vx * d, b.y - b.vy * d, b.explode, b.dmg, own, b.tp); continue; }
       damageTile(Math.floor(b.x / T), Math.floor(b.y / T), b.tdmg || 0.5);
       part(b.x, b.y, -b.vx * 0.2, rand(-80, -10), b.owner === 'e' ? '#f2c94c' : '#d8e2ff', 0.25, 1, G);
@@ -2616,6 +2769,10 @@ function updateBullets(dt, edt) {
           else hitEnemy(e, b.dmg, Math.sign(b.vx) * 90);
           break;
         }
+      }
+      if (!b.dead) for (const e of ents) { // the engine's stabiliser vats
+        if (e.type !== 'engine' || !live(e)) continue;
+        for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'p', b.tp); else hitVat(e, v, b.dmg); break; }
       }
       if (!b.dead) for (const e of ents) { // the crawler's body is armoured: bullets spark off it
         if (e.type !== 'crawler' || !live(e)) continue;
@@ -2833,6 +2990,14 @@ function drawBackground(t) {
     for (const xx of [x, x + 2640]) {
       if (xx > VW + 30 || xx + L.w < -30) continue;
       ctx.fillStyle = th.city;
+      if (th.cityKind === 'factory') { // chimneys with smoke drifting off them
+        ctx.fillRect(xx, base - L.h * 0.6, L.w, L.h + 60); ctx.fillRect(xx + L.w / 2 - 4, base - L.h - 20, 8, L.h * 0.5 + 20);
+        ctx.globalAlpha = 0.25; ctx.fillStyle = '#5a5a52';
+        for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(xx + L.w / 2 + k * 9 + Math.sin(t + k) * 2, base - L.h - 24 - k * 9, 5 + k * 2, 0, 7); ctx.fill(); }
+        ctx.globalAlpha = 1;
+        if (Math.sin(t * 3 + L.x) > 0.6) { ctx.fillStyle = th.win[1]; ctx.fillRect(xx + L.w / 2 - 1, base - L.h - 22, 2, 2); }
+        continue;
+      }
       if (th.cityKind === 'pines') { // a ridge of pine silhouettes
         for (let k = 0; k < 3; k++) { const px = xx + k * L.w / 2, ph = L.h * (0.5 + 0.2 * k); ctx.beginPath(); ctx.moveTo(px - 12, base + 60); ctx.lineTo(px, base - ph); ctx.lineTo(px + 12, base + 60); ctx.fill(); }
         continue;
@@ -3275,6 +3440,7 @@ function drawEnt(e, t) {
     case 'boss': drawMech(e, t); break;
     case 'kopter': drawKopter(e, t); break;
     case 'tank': drawTank(e, t); break;
+    case 'engine': drawEngine(e, t); break;
     case 'icicle': {
       const sh = e.warn > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
       ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.moveTo(x - 1 + sh, y); ctx.lineTo(x + e.w + 1 + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h + 1); ctx.fill();
@@ -3407,6 +3573,7 @@ function drawBullets() {
       case 'pill': ctx.fillStyle = '#f2c94c'; ctx.fillRect(x - 2, y - 1, 2, 2); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y - 1, 2, 2); break;
       case 'bigpill': ctx.fillStyle = '#e78ac3'; ctx.fillRect(x - 3, y - 2, 3, 4); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y - 2, 3, 4); break;
       case 'wave': ctx.fillStyle = '#b4bed0'; ctx.fillRect(x - 4, y - 6, 8, 12); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x - 2, y - 9, 4, 3); break;
+      case 'rock': ctx.fillStyle = '#62626c'; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.fillStyle = '#3e3e46'; ctx.fillRect(x - 1, y, 3, 2); break;
       case 'slug': ctx.fillStyle = '#ff6a4a'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y, 1, 1); break;
       case 'enigma': ctx.fillStyle = '#66c2a5'; ctx.fillRect(x - 2, y, 4, 1); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x, y, 1, 1); break;
       case 'calc': ctx.fillStyle = '#8da0cb'; ctx.fillRect(x - 2, y - 2, 4, 4); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
@@ -3534,7 +3701,7 @@ function drawHud(t) {
   text('KILLS ' + stats.kills, VW - 126, 27, 8, '#e7eaf6');
   text('FREED ' + stats.rescued + '/' + LEVELS[level].cages, VW - 10, 27, 8, '#a6d854', 'right');
   // objectives: shown for a few seconds at the start and whenever one moves, and while the map is open
-  if (objShowT > 0 || keys.map) {
+  if ((objShowT > 0 && banner.t <= 0) || keys.map) {
     const a = keys.map ? 1 : Math.min(1, objShowT * 2);
     ctx.globalAlpha = a; ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 42, 190, 8 + objectives.length * 10);
     objectives.forEach((o, i) => {
@@ -3559,7 +3726,7 @@ function drawHud(t) {
     ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
     ctx.fillStyle = B.p2 ? '#b0507a' : '#7570b3'; ctx.fillRect(x, y, w * Math.max(0, B.hp) / B.max, 5);
   }
-  if (banner.t > 0 && !paused) {
+  if (banner.t > 0 && !paused && !keys.map) {
     const a = Math.min(1, banner.t * 3, (banner.max - banner.t) * 6 + 0.2);
     ctx.globalAlpha = a;
     text(banner.text, VW / 2, 72, 16, '#e7eaf6', 'center');
@@ -3590,9 +3757,9 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('3 LEVELS · 7 BROS · 4 BOSSES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('4 LEVELS · 12 BROS · 5 BOSSES · 14 QUACK TYPES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST RUN ' + hiScore, VW / 2, 172, 8, '#f2c94c', 'center');
-    BROS.forEach((b, i) => { const x = VW / 2 - 138 + i * 40; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 122, 24, 32); });
+    BROS.forEach((b, i) => { const x = VW / 2 - 190 + i * 32; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 126, 18, 24); });
     if (blink) text('PRESS ENTER OR TAP TO START', VW / 2, 190, 8, '#e7eaf6', 'center');
     text('ARROWS MOVE · UP JUMP · Z FIRE · X SPECIAL · C PUNCH', VW / 2, 216, 8, '#a3abd0', 'center');
     text('SHIFT DASH · DOWN+PUNCH IN AIR SLAMS · GAMEPAD WORKS', VW / 2, 230, 8, '#a3abd0', 'center');
@@ -3830,8 +3997,8 @@ function drawWeather(t) {
       boltPts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.lineWidth = 1;
       ctx.fillStyle = '#ffffff'; ctx.globalAlpha = flashT * 0.5; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
     }
-  } else if (theme.snow) {
-    ctx.fillStyle = 'rgba(240,246,255,0.75)';
+  } else if (theme.snow || theme.ash) {
+    ctx.fillStyle = theme.ash ? 'rgba(150,150,140,0.55)' : 'rgba(240,246,255,0.75)';
     for (const d of DROPS) {
       d[1] += 34 * d[2] * dt; d[0] += Math.sin(t * 1.3 + d[2] * 9) * 12 * dt - 8 * dt;
       if (d[1] > VH) { d[1] = -4; d[0] = Math.random() * VW; }
@@ -3879,7 +4046,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();
