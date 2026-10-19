@@ -59,9 +59,9 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 <div class="wrap">
   <header>
     <h1>Science Bros</h1>
-    <div class="lvl">Placebo Island · Detox Desert</div>
+    <div class="lvl">Placebo Island · Detox Desert · Cryo Summit</div>
   </header>
-  <p class="premise">Dr. Placebo's quack army holds six scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. Each freed scientist adds one bro to your reserve.</p>
+  <p class="premise">Dr. Placebo's quack army holds eight scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. Each freed scientist adds one bro to your reserve.</p>
 
   <div class="stage">
     <canvas id="game" width="480" height="270" tabindex="0" aria-label="Science Bros game screen"></canvas>
@@ -98,8 +98,8 @@ const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 const T = 16, VW = 480, VH = 270, LW = 236, LH = 22, G = 900;
-const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5;
-const TILE_HP = [0, 2, 6, 1e9, 3, 0];
+const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6;
+const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2];
 const BG_EARTH = 1, BG_BRICK = 2;
 const FONT = '"Silkscreen", "Courier New", monospace';
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -278,13 +278,15 @@ function drawArm(sh, face, mode, coat, skin, swing = 0) {
 // Each level has a theme: sky, skyline, earth colour and the strip on top of the ground.
 const THEMES = {
   island: { sky: ['#121735', '#2b2f66', '#3d3a78'], stars: true, orb: 'planet', hill: '#242a58', city: '#1a1f47', cityKind: 'labs', win: ['#8da0cb', '#a6d854'], beam: '#c9f08f',
-    dirt: ['#3b3247', '#4a3f57', '#2e2738', '#514560'], top: ['#5f9a2c', '#8cc63f'], dust: '#8b84a6', ambient: 0.42, dark: '#05051a', rain: true },
+    dirt: ['#3b3247', '#4a3f57', '#2e2738', '#514560'], top: ['#5f9a2c', '#8cc63f'], dust: '#8b84a6', ambient: 0.42, dark: '#05051a', rain: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
   desert: { sky: ['#2b1d3a', '#8a3f55', '#e8875a'], stars: false, orb: 'sun', hill: '#6a3048', city: '#4a2238', cityKind: 'mesas', win: ['#f2c94c', '#e78ac3'], beam: '#ffd9a0',
-    dirt: ['#9a6a3e', '#b07a4a', '#86592f', '#c48c56'], top: ['#d9a35c', '#f2c98c'], dust: '#c9a27a', ambient: 0.28, dark: '#2a0c22', sand: true },
+    dirt: ['#9a6a3e', '#b07a4a', '#86592f', '#c48c56'], top: ['#d9a35c', '#f2c98c'], dust: '#c9a27a', ambient: 0.28, dark: '#2a0c22', sand: true, acid: ['#4f9c2f', '#a6d854', '#c9f08f'] },
+  snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'pines', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
+    dirt: ['#4a5068', '#59617c', '#3b4057', '#646d8a'], top: ['#c9d8ea', '#ffffff'], dust: '#cfd8e8', ambient: 0.45, dark: '#030818', snow: true, acid: ['#1f5a86', '#6fc3f0', '#dff4ff'] },
 };
 let theme = THEMES.island;
 const TILE_IMG = [], BG_IMG = [];
-const TILE_COL = [null, null, ['#4a5677', '#303a56'], ['#93a0b8', '#6f7c96'], ['#7a5c36', '#5a4226']];
+const TILE_COL = [null, null, ['#4a5677', '#303a56'], ['#93a0b8', '#6f7c96'], ['#7a5c36', '#5a4226'], null, ['#dff4ff', '#8fc7e8']];
 function buildTiles(th) {
   theme = th; skyGrad = null;
   const speck = (g, cols, n) => { for (let i = 0; i < n; i++) { g.fillStyle = cols[i % cols.length]; g.fillRect((Math.random() * 15) | 0, (Math.random() * 15) | 0, 1 + (Math.random() * 2 | 0), 1); } };
@@ -306,6 +308,12 @@ function buildTiles(th) {
     g.fillStyle = '#7a5c36'; g.fillRect(0, 0, T, T);
     g.fillStyle = '#5a4226'; g.fillRect(0, 0, T, 2); g.fillRect(0, T - 2, T, 2); g.fillRect(0, 0, 2, T); g.fillRect(T - 2, 0, 2, T);
     for (let i = 2; i < 14; i++) { g.fillRect(i, i, 2, 1); }
+  });
+  TILE_IMG[ICE] = make((g, v) => { // ice: pale blue with a shine and a crack or two
+    g.fillStyle = '#8fc7e8'; g.fillRect(0, 0, T, T);
+    g.fillStyle = '#b6defa'; g.fillRect(1, 1, T - 2, 5);
+    g.fillStyle = '#dff4ff'; g.fillRect(2, 2, 5, 1); g.fillRect(3 + v, 3, 2, 1); g.fillRect(10, 9, 3, 1);
+    g.fillStyle = '#6fa6cf'; g.fillRect(0, T - 2, T, 2); g.fillRect(4 + v * 2, 7, 1, 5); g.fillRect(5 + v * 2, 11, 3, 1);
   });
   TILE_COL[DIRT] = [th.dirt[0], th.dirt[3]];
   // back walls: what you see behind broken earth and inside buildings
@@ -370,7 +378,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   // 5. Cliff fort
   ground(141, 150, 12); ground(151, 175, 16);
   fill(160, 9, 161, 15, BRICK);
-  sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
+  sp('mechsuit', 142); sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
   sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
   dc('sandbags', 146); dc('sandbags', 153); dc('palm', 164, { lean: -1 }); dc('sign', 171, { text: 'NO SCIENCE' });
 
@@ -415,6 +423,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
 
   // 5. Acid canyon
   ground(126, 134, 16);
+  sp('mechsuit', 127);
   fill(135, 21, 150, 21, STEEL); fill(135, 17, 150, 20, ACID); fill(135, 16, 150, 16, CRATE);
   for (const c of [138, 142, 146, 149]) fill(c, 17, c, 20, STEEL);
   ground(151, 172, 14); fill(158, 11, 161, 13, DIRT);
@@ -430,9 +439,59 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('crawler', 200, 0, { ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] });
   dc('sign', 175, { text: 'CRYSTAL HEALING' }); dc('crystal', 186); dc('crystal', 201); dc('crystal', 214); dc('palm', 229); dc('cactus', 233);
 }
+function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
+  // 1. Snowy slopes with a frozen pond (ice is slippery)
+  ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
+  fill(12, 14, 17, 14, ICE);
+  sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('scout', 25); sp('ammo', 30); sp('grenadier', 33);
+  dc('pine', 3); dc('sign', 6, { text: 'COLD CURES ALL' }); dc('pine', 9); dc('snowman', 20); dc('pine', 29); dc('pine', 35);
+
+  // 2. The Cryo Spa: brick, crate doors, an ice floor, a mech parked outside
+  ground(37, 72, 16);
+  fill(42, 8, 66, 15, BRICK); fill(44, 10, 64, 15, EMPTY);
+  fill(42, 13, 42, 15, CRATE); fill(43, 13, 43, 15, EMPTY); fill(66, 13, 66, 15, CRATE); fill(65, 13, 65, 15, EMPTY);
+  fill(53, 8, 55, 8, STEEL); fill(44, 16, 64, 16, ICE);
+  bgFill(43, 10, 65, 15, BG_BRICK);
+  sp('mechsuit', 38);
+  sp('shield', 48, 10); sp('heavy', 56, 10); sp('barrel', 59, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'curie' });
+  sp('guru', 50); sp('rocketeer', 62);
+  lamp(47, 9); lamp(54, 9); lamp(61, 9);
+  dc('plaque', 54, { r: 8, text: 'CRYO SPA' }); dc('snowman', 69);
+  sp('flag', 70);
+
+  // 3. Frozen chasm: freezing water under a brittle ice bridge, steel piles to hop on
+  ground(73, 75, 16);
+  fill(76, 21, 104, 21, STEEL); fill(76, 17, 104, 20, ACID); fill(76, 16, 104, 16, ICE);
+  for (const c of [79, 83, 87, 91, 95, 99, 103]) fill(c, 17, c, 20, STEEL);
+  sp('grunt', 82); sp('shield', 90); sp('dog', 96); sp('bomber', 101);
+  dc('sign', 74, { text: 'THIN ICE' });
+
+  // 4. Cliff with a tunnel underneath: icicles hang from the tunnel roof, rocketeers wait on top
+  ground(105, 112, 16); ground(113, 150, 10);
+  fill(113, 13, 150, 15, EMPTY);
+  for (const c of [120, 132, 144]) fill(c, 10, c, 10, STEEL); // bedrock studs hold the tunnel roof up
+  for (const c of [118, 123, 129, 135, 141]) sp('icicle', c, 0, { hang: 12 });
+  sp('grunt', 120, 13); sp('dog', 126, 13); sp('heavy', 133, 13); sp('grunt', 146, 13);
+  sp('strike', 117); sp('rocketeer', 125); sp('cage', 131, 0, { bro: 'tesla' }); sp('grenadier', 138); sp('ammo', 142); sp('rocketeer', 147);
+  dc('pine', 115); dc('pine', 128); dc('pine', 149);
+
+  // 5. Snow fort
+  ground(151, 176, 16);
+  fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK);
+  sp('flag', 152); sp('shield', 156); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
+  dc('sandbags', 154); dc('snowman', 163);
+
+  // 6. Tank arena: snow over steel, the extraction pad behind a gate
+  fill(177, 16, 223, 17, DIRT); fill(177, 18, 223, 21, STEEL);
+  fill(190, 14, 190, 15, BRICK); fill(205, 14, 205, 15, BRICK);
+  fill(224, 4, 225, 21, STEEL); fill(226, 16, 235, 21, STEEL);
+  sp('tank', 212, 0, { ax0: 178, ax1: 223, trig: 182, final: true, gate: [224, 225, 4, 15] });
+  dc('sign', 180, { text: 'SNAKE OIL CO' }); dc('pine', 228); dc('snowman', 232);
+}
 const LEVELS = [
   { name: 'PLACEBO ISLAND', sub: 'Free 4 scientists, destroy the Homeopathitron', theme: 'island', build: buildIsland, cages: 4, pad: [227, 16] },
   { name: 'DETOX DESERT', sub: 'Free 2 scientists, down the Detoxkopter, kill the Crystal Crawler', theme: 'desert', build: buildDesert, cages: 2, pad: [230, 12] },
+  { name: 'CRYO SUMMIT', sub: 'Free 2 scientists, stop Dr. Placebo and his Snake Oil Tank', theme: 'snow', build: buildCryo, cages: 2, pad: [230, 16] },
 ];
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
@@ -586,7 +645,7 @@ function noise(dur, vol, freq, t = AC.currentTime) {
 }
 const sfxLast = {};
 function sfx(n) {
-  if (!AC || muted) return;
+  if (!AC || muted || quiet) return;
   const now = performance.now();
   if (sfxLast[n] && now - sfxLast[n] < 45) return;
   sfxLast[n] = now;
@@ -628,6 +687,8 @@ function sfx(n) {
       case 'dash': noise(0.15, 0.06, 4000); tone(500, 900, 0.1, 'triangle', 0.02); break;
       case 'jet': noise(1.6, 0.12, 1800); tone(300, 90, 1.6, 'sawtooth', 0.03); break;
       case 'thunder': noise(2.2, 0.22, 400); tone(60, 30, 1.8, 'sine', 0.08); break;
+      case 'mech': tone(120, 240, 0.25, 'square', 0.04); noise(0.2, 0.06, 800); break;
+      case 'glass': noise(0.2, 0.08, 7000); tone(2800, 1200, 0.15, 'triangle', 0.03); break;
       case 'squish': noise(0.1, 0.12, 900); tone(200, 80, 0.12, 'sine', 0.05); break;
     }
   } catch (e) { /* audio is optional */ }
@@ -649,7 +710,7 @@ function note(f0, f1, t0, dur, type, vol) {
   o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
 }
 function updateMusic() {
-  if (!AC || muted || state !== 'play' || paused) { musicNext = 0; return; }
+  if (!AC || muted || !settings.music || state !== 'play' || paused) { musicNext = 0; return; }
   const song = ents.some((e) => BOSS[e.type] && e.active && !e.dead) ? SONGS.boss : SONGS.level, spb = 60 / song.bpm / 4;
   if (musicNext < AC.currentTime) musicNext = AC.currentTime + 0.05;
   try {
@@ -704,6 +765,7 @@ function pollPad() {
 }
 // short rumble on pads that support it
 function rumble(strength, ms) {
+  if (quiet) return;
   try {
     if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
     for (const g of navigator.getGamepads()) if (g && g.vibrationActuator) g.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: strength, weakMagnitude: strength * 0.6 }).catch(() => {});
@@ -714,6 +776,24 @@ document.getElementById('fs').addEventListener('click', () => {
   try { const p = (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fullscreen is optional */ }
   cv.focus();
 });
+
+// ---------------------------------------------------------------- settings
+// Toggled from the pause menu; kept in this browser only.
+const settings = { shake: true, scanlines: false, music: true, lighting: true };
+try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
+const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
+const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
+let menuSel = 0;
+function pauseMenu() {
+  if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
+  if (pressed.down) menuSel = (menuSel + 1) % MENU.length;
+  if (pressed.fire || pressed.start || pressed.melee) {
+    const [, key] = MENU[menuSel];
+    if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
+    else if (menuSel === 4) { paused = false; startLevel(level); }
+    else { paused = false; state = 'title'; init(); }
+  }
+}
 
 // ---------------------------------------------------------------- game state
 let state = 'title', paused = false;
@@ -766,7 +846,7 @@ function decal(x, y, col, sz) {
 }
 function splash(x, y, n) {
   sfx('splash');
-  for (let i = 0; i < n; i++) part(x + rand(-6, 6), y, rand(-90, 90), rand(-220, -60), i % 2 ? '#a6d854' : '#c9f08f', rand(0.4, 0.9), 2, G);
+  for (let i = 0; i < n; i++) part(x + rand(-6, 6), y, rand(-90, 90), rand(-220, -60), i % 2 ? theme.acid[1] : theme.acid[2], rand(0.4, 0.9), 2, G);
 }
 function updateBodies(dt) {
   for (const b of bodies) {
@@ -816,13 +896,13 @@ function showBanner(text, sub = '', dur = 2) { banner = { text, sub, t: dur, max
 
 // quacks share one brain (patrol, spot, alert, attack); each type adds its own attack
 const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1 };
-const BOSS = { boss: 1, kopter: 1, crawler: 1 };
-const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER' };
+const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1 };
+const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK' };
 const isQuack = (e) => QUACK[e.type] === 1;
 const DIMS = {
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
-  cage: [16, 16, 1], flag: [4, 32, 1], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
+  cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], icicle: [6, 14, 1], tank: [64, 30, 180], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -841,10 +921,12 @@ function makeEnt(s) {
   if (s.type === 'turret') { e.cool = rand(0.5, 1.5); e.burst = 0; e.ang = Math.PI; }
   if (s.type === 'bomber') { e.run = false; e.fuse = 2.6; }
   if (s.type === 'cage') e.bro = s.bro;
+  if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; }
   if (s.type === 'flag') e.on = false;
   if (BOSS[s.type]) {
     Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate });
     if (s.type === 'boss') e.wp = 0;
+    if (s.type === 'tank') { e.ang = -Math.PI / 2; e.tread = 0; }
     if (s.type === 'kopter') { e.rot = 0; e.tx = e.x; e.ty = e.y; }
     if (s.type === 'crawler') { e.segs = []; e.hx = e.x + 10; e.hy = e.fy + 56; e.surfY = e.fy; }
   }
@@ -873,13 +955,14 @@ function startLevel(n) {
 function init() { newGame(); startLevel(0); }
 
 // ---------------------------------------------------------------- combat
-const HITTABLE = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, boss: 1, kopter: 1, crawler: 1 };
+const HITTABLE = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
-const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !(e.dying > 0)));
+const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
 // how: 'shot' and 'blast' leave a ragdoll, 'gib' and 'crush' tear the body apart, 'burn' leaves a charred body, 'punch' sends it flying
 function hitEnemy(e, dmg, kx = 0, how = 'shot') {
-  if (e.dead || (BOSS[e.type] && (e.dying > 0 || !e.active))) return;
+  if (e.dead || (BOSS[e.type] && (e.doomed || !e.active))) return;
   if (e.type === 'propane') { if (how === 'crush') killEnemy(e); else lightPropane(e, kx, 0.3); return; }
+  if (e.type === 'icicle') { if (!e.falling) { e.falling = true; sfx('glass'); } return; }
   if (e.type === 'shield' && e.shield > 0 && how === 'shot' && kx && Math.sign(kx) === -e.face) { // the riot shield takes shots from the front
     e.shield -= dmg; e.kx += kx * 0.25; sfx('ting');
     const [cx, cy] = center(e);
@@ -957,6 +1040,8 @@ function dropChute(e) {
 }
 // boss death: each boss plays its own death animation, then bossDown() opens the way
 function bossDying(e) {
+  if (e.doomed) return;
+  e.doomed = true; // from here on its own death blasts can't restart the sequence
   e.dying = e.type === 'kopter' ? 9 : 3.2; e.boomT = 0;
   if (e.type !== 'kopter') e.vx = 0;
   showBanner(BOSS_NAME[e.type] + ' DOWN', { boss: 'diluted to zero', kopter: 'flushed out', crawler: 'bad vibes only' }[e.type], 2.5);
@@ -1152,7 +1237,7 @@ function useSpecial() {
       break;
     }
     case 'darwin': // the weak drop dead, the strong take a beating
-      for (const e of enemiesNear(P.x, P.y, 600, (e) => Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10 && e.type !== 'barrel' && e.type !== 'propane' && e.type !== 'ammo' && e.type !== 'strike')) {
+      for (const e of enemiesNear(P.x, P.y, 600, (e) => Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10 && e.type !== 'barrel' && e.type !== 'propane' && e.type !== 'ammo' && e.type !== 'strike' && e.type !== 'icicle')) {
         const [cx, cy] = center(e);
         for (let i = 0; i < 6; i++) part(cx + rand(-6, 6), cy + rand(-8, 8), 0, rand(-60, -20), '#a6d854', 0.6, 2);
         if (BOSS[e.type]) hitEnemy(e, 12); else if (e.max <= 4) hitEnemy(e, 99, 0, 'gib'); else hitEnemy(e, 10);
@@ -1165,6 +1250,11 @@ function useSpecial() {
 function killPlayer(how = 'shot', dir = 0) {
   if (!P.alive || P.ride) return;
   if (P.dash > 0 && how === 'shot') return; // the roll dodges bullets and bites
+  if (P.mech) { // the mech takes the hit instead
+    P.mech.hp -= how === 'shot' ? 1 : how === 'gib' ? 5 : how === 'crush' ? 99 : 2; P.mech.hurt = 0.1; sfx('ting');
+    if (P.mech.hp <= 0) ejectMech(true);
+    return;
+  }
   P.alive = false; stats.deaths++; sfx('die'); shake += 5;
   const [cx, cy] = center(P), img = P.bro.spr[0][P.face > 0 ? 0 : 1];
   if (how === 'gib' || how === 'crush') gibs(img, cx, cy, P.vx * 0.3, how === 'crush' ? 40 : -60);
@@ -1187,6 +1277,23 @@ function respawn() {
 }
 
 // ---------------------------------------------------------------- update
+// title screen: the camera drifts along the level while things blow up in the background
+let attractT = 1;
+function attract(dt) {
+  if (state === 'title') {
+    cam.x += 26 * dt; if (cam.x > LW * T - VW) cam.x = 0;
+    cam.y = clamp(12 * T - VH * 0.58, 0, LH * T - VH);
+    attractT -= dt;
+    if (attractT <= 0) {
+      attractT = rand(0.6, 1.4);
+      const x = cam.x + rand(40, VW - 40), c = Math.floor(x / T);
+      quiet = true; explode(x, surf(c, 0) * T + 4, rand(22, 36), 4, 'p', 2); quiet = false;
+    }
+    updateFx(dt, dt); updateCollapse(dt); updateBodies(dt); updateProps(dt);
+  }
+  updateParticles(dt);
+}
+let quiet = false;
 function step(dt) {
   if (pressed.mute) muted = !muted;
   if (state !== 'play') {
@@ -1196,11 +1303,11 @@ function step(dt) {
       else init();
       state = 'play';
     }
-    updateParticles(dt);
+    attract(dt);
     return;
   }
-  if (pressed.pause) paused = !paused;
-  if (paused) return;
+  if (pressed.pause) { paused = !paused; menuSel = 0; }
+  if (paused) { pauseMenu(); return; }
   if (hitStop > 0) { // a few frames of freeze sell big hits; keep presses made during it
     hitStop -= dt;
     if (pressed.jump) P.jbuf = 0.15;
@@ -1247,11 +1354,14 @@ function step(dt) {
 function updatePlayer(dt) {
   if (P.ride) { P.x = chopper.x - 5; P.y = chopper.y + 36; P.vx = 0; P.anim += dt; return; }
   if (!P.alive) return;
-  P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt;
+  P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
+  if (P.mech) { updateMechSuit(dt); return; }
   P.squash = approach(P.squash, 0, dt * 1.2); P.recoil = approach(P.recoil, 0, dt * 30);
   const dir = P.wlock > 0 ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   if (dir && P.dash <= 0) P.face = dir;
-  if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * 118, (P.onGround ? 1500 : 950) * dt);
+  const onIce = P.onGround && tileAt(Math.floor((P.x + P.w / 2) / T), Math.floor((P.y + P.h + 1) / T)) === ICE;
+  if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * 118, (P.onGround ? (onIce ? 240 : 1500) : 950) * dt);
+  if (onIce && Math.abs(P.vx) > 60 && Math.random() < 0.3) part(P.x + 5, P.y + P.h, -P.vx * 0.2, -10, '#dff4ff', 0.3, 1); // skidding
   P.coy = P.onGround ? 0.09 : P.coy - dt;
   P.jbuf = pressed.jump ? 0.12 : P.jbuf - dt; // jump pressed just before landing still counts
   // which side has a wall right next to us (for climbing and wall jumps)
@@ -1343,7 +1453,7 @@ function playerSees(e, rangeX, rangeY) {
 function updateEnt(e, dt) {
   e.flash -= dt;
   if (!BOSS[e.type]) e.t += dt; // bosses use t as their own countdown
-  const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone';
+  const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone' && e.type !== 'icicle';
   if (ground) {
     e.vy = Math.min(e.vy + G * dt, 520);
     e.kx = approach(e.kx, 0, 600 * dt);
@@ -1398,6 +1508,10 @@ function updateEnt(e, dt) {
       if (e.t > 15) e.dead = true;
       break;
     case 'drone': updateDrone(e, dt); break;
+    case 'mechsuit':
+      e.vx = 0; moveBody(e, dt);
+      if (P.alive && !P.mech && (P.boardCool || 0) <= 0 && overlap(P, e)) boardMech(e);
+      break;
     case 'propane': {
       if (e.lit && e.fuse > 0) { e.fuse -= dt; e.spin = rand(-0.12, 0.12); if (Math.random() < 0.7) part(e.x + 4, e.y + 1, rand(-40, 40), rand(-60, -10), '#fff6c2', 0.2, 1); }
       if (e.lit && e.fuse <= 0) { // the valve blows: it flies like a rocket and goes off on impact
@@ -1429,6 +1543,8 @@ function updateEnt(e, dt) {
     case 'boss': updateMech(e, dt); break;
     case 'kopter': updateKopter(e, dt); break;
     case 'crawler': updateCrawler(e, dt); break;
+    case 'tank': updateTank(e, dt); break;
+    case 'icicle': updateIcicle(e, dt); break;
   }
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > LH * T) && !e.dead) {
     if (e.type === 'cage' || e.type === 'pickup') { e.dead = true; } else if (HITTABLE[e.type]) { e.hp = 0; killEnemy(e); }
@@ -1586,7 +1702,7 @@ function updateDrone(e, dt) {
   e.cool -= dt;
   if (e.cool > 0) return;
   const [dx, dy] = center(e);
-  const tgt = enemiesNear(dx, dy, 220, (o) => o.type !== 'barrel' && o.type !== 'propane' && o.type !== 'ammo' && o.type !== 'strike' && los(dx, dy, center(o)[0], center(o)[1]))
+  const tgt = enemiesNear(dx, dy, 220, (o) => o.type !== 'barrel' && o.type !== 'propane' && o.type !== 'ammo' && o.type !== 'strike' && o.type !== 'icicle' && los(dx, dy, center(o)[0], center(o)[1]))
     .sort((a, b) => Math.hypot(center(a)[0] - dx, center(a)[1] - dy) - Math.hypot(center(b)[0] - dx, center(b)[1] - dy))[0];
   if (!tgt) { e.cool = 0.1; return; }
   const a = Math.atan2(center(tgt)[1] - dy, center(tgt)[0] - dx);
@@ -1597,9 +1713,107 @@ function rescue(cage) {
   cage.dead = true; lives++; stats.rescued++; addScore(1000, false); sfx('rescue');
   if (!unlocked.includes(cage.bro)) unlocked.push(cage.bro);
   const bro = BRO[cage.bro];
-  P.bro = bro; P.spec = 3; P.inv = 1; P.x = cage.x + 3; P.y = cage.y;
+  P.bro = bro; P.spec = 3; P.inv = 1; if (!P.mech) { P.x = cage.x + 3; P.y = cage.y; }
   for (let i = 0; i < 16; i++) part(cage.x + 8, cage.y + 8, rand(-120, 120), rand(-200, -40), i % 2 ? '#8b93ad' : '#a6d854', rand(0.5, 1), 2, G);
   showBanner('RESCUED: ' + bro.name.toUpperCase(), '+1 bro in reserve · ' + bro.weapon, 2.2);
+}
+
+// ---------------------------------------------------------------- bro-mech
+// Walk into an empty mech to climb in. It bulldozes soft walls, fires a heavy gun (fire) and rockets (special),
+// punches through blocks, stomps on landing and soaks up 24 hits. Dash (Shift) jumps out; at 0 it blows up and throws you clear.
+function boardMech(suit) {
+  suit.dead = true; sfx('mech');
+  P.mech = { hp: suit.mhp || 24, max: 24, gcool: 0, rcool: 0, wp: 0, hurt: 0 };
+  P.w = 20; P.h = 26; P.x = suit.x; P.y = suit.y; P.vx = 0; P.vy = 0; P.dash = 0; P.pound = 0;
+  showBanner('BRO-MECH', 'Z gun · X rockets · C smash · Shift jump out', 2);
+}
+function ejectMech(destroyed) {
+  const M = P.mech, feet = P.y + P.h, cx = P.x + P.w / 2;
+  P.mech = null; P.w = 10; P.h = 15; P.x = cx - 5; P.y = feet - 15 - 18; P.vy = -300; P.vx = -P.face * 150; P.wlock = 0.3; P.boardCool = 0.8; // hop out backwards
+  if (destroyed) {
+    explode(cx, feet - 13, 42, 6, 'p', 3); P.inv = 1.2;
+    for (let i = 0; i < 14; i++) chunk(cx + rand(-8, 8), feet - rand(4, 24), rand(-220, 220), rand(-320, -80), ['#5c6480', '#f2c94c', '#25223a'][i % 3]);
+    showBanner('MECH LOST', 'back on foot', 1.2);
+  } else {
+    const s = makeEnt({ type: 'mechsuit', c: 0, y: feet - 26 }); s.x = cx - 10; s.mhp = M.hp; s.face = P.face; ents.push(s); sfx('mech');
+  }
+}
+function updateMechSuit(dt) {
+  const M = P.mech;
+  M.gcool -= dt; M.rcool -= dt; M.hurt -= dt;
+  const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (dir) P.face = dir;
+  P.vx = approach(P.vx, dir * 82, (P.onGround ? 700 : 400) * dt);
+  P.coy = P.onGround ? 0.09 : P.coy - dt;
+  P.jbuf = pressed.jump ? 0.12 : P.jbuf - dt;
+  if (P.jbuf > 0 && P.coy > 0) { P.vy = -300; P.coy = 0; P.jbuf = 0; sfx('jump'); }
+  if (!keys.jump && P.vy < -120) P.vy = -120;
+  P.vy = Math.min(P.vy + G * dt, 560);
+  if (dir && P.onGround) { // bulldoze: walking into soft blocks grinds them away
+    const ex = dir > 0 ? P.x + P.w + 1 : P.x - 1;
+    for (let yy = P.y + 3; yy < P.y + P.h - 2; yy += 8) {
+      const c = Math.floor(ex / T), r = Math.floor(yy / T), v = tileAt(c, r);
+      if (v && v !== STEEL && v !== ACID) { damageTile(c, r, 5 * dt); if (Math.random() < 0.3) part(ex, yy, -dir * rand(20, 80), rand(-80, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
+    }
+  }
+  const vy0 = P.vy, was = P.onGround, wp0 = M.wp;
+  moveBody(P, dt);
+  P.x = clamp(P.x, 0, LW * T - P.w);
+  M.wp += Math.abs(P.vx) * dt * 0.07;
+  if (P.onGround && Math.floor(M.wp * 2) !== Math.floor(wp0 * 2)) { shake = Math.min(10, shake + 0.6); sfx('thud'); }
+  if (P.onGround && !was && vy0 > 300) { // stomp
+    const cx = P.x + P.w / 2, fy = P.y + P.h + 2;
+    shake = Math.min(12, shake + 4); sfx('thud'); rumble(0.5, 120);
+    for (let c = Math.floor((cx - 14) / T); c <= Math.floor((cx + 14) / T); c++) damageTile(c, Math.floor(fy / T), 2);
+    for (const e of ents) if (live(e) && !BOSS[e.type] && Math.hypot(center(e)[0] - cx, center(e)[1] - fy) < 40) { e.vy = -240; hitEnemy(e, 2, Math.sign(center(e)[0] - cx || 1) * 200, 'blast'); }
+    for (let i = 0; i < 12; i++) part(cx + rand(-10, 10), fy - 2, rand(-150, 150), rand(-100, -20), theme.dust, rand(0.3, 0.6), rand(3, 5), 0, 'smoke');
+  }
+  const gx = P.x + (P.face > 0 ? P.w + 4 : -4), gy = P.y + 12;
+  if (keys.fire && M.gcool <= 0) {
+    M.gcool = 0.07; M.kick = 1;
+    bullets.push({ x: gx, y: gy + rand(-1, 1), vx: P.face * 520, vy: rand(-20, 20), owner: 'p', dmg: 1.5, tdmg: 1.2, life: 0.6, kind: 'photon' });
+    body({ kind: 'shell', x: P.x + P.w / 2, y: gy - 2, vx: -P.face * rand(40, 100), vy: rand(-200, -120), col: '#f2c94c', s: 2, r: 1, bounce: 0.5, fric: 0.6, vr: rand(-30, 30), life: 2 });
+    fx.push({ kind: 'muzzle', x: gx, y: gy, f: P.face, t: 0.05, max: 0.05 }); sfx('mg');
+  }
+  if ((pressed.special || P.wantSpec) && M.rcool <= 0) {
+    M.rcool = 0.6; sfx('rocket');
+    bullets.push({ x: P.x + P.w / 2, y: P.y + 2, vx: P.face * 110, vy: -50, owner: 'p', kind: 'rocket', explode: 30, tp: 4, dmg: 8, life: 3 });
+  }
+  if ((pressed.melee || P.wantMelee) && P.mcool <= 0) { // smash: a mech fist goes through walls and quacks alike
+    P.mcool = 0.4; P.punch = 0.16; sfx('punch'); shake = Math.min(10, shake + 3); hitStop = Math.max(hitStop, 0.04);
+    const box = { x: P.face > 0 ? P.x + P.w - 2 : P.x - 20, y: P.y + 2, w: 22, h: 22 };
+    for (const e of ents) if (live(e) && overlap(e, box)) { if (BOSS[e.type]) hitEnemy(e, 6); else { e.vy = -200; hitEnemy(e, 20, P.face * 420, 'punch'); } }
+    const c = Math.floor((P.face > 0 ? P.x + P.w + 6 : P.x - 6) / T);
+    for (let r = Math.floor(P.y / T); r <= Math.floor((P.y + P.h - 2) / T); r++) damageTile(c, r, 99);
+  }
+  M.kick = Math.max(0, (M.kick || 0) - dt * 20);
+  if (pressed.dash || P.wantDash) ejectMech(false);
+  else if (rectAcid(P.x, P.y + P.h - 6, P.w, 6)) { M.hp = 0; ejectMech(true); }
+  else if (M.hp <= 0) ejectMech(true);
+  P.wantSpec = P.wantMelee = P.wantDash = false;
+}
+function drawBroMech(x, y, face, wp, onGround, vx, bro, flash, kick, punchT) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.lineCap = 'round'; ctx.lineWidth = 4;
+  for (const k of [1, 0]) { // two jointed legs
+    const hx = x + (k ? 13 : 7), ph = wp * Math.PI * 2 + k * Math.PI, moving = Math.abs(vx) > 5;
+    const lift = !onGround ? 3 : moving ? Math.max(0, Math.sin(ph)) * 4 : 0, fx0 = hx + (moving ? Math.cos(ph) * 4 * Math.sign(vx) : 0), fy = y + 26 - lift;
+    const kx = (hx + fx0) / 2 + face * 3, ky = (y + 16 + fy) / 2;
+    ctx.strokeStyle = flash ? '#fff' : (k ? '#3d4560' : '#4f5a78'); ctx.beginPath(); ctx.moveTo(hx, y + 16); ctx.lineTo(kx, ky); ctx.lineTo(fx0, fy - 2); ctx.stroke();
+    ctx.fillStyle = '#25223a'; ctx.fillRect(Math.round(fx0) - 4, Math.round(fy) - 2, 8, 2);
+  }
+  ctx.lineCap = 'butt'; ctx.lineWidth = 1;
+  const by = y + (onGround && Math.abs(vx) > 5 ? Math.round(Math.abs(Math.sin(wp * Math.PI * 2))) : 0);
+  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x, by + 3, 20, 15);
+  ctx.fillStyle = flash ? '#fff' : '#5c6480'; ctx.fillRect(x + 1, by + 4, 18, 13);
+  ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 4; k++) ctx.fillRect(x + 2 + k * 4, by + 15, 2, 2); // hazard stripe
+  const cxp = face > 0 ? x + 10 : x + 3;
+  ctx.fillStyle = '#bfe9ff'; ctx.fillRect(cxp, by + 5, 7, 6);
+  if (bro) ctx.drawImage(bro.spr[0][face > 0 ? 0 : 1], 0, 0, 12, 8, cxp, by + 6, 7, 5); else { ctx.fillStyle = '#25223a'; ctx.fillRect(cxp + 1, by + 6, 5, 4); }
+  ctx.fillStyle = '#8e2b3c'; ctx.fillRect(face > 0 ? x + 1 : x + 14, by, 5, 4); // rocket pod
+  const reach = punchT > 0 ? 8 : 0, gx = (face > 0 ? x + 16 + reach : x - 6 - reach) - face * Math.round(kick || 0);
+  ctx.fillStyle = '#25223a'; ctx.fillRect(gx, by + 10, 10, 4);
+  ctx.fillStyle = '#8b93ad'; ctx.fillRect(face > 0 ? gx + 8 : gx, by + 11, 3, 2);
 }
 
 // ---------------------------------------------------------------- bosses
@@ -1836,6 +2050,141 @@ function spit(b, n) {
   }
 }
 
+// Snake Oil Tank: Dr. Placebo himself. Keeps its distance and lobs shells from a turret that tracks you,
+// drives in with a flamethrower of burning snake oil; below half health it mortars and rams.
+function updateTank(b, dt) {
+  b.anim += dt;
+  if (!b.active) {
+    if (P.alive && P.x > b.trig * T) { activateBoss(b, 'Dr. Placebo drives it himself. Cures everything.'); b.state = 'drive'; b.t = 2; }
+    return;
+  }
+  b.vy += G * dt; b.y += b.vy * dt;
+  if (b.y + b.h >= b.fy) { b.y = b.fy - b.h; b.vy = 0; b.onGround = true; }
+  const cx = b.x + b.w / 2, px = b.x + b.w / 2 - b.face * 6, py = b.y + 2, [tx, ty] = center(P);
+  if (b.dying > 0) {
+    b.dying -= dt; b.boomT -= dt;
+    if (b.boomT <= 0) { b.boomT = 0.12; explode(b.x + rand(0, b.w), b.y + rand(0, b.h), 24, 0, 'p', 0); }
+    if (b.dying <= 0) {
+      explode(cx, b.y + b.h / 2, 76, 0, 'p', 2);
+      for (let i = 0; i < 30; i++) chunk(cx + rand(-24, 24), b.y + rand(0, 20), rand(-260, 260), rand(-400, -80), ['#4b5a3a', '#25223a', '#8b93ad', '#c9a227'][i % 4]);
+      body({ kind: 'chunk', x: px, y: py, vx: rand(-160, 160), vy: -460, col: '#3a4a2c', s: 10, r: 5, vr: 18, life: 9, bounce: 0.35 }); // the turret flies off
+      spriteBody('corpse', RIG.guru.still[b.face > 0 ? 0 : 1], cx, b.y, -b.face * 140, -420, { sw: 14, sh: 18, vr: 14, bleed: 1, life: 14 });
+      bossDown(b);
+    }
+    return;
+  }
+  const p2 = b.hp < b.max * 0.5;
+  if (p2 && !b.p2) { b.p2 = true; showBanner('MAXIMUM DOSE', 'snake oil, extra strength', 1.6); sfx('special'); }
+  // the turret swings toward you (upper half only)
+  let want = Math.atan2(ty - py, tx - px); if (want > 0) want = tx > px ? -0.05 : -Math.PI + 0.05;
+  let da = want - b.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+  b.ang += clamp(da, -2 * dt, 2 * dt);
+  b.t -= dt; b.recoil = Math.max(0, (b.recoil || 0) - dt * 5);
+  const dx = tx - cx, dirP = Math.sign(dx) || 1;
+  const next = () => {
+    const opts = ['drive', 'shell', 'flame', 'shell'];
+    if (p2) opts.push('mortar', 'ram');
+    b.state = opts[(Math.random() * opts.length) | 0];
+    if (b.state === 'drive') b.t = 1.6;
+    if (b.state === 'shell') { b.t = 2.2; b.shots = p2 ? 3 : 2; b.shotT = 0.5; }
+    if (b.state === 'flame') { b.t = 2.2; b.face = dirP; }
+    if (b.state === 'mortar') { b.t = 2; b.shots = 3; b.shotT = 0.4; }
+    if (b.state === 'ram') { b.t = 2.5; b.face = dirP; sfx('roar'); }
+  };
+  switch (b.state) {
+    case 'drive': b.face = dirP; b.vx = Math.abs(dx) < 110 ? -dirP * 60 : Math.abs(dx) > 200 ? dirP * 60 : 0; if (b.t <= 0) next(); break;
+    case 'shell':
+      b.vx = 0; b.shotT -= dt;
+      if (b.shotT <= 0 && b.shots > 0) {
+        b.shots--; b.shotT = 0.7; b.recoil = 1; sfx('boom'); shake = Math.min(10, shake + 2);
+        const mx = px + Math.cos(b.ang) * 22, my = py + Math.sin(b.ang) * 22;
+        bullets.push({ x: mx, y: my, vx: Math.cos(b.ang) * 320, vy: Math.sin(b.ang) * 320, grav: 500, owner: 'e', kind: 'bomb', life: 4, explode: 30, tp: 3, dmg: 6 });
+        fx.push({ kind: 'muzzle', x: mx, y: my, f: Math.cos(b.ang) > 0 ? 1 : -1, t: 0.08, max: 0.08 });
+        for (let i = 0; i < 6; i++) part(mx, my, Math.cos(b.ang) * rand(20, 80), rand(-40, 0), '#8b84a6', rand(0.5, 1), rand(3, 5), 0, 'smoke');
+      }
+      if (b.t <= 0) next();
+      break;
+    case 'flame': { // roll in spraying burning snake oil
+      b.vx = b.face * 45;
+      const nx = b.face > 0 ? b.x + b.w : b.x, ny = b.y + b.h - 10;
+      for (let i = 0; i < 3; i++) part(nx, ny + rand(-3, 3), b.face * rand(140, 260), rand(-50, 20), '', rand(0.25, 0.45), 3, 0, 'fire');
+      const box = { x: b.face > 0 ? nx : nx - 72, y: ny - 16, w: 72, h: 26 };
+      if (P.alive && P.inv <= 0 && overlap(P, box)) killPlayer('gib');
+      for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) setBurn(e);
+      if (Math.random() < dt * 3) ignite(nx + b.face * rand(20, 70), ny, 1, 4);
+      if (Math.random() < 0.2) sfx('hiss');
+      if (b.t <= 0) next();
+      break;
+    }
+    case 'mortar':
+      b.vx = 0; b.shotT -= dt;
+      if (b.shotT <= 0 && b.shots > 0) {
+        b.shots--; b.shotT = 0.45; sfx('rocket');
+        const t = 1.3, aimX = tx + rand(-50, 50), vx = (aimX - px) / t, vy = (ty - py - 0.5 * 500 * t * t) / t;
+        bullets.push({ x: px, y: py - 10, vx, vy, grav: 500, owner: 'e', kind: 'bomb', life: 5, explode: 28, tp: 3, dmg: 6 });
+      }
+      if (b.t <= 0) next();
+      break;
+    case 'ram':
+      b.vx = b.face * 180; shake = Math.min(10, shake + dt * 4);
+      if (b.x <= b.ax0 * T + 2 || b.x + b.w >= b.ax1 * T - 2 || b.t <= 0) { shake += 6; sfx('thud'); next(); }
+      break;
+  }
+  // crush whatever blocks it drives into
+  const c0 = Math.floor(b.x / T), c1 = Math.floor((b.x + b.w) / T), r0 = Math.floor(b.y / T), r1 = Math.floor((b.y + b.h - 1) / T);
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) damageTile(c, r, 99);
+  b.x = clamp(b.x + b.vx * dt, b.ax0 * T, b.ax1 * T - b.w);
+  b.tread = (b.tread || 0) + b.vx * dt;
+  if (Math.abs(b.vx) > 0 && Math.random() < 0.4) part(b.face > 0 ? b.x : b.x + b.w, b.y + b.h - 2, -b.face * rand(20, 60), rand(-40, -10), theme.dust, 0.5, rand(2, 4), 0, 'smoke');
+  if (Math.random() < 0.15) part(b.x + (b.face > 0 ? 6 : b.w - 6), b.y + 6, rand(-5, 5), rand(-40, -20), '#4b4766', rand(0.6, 1), rand(3, 5), 0, 'smoke'); // exhaust
+  if (b.hp < b.max * 0.5 && Math.random() < 0.3) part(cx + rand(-20, 20), b.y + 4, rand(-10, 10), rand(-50, -20), '#36324d', rand(0.6, 1.1), rand(3, 6), 0, 'smoke');
+  if (P.alive && P.inv <= 0 && overlap(P, { x: b.x + 2, y: b.y + 6, w: b.w - 4, h: b.h - 6 })) killPlayer('crush');
+}
+function drawTank(b, t) {
+  if (b.dead) return;
+  const x = Math.round(b.x), y = Math.round(b.y), fl = b.flash > 0, F = b.face;
+  // treads: a dark belt with plates that move as it drives
+  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y + b.h - 11, b.w + 2, 12);
+  ctx.fillStyle = fl ? '#fff' : '#25223a'; ctx.fillRect(x, y + b.h - 10, b.w, 10);
+  ctx.fillStyle = '#4b4766'; for (let k = 0; k < 9; k++) { const tx0 = x + ((k * 8 - Math.floor(b.tread || 0)) % b.w + b.w) % b.w; ctx.fillRect(tx0, y + b.h - 10, 3, 2); ctx.fillRect(tx0, y + b.h - 2, 3, 2); }
+  ctx.fillStyle = '#5c6480'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(x + 7 + k * 12.5, y + b.h - 5, 3, 0, 7); ctx.fill(); }
+  // hull
+  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x + 1, y + 7, b.w - 2, b.h - 16);
+  ctx.fillStyle = fl ? '#fff' : (b.p2 ? '#5a4a2a' : '#4b5a3a'); ctx.fillRect(x + 2, y + 8, b.w - 4, b.h - 18);
+  ctx.fillStyle = '#c9a227'; ctx.fillRect(x + 6, y + 11, b.w - 12, 7);
+  ctx.fillStyle = '#25223a'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('SNAKE OIL', x + b.w / 2, y + 17);
+  ctx.fillStyle = '#5c6480'; ctx.fillRect(F > 0 ? x + b.w - 4 : x - 4, y + b.h - 15, 8, 4); // flamethrower nozzle
+  // turret with Dr. Placebo in the hatch
+  const px = x + b.w / 2 - F * 6, py = y + 2;
+  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 3, py - 9, 6, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(px + F * 3, py - 7, F * 3, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(px - 1, py - 8, 1, 1);
+  ctx.fillStyle = fl ? '#fff' : '#3a4a2c'; ctx.beginPath(); ctx.arc(px, py + 5, 10, Math.PI, 0); ctx.fill(); ctx.fillRect(px - 10, py + 5, 20, 3);
+  ctx.save(); ctx.translate(px, py + 2); ctx.rotate(b.ang);
+  const kick = (b.recoil || 0) * 4;
+  ctx.fillStyle = '#25223a'; ctx.fillRect(6 - kick, -2, 18, 4); ctx.fillStyle = '#4b5a3a'; ctx.fillRect(20 - kick, -3, 5, 6);
+  ctx.restore();
+  if (b.dying > 0 && Math.floor(t * 20) % 2) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(x, y, b.w, b.h); }
+}
+// icicle: hangs under a tile, shakes when you walk beneath it, then drops and shatters on whatever it hits
+function updateIcicle(e, dt) {
+  const [ac, ar] = e.anchor;
+  if (!e.falling) {
+    const below = P.alive && Math.abs(P.x + P.w / 2 - (e.x + e.w / 2)) < 18 && P.y > e.y && P.y - e.y < 120;
+    if (below && !e.warn) { e.warn = 0.45; sfx('creak'); }
+    if (e.warn > 0) { e.warn -= dt; if (e.warn <= 0) e.falling = true; }
+    if (!isSolidT(tileAt(ac, ar))) e.falling = true;
+    return;
+  }
+  e.vy = Math.min(e.vy + G * dt, 600); e.y += e.vy * dt;
+  let hit = solidPx(e.x + e.w / 2, e.y + e.h);
+  for (const o of ents) if (live(o) && o !== e && overlap(o, e)) { if (BOSS[o.type]) hitEnemy(o, 6); else hitEnemy(o, 99, 0, 'crush'); hit = true; }
+  if (P.alive && overlap(P, e)) { killPlayer('crush'); hit = true; }
+  if (hit || e.y > LH * T) shatterIcicle(e);
+}
+function shatterIcicle(e) {
+  e.dead = true; sfx('glass');
+  for (let i = 0; i < 8; i++) chunk(e.x + e.w / 2, e.y + rand(0, e.h), rand(-140, 140), rand(-200, -40), i % 2 ? '#dff4ff' : '#8fc7e8');
+}
+
 // ---------------------------------------------------------------- projectiles
 const SHOOTABLE = { rocket: 1, missile: 1, bomb: 1, grenade: 1 };
 // homing: enemy missiles chase you, finches (and punched-back missiles) chase the nearest quack
@@ -1843,7 +2192,7 @@ function steer(b, d) {
   let tx, ty;
   if (b.owner === 'e') { if (!b.home || !P.alive) return; [tx, ty] = center(P); }
   else {
-    const t = enemiesNear(b.x, b.y, 220, (e) => e.type !== 'barrel' && e.type !== 'propane' && e.type !== 'ammo' && e.type !== 'strike')
+    const t = enemiesNear(b.x, b.y, 220, (e) => e.type !== 'barrel' && e.type !== 'propane' && e.type !== 'ammo' && e.type !== 'strike' && e.type !== 'icicle')
       .sort((a, c) => Math.hypot(center(a)[0] - b.x, center(a)[1] - b.y) - Math.hypot(center(c)[0] - b.x, center(c)[1] - b.y))[0];
     if (!t) return;
     [tx, ty] = center(t);
@@ -2013,7 +2362,7 @@ function updateProps(dt) {
 }
 function topple(d) {
   const x = d.c * T + 8, y = d.kind === 'plaque' ? d.r * T + 8 : d.r * T - 8;
-  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'] }[d.kind];
+  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'] }[d.kind];
   const n = d.kind === 'palm' ? 12 : 6;
   for (let i = 0; i < n; i++) chunk(x + rand(-6, 6), y - (d.kind === 'palm' ? rand(0, 40) : rand(0, 8)), rand(-120, 120), rand(-200, -40), cols[i % cols.length]);
 }
@@ -2065,7 +2414,7 @@ function updateChopper(dt) {
   if (chopper.state === 'hover') {
     chopper.y = chopper.ty + Math.sin(chopper.t * 3) * 2;
     const ladder = { x: chopper.x - 8, y: chopper.y + 30, w: 16, h: chopper.floor - chopper.y - 30 };
-    if (P.alive && overlap(P, ladder)) { chopper.state = 'leave'; P.ride = true; P.alive = false; sfx('rescue'); showBanner('EXTRACTED', LEVELS[level].name.toLowerCase().replace(/(^|\s)\w/g, (m) => m.toUpperCase()) + ' liberated', 3); }
+    if (P.alive && overlap(P, ladder)) { if (P.mech) ejectMech(false); chopper.state = 'leave'; P.ride = true; P.alive = false; sfx('rescue'); showBanner('EXTRACTED', LEVELS[level].name.toLowerCase().replace(/(^|\s)\w/g, (m) => m.toUpperCase()) + ' liberated', 3); }
   }
   if (chopper.state === 'leave') {
     chopper.x += 70 * dt; chopper.y -= 60 * dt;
@@ -2090,11 +2439,22 @@ function drawBackground(t) {
   if (th.orb === 'planet') { // planet with ring
     ctx.fillStyle = '#7570b3'; ctx.beginPath(); ctx.arc(380 - cam.x * 0.02, 50, 18, 0, 7); ctx.fill();
     ctx.strokeStyle = '#8da0cb'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(380 - cam.x * 0.02, 50, 30, 6, -0.3, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
+  } else if (th.orb === 'moon') {
+    ctx.fillStyle = '#e8eef8'; ctx.beginPath(); ctx.arc(390 - cam.x * 0.02, 46, 16, 0, 7); ctx.fill();
+    ctx.fillStyle = '#c9d4e6'; ctx.beginPath(); ctx.arc(384 - cam.x * 0.02, 42, 4, 0, 7); ctx.arc(395 - cam.x * 0.02, 52, 3, 0, 7); ctx.fill();
   } else { // low sun with a heat shimmer of bands
     const sx = 340 - cam.x * 0.02, sy = 150 - cam.y * 0.05;
     ctx.fillStyle = '#f7c26b'; ctx.beginPath(); ctx.arc(sx, sy, 34, 0, 7); ctx.fill();
     ctx.fillStyle = th.sky[2];
     for (let k = 0; k < 4; k++) ctx.fillRect(sx - 40, sy + 6 + k * 7 + Math.sin(t * 2 + k) * 1.5, 80, 2 + k);
+  }
+  if (th.aurora) { // northern lights: two slow waving curtains
+    for (let k = 0; k < 2; k++) for (let x = 0; x < VW; x += 3) {
+      const wx = x + cam.x * 0.05, top = 30 + k * 26 + Math.sin(wx * 0.012 + t * 0.4 + k * 2) * 14, h = 40 + Math.sin(wx * 0.03 + t * 0.7 + k) * 18;
+      ctx.globalAlpha = 0.06 + Math.max(0, Math.sin(wx * 0.02 - t * 0.5 + k * 3)) * 0.1;
+      ctx.fillStyle = k ? '#b3a6ff' : '#7df2b0'; ctx.fillRect(x, top, 3, h);
+    }
+    ctx.globalAlpha = 1;
   }
   // far hills
   ctx.fillStyle = th.hill;
@@ -2117,6 +2477,10 @@ function drawBackground(t) {
     for (const xx of [x, x + 2640]) {
       if (xx > VW + 30 || xx + L.w < -30) continue;
       ctx.fillStyle = th.city;
+      if (th.cityKind === 'pines') { // a ridge of pine silhouettes
+        for (let k = 0; k < 3; k++) { const px = xx + k * L.w / 2, ph = L.h * (0.5 + 0.2 * k); ctx.beginPath(); ctx.moveTo(px - 12, base + 60); ctx.lineTo(px, base - ph); ctx.lineTo(px + 12, base + 60); ctx.fill(); }
+        continue;
+      }
       if (th.cityKind === 'mesas') {
         ctx.beginPath(); ctx.moveTo(xx - 14, base + 60); ctx.lineTo(xx, base - L.h * 0.7); ctx.lineTo(xx + L.w, base - L.h * 0.7); ctx.lineTo(xx + L.w + 14, base + 60); ctx.fill();
         ctx.fillStyle = th.hill; ctx.fillRect(xx + 3, base - L.h * 0.7 + 8, L.w - 6, 2);
@@ -2154,12 +2518,12 @@ function drawTiles(t) {
     const x = c * T + sh, y = r * T;
     if (v === ACID) {
       const top = tileAt(c, r - 1) !== ACID;
-      ctx.fillStyle = '#4f9c2f'; ctx.fillRect(x, y, T, T);
+      ctx.fillStyle = theme.acid[0]; ctx.fillRect(x, y, T, T);
       if (top) {
-        ctx.fillStyle = '#a6d854';
+        ctx.fillStyle = theme.acid[1];
         const h = 3 + Math.round(Math.sin(t * 3 + c) * 1.5);
         ctx.fillRect(x, y + 3 - h + 2, T, h);
-        if (Math.sin(t * 2.3 + c * 1.7) > 0.95) part(x + rand(2, 14), y + 2, 0, -30, '#c9f08f', 0.5, 2);
+        if (Math.sin(t * 2.3 + c * 1.7) > 0.95) part(x + rand(2, 14), y + 2, 0, -30, theme.acid[2], 0.5, 2);
       }
       continue;
     }
@@ -2239,6 +2603,18 @@ function drawDecor(t) {
       ctx.font = '8px ' + FONT; ctx.textAlign = 'center';
       ctx.fillStyle = '#25223a'; ctx.fillRect(x - 26, y + 3, 52, 11);
       ctx.fillStyle = '#f2c94c'; ctx.fillText(d.text, x, y + 12);
+    } else if (d.kind === 'pine') {
+      const lean = Math.round(sway * 8);
+      ctx.fillStyle = '#4a3a2a'; ctx.fillRect(x - 1, y - 6, 3, 6);
+      for (let k = 0; k < 3; k++) {
+        const ty = y - 6 - k * 9, hw = 11 - k * 3;
+        ctx.fillStyle = '#1f4a3a'; ctx.beginPath(); ctx.moveTo(x - hw + lean * k / 2, ty); ctx.lineTo(x + lean * (k + 1) / 2, ty - 12); ctx.lineTo(x + hw + lean * k / 2, ty); ctx.fill();
+        ctx.fillStyle = '#e8f0fa'; ctx.fillRect(x - hw + 3 + lean * k / 2, ty - 3, hw * 2 - 6, 2); // snow on the boughs
+      }
+    } else if (d.kind === 'snowman') {
+      ctx.fillStyle = '#e8f0fa'; ctx.beginPath(); ctx.arc(x, y - 6, 6, 0, 7); ctx.arc(x, y - 15, 4.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1b1d2e'; ctx.fillRect(x - 2, y - 17, 1, 1); ctx.fillRect(x + 1, y - 17, 1, 1); ctx.fillRect(x - 3, y - 22, 6, 3); ctx.fillRect(x - 4, y - 20, 8, 1);
+      ctx.fillStyle = '#f29e4c'; ctx.fillRect(x, y - 15, 3, 1);
     } else if (d.kind === 'cactus') {
       const h = 18 + (d.seed * 3 | 0), lean = Math.round(sway * 10);
       ctx.fillStyle = '#3f7f4a'; ctx.fillRect(x - 2 + lean, y - h, 5, h); ctx.fillRect(x - 7 + lean, y - h + 6, 3, 7); ctx.fillRect(x - 7 + lean, y - h + 10, 6, 3); ctx.fillRect(x + 4 + lean, y - h + 3, 3, 6); ctx.fillRect(x + 2 + lean, y - h + 7, 5, 3);
@@ -2270,6 +2646,7 @@ function drawLamps(t) {
 function drawPlayer() {
   if (!P.alive && !P.ride) return;
   if (P.inv > 0 && Math.floor(P.inv * 15) % 2 && !P.ride) return;
+  if (P.mech) { drawBroMech(P.x, P.y, P.face, P.mech.wp, P.onGround, P.vx, P.bro, P.mech.hurt > 0, P.mech.kick, P.punch); return; }
   const rig = P.bro.rig, cx = P.x + P.w / 2, feet = P.y + P.h + 1;
   const pose = P.ride ? { leg: 'climb', fr: 0, bob: 0 } : poseOf(P);
   ctx.save();
@@ -2446,6 +2823,18 @@ function drawEnt(e, t) {
     }
     case 'boss': drawMech(e, t); break;
     case 'kopter': drawKopter(e, t); break;
+    case 'tank': drawTank(e, t); break;
+    case 'icicle': {
+      const sh = e.warn > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+      ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.moveTo(x - 1 + sh, y); ctx.lineTo(x + e.w + 1 + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h + 1); ctx.fill();
+      ctx.fillStyle = '#b6defa'; ctx.beginPath(); ctx.moveTo(x + sh, y); ctx.lineTo(x + e.w + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 1 + sh, y + 1, 1, 6);
+      break;
+    }
+    case 'mechsuit':
+      drawBroMech(e.x, e.y, e.face, 0, true, 0, null, false, 0, 0);
+      if (Math.floor(t * 2) % 2) { ctx.fillStyle = '#a6d854'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('GET IN', x + 10, y - 4); }
+      break;
   }
 }
 function drawMech(b, t) {
@@ -2646,6 +3035,7 @@ function drawHud(t) {
   for (let i = 0; i < 3; i++) { const fx0 = 40 + i * 9, on = i < P.spec; ctx.fillStyle = on ? '#e9eef6' : '#2a3160'; ctx.fillRect(fx0 + 2, 19, 3, 2); ctx.fillStyle = on ? '#8da0cb' : '#2a3160'; ctx.fillRect(fx0, 21, 7, 6); }
   for (let i = 0; i < Math.min(lives, 9); i++) ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 7, 70 + i * 10, 20, 9, 5);
   if (lives > 9) text('+' + (lives - 9), 162, 26, 8, '#e7eaf6');
+  if (P.mech) { ctx.fillStyle = '#2a3160'; ctx.fillRect(104, 31, 60, 2); ctx.fillStyle = P.mech.hp < 8 ? '#d9534f' : '#f2c94c'; ctx.fillRect(104, 31, 60 * Math.max(0, P.mech.hp) / P.mech.max, 2); }
   ctx.fillStyle = '#2a3160'; ctx.fillRect(40, 31, 60, 2);
   ctx.fillStyle = P.dcool > 0 ? '#5c6480' : '#a6d854'; ctx.fillRect(40, 31, 60 * (1 - Math.max(0, P.dcool) / 0.6), 2);
   // right: score, kills, rescued, time
@@ -2662,25 +3052,35 @@ function drawHud(t) {
     ctx.fillStyle = '#f2c94c'; ctx.fillRect(VW / 2 - 20, 34, 40 * combo.t / 1.6, 1);
   }
   if (slowT > 0) { ctx.fillStyle = 'rgba(141,160,203,0.12)'; ctx.fillRect(0, 0, VW, VH); text('TIME DILATION ' + slowT.toFixed(1) + ' S', VW / 2, 46, 8, '#8da0cb', 'center'); }
-  const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !(e.dying > 0));
+  const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !e.doomed);
   if (B) {
     const w = 220, x = (VW - w) / 2, y = VH - 18;
     text(BOSS_NAME[B.type], VW / 2, y - 4, 8, '#e6e2f0', 'center');
     ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
     ctx.fillStyle = B.p2 ? '#b0507a' : '#7570b3'; ctx.fillRect(x, y, w * Math.max(0, B.hp) / B.max, 5);
   }
-  if (banner.t > 0) {
+  if (banner.t > 0 && !paused) {
     const a = Math.min(1, banner.t * 3, (banner.max - banner.t) * 6 + 0.2);
     ctx.globalAlpha = a;
     text(banner.text, VW / 2, 72, 16, '#e7eaf6', 'center');
     if (banner.sub) text(banner.sub, VW / 2, 88, 8, '#a6d854', 'center');
     ctx.globalAlpha = 1;
   }
-  if (paused) { ctx.fillStyle = 'rgba(11,14,31,0.6)'; ctx.fillRect(0, 0, VW, VH); text('PAUSED', VW / 2, VH / 2, 16, '#e7eaf6', 'center'); text('P to resume', VW / 2, VH / 2 + 16, 8, '#a3abd0', 'center'); }
+  if (paused) { // pause menu: up/down to choose, fire or Enter to switch
+    ctx.fillStyle = 'rgba(11,14,31,0.75)'; ctx.fillRect(0, 0, VW, VH);
+    text('PAUSED', VW / 2, 74, 16, '#e7eaf6', 'center');
+    MENU.forEach(([label, key], i) => {
+      const y = 104 + i * 16, sel = i === menuSel;
+      if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
+      text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
+      if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
+    });
+    text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 214, 8, '#a3abd0', 'center');
+  }
   if (muted) text('MUTED', VW / 2, 14, 8, '#a3abd0', 'center');
 }
 function drawScreen(t) {
-  ctx.fillStyle = 'rgba(11,14,31,0.72)'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = state === 'title' ? 'rgba(11,14,31,0.5)' : 'rgba(11,14,31,0.72)'; ctx.fillRect(0, 0, VW, VH);
   const blink = Math.floor(t * 2) % 2 === 0;
   const statRows = (y0) => {
     const rows = [['SCORE', String(stats.score)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LEVELS[level].cages], ['BROS LOST', String(stats.deaths)]];
@@ -2688,11 +3088,11 @@ function drawScreen(t) {
   };
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('2 LEVELS · 7 BROS · 3 BOSSES', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('3 LEVELS · 7 BROS · 4 BOSSES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 138 + i * 40; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 122, 24, 32); });
     if (blink) text('PRESS ENTER OR TAP TO START', VW / 2, 190, 8, '#e7eaf6', 'center');
     text('ARROWS MOVE · UP JUMP · Z FIRE · X SPECIAL · C PUNCH', VW / 2, 216, 8, '#a3abd0', 'center');
-    text('HOLD JUMP AGAINST A WALL TO CLIMB · PUNCH GRENADES BACK', VW / 2, 230, 8, '#a3abd0', 'center');
+    text('SHIFT DASH · DOWN+PUNCH IN AIR SLAMS · GAMEPAD WORKS', VW / 2, 230, 8, '#a3abd0', 'center');
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
     text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LEVELS[level].cages, VW / 2, 126, 8, '#a3abd0', 'center');
@@ -2712,7 +3112,7 @@ function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.textBaseline = 'alphabetic';
   drawBackground(t);
-  const sx = shake > 0 ? rand(-shake, shake) : 0, sy = shake > 0 ? rand(-shake, shake) : 0;
+  const sk = settings.shake ? shake : 0, sx = sk > 0 ? rand(-sk, sk) : 0, sy = sk > 0 ? rand(-sk, sk) : 0;
   ctx.setTransform(1, 0, 0, 1, Math.round(-cam.x + sx), Math.round(-cam.y + sy));
   drawBackWalls();
   drawDecor(t);
@@ -2727,11 +3127,11 @@ function render(t) {
   drawParticles();
   drawFx();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  collectLights(t);
-  drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy));
+  if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   if (state === 'play') drawHud(t); else drawScreen(t);
+  if (settings.scanlines) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < VH; y += 2) ctx.fillRect(0, y, VW, 1); }
 }
 
 // ---------------------------------------------------------------- lighting and weather
@@ -2792,7 +3192,7 @@ function collectLights(t) {
   for (const d of decor) if (!d.gone && d.kind === 'crystal') light(d.c * T + 8, d.r * T - 8, 44, '#e78ac3', 0.55 + Math.sin(t * 2 + d.seed) * 0.1);
   // acid glows along its surface
   const c0 = Math.max(0, Math.floor(cam.x / T)), c1 = Math.min(LW - 1, Math.floor((cam.x + VW) / T)), r0 = Math.max(1, Math.floor(cam.y / T)), r1 = Math.min(LH - 1, Math.floor((cam.y + VH) / T));
-  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c += 2) if (tiles[r * LW + c] === ACID && tiles[(r - 1) * LW + c] !== ACID) light(c * T + 8, r * T + 2, 30, '#a6d854', 0.5);
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c += 2) if (tiles[r * LW + c] === ACID && tiles[(r - 1) * LW + c] !== ACID) light(c * T + 8, r * T + 2, 30, theme.acid[1], 0.5);
   if (chopper) light(chopper.x, chopper.y + 40, 70, '#fff6c2', 0.5);
 }
 function drawLighting(ox, oy) {
@@ -2839,6 +3239,14 @@ function drawWeather(t) {
       boltPts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.lineWidth = 1;
       ctx.fillStyle = '#ffffff'; ctx.globalAlpha = flashT * 0.5; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
     }
+  } else if (theme.snow) {
+    ctx.fillStyle = 'rgba(240,246,255,0.75)';
+    for (const d of DROPS) {
+      d[1] += 34 * d[2] * dt; d[0] += Math.sin(t * 1.3 + d[2] * 9) * 12 * dt - 8 * dt;
+      if (d[1] > VH) { d[1] = -4; d[0] = Math.random() * VW; }
+      if (d[0] < -4) d[0] += VW + 8;
+      ctx.fillRect(d[0], d[1], d[2] > 1.1 ? 2 : 1, d[2] > 1.1 ? 2 : 1);
+    }
   } else if (theme.sand) {
     ctx.fillStyle = 'rgba(242,201,140,0.35)';
     const gust = 1 + Math.max(0, Math.sin(t * 0.3)) * 2;
@@ -2880,7 +3288,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, cam, bgAt: (c, r) => bg[r * LW + c], get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, cam, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

@@ -76,5 +76,34 @@ for (const q of qs) S.hitEnemy(q, 99, 90, 'shot');
 check('three quick kills make a x3 combo', S.stats.best === 3);
 check('combo multiplies the score', S.stats.score === 100 + 200 + 300, 'score ' + S.stats.score);
 
+// bro-mech: walk in to board, bulldoze a wall, soak hits, jump out, and get thrown clear when it blows
+lone(); S.P.inv = 0; S.P.x = 2 * T; S.P.y = 16 * T - 15.01; run(2);
+const suit = spawn('mechsuit', 6); run(2);
+for (let i = 0; i < 60 && !S.P.mech; i++) run(1, { right: true });
+check('walking into a mech boards it', !!S.P.mech && S.P.w === 20);
+const hp0 = S.P.mech.hp; S.bullets.push({ x: S.P.x + 10, y: S.P.y + 10, vx: -165, vy: 0, owner: 'e', dmg: 1, tdmg: 0.4, life: 2, kind: 'pill' }); run(2);
+check('the mech takes bullets instead of the bro', S.P.alive && S.P.mech.hp === hp0 - 1, 'hp ' + S.P.mech.hp);
+const wallC = Math.floor((S.P.x + S.P.w) / T) + 1; S.P.x = 19 * T - 21; run(1);
+for (let i = 0; i < 120; i++) run(1, { right: true });
+check('the mech bulldozes into the hill', !solid(21, 14), 'P col ' + (S.P.x / T).toFixed(1));
+S.pressed.dash = true; run(1);
+const parked = S.ents.find((e) => e.type === 'mechsuit' && !e.dead);
+check('dash jumps out and leaves the mech parked', !S.P.mech && S.P.w === 10 && !!parked);
+run(60); check('you land beside it instead of falling back in', !S.P.mech && !parked.dead);
+S.P.x = parked.x + 4; S.P.y = parked.y + 8; run(3);
+check('you can climb back in', !!S.P.mech);
+S.P.mech.hp = 1; S.bullets.push({ x: S.P.x + 10, y: S.P.y + 10, vx: -165, vy: 0, owner: 'e', dmg: 1, tdmg: 0.4, life: 2, kind: 'pill' }); run(2);
+check('a destroyed mech throws the bro clear alive', !S.P.mech && S.P.alive);
+
+// pause menu: toggle a setting, restart the level
+S.reset(); run(1);
+S.pressed.pause = true; run(1); check('P pauses the game', S.paused);
+const t0 = S.stats.time; run(30); check('nothing moves while paused', S.stats.time === t0);
+const shake0 = S.settings.shake; S.pressed.fire = true; run(1); check('fire switches the selected setting', S.settings.shake === !shake0);
+S.pressed.fire = true; run(1); // switch it back
+S.pressed.down = true; run(1); S.pressed.down = true; run(1); S.pressed.down = true; run(1); S.pressed.down = true; run(1);
+S.P.x = 50 * T; S.pressed.fire = true; run(1);
+check('restart level from the menu', !S.paused && S.P.x < 5 * T && S.state === 'play');
+
 console.log(fails ? fails + ' check(s) failed' : 'all control and destruction checks passed');
 process.exit(fails ? 1 : 0);

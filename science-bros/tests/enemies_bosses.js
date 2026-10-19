@@ -113,7 +113,33 @@ check('Crystal Crawler surfaces', surfaced);
 S.hitEnemy(crawl, 999, 0); k = 0; for (; k < 600 && !crawl.dead; k++) run(1);
 check('Crystal Crawler dies', crawl.dead && !!S.chopper, k + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
-check('extraction on level 2 ends the game', S.state === 'done', S.state);
+check('extraction on level 2 leads on to level 3', S.state === 'win', S.state);
+drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); }
+check('level-clear screen draws', drew);
+
+// level 3: builds clean, icicles drop on what walks under them, ice is slippery, the tank fights and the game ends
+S.startLevel(2); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
+check('level 3 has 2 cages, a mech and the tank', S.ents.filter((o) => o.type === 'cage').length === 2 && S.ents.some((o) => o.type === 'mechsuit') && S.ents.some((o) => o.type === 'tank'));
+run(1); S.ents.forEach((o) => { if (!['tank', 'icicle', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+const ic = S.ents.find((o) => o.type === 'icicle');
+const q = Object.assign(S.makeEnt({ type: 'grunt', c: 118, from: 13 }), { face: 1 }); S.ents.push(q);
+S.P.inv = 0; S.P.x = ic.x - 2; S.P.y = 16 * T - 16; S.P.vx = 0; let k3 = 0;
+for (; k3 < 120 && !ic.dead; k3++) run(1);
+check('an icicle drops when you walk under it', ic.dead, k3 + ' frames');
+check('the icicle kills what it lands on', !S.P.alive || q.dead);
+S.startLevel(2); run(1); S.ents.forEach((o) => { if (!['tank', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+S.P.inv = 1e9; S.P.x = 13 * T; S.P.y = 14 * T - 16; S.P.vx = 0; run(3);
+for (let i = 0; i < 30; i++) run(1, { right: true }); run(1);
+const v0 = S.P.vx; run(8);
+check('ice is slippery: you keep sliding after letting go', v0 > 60 && S.P.vx > 20, 'vx ' + v0.toFixed(0) + ' -> ' + S.P.vx.toFixed(0));
+const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = 186 * T; S.P.y = 16 * T - 16; S.P.vy = 0; run(5);
+check('Snake Oil Tank activates', tank.active);
+let shot = false; for (let i = 0; i < 900 && !shot; i++) { S.P.inv = 1e9; run(1); shot = S.bullets.some((b) => b.owner === 'e' && b.kind === 'bomb') || tank.state === 'flame'; }
+check('Snake Oil Tank attacks', shot, tank.state);
+S.hitEnemy(tank, 999, 0); k3 = 0; for (; k3 < 600 && !tank.dead; k3++) run(1);
+check('Snake Oil Tank dies and the chopper comes', tank.dead && !!S.chopper, k3 + ' frames');
+for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
+check('extraction on level 3 ends the game', S.state === 'done', S.state);
 drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); }
 check('game-complete screen draws', drew);
 
