@@ -847,6 +847,7 @@ document.querySelectorAll('.touch button').forEach((b) => {
 });
 // gamepad (standard mapping): stick or d-pad moves, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause
 const padHeld = {};
+let padFull = 0, clock = 0; // stick pushed all the way; a clock that runs in every state (for double taps)
 let padSeen = false;
 function pollPad() {
   if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
@@ -855,6 +856,7 @@ function pollPad() {
   if (!gp) return;
   if (!padSeen) { padSeen = true; audioInit(); }
   const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+  padFull = ax < -0.92 ? -1 : ax > 0.92 ? 1 : 0;
   const now = { left: ax < -0.4 || b(14), right: ax > 0.4 || b(15), down: ay > 0.55 || b(13), jump: b(0) || b(12), fire: b(2) || b(7), melee: b(1), special: b(3), dash: b(4) || b(5) || b(6), pause: b(9), start: b(9) || (state !== 'play' && b(0)) };
   for (const k in now) {
     if (now[k] && !padHeld[k]) { pressed[k] = true; keys[k] = true; }
@@ -878,7 +880,7 @@ document.getElementById('fs').addEventListener('click', () => {
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
-const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true };
+const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
 let hiScore = 0;
 try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
@@ -889,7 +891,7 @@ function bankScore() {
   if (runScore > hiScore) { hiScore = runScore; stats.newHi = true; try { localStorage.setItem('sciencebros.hiscore', String(hiScore)); } catch (e) { /* storage blocked */ } }
 }
 const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
-const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
+const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
   if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
@@ -1077,6 +1079,8 @@ function startLevel(n) {
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
   boss = ents.find((e) => e.final); chopper = null;
+  const pool = BROS.map((b) => b.id).filter((id) => !unlocked.includes(id)).sort(() => Math.random() - 0.5);
+  for (const c of ents) if (c.type === 'cage') c.bro = pool.length ? pool.pop() : BROS[(Math.random() * BROS.length) | 0].id;
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
   objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
@@ -1520,6 +1524,7 @@ function attract(dt) {
 }
 let quiet = false;
 function step(dt) {
+  clock += dt;
   if (pressed.mute) muted = !muted;
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
@@ -1600,7 +1605,11 @@ function updatePlayer(dt) {
   const dir = P.wlock > 0 ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   if (dir && P.dash <= 0) P.face = dir;
   const onIce = P.onGround && tileAt(Math.floor((P.x + P.w / 2) / T), Math.floor((P.y + P.h + 1) / T)) === ICE;
-  P.sprint = keys.dash && P.dash <= 0 && dir !== 0; // keep holding dash after the roll to run flat out
+  // run: tap a direction twice quickly (or push the stick all the way); letting go of the direction stops running
+  for (const [k, d] of [['left', -1], ['right', 1]]) if (pressed[k]) { if (P.tapDir === d && clock - P.tapAt < 0.28) P.run = true; P.tapDir = d; P.tapAt = clock; }
+  if (!dir || (padFull === 0 && !keys.left && !keys.right)) P.run = false;
+  if (padFull && padFull === dir) P.run = true;
+  P.sprint = P.run && P.dash <= 0 && dir !== 0;
   if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * (P.sprint ? 185 : 118), (P.onGround ? (onIce ? 240 : 1500) : 950) * dt);
   if (P.onGround && dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 70) { // skid when turning at speed
     if (Math.random() < 0.6) part(P.x + 5 + Math.sign(P.vx) * 4, P.y + P.h, Math.sign(P.vx) * rand(20, 60), rand(-30, -5), theme.dust, 0.35, 2, 0, 'smoke');
@@ -1879,7 +1888,7 @@ function updateQuack(e, dt) {
     let walk = 0;
     if (tgt) {
       e.face = tgt.x > e.x ? 1 : -1;
-      if (e.cool <= 0) { bullets.push({ x: e.x + (e.face > 0 ? e.w + 1 : -1), y: e.y + 8, vx: e.face * 210, vy: 0, owner: 'p', dmg: 1, tdmg: 0.3, life: 1.5, kind: 'pill' }); e.cool = rand(0.45, 0.8); e.atk = 0.15; sfx('eshot'); }
+      if (e.cool <= 0) { bullets.push({ x: e.x + (e.face > 0 ? e.w + 1 : -1), y: e.y + 8, vx: e.face * 210, vy: 0, owner: 'p', dmg: 1, tdmg: 0.3, life: 1.5, kind: 'pill', src: e }); e.cool = rand(0.45, 0.8); e.atk = 0.15; sfx('eshot'); }
     } else walk = patrol(e, dt, 26);
     e.vx = walk + e.kx; moveBody(e, dt);
     return;
@@ -2711,6 +2720,18 @@ function acidPool(x, y) {
   while (r > 0 && isSolidT(tileAt(c, r - 1))) r--;
   fx.push({ kind: 'acidpool', x: c * T + 8, y: r * T, c, r, t: 2.6, max: 2.6 });
 }
+// does the segment (x0,y0)-(x1,y1) touch box b grown by m on every side? (Liang-Barsky clipping)
+function segHit(x0, y0, x1, y1, b, m) {
+  const dx = x1 - x0, dy = y1 - y0; let t0 = 0, t1 = 1;
+  for (const [p, q] of [[-dx, x0 - (b.x - m)], [dx, b.x + b.w + m - x0], [-dy, y0 - (b.y - m)], [dy, b.y + b.h + m - y0]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return true;
+}
+// the box enemy shots must touch to kill you: a pixel inside the sprite on the sides and the top of the hair
+const hurtbox = () => ({ x: P.x + 1, y: P.y + 2, w: P.w - 2, h: P.h - 2 });
 function updateBullets(dt, edt) {
   for (const b of bullets) {
     if (b.dead) continue;
@@ -2728,6 +2749,7 @@ function updateBullets(dt, edt) {
     if (b.kind === 'missile' && Math.random() < 0.6) part(b.x - Math.cos(b.ang) * 5, b.y - Math.sin(b.ang) * 5, rand(-10, 10), rand(-10, 10), theme.dust, rand(0.3, 0.6), rand(2, 3), 0, 'smoke');
     if (b.kind === 'glob' && Math.random() < 0.4) part(b.x, b.y, 0, 20, '#a6d854', 0.3, 1, G);
     if (b.grav) b.vy += b.grav * d;
+    const ox = b.x, oy = b.y;
     b.x += b.vx * d; b.y += b.vy * d;
     if (b.kind === 'helix') {
       b.phase += d * 14; b.y = b.by + Math.sin(b.phase) * 11;
@@ -2763,7 +2785,7 @@ function updateBullets(dt, edt) {
     if (b.owner === 'p') {
       for (const e of ents) {
         if (!live(e)) continue;
-        if (b.x > e.x - 2 && b.x < e.x + e.w + 2 && b.y > e.y - 2 && b.y < e.y + e.h + 2) {
+        if (e !== b.src && segHit(ox, oy, b.x, b.y, e, 2)) { // never the quack that fired it
           b.dead = true;
           if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'p', b.tp);
           else hitEnemy(e, b.dmg, Math.sign(b.vx) * 90);
@@ -2794,8 +2816,8 @@ function updateBullets(dt, edt) {
         if (Math.random() < 0.4) bleed(o.x, o.y, 2, b.vx * 0.1);
       }
     } else {
-      const m = SHOOTABLE[b.kind] || b.kind === 'glob' ? 3 : 0;
-      if (P.alive && P.inv <= 0 && b.x > P.x - 1 - m && b.x < P.x + P.w + 1 + m && b.y > P.y - m && b.y < P.y + P.h + m) {
+      const m = SHOOTABLE[b.kind] || b.kind === 'glob' || b.kind === 'rock' ? 3 : 0;
+      if (P.alive && P.inv <= 0 && segHit(ox, oy, b.x, b.y, P.mech ? P : hurtbox(), m)) {
         b.dead = true;
         if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'env', b.tp); else killPlayer(b.kind === 'glob' ? 'gib' : 'shot', Math.sign(b.vx));
       }
@@ -3884,6 +3906,12 @@ function render(t) {
   drawBullets();
   drawParticles();
   drawFx();
+  if (settings.hitboxes) { // debug view: what can hit what
+    ctx.lineWidth = 1;
+    for (const e of ents) if (live(e)) { ctx.strokeStyle = OBJ[e.type] ? '#f2c94c' : '#ff5a4a'; ctx.strokeRect(Math.round(e.x) + 0.5, Math.round(e.y) + 0.5, e.w - 1, e.h - 1); }
+    if (P.alive) { const h = P.mech ? P : hurtbox(); ctx.strokeStyle = '#a6d854'; ctx.strokeRect(Math.round(h.x) + 0.5, Math.round(h.y) + 0.5, h.w - 1, h.h - 1); }
+    ctx.fillStyle = '#ffffff'; for (const b of bullets) ctx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1);
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);

@@ -102,9 +102,25 @@ S.pressed.pause = true; run(1); check('P pauses the game', S.paused);
 const t0 = S.stats.time; run(30); check('nothing moves while paused', S.stats.time === t0);
 const shake0 = S.settings.shake; S.pressed.fire = true; run(1); check('fire switches the selected setting', S.settings.shake === !shake0);
 S.pressed.fire = true; run(1); // switch it back
-S.pressed.down = true; run(1); S.pressed.down = true; run(1); S.pressed.down = true; run(1); S.pressed.down = true; run(1); S.pressed.down = true; run(1);
+for (let k = 0; k < 6; k++) { S.pressed.down = true; run(1); } // down to RESTART LEVEL
 S.P.x = 50 * T; S.pressed.fire = true; run(1);
 check('restart level from the menu', !S.paused && S.P.x < 5 * T && S.state === 'play');
+
+// running: tap right twice quickly to run, let go to stop
+S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); S.P.inv = 1e9; S.P.x = 2 * T; S.P.y = 16 * T - 15.01; run(2);
+S.pressed.right = true; run(1, { right: true }); run(4); S.pressed.right = true; run(1, { right: true });
+for (let i = 0; i < 30; i++) run(1, { right: true });
+check('double-tap right runs', S.P.run && S.P.vx > 160, 'vx ' + S.P.vx.toFixed(0));
+run(10); S.pressed.right = true; run(30, { right: true });
+check('letting go stops running; one tap walks', !S.P.run && S.P.vx < 125, 'vx ' + S.P.vx.toFixed(0));
+
+// hit boxes: a fast shot cannot skip through a quack, and a shot that grazes past your sprite misses
+lone(); S.P.x = 2 * T; const thin = spawn('grunt', 12, { react: 99, cool: 99 });
+S.bullets.push({ x: thin.x - 9, y: thin.y + 8, vx: 1300, vy: 0, owner: 'p', dmg: 5, tdmg: 0, life: 0.5, kind: 'photon' }); run(1);
+check('a very fast bullet still hits (swept check)', thin.dead);
+lone(); S.P.x = 6 * T; S.P.y = 16 * T - 15.01; S.P.inv = 0; run(2);
+S.bullets.push({ x: S.P.x + 40, y: S.P.y + 0.5, vx: -200, vy: 0, owner: 'e', dmg: 1, tdmg: 0, life: 1, kind: 'pill' }); run(20);
+check('a shot skimming the top of your hair misses', S.P.alive);
 
 console.log(fails ? fails + ' check(s) failed' : 'all control and destruction checks passed');
 process.exit(fails ? 1 : 0);
