@@ -191,7 +191,36 @@ run(3); check('shooting the stabiliser vats breaks them', eng.vats.every((v) => 
 S.finishObjectives(); S.hitEnemy(eng, 999, 0); k3 = 0; for (; k3 < 600 && !eng.dead; k3++) { S.P.inv = 1e9; run(1); }
 check('with the vats gone the core can be destroyed', eng.dead && !!S.chopper, k3 + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
-check('extraction on level 4 ends the game', S.state === 'done', S.state);
+check('extraction on level 4 leads on to level 5', S.state === 'win', S.state);
+
+// level 5: the Flat Earth Zeppelin
+S.startLevel(4); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
+run(1); S.ents.forEach((o) => { if (!['blimp', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = 180 * T; S.P.y = 16 * T - 16; run(5);
+check('Flat Earth Zeppelin activates', zep.active);
+let zshot = false; for (let i = 0; i < 400 && !zshot; i++) { S.P.inv = 1e9; run(1); zshot = S.bullets.some((b) => b.owner === 'e'); }
+check('its gondolas shoot', zshot);
+const zh = zep.hp; S.hitEnemy(zep, 30, 0); check('the gas bag is shielded while gondolas hang on', zep.hp === zh);
+for (const v of zep.vats) { v.hp = 1; S.bullets.push({ x: v.x + 8, y: v.y + 6, vx: 1, vy: 0, owner: 'p', dmg: 2, tdmg: 0, life: 0.2, kind: 'photon' }); }
+run(2); check('shooting the gondolas drops them', zep.vats.every((v) => v.dead));
+S.finishObjectives(); S.hitEnemy(zep, 999, 0); k3 = 0; for (; k3 < 900 && !zep.dead; k3++) { S.P.inv = 1e9; run(1); }
+check('then the zeppelin goes down', zep.dead && !!S.chopper, k3 + ' frames');
+
+// level 6: King Citrus
+S.startLevel(5); check('level 6 builds with nothing floating', S.checkCollapse() === 0);
+run(1); S.ents.forEach((o) => { if (!['citrus', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = 186 * T; S.P.y = 15 * T - 16; run(5);
+check('King Citrus activates', kc.active);
+let hopped = false; for (let i = 0; i < 300 && !hopped; i++) { S.P.inv = 1e9; run(1); if (!kc.onGround) hopped = true; }
+check('King Citrus hops', hopped);
+for (let i = 0; i < 120 && !kc.onGround; i++) run(1);
+kc.state = 'roll'; kc.t = 0.1; kc.face = 1; let dizzy = false; for (let i = 0; i < 300 && !dizzy; i++) { S.P.inv = 1e9; run(1); dizzy = kc.state === 'dizzy'; }
+check('a roll ends dizzy against the wall', dizzy);
+kc.dizzy = 1; const kh = kc.hp; S.hitEnemy(kc, 5, 0); check('he takes double damage while dizzy', kh - kc.hp === 10, (kh - kc.hp) + ' damage'); kc.dizzy = 0;
+S.finishObjectives(); S.hitEnemy(kc, 999, 0); k3 = 0; for (; k3 < 600 && !kc.dead; k3++) { S.P.inv = 1e9; run(1); }
+check('King Citrus is juiced and the chopper comes', kc.dead && !!S.chopper, k3 + ' frames');
+for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
+check('extraction on level 6 ends the game', S.state === 'done', S.state);
 drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); }
 check('game-complete screen draws', drew);
 

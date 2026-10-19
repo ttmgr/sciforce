@@ -15,7 +15,7 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const FOE = ['grunt', 'shield', 'heavy', 'scout', 'grenadier', 'rocketeer', 'guru', 'para', 'jetpack', 'sniper', 'flamer', 'brute', 'medic', 'bomber', 'dog', 'turret'];
 
-for (let l = 0; l < 4; l++) {
+for (let l = 0; l < 6; l++) {
   const name = 'mission ' + (l + 1);
   S.startLevel(l); S.state === 'play' || null;
   const near = S.ents.filter((e) => FOE.includes(e.type) && e.x < 20 * T);

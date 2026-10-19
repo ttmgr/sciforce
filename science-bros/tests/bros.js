@@ -20,7 +20,7 @@ const setup = (id) => {
 };
 const quack = (c, extra = {}) => { const e = Object.assign(S.makeEnt({ type: 'grunt', c, from: 0 }), { face: -1, react: 99, cool: 99 }, extra); S.ents.push(e); return e; };
 
-check('there are 18 bros', S.BROS.length === 18, S.BROS.length + ' bros');
+check('there are 22 bros', S.BROS.length === 22, S.BROS.length + ' bros');
 for (const b of S.BROS) {
   setup(b.id);
   const q = quack(12); // 8 tiles ahead; the bro walks toward it firing
@@ -64,6 +64,12 @@ setup('mendel'); const m1 = quack(14); S.pressed.special = true; run(1); for (le
 check('Mendel pea turrets shoot a quack', m1.dead);
 setup('tesla'); const t1 = quack(8); S.P.cool = 0; run(1, { fire: true });
 check('Tesla arcs stun', t1.dead || t1.stun > 0);
+setup('sagan'); const st = [quack(10), quack(16), quack(22)]; S.pressed.special = true; run(150);
+check('Sagan star rain hits quacks across the screen', st.filter((e) => e.dead).length >= 2, st.filter((e) => e.dead).length + ' of 3');
+setup('hubble'); const hb = quack(9); S.pressed.special = true; run(1);
+check('Hubble flings quacks away', hb.dead || hb.kx > 300);
+setup('wegener'); const wg = quack(12); S.pressed.special = true; run(2);
+check('Wegener opens the ground under a quack', !(S.tileAt(12, 16) !== 0) || wg.dead);
 // pickup guns
 for (const g of ['shotgun', 'rocket', 'minigun', 'railgun']) {
   setup('einstein'); const pk = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'gun' }); pk.gun = g; pk.x = S.P.x; S.ents.push(pk); run(3);

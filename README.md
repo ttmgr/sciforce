@@ -2,7 +2,7 @@
 
 ## Science Bros
 
-Broforce-style run-and-gun platformer: a 4-mission campaign (Operation Infinite Dilution), 18 scientist bros, 4 pickup guns, 14 quack types, 5 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
+Broforce-style run-and-gun platformer: a 6-mission campaign against the Anti-Science League, 22 scientist bros, 4 pickup guns, 14 quack types, 7 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
 
 - Game: `science-bros/index.html`. Open it in a browser.
 - Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; tap left or right twice quickly to run (or push a gamepad stick all the way); Shift or V dodge-roll (also jumps out of the mech); Up/Down on a ladder climbs; hold Tab for the map; P pause menu; M mute.
@@ -21,7 +21,11 @@ Title, then a world map of the four stops, then a briefing from HQ (Prof. Peer R
 - **Mission 1, Placebo Island:** smash 3 placebo vats, destroy the Homeopathitron.
 - **Mission 2, Detox Desert:** topple the radio mast, shoot down the Detoxkopter, kill the Crystal Crawler.
 - **Mission 3, Cryo Summit:** wipe 2 server racks, stop the Snake Oil Tank (Dr. Placebo escapes in a pod).
+- **Story:** the Anti-Science League wants to take over the world. Dr. Placebo is its general for the first four missions; its leader is King Citrus, the Big Bad Orange, a fictional giant angry orange who preaches vitamin C megadoses.
 - **Mission 4, Dilution Plant:** smash 2 dilution vats, shut down the **Succussion Engine**: two hammers drop where you stand (a red column warns you), it sprays diluted solution and spits out quacks; its core is shielded until you break its three stabiliser vats, then it shakes rubble down from the roof.
+
+- **Mission 5, Flat Earth Station:** jam 3 propaganda antennas, climb (or blast through) the ice wall they call the edge of the world, and bring down the **Flat Earth Zeppelin**: shoot its four gondolas off from the tower tops, then the gas bag. It bombs you and drops paratroopers.
+- **Mission 6, Citrus Citadel:** pour out 3 megadose vats in the juice works, fight through the rally and the citadel walls, then juice **King Citrus**. He hops with shockwaves, rolls across the throne room (and is dizzy, taking double damage, after hitting a wall), spits seeds, squirts juice puddles, calls in quacks, and when furious rains vitamin pills.
 
 ### Maps
 
@@ -44,8 +48,9 @@ A minimap in the bottom-right corner shows the level around you. Hold Tab for th
 
 - **Pickup guns** come from orange crates (and sometimes from blue item crates). Each replaces your bro's weapon until its ammo runs out: shotgun (7 pellets, big kick), rocket launcher, minigun, and railgun (one line through every quack and every block that is not steel). Ammo shows on the HUD.
 - **Upgrades:** Einstein's photons pass through the first quack, and he fires faster during time dilation; Curie's vials leave a radiation puddle; Tesla's arc chains to four quacks and stuns them; Newton's apples bounce once before going off; Franklin's X-ray cuts through one block; Ada fires five cards and her drone lasts 12 s; Darwin sends three finches.
+- **Bros 19 to 22:** Carl Sagbro (slow glowing orbs that pass through everything; star rain), Alfred Wegbro (a ripple along the ground that throws quacks up; the ground splits under every quack on screen), Edwin Hubbro (shots that hit harder the further they fly; everything on screen flung away), Dmitri Mendelbro (each shot a random element: sodium blast, floating helium, piercing iron, fast neon, uranium puddle; eight element blasts).
 - **New bros (18 in all):** Gregor Mendbro (pea shooter; three pea turrets), Louis Pastbro (darts that poison; a heat wave that cooks nearby quacks), Michael Farabro (an arc welder that cuts quacks and stone; a cage that bounces every shot back for 6 s), Hypatia Bro (a disc that flies out and comes back through quacks; six discs that spiral out), Richard Feynbro (wavy shots that pass through two quacks; shots in every direction), Alexander Flembro (spores that make quacks sick, and sickness spreads; every quack on screen falls sick).
-- Each cage holds a random bro you have not freed yet. There are 15 cages across the four missions, so a run never frees all 17.
+- Each cage holds a random bro you have not freed yet. There are 21 cages across the six missions, one for each bro you can free.
 - **Hit boxes:** bullets are tested along the path they travelled each frame, so fast shots cannot skip through anything; enemy shots must touch a box a pixel inside your sprite. The pause menu can show all hitboxes.
 
 ### Moves
