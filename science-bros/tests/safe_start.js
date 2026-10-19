@@ -13,9 +13,9 @@ const S = win.__SB__, T = S.T;
 const run = (n, keys = {}) => { for (let i = 0; i < n; i++) { for (const k in S.keys) S.keys[k] = false; Object.assign(S.keys, keys); S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; if (i % 10 === 0) S.render(i / 60); } };
 let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
-const FOE = ['grunt', 'shield', 'heavy', 'scout', 'grenadier', 'rocketeer', 'guru', 'para', 'jetpack', 'sniper', 'flamer', 'brute', 'medic', 'bomber', 'dog', 'turret'];
+const FOE = ['preacher', 'mortar', 'camdrone', 'grunt', 'shield', 'heavy', 'scout', 'grenadier', 'rocketeer', 'guru', 'para', 'jetpack', 'sniper', 'flamer', 'brute', 'medic', 'bomber', 'dog', 'turret'];
 
-for (let l = 0; l < 6; l++) {
+for (let l = 0; l < S.nLevels; l++) {
   const name = 'mission ' + (l + 1);
   S.startLevel(l); S.state === 'play' || null;
   const near = S.ents.filter((e) => FOE.includes(e.type) && e.x < 20 * T);

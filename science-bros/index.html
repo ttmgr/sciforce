@@ -59,9 +59,9 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 <div class="wrap">
   <header>
     <h1>Science Bros</h1>
-    <div class="lvl">War on the Anti-Science League · 6 missions</div>
+    <div class="lvl">War on the Anti-Science League · 11 missions · 3 bonus modes</div>
   </header>
-  <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin; in the Citrus Citadel, juice King Citrus. Each freed scientist adds one bro to your reserve.</p>
+  <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin. Then fight through the League's five strongholds (the Chemtrail Airfield, the Quartz Caverns, the Miasma Marsh, the Zodiac Observatory and the Perpetual Motion Works) to the Citrus Citadel, and juice King Citrus. Each freed scientist adds one bro to your reserve. From the title menu you can also hold the Lab Siege, run the Boss Rush or land on the Moon Base.</p>
 
   <div class="stage">
     <canvas id="game" width="480" height="270" tabindex="0" aria-label="Science Bros game screen"></canvas>
@@ -97,7 +97,8 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const T = 16, VW = 480, VH = 270, LW = 236, LH = 22, G = 900;
+const T = 16, VW = 480, VH = 270, LW = 236, LH = 22;
+let G = 900; // gravity; lower on the Moon
 const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
 const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
 const BG_EARTH = 1, BG_BRICK = 2;
@@ -283,6 +284,8 @@ const RIG = {
   flamer: buildRig(HEADS.goon, BODY_VEST, Object.assign({}, GOON_PAL, { o: '#3d3d3d', k: '#c9a227', c: '#5a3a26', y: '#25223a' })),
   brute: buildRig(HEADS.big, BODY_BIG, Object.assign({}, GOON_PAL, { o: '#8e2b3c', c: '#5a2030', t: '#25223a', p: '#3a1520', s: '#8a5a5a' })),
   medic: buildRig(HEADS.goon, BODY, Object.assign({}, GOON_PAL, { c: '#e9eef6', t: '#d9534f', o: '#e9eef6' })),
+  preacher: buildRig(HEADS.goon, BODY_ROBE, Object.assign({}, GOON_PAL, { c: '#25223a', y: '#e6e2f0', o: '#4a3a6a', t: '#f2c94c' })),
+  mortar: buildRig(HEADS.helmet, BODY_VEST, Object.assign({}, GOON_PAL, { h: '#5a6a3a', o: '#4a5a3a', c: '#3a4a2c', y: '#7a6a3a' })),
   char: buildRig(HEADS.goon, BODY, { o: '#2e2738', k: '#3b3247', e: '#f29e4c', y: '#4b4766', s: '#1d1a26', c: '#2a2438', t: '#3b3247', p: '#1d1a26', b: '#121018' }),
 };
 // dog: its own little 14x8 sprite set
@@ -335,6 +338,18 @@ const THEMES = {
     dirt: ['#3a3f52', '#454b60', '#30344a', '#525872'], top: ['#3f7f4a', '#6fbf6a'], dust: '#9a9ab0', ambient: 0.45, dark: '#05031a', acid: ['#1f4a8a', '#4f8fd0', '#bfe9ff'] },
   citrus: { sky: ['#2a0a0a', '#7a2a10', '#e8862a'], stars: false, orb: 'bigsun', hill: '#4a1a0a', city: '#2a0e06', cityKind: 'towers', win: ['#f2c94c', '#ff8a2a'], beam: '#ffb060',
     dirt: ['#7a3a1a', '#8a4a22', '#6a3014', '#9a5a2a'], top: ['#e8862a', '#f2b04a'], dust: '#c98a5a', ambient: 0.3, dark: '#1a0602', embers: true, acid: ['#c85a10', '#f2a030', '#ffd080'] },
+  sky: { sky: ['#3a6ab8', '#7aaee0', '#cfe6f5'], stars: false, orb: 'sun', hill: '#5a8a6a', city: '#6a8aa0', cityKind: 'domes', win: ['#f2c94c', '#e6e2f0'], beam: '#ffffff',
+    dirt: ['#6a5a4a', '#7a6a5a', '#5a4a3a', '#8a7a6a'], top: ['#5f9a2c', '#8cc63f'], dust: '#c9b9a0', ambient: 0.08, dark: '#0a1020', acid: ['#2a6a9a', '#6ab0e0', '#dff4ff'] },
+  cave: { sky: ['#06030c', '#120a20', '#1e1030'], stars: false, orb: 'none', hill: '#140c22', city: '#0e0818', cityKind: 'mesas', win: ['#b3a6ff', '#e78ac3'], beam: '#b3a6ff',
+    dirt: ['#4a3a5e', '#5a4a6e', '#3e2e52', '#6a5a80'], top: ['#8a6aae', '#c3b6ff'], dust: '#8a7aa0', ambient: 0.5, dark: '#06021a', acid: ['#4a2a6a', '#b3a6ff', '#e8dcff'] },
+  swamp: { sky: ['#0a140c', '#1a2a1a', '#3a4a2a'], stars: false, orb: 'moon', hill: '#14201a', city: '#0e1810', cityKind: 'pines', win: ['#a6d854', '#f2c94c'], beam: '#c9f08f',
+    dirt: ['#3a3a24', '#4a4a2e', '#2e2e1c', '#5a5a38'], top: ['#4a6a2a', '#6a8a3a'], dust: '#7a7a5a', ambient: 0.5, dark: '#020602', rain: true, acid: ['#3a5a1a', '#7a9a2a', '#c9e08f'] },
+  astro: { sky: ['#02041a', '#0a1240', '#1a2a6a'], stars: true, orb: 'planet', hill: '#0a1030', city: '#060a24', cityKind: 'domes', win: ['#8fd3ff', '#f2c94c'], beam: '#bfe9ff',
+    dirt: ['#4a4a5a', '#5a5a6a', '#3a3a4a', '#6a6a7a'], top: ['#8da0cb', '#bfe9ff'], dust: '#9aa0b8', ambient: 0.45, dark: '#000210', snow: true, acid: ['#1f3a7a', '#4f6fd0', '#bfd0ff'] },
+  rust: { sky: ['#1a0e08', '#3a2010', '#6a3a1a'], stars: false, orb: 'moon', hill: '#2a1810', city: '#1a0e08', cityKind: 'factory', win: ['#f2c94c', '#ff6a4a'], beam: '#ffb060',
+    dirt: ['#5a3a2a', '#6a4a32', '#4a2e20', '#7a5a3a'], top: ['#8a5a2a', '#b07a3a'], dust: '#9a7a5a', ambient: 0.45, dark: '#080402', ash: true, acid: ['#6a3a1a', '#c96a2a', '#f2a060'] },
+  moon: { sky: ['#000000', '#05050f', '#101020'], stars: true, orb: 'earth', hill: '#202028', city: '#16161e', cityKind: 'domes', win: ['#bfe9ff', '#f2c94c'], beam: '#e6e2f0',
+    dirt: ['#6a6a72', '#7a7a82', '#5a5a62', '#8a8a92'], top: ['#9a9aa2', '#b4b4bc'], dust: '#b4b4bc', ambient: 0.35, dark: '#000005', acid: ['#3a3a4a', '#6a6a7a', '#9a9aaa'] },
   plant: { sky: ['#0d1410', '#1c2a24', '#3a3a2c'], stars: false, orb: 'moon', hill: '#1a2420', city: '#141c18', cityKind: 'factory', win: ['#f2c94c', '#ff6a4a'], beam: '#ff9a6a',
     dirt: ['#4a4a52', '#56565e', '#3e3e46', '#62626c'], top: ['#6b5a4a', '#8a7560'], dust: '#8a8a92', ambient: 0.5, dark: '#050806', ash: true, acid: ['#1f6a7a', '#7de0f0', '#dff8ff'] },
   snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'pines', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
@@ -382,7 +397,7 @@ function buildLevel() {
   tiles = new Uint8Array(LW * LH); thp = new Float32Array(LW * LH); bg = new Uint8Array(LW * LH); spawns = []; decor = []; lamps = [];
   const set = (c, r, v) => { if (c < 0 || r < 0 || c >= LW || r >= LH) return; tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; if (v === DIRT && r > 0 && tiles[(r - 1) * LW + c] === DIRT) bg[r * LW + c] = BG_EARTH; };
   const fill = (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) set(c, r, v); };
-  LEVELS[level].build({
+  LV().build({
     fill,
     ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, LH - 2, v); fill(c0, LH - 1, c1, LH - 1, STEEL); },
     sp: (type, c, from = 0, extra = {}) => spawns.push(Object.assign({ type, c, from }, extra)),
@@ -597,7 +612,7 @@ function buildCitadel({ fill, ground, sp, bgFill, dc, lamp }) {
   // 3. The rally: a stage, a crowd of quacks, a guru on the mic
   ground(81, 130, 16); fill(100, 13, 108, 15, BRICK);
   sp('mine', 88); sp('grunt', 92); sp('grunt', 95); sp('fueltank', 96); sp('grunt', 98); sp('strike', 101); sp('guru', 104); sp('pickup', 107, 0, { item: 'intel' });
-  sp('grunt', 110); sp('grunt', 113); sp('shield', 116); sp('fueltank', 118); sp('brute', 120); sp('heavy', 124); sp('itemcrate', 127);
+  sp('grunt', 110); sp('grunt', 113); sp('shield', 116); sp('fueltank', 118); sp('brute', 120); sp('heavy', 124); sp('itemcrate', 127); sp('cage', 102, 0); sp('preacher', 99); sp('mortar', 126); sp('camdrone', 110); sp('camdrone', 150);
   dc('sign', 84, { text: 'RALLY TODAY' });
   sp('flag', 129);
   // 4. Citadel walls and a tower: climb, blast, or bulldoze them with the mech
@@ -692,7 +707,7 @@ const LEVELS = [
 LEVELS.push(
   { name: 'FLAT EARTH STATION', sub: 'Jam the antennas, bring down the zeppelin', theme: 'edge', build: buildEdge, cages: 3, pad: [230, 16], map: [368, 100],
     brief: 'The League broadcasts its lies from a Flat Earth Station on the coast. Jam its three propaganda antennas, climb the ice wall they say is the edge of the world, and bring down the Flat Earth Zeppelin. Shoot its four gondolas off first; the gas bag only gives once they are gone.',
-    debrief: 'The broadcasts are off and the zeppelin is in the sea. Its log names its home port: the Citrus Citadel, seat of King Citrus.',
+    debrief: 'The broadcasts are off and the zeppelin is in the sea. Its log lists five League strongholds that guard the road to the Citrus Citadel.',
     objectives: [{ id: 'radio', text: 'Jam the propaganda antennas', need: 3, req: true }, { id: 'boss', text: 'Bring down the Flat Earth Zeppelin', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Script: today we prove the Earth is flat by refusing to look at it.', 'Memo from K.C.: more antennas. Also, oranges in every lunchbox.', 'Flight plan: zeppelin returns to the Citrus Citadel after each broadcast.'] },
   { name: 'CITRUS CITADEL', sub: 'Pour out the megadose vats, juice King Citrus', theme: 'citrus', build: buildCitadel, cages: 3, pad: [231, 15], map: [432, 182],
@@ -701,6 +716,157 @@ LEVELS.push(
     objectives: [{ id: 'vat', text: 'Pour out the megadose vats', need: 3, req: true }, { id: 'boss', text: 'Juice King Citrus', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Decree: anyone who says peer review must eat ten oranges.', 'Speech notes: tremendous vitamins. The best vitamins. Ask anyone.', 'Battle plan: if the bros reach the throne room, roll at them.'] },
 );
+// ---- a library of level pieces: each fills columns c..c+w-1; `put` lists [type, column offset, search row, extra]
+function place(H, c, o) { for (const [type, dc, from, extra] of o.put || []) H.sp(type, c + dc, from || 0, extra || {}); }
+const SEG = {
+  camp(H, c, w, o) { H.ground(c, c + w - 1, 16); H.sp('guncrate', c + 8); H.sp('itemcrate', c + 11); H.dc('sign', c + 5, { text: o.sign || 'BASE CAMP' }); for (const k of [2, 15]) H.dc(o.decor || 'sandbags', c + k); },
+  yard(H, c, w, o) { const top = o.top || 16; H.ground(c, c + w - 1, top); H.fill(c + 5, top - 2, c + 5, top - 1, CRATE); H.fill(c + w - 9, top - 2, c + w - 8, top - 1, BRICK); place(H, c, o); },
+  hall(H, c, w, o) { // a building: crate doors, a steel girder, a catwalk with a ladder, lamps
+    H.ground(c, c + w - 1, 16);
+    const a = c + 3, b = c + w - 4, m = (a + b) >> 1;
+    H.fill(a, 8, b, 15, BRICK); H.fill(a + 2, 10, b - 2, 15, EMPTY);
+    H.fill(a, 13, a, 15, CRATE); H.fill(a + 1, 13, a + 1, 15, EMPTY); H.fill(b, 13, b, 15, CRATE); H.fill(b - 1, 13, b - 1, 15, EMPTY);
+    H.fill(m - 1, 8, m + 1, 8, STEEL); H.fill(a + 2, 12, m - 3, 12, STEEL); H.fill(m - 2, 12, m - 2, 15, LADDER);
+    H.bgFill(a + 1, 10, b - 1, 15, BG_BRICK);
+    for (const k of [a + 5, m + 3, b - 5]) H.lamp(k, 9);
+    place(H, c, o);
+  },
+  pit(H, c, w, o) { // liquid with a bridge over it and steel piles every four columns
+    const a = c + 4, b = c + w - 5;
+    H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16);
+    H.fill(a, 21, b, 21, STEEL); H.fill(a, 17, b, 20, ACID); H.fill(a, 16, b, 16, o.bridge || CRATE);
+    for (let k = a + 2; k <= b; k += 4) H.fill(k, 17, k, 20, STEEL);
+    place(H, c, o);
+  },
+  cliff(H, c, w, o) { // a ladder up onto a cliff, a tunnel underneath; steel studs hold the tunnel roof
+    H.ground(c, c + 5, 16); H.ground(c + 6, c + w - 1, 10); H.fill(c + 6, 13, c + w - 1, 15, EMPTY);
+    for (let k = c + 10; k < c + w - 2; k += 10) H.fill(k, 10, k, 10, STEEL);
+    H.fill(c + 5, 10, c + 5, 15, LADDER);
+    if (o.icicles) for (let k = c + 9; k < c + w - 2; k += 7) H.sp('icicle', k, 0, { hang: 12 });
+    place(H, c, o);
+  },
+  fort(H, c, w, o) { // two walls with ladders and turrets on top
+    H.ground(c, c + w - 1, 16);
+    for (const k of [c + 8, c + w - 12]) { H.fill(k, 8, k + 2, 15, BRICK); H.fill(k - 1, 8, k - 1, 15, LADDER); H.sp('turret', k + 1); }
+    place(H, c, o);
+  },
+  chimneys(H, c, w, o) { H.ground(c, c + w - 1, 16); for (const k of [c + 9, c + 24]) if (k + 1 < c + w) { H.fill(k, 3, k + 1, 12, BRICK); H.fill(k, 13, k + 1, 15, CRATE); H.fill(k - 1, 3, k - 1, 15, LADDER); } place(H, c, o); }, // climb them, or shoot out the crate base and drop them
+};
+// boss arenas always start at column 176; the extraction pad sits behind a steel gate
+const ARENA = {
+  flat(H, o) { H.fill(176, 16, 225, 17, DIRT); H.fill(176, 18, 235, 21, STEEL); H.fill(190, 13, 191, 15, BRICK); H.fill(210, 13, 211, 15, BRICK); H.fill(226, 0, 227, 15, STEEL); H.ground(228, 235, 16); H.sp(o.boss, 205, 0, Object.assign({ ax0: 178, ax1: 225, trig: 180, final: true, gate: [226, 227, 0, 15] }, o.extra)); },
+  towers(H, o) { H.ground(176, 225, 16); for (const k of [186, 200, 214]) { H.fill(k, 9, k + 1, 15, BRICK); H.fill(k - 1, 9, k - 1, 15, LADDER); H.sp('spring', k - 4); } H.sp('ammo', 194); H.fill(226, 0, 227, 15, STEEL); H.ground(228, 235, 16); H.sp(o.boss, 205, 0, Object.assign({ ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] }, o.extra)); },
+  sand(H, o) { H.ground(176, 177, 12); H.fill(178, 12, 223, 17, DIRT); H.fill(178, 18, 223, 21, STEEL); H.fill(224, 0, 225, 21, STEEL); H.fill(226, 12, 235, 21, STEEL); H.sp(o.boss, 200, 0, Object.assign({ ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] }, o.extra)); },
+  stage(H, o) { H.fill(176, 16, 225, 17, DIRT); H.fill(176, 18, 235, 21, STEEL); H.fill(186, 11, 190, 11, STEEL); H.fill(185, 11, 185, 15, LADDER); H.fill(210, 11, 214, 11, STEEL); H.fill(215, 11, 215, 15, LADDER); H.fill(226, 0, 227, 15, STEEL); H.ground(228, 235, 16); H.sp(o.boss, 200, 0, Object.assign({ ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] }, o.extra)); },
+};
+// a mission made of pieces left to right (they must add up to 176 columns), then an arena
+const pieces = (segs, arena, deco) => (H) => { let c = 0; for (const [kind, w, o] of segs) { SEG[kind](H, c, w, o || {}); c += w; } ARENA[arena.kind](H, arena); if (deco) deco(H); };
+const NEW_LEVELS = [
+  { name: 'CHEMTRAIL AIRFIELD', sub: 'Topple the spray towers, down the Chemtrail Copter', theme: 'sky', cages: 3, pad: [231, 16],
+    brief: 'The League says planes spray mind-control mist, and to prove it they built their own spraying planes. Topple their three spray towers, free our people and shoot down the Chemtrail Copter.',
+    debrief: 'The skies are clear. A flight log points to a cave full of healing crystals.',
+    objectives: [{ id: 'radio', text: 'Topple the spray towers', need: 3, req: true }, { id: 'boss', text: 'Shoot down the Chemtrail Copter', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Pilot notes: the mist is water. Do not tell the customers.', 'Order form: 500 tin-foil hats, extra shiny.', 'Map: crystals shipped in from the Quartz Caverns.'],
+    build: pieces([['camp', 20, { sign: 'CHEMTRAILS ARE REAL', decor: 'palm' }],
+      ['yard', 40, { put: [['grunt', 2], ['shield', 7], ['dog', 10], ['target', 14, 0, { skin: 'radio' }], ['jetpack', 18], ['fueltank', 22], ['camdrone', 24], ['cage', 26], ['rocketeer', 30], ['pickup', 34, 0, { item: 'intel' }], ['flag', 38]] }],
+      ['hall', 40, { put: [['grunt', 8, 12], ['target', 20, 0, { skin: 'radio' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['alarm', 37], ['flag', 39]] }],
+      ['pit', 36, { put: [['grunt', 10], ['bomber', 18], ['itemcrate', 32], ['pickup', 33, 0, { item: 'intel' }]] }],
+      ['fort', 40, { put: [['mechsuit', 2], ['sniper', 9], ['target', 20, 0, { skin: 'radio' }], ['grenadier', 22], ['guncrate', 25], ['cage', 30], ['pickup', 34, 0, { item: 'intel' }], ['mortar', 35], ['flag', 38]] }]],
+      { kind: 'towers', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays the sky with nonsense.', hpMul: 1.4 } }) },
+  { name: 'QUARTZ CAVERNS', sub: 'Smash the charging vats, kill the Quartz Queen', theme: 'cave', cages: 3, pad: [230, 12],
+    brief: 'Deep under the mountains the League charges crystals to sell as medicine. Smash the three crystal-charging vats and kill the Quartz Queen, a crawler grown in the dark.',
+    debrief: 'The caverns are quiet. The crystal invoices were paid by a marsh company that sells bad air.',
+    objectives: [{ id: 'vat', text: 'Smash the charging vats', need: 3, req: true }, { id: 'boss', text: 'Kill the Quartz Queen', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Label: crystal, charged by moonlight, 400 dollars.', 'Lab note: the crystals do nothing. Price goes up.', 'Invoice: paid by Miasma Holdings, Marsh Road.'],
+    build: pieces([['camp', 20, { sign: 'CRYSTALS HEAL', decor: 'crystal' }],
+      ['cliff', 40, { put: [['grunt', 8, 13], ['dog', 14, 13], ['sniper', 18], ['target', 20, 13, { skin: 'vat' }], ['cage', 28, 13], ['pickup', 33], ['flag', 38]] }],
+      ['pit', 36, { bridge: ICE, put: [['jetpack', 12], ['camdrone', 16], ['shield', 20], ['pickup', 33, 0, { item: 'intel' }]] }],
+      ['hall', 40, { put: [['target', 10, 12, { skin: 'vat' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }],
+      ['yard', 40, { put: [['brute', 10], ['target', 16, 0, { skin: 'vat' }], ['flamer', 22], ['preacher', 24], ['cage', 26], ['guru', 28], ['itemcrate', 31], ['pickup', 34, 0, { item: 'intel' }], ['flag', 38]] }]],
+      { kind: 'sand', boss: 'crawler', extra: { name: 'QUARTZ QUEEN', sub: 'Grown in the dark on good vibes.', hpMul: 1.3 } },
+      (H) => { for (let c = 3; c < 232; c += 9) H.dc('crystal', c); }) }, // glowing crystals light the way
+  { name: 'MIASMA MARSH', sub: 'Wipe the servers, stop the Miasma Machine', theme: 'swamp', cages: 3, pad: [231, 16],
+    brief: 'Miasma Holdings says illness comes from bad air, and sells air filters full of nothing. Wipe their two research servers and stop the Miasma Machine before it fogs the whole coast.',
+    debrief: 'The fog is lifting. Their best customer was an observatory that sells horoscopes.',
+    objectives: [{ id: 'server', text: 'Wipe the research servers', need: 2, req: true }, { id: 'boss', text: 'Stop the Miasma Machine', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Brochure: germs are a myth. Breathe our premium air.', 'Memo: hide the microscope. Customers keep looking in it.', 'Receipt: 10,000 air filters to the Zodiac Observatory.'],
+    build: pieces([['camp', 20, { sign: 'BAD AIR CAUSES ALL', decor: 'pine' }],
+      ['pit', 40, { put: [['grunt', 10], ['dog', 16], ['bomber', 24], ['cage', 37]] }],
+      ['yard', 40, { top: 15, put: [['target', 6, 0, { skin: 'server' }], ['shield', 12], ['flamer', 18], ['fueltank', 21], ['heavy', 26], ['pickup', 30, 0, { item: 'intel' }], ['mine', 33], ['mortar', 36], ['flag', 38]] }],
+      ['chimneys', 36, { put: [['grenadier', 4], ['preacher', 12], ['rocketeer', 16], ['cage', 20], ['medic', 28], ['pickup', 32, 0, { item: 'intel' }], ['flag', 34]] }],
+      ['hall', 40, { put: [['target', 10, 12, { skin: 'server' }], ['camdrone', 14], ['grunt', 18, 12], ['sniper', 26, 12], ['cage', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['alarm', 37], ['flag', 39]] }]],
+      { kind: 'flat', boss: 'tank', extra: { name: 'MIASMA MACHINE', sub: 'Pumps out bad air, and bad ideas.', hpMul: 1.2 } }) },
+  { name: 'ZODIAC OBSERVATORY', sub: 'Knock down the horoscope dishes, scrap the Zodiac Mech', theme: 'astro', cages: 3, pad: [231, 16],
+    brief: 'The Zodiac Observatory points its dishes at the stars to sell horoscopes. Knock down its three dishes and scrap the Zodiac Mech on the summit.',
+    debrief: 'No more horoscopes. The dish money went to a factory that sells perpetual motion machines.',
+    objectives: [{ id: 'radio', text: 'Knock down the horoscope dishes', need: 3, req: true }, { id: 'boss', text: 'Scrap the Zodiac Mech', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Horoscope for Leo: avoid scientists today.', 'Telescope log: pointed at the stars once. Too confusing.', 'Bank note: profits sent to the Perpetual Motion Works.'],
+    build: pieces([['camp', 20, { sign: 'YOUR STARS SAY RUN', decor: 'pine' }],
+      ['fort', 40, { put: [['sniper', 9], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 22], ['cage', 26], ['jetpack', 30], ['pickup', 34, 0, { item: 'intel' }], ['mortar', 35], ['flag', 38]] }],
+      ['cliff', 40, { icicles: true, put: [['grunt', 8, 13], ['heavy', 16, 13], ['target', 22, 0, { skin: 'radio' }], ['preacher', 26, 13], ['cage', 28, 13], ['guru', 30], ['pickup', 33, 13, { item: 'intel' }], ['flag', 38]] }],
+      ['yard', 40, { put: [['target', 8, 0, { skin: 'radio' }], ['shield', 12], ['brute', 18], ['itemcrate', 22], ['camdrone', 24], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['flamer', 33], ['flag', 38]] }],
+      ['pit', 36, { bridge: ICE, put: [['dog', 10], ['jetpack', 18], ['grenadier', 33]] }]],
+      { kind: 'flat', boss: 'boss', extra: { name: 'ZODIAC MECH', sub: 'It is a Leo. It is angry.', hpMul: 1.5 } }) },
+  { name: 'PERPETUAL MOTION WORKS', sub: 'Smash the demo engines, stop the Pitchman', theme: 'rust', cages: 3, pad: [231, 16],
+    brief: 'The Works sell machines that run forever on nothing, to anyone who pays in advance. Smash the three demo engines and stop the Pitchman before the big investor show.',
+    debrief: 'The show is cancelled. The investors were all League members, and they have fled to the Citrus Citadel.',
+    objectives: [{ id: 'vat', text: 'Smash the demo engines', need: 3, req: true }, { id: 'boss', text: 'Stop the Pitchman', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Sales script: it runs forever. Do not ask about the plug.', 'Engineer note: the plug is behind the curtain.', 'Guest list: King Citrus, front row. Paid in oranges.'],
+    build: pieces([['camp', 20, { sign: 'FREE ENERGY FOREVER' }],
+      ['hall', 40, { put: [['target', 10, 12, { skin: 'vat' }], ['heavy', 22, 12], ['cage', 26, 12], ['medic', 30, 12], ['pickup', 32, 12, { item: 'intel' }], ['flag', 39]] }],
+      ['chimneys', 36, { put: [['rocketeer', 4], ['shield', 12], ['target', 18, 0, { skin: 'vat' }], ['jetpack', 26], ['cage', 30], ['mortar', 32], ['flag', 34]] }],
+      ['pit', 40, { put: [['grunt', 12], ['bomber', 20], ['camdrone', 26], ['pickup', 37, 0, { item: 'intel' }]] }],
+      ['yard', 40, { put: [['mechsuit', 2], ['target', 6, 0, { skin: 'vat' }], ['brute', 12], ['fueltank', 16], ['guru', 20], ['preacher', 23], ['cage', 26], ['pickup', 30, 0, { item: 'intel' }], ['heavy', 34], ['flag', 38]] }]],
+      { kind: 'stage', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Just pay first.', hpMul: 1.3 } }) },
+];
+LEVELS.splice(LEVELS.length - 1, 0, ...NEW_LEVELS); // they come before the Citrus Citadel, which stays the finale
+LEVELS.forEach((L, i) => { L.map = [36 + i * 41, 150 + Math.round(Math.sin(i * 1.4) * 52)]; }); // the route on the world map
+// levels outside the campaign: Lab Siege (horde) and the bonus Moon Base
+const EXTRA = [
+  { name: 'LAB SIEGE', sub: 'Hold the lab. Waves never stop.', theme: 'island', build: buildSiege, cages: 0, pad: [30, 16], objectives: [], ceasefire: 4 },
+];
+EXTRA.push({ name: 'MOON BASE', sub: 'Low gravity. The Director is filming a fake landing.', theme: 'moon', build: buildMoon, cages: 3, pad: [230, 16], grav: 380,
+  objectives: [{ id: 'radio', text: 'Knock down the film-set masts', need: 3, req: true }, { id: 'boss', text: 'Stop The Director', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+  intel: ['Call sheet: scene 1, the moon landing. Scene 2, say it was faked.', 'Prop list: one flag, one wind machine to make it wave.', 'Note: the real base is next door. Do not let the extras see it.'] });
+const MOON = LEVELS.length + 1;
+const levelDef = (n) => LEVELS[n] || EXTRA[n - LEVELS.length];
+const LV = () => levelDef(level);
+const SIEGE = LEVELS.length; // index of the Lab Siege level
+let mode = 'campaign'; // campaign, siege, rush or moon
+// Moon Base: low gravity, craters, a fake film set next to a real base, The Director at the end
+function buildMoon({ fill, ground, sp, bgFill, dc, lamp }) {
+  ground(0, 30, 16); dc('sign', 6, { text: 'TRANQUILITY BASE' }); sp('guncrate', 10); sp('itemcrate', 13); sp('grunt', 22); sp('dog', 26);
+  ground(31, 80, 16); dc('sign', 34, { text: 'FAKE MOON SET' });
+  sp('target', 40, 0, { skin: 'radio' }); sp('target', 58, 0, { skin: 'radio' }); sp('target', 74, 0, { skin: 'radio' });
+  fill(46, 12, 52, 15, BRICK); fill(48, 13, 50, 15, EMPTY); fill(47, 13, 47, 15, CRATE);
+  sp('cage', 49, 13); sp('pickup', 50, 13, { item: 'intel' }); sp('shield', 44); sp('grunt', 55); sp('jetpack', 62); sp('medic', 66); sp('alarm', 70);
+  sp('flag', 79);
+  ground(81, 130, 16); // crater field: big low-gravity jumps
+  for (const [c0, c1] of [[86, 91], [98, 104], [112, 118]]) fill(c0, 16, c1, 18, EMPTY);
+  sp('jetpack', 95); sp('jetpack', 108); sp('rocketeer', 106); sp('pickup', 115, 0, { item: 'intel' }); sp('strike', 122); sp('brute', 126);
+  sp('flag', 129);
+  ground(131, 175, 16); // base modules
+  fill(138, 10, 152, 15, STEEL); fill(140, 12, 150, 15, EMPTY); fill(138, 13, 138, 15, CRATE); fill(139, 13, 139, 15, EMPTY); fill(152, 13, 152, 15, CRATE); fill(151, 13, 151, 15, EMPTY);
+  bgFill(139, 12, 151, 15, BG_BRICK); fill(137, 10, 137, 15, LADDER);
+  sp('cage', 145, 12); sp('heavy', 148, 12); sp('sniper', 145); sp('cage', 160); sp('pickup', 163, 0, { item: 'intel' }); sp('flamer', 166); sp('mechsuit', 133);
+  lamp(143, 11); lamp(148, 11);
+  sp('flag', 174);
+  fill(176, 16, 225, 17, DIRT); fill(176, 18, 235, 21, STEEL); // the sound stage
+  fill(186, 11, 190, 11, STEEL); fill(185, 11, 185, 15, LADDER); fill(210, 11, 214, 11, STEEL); fill(215, 11, 215, 15, LADDER);
+  fill(226, 0, 227, 15, STEEL); ground(228, 235, 16);
+  sp('director', 200, 0, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  dc('sign', 178, { text: 'QUIET ON SET' });
+}
+// the Lab Siege arena: a walled yard with ledges, a high platform, ladders and springs
+function buildSiege({ fill, ground, sp, bgFill, dc, lamp }) {
+  ground(0, 60, 16); fill(59, 0, 60, 15, STEEL); fill(61, 0, 235, 21, STEEL);
+  fill(8, 11, 14, 11, STEEL); fill(15, 11, 15, 15, LADDER);
+  fill(24, 8, 34, 8, STEEL); fill(23, 8, 23, 15, LADDER);
+  fill(44, 11, 50, 11, STEEL); fill(43, 11, 43, 15, LADDER);
+  fill(18, 14, 18, 15, CRATE); fill(40, 14, 41, 15, CRATE); fill(53, 14, 54, 15, BRICK);
+  sp('spring', 20); sp('spring', 38); sp('barrel', 10); sp('propane', 47); sp('barrel', 52); sp('itemcrate', 29, 0); sp('guncrate', 33, 0);
+  dc('sign', 4, { text: 'LAB SIEGE' }); dc('sandbags', 26); dc('palm', 56, { lean: -1 });
+}
 const ENDING = 'King Citrus is juiced and the Anti-Science League has scattered. The world goes back to evidence, vaccines and round planets. Science wins.';
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
@@ -748,7 +914,7 @@ function damageTile(c, r, d) {
 function breakTile(c, r) {
   const i = r * LW + c, v = tiles[i];
   if (!isSolidT(v)) return;
-  tiles[i] = EMPTY; decals.delete(i); shk[i] = 0; miniDirty = true;
+  tiles[i] = EMPTY; decals.delete(i); shk[i] = 0; miniDirty = true; career.blocks++;
   const cols = TILE_COL[v];
   for (let k = 0; k < 4; k++) chunk(c * T + rand(3, 13), r * T + rand(3, 13), rand(-110, 110), rand(-230, -40), cols[k % 2]);
   part(c * T + 8, r * T + 8, rand(-10, 10), rand(-30, -10), '#4b4766', rand(0.4, 0.8), rand(3, 5), 0, 'smoke');
@@ -1024,10 +1190,108 @@ function pauseMenu() {
 let state = 'title', paused = false;
 let ents, bullets, parts, fx, P, boss, chopper, unlocked, lives, stats, checkpoint, slowT, shake, banner, endT;
 let ceasefire = 0; // seconds left of the quiet start of a mission
+// ---- trophies: unlocked once, kept in this browser; counters add up across every game you play
+const ACH = [
+  ['first', 'FIRST BLOOD', 'Defeat a quack'], ['combo10', 'COMBO KING', 'Reach a x10 combo'], ['demo', 'DEMOLITION', 'Break 500 blocks'],
+  ['pound', 'GROUND POUNDER', 'Land 25 ground pounds'], ['mech', 'MECH PILOT', 'Defeat 25 quacks from a mech'], ['rescue', 'BROS BEFORE QUACKS', 'Free 10 scientists'],
+  ['intel', 'BOOKWORM', 'Find 15 intel files'], ['flawless', 'UNTOUCHABLE', 'Finish a mission without losing a bro'], ['speed', 'SPEEDRUNNER', 'Finish a mission in under 3 minutes'],
+  ['campaign', 'SCIENCE WINS', 'Beat the campaign'], ['allbros', 'FULL ROSTER', 'Free every bro in one campaign run'], ['siege5', 'HOLD THE LINE', 'Reach wave 5 in Lab Siege'],
+  ['siege15', 'LAST LAB STANDING', 'Reach wave 15 in Lab Siege'], ['rush', 'BOSS RUSHER', 'Clear the Boss Rush'], ['moon', 'MOONWALKER', 'Clear the Moon Base'],
+  ['pyro', 'PYROMANIAC', 'Set 30 quacks on fire'], ['strike', 'CALL IT IN', 'Call 5 airstrikes'], ['guns', 'BORROWED GUNS', 'Defeat 50 quacks with pickup guns'], ['drones', 'CAMERA SHY', 'Down 10 camera drones'],
+];
+let trophies = {}, career = { blocks: 0, pounds: 0, mech: 0, rescues: 0, intel: 0, burns: 0, strikes: 0, guns: 0, drones: 0 }, toast = null, careerT = 0;
+try { trophies = JSON.parse(localStorage.getItem('sciencebros.trophies') || '{}'); Object.assign(career, JSON.parse(localStorage.getItem('sciencebros.career') || '{}')); } catch (e) { /* storage blocked */ }
+function unlock(id) {
+  if (trophies[id]) return;
+  trophies[id] = Date.now(); const a = ACH.find((x) => x[0] === id);
+  toast = { name: a ? a[1] : id, t: 3 }; sfx('rescue');
+  try { localStorage.setItem('sciencebros.trophies', JSON.stringify(trophies)); } catch (e) { /* storage blocked */ }
+}
+function checkCareer() { // counter trophies, checked about once a second
+  const goals = [['demo', 'blocks', 500], ['pound', 'pounds', 25], ['mech', 'mech', 25], ['rescue', 'rescues', 10], ['intel', 'intel', 15], ['pyro', 'burns', 30], ['strike', 'strikes', 5], ['guns', 'guns', 50], ['drones', 'drones', 10]];
+  for (const [id, k, n] of goals) if (career[k] >= n) unlock(id);
+  try { localStorage.setItem('sciencebros.career', JSON.stringify(career)); } catch (e) { /* storage blocked */ }
+}
+function drawTrophies(t) {
+  text('TROPHIES ' + Object.keys(trophies).length + ' / ' + ACH.length, VW / 2, 24, 16, '#a6d854', 'center');
+  ACH.forEach(([id, name, desc], i) => {
+    const col = i % 2, row = (i / 2) | 0, x = 20 + col * 230, y = 44 + row * 23, got = !!trophies[id];
+    ctx.fillStyle = got ? '#c9a227' : '#2a3160'; ctx.fillRect(x, y - 7, 8, 8); if (got) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(x + 2, y - 5, 4, 4); }
+    text(name, x + 13, y, 8, got ? '#f2c94c' : '#5c6480'); text(desc, x + 13, y + 10, 8, got ? '#e7eaf6' : '#5c6480');
+  });
+  if (Math.floor(t * 2) % 2) text('PRESS ENTER TO GO BACK', VW / 2, 262, 8, '#e7eaf6', 'center');
+}
+// ---- Lab Siege: endless waves; a boss every fifth wave; supplies between waves; a bro every third wave
+const siege = { wave: 0, queue: [], spawnT: 0, breakT: 0, best: 0 };
+try { siege.best = +localStorage.getItem('sciencebros.siege') || 0; } catch (e) { /* storage blocked */ }
+function startWave(n) {
+  siege.wave = n; siege.queue = []; siege.spawnT = 0.5; if (n >= 5) unlock('siege5'); if (n >= 15) unlock('siege15');
+  const pool = ['grunt', 'grunt', 'dog'];
+  if (n >= 2) pool.push('shield', 'scout'); if (n >= 3) pool.push('grenadier', 'bomber'); if (n >= 4) pool.push('jetpack', 'rocketeer');
+  if (n >= 5) pool.push('camdrone'); if (n >= 6) pool.push('heavy', 'flamer', 'medic'); if (n >= 7) pool.push('sniper', 'brute', 'guru'); if (n >= 8) pool.push('preacher', 'mortar');
+  for (let k = 0; k < Math.min(30, 4 + n * 2); k++) siege.queue.push(pool[(Math.random() * pool.length) | 0]);
+  if (n % 5 === 0) siege.queue.unshift(['tank', 'boss', 'kopter'][(n / 5) % 3]);
+  showBanner('WAVE ' + n, n % 5 === 0 ? 'boss wave' : siege.queue.length + ' quacks incoming', 1.6); sfx('siren');
+}
+function updateSiege(dt) {
+  const alive = ents.filter((e) => foe(e) || (BOSS[e.type] && !e.dead)).length;
+  if (siege.breakT > 0) { siege.breakT -= dt; if (siege.breakT <= 0) startWave(siege.wave + 1); return; }
+  if (siege.queue.length) {
+    siege.spawnT -= dt;
+    if (siege.spawnT <= 0 && alive < Math.min(12, 5 + siege.wave / 2)) {
+      siege.spawnT = 0.55;
+      const type = siege.queue.shift();
+      if (BOSS[type]) { const b = makeEnt({ type, c: 30, from: 0, ax0: 2, ax1: 58, trig: 0, final: false }); ents.push(b); return; }
+      const fromTop = type === 'jetpack' || Math.random() < 0.25, side = Math.random() < 0.5;
+      const q = makeEnt({ type: fromTop && type === 'grunt' ? 'para' : type, c: fromTop ? rand(4, 55) : side ? 2 : 57, y: fromTop ? cam.y - 20 : 15 * T - 16 });
+      q.aware = true; q.provoked = true; q.react = 0.8; q.face = P.x > q.x ? 1 : -1; ents.push(q);
+    }
+  } else if (alive === 0) { // wave cleared: a breather, supplies, sometimes a new bro
+    siege.breakT = 6; addScore(500 * siege.wave, false);
+    showBanner('WAVE ' + siege.wave + ' CLEARED', siege.wave % 3 === 0 ? '+1 bro, supplies dropping' : 'supplies dropping', 2);
+    if (siege.wave % 3 === 0) lives++;
+    for (const k of [0, 1]) { const pk = spawnPickup(rand(8, 52) * T, cam.y + 10); pk.item = ['gun', 'shield', 'jetpack', 'overclock', 'special', 'strike'][(Math.random() * 6) | 0]; pk.gun = Object.keys(GUNS)[(Math.random() * 4) | 0]; pk.keep = true; }
+    if (siege.wave > siege.best) { siege.best = siege.wave; try { localStorage.setItem('sciencebros.siege', String(siege.best)); } catch (e) { /* storage blocked */ } }
+  }
+}
+// ---- Boss Rush: every boss in a row against the clock
+const RUSH = [[0, 179, 'boss'], [1, 85, 'kopter'], [1, 178, 'crawler'], [2, 179, 'tank'], [3, 183, 'engine'], [4, 167, 'blimp'], [5, 178, 'kopter'], [6, 179, 'crawler'], [7, 178, 'tank'], [8, 178, 'boss'], [9, 178, 'director'], [LEVELS.length - 1, 181, 'citrus']];
+const rush = { i: 0, t: 0, nextT: 0, best: 0 };
+try { rush.best = +localStorage.getItem('sciencebros.rush') || 0; } catch (e) { /* storage blocked */ }
+function loadRush(i) {
+  rush.i = i; rush.nextT = 0;
+  const [lvl, col, type] = RUSH[i];
+  startLevel(lvl); objectives = []; ceasefire = 0;
+  ents = ents.filter((e) => e.type === type || e.type === 'flag'); boss = ents.find((e) => e.type === type);
+  P.x = col * T + 3; P.y = surf(col, 0) * T - 16; P.inv = 2; checkpoint = { x: P.x, y: P.y };
+  showBanner('BOSS ' + (i + 1) + ' / ' + RUSH.length, bname(boss), 1.6);
+}
+function updateRush(dt) {
+  rush.t += dt;
+  if (rush.nextT > 0) {
+    rush.nextT -= dt;
+    if (rush.nextT <= 0) {
+      if (rush.i + 1 < RUSH.length) loadRush(rush.i + 1);
+      else { state = 'modedone'; unlock('rush'); if (!rush.best || rush.t < rush.best) { rush.best = rush.t; try { localStorage.setItem('sciencebros.rush', String(rush.best)); } catch (e) { /* storage blocked */ } } }
+    }
+  }
+}
+// start one of the title menu's modes; the bonus modes give you every bro
+function startMode(m) {
+  mode = m; newGame();
+  if (m !== 'campaign') unlocked = BROS.map((b) => b.id);
+  if (m === 'campaign') { level = 0; state = 'map'; mapT = 0; return; }
+  if (m === 'siege') { startLevel(SIEGE); siege.wave = 0; siege.queue = []; siege.breakT = 4; P.bro = BRO[unlocked[(Math.random() * unlocked.length) | 0]]; }
+  if (m === 'rush') { lives = 5; rush.t = 0; loadRush(0); }
+  if (m === 'moon') { startLevel(MOON); applyGear(); }
+  state = 'play';
+}
+const TITLE_MENU = [['CAMPAIGN', 'campaign'], ['LAB SIEGE', 'siege'], ['BOSS RUSH', 'rush'], ['MOON BASE', 'moon'], ['TROPHIES', 'trophies']];
+let titleSel = 0;
 let bodies = [], decals = new Map(), hitStop = 0, combo = { n: 0, t: 0, pop: 0 };
 // kills inside 1.6 s of each other chain into a combo that multiplies the points
 function addScore(pts, kill = true) {
-  if (kill) { stats.kills++; combo.n = combo.t > 0 ? combo.n + 1 : 1; combo.t = 1.6; combo.pop = 0.25; stats.best = Math.max(stats.best, combo.n); pts *= combo.n; }
+  if (kill) { unlock('first'); if (P.mech) career.mech++; if (P.alt) career.guns++; stats.kills++; combo.n = combo.t > 0 ? combo.n + 1 : 1; if (combo.n >= 10) unlock('combo10'); combo.t = 1.6; combo.pop = 0.25; stats.best = Math.max(stats.best, combo.n); pts *= combo.n; }
   stats.score += pts;
 }
 const cam = { x: 0, y: 0 };
@@ -1122,16 +1386,17 @@ function showBanner(text, sub = '', dur = 2) { banner = { text, sub, t: dur, max
 const floatText = (x, y, txt, col = '#f2c94c') => fx.push({ kind: 'text', x, y, txt, col, t: 1.1, max: 1.1 });
 
 // quacks share one brain (patrol, spot, alert, attack); each type adds its own attack
-const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, jetpack: 1, sniper: 1, flamer: 1, brute: 1, medic: 1 };
-const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1 };
-const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK', engine: 'SUCCUSSION ENGINE', blimp: 'FLAT EARTH ZEPPELIN', citrus: 'KING CITRUS' };
+const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, jetpack: 1, sniper: 1, flamer: 1, brute: 1, medic: 1, preacher: 1, mortar: 1 };
+const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1, director: 1 };
+const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK', engine: 'SUCCUSSION ENGINE', blimp: 'FLAT EARTH ZEPPELIN', citrus: 'KING CITRUS', director: 'THE DIRECTOR' };
 const isQuack = (e) => QUACK[e.type] === 1;
+const bname = (e) => e.bossName || BOSS_NAME[e.type];
 const DIMS = {
-  jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2],
+  jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2], preacher: [10, 15, 3], mortar: [12, 15, 3], camdrone: [10, 8, 1],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
   cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], peaplant: [8, 10, 1], guncrate: [12, 12, 1],
-  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
+  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], director: [30, 22, 110], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -1150,6 +1415,7 @@ function makeEnt(s) {
   if (s.type === 'turret') { e.cool = rand(0.5, 1.5); e.burst = 0; e.ang = Math.PI; }
   if (s.type === 'bomber') { e.run = false; e.fuse = 2.6; }
   if (s.type === 'cage') e.bro = s.bro;
+  if (s.type === 'camdrone') { e.home = s.y !== undefined ? clamp(e.y, 5 * T, 11 * T) : e.y - 56; e.y = e.home; e.dirx = Math.random() < 0.5 ? 1 : -1; e.dive = false; e.lockT = 0; e.fuse = 4; }
   if (s.type === 'pickup') { e.item = s.item; e.keep = !!s.item; }
   if (s.type === 'itemcrate') e.item = s.item;
   if (s.type === 'guncrate') e.gun = s.gun;
@@ -1157,12 +1423,17 @@ function makeEnt(s) {
   if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; }
   if (s.type === 'flag') e.on = false;
   if (BOSS[s.type]) {
-    Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate });
+    Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate, bossName: s.name, bossSub: s.sub });
+    if (s.hpMul) e.hp = e.max = Math.round(e.max * s.hpMul);
     if (s.type === 'boss') e.wp = 0;
     if (s.type === 'tank') { e.ang = -Math.PI / 2; e.tread = 0; }
     if (s.type === 'blimp') { // four gondolas hang under the gas bag; they must go before the bag takes damage
       e.y = e.fy - 160; e.vats = [14, 40, 70, 96].map((dx) => ({ dx, x: 0, y: 0, w: 16, h: 12, hp: 14, max: 14, dead: false, flash: 0, cool: rand(0.5, 2) }));
       e.dir = -1; e.bombT = 2; e.paraT = 7; e.rot = 0;
+    }
+    if (s.type === 'director') { // a camera head on a crane; three studio lights on stands guard it
+      e.y = 3 * T; e.vats = [192, 202, 218].map((c) => ({ x: c * T - 2, y: 16 * T - 28, w: 20, h: 28, hp: 18, max: 18, dead: false, flash: 0 }));
+      e.beamX = e.x; e.lock = 0; e.cueT = 6; e.bagT = 3; e.dir = -1;
     }
     if (s.type === 'citrus') { e.state = 'idle'; e.spin = 0; e.dizzy = 0; e.face = -1; }
     if (s.type === 'engine') { // the core sits on the gantry platform between two vats; a third vat stands on the floor
@@ -1189,7 +1460,7 @@ function objHit(id, n = 1) {
   if (extractPending && reqDone()) { extractPending = false; callChopper(); }
 }
 function callChopper() {
-  const [pc, pr] = LEVELS[level].pad;
+  const [pc, pr] = LV().pad;
   chopper = { x: LW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
   showBanner('GET TO THE CHOPPER', 'Extraction pad, east side', 4);
 }
@@ -1197,7 +1468,7 @@ function callChopper() {
 function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; dossier = []; }
 function startLevel(n) {
   level = n;
-  buildTiles(THEMES[LEVELS[n].theme]);
+  buildTiles(THEMES[levelDef(n).theme]);
   buildLevel();
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
@@ -1205,17 +1476,18 @@ function startLevel(n) {
   const pool = BROS.map((b) => b.id).filter((id) => !unlocked.includes(id)).sort(() => Math.random() - 0.5);
   for (const c of ents) if (c.type === 'cage') c.bro = pool.length ? pool.pop() : BROS[(Math.random() * BROS.length) | 0].id;
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
-  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; ceasefire = 10;
+  G = levelDef(n).grav || 900;
+  objectives = (levelDef(n).objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; ceasefire = levelDef(n).ceasefire !== undefined ? levelDef(n).ceasefire : 10;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
   cam.x = 0; cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
-  showBanner('LEVEL ' + (n + 1) + ' · ' + LEVELS[n].name, LEVELS[n].sub, 3);
+  showBanner((n < LEVELS.length ? 'LEVEL ' + (n + 1) + ' · ' : '') + levelDef(n).name, levelDef(n).sub, 3);
 }
 function init() { newGame(); startLevel(0); }
 
 // ---------------------------------------------------------------- combat
-const HITTABLE = { guncrate: 1, mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1 };
+const HITTABLE = { preacher: 1, mortar: 1, camdrone: 1, guncrate: 1, mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1, director: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
 const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, guncrate: 1, mine: 1, alarm: 1, target: 1 };
 const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
@@ -1234,6 +1506,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
     return;
   }
   if (e.dizzy > 0) dmg *= 2; // King Citrus takes double while he sees stars
+  if (e.fervor > 0) dmg *= 0.6;
   e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; // shoot one during the ceasefire and that one fights back
   if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
@@ -1249,7 +1522,7 @@ function lightPropane(e, kx, fuse) {
   if (e.lit) { e.fuse = Math.min(e.fuse, fuse); return; }
   e.lit = true; e.fuse = fuse; e.dirx = Math.sign(kx) || (Math.random() < 0.5 ? -1 : 1); sfx('hiss');
 }
-function setBurn(e) { if (e.burn > 0 || e.dead || !isQuack(e) || e.type === 'flamer') return; e.burn = rand(1.6, 2.2); e.aware = true; e.react = 99; sfx('scream'); }
+function setBurn(e) { if (e.burn > 0 || e.dead || !isQuack(e) || e.type === 'flamer') return; career.burns++; e.burn = rand(1.6, 2.2); e.aware = true; e.react = 99; sfx('scream'); }
 function spawnPickup(x, y, strike = false) {
   const p = makeEnt({ type: 'pickup', c: 0, y: y - 4 });
   p.x = x - 4; p.vy = -220; p.kx = rand(-40, 40); p.strike = strike;
@@ -1277,6 +1550,7 @@ function killEnemy(e, how = 'shot') {
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
   if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, 'env', 3); return; }
+  if (e.type === 'camdrone') { career.drones++; explode(cx, cy, 30, 5, 'env', 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
   if (e.type === 'turret') {
     sfx('hit');
     for (let i = 0; i < 9; i++) chunk(cx + rand(-6, 6), cy + rand(-4, 4), rand(-150, 150), rand(-260, -60), ['#8b93ad', '#5c6480', '#e6e2f0'][i % 3]);
@@ -1309,6 +1583,7 @@ function killEnemy(e, how = 'shot') {
 }
 // a jet screams over from behind you and carpet-bombs the ground ahead
 function airstrike() {
+  career.strikes++;
   const dir = P.face, x0 = P.x + dir * 40;
   fx.push({ kind: 'jet', x: P.x - dir * 300, y: cam.y + 26, dir, from: Math.min(x0, x0 + dir * 420), to: Math.max(x0, x0 + dir * 420), drop: 0, t: 3, max: 3 });
   showBanner('AIRSTRIKE INBOUND', 'keep your head down', 1.6); sfx('jet');
@@ -1322,7 +1597,7 @@ function givePickup(item, e) {
     case 'overclock': P.over = 9; showBanner('OVERCLOCK', 'double fire rate, 9 s', 1.2); break;
     case 'jetpack': P.jet = 7; showBanner('JETPACK', 'hold jump in the air to fly, 7 s', 1.2); break;
     case 'life': lives++; floatText(e.x + 4, e.y - 6, '+1 BRO', '#e78ac3'); break;
-    case 'intel': objHit('intel'); { const lines = LEVELS[level].intel || []; const k = Math.min(lines.length - 1, (objective('intel') || { n: 1 }).n - 1); if (lines[k]) { showBanner('INTEL FOUND', lines[k], 3.2); dossier.push(lines[k]); } } break;
+    case 'intel': career.intel++; objHit('intel'); { const lines = LV().intel || []; const k = Math.min(lines.length - 1, (objective('intel') || { n: 1 }).n - 1); if (lines[k]) { showBanner('INTEL FOUND', lines[k], 3.2); dossier.push(lines[k]); } } break;
     default: P.spec = Math.min(3, P.spec + 1); showBanner('+1 SPECIAL', P.bro.special, 1);
   }
 }
@@ -1336,12 +1611,14 @@ function bossDying(e) {
   e.doomed = true; // from here on its own death blasts can't restart the sequence
   e.dying = e.type === 'kopter' ? 9 : 3.2; e.boomT = 0;
   if (e.type !== 'kopter') e.vx = 0;
-  showBanner(BOSS_NAME[e.type] + ' DOWN', { boss: 'diluted to zero', kopter: 'flushed out', crawler: 'bad vibes only' }[e.type], 2.5);
+  showBanner(bname(e) + ' DOWN', { boss: 'diluted to zero', kopter: 'flushed out', crawler: 'bad vibes only' }[e.type], 2.5);
 }
 function bossDown(e) {
   e.dead = true; addScore(5000);
   if (e.gate) { const [c0, c1, r0, r1] = e.gate; for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) breakTile(c, r); }
   objHit(e.final ? 'boss' : e.type);
+  if (mode === 'rush') { rush.nextT = 2.5; showBanner(bname(e) + ' DOWN', 'next boss coming', 2); return; }
+  if (mode === 'siege') { showBanner('BOSS DOWN', 'keep holding the lab', 2); return; }
   if (e.final) {
     if (reqDone()) callChopper();
     else { extractPending = true; showBanner('NOT DONE YET', 'Finish the objectives, then the chopper comes', 3); objShowT = 6; }
@@ -1671,7 +1948,7 @@ function useSpecial() {
     case 'hypatia': for (let k = 0; k < 6; k++) bullets.push({ x: P.x + 5, y: P.y + 8, vx: 0, vy: 0, owner: 'p', dmg: 2, tdmg: 0.6, life: 2.5, kind: 'orbit', pierce: 99, ang: k * Math.PI / 3, rad: 8 }); break;
     case 'feynman': for (let k = 0; k < 20; k++) { const a = k * Math.PI / 10; bullets.push({ x: P.x + 5, y: P.y + 8, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, owner: 'p', dmg: 2, tdmg: 0.5, life: 0.7, kind: 'photon', pierce: 1 }); } break;
     case 'fleming': for (const e of ents) if (isQuack(e) && !e.dead && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.sick = 8; floatText(e.x + 5, e.y - 6, 'ACHOO', '#a6d854'); } fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#7bc043' }); break;
-    case 'sagan': for (let k = 0; k < 40; k++) setTimeoutGame(() => bullets.push({ x: cam.x + rand(10, VW - 10), y: cam.y - 6, vx: rand(-30, 30), vy: 520, owner: 'p', dmg: 3, tdmg: 0.5, life: 1.2, kind: 'star', pierce: 2 }), k * 0.04); break;
+    case 'sagan': for (let k = 0; k < 40; k++) setTimeoutGame(() => { const seen = ents.filter((e) => foe(e) && Math.abs(center(e)[0] - cam.x - VW / 2) < VW / 2); const aim = k % 3 && seen.length ? center(seen[k % seen.length])[0] + rand(-5, 5) : cam.x + rand(10, VW - 10); bullets.push({ x: aim, y: cam.y - 6, vx: rand(-30, 30), vy: 520, owner: 'p', dmg: 3, tdmg: 0.5, life: 1.2, kind: 'star', pierce: 2 }); }, k * 0.04); break; // two of every three stars fall on a quack you can see
     case 'wegener': // the ground opens under every quack on screen
       shake += 8; sfx('roar');
       for (const e of ents) if (foe(e) && !BOSS[e.type] && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) {
@@ -1760,7 +2037,8 @@ function step(dt) {
   if (pressed.mute) muted = !muted;
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
-      if (state === 'title' || state === 'done') { newGame(); level = 0; state = 'map'; mapT = 0; }
+      if (state === 'title') { const m = TITLE_MENU[titleSel][1]; if (m === 'trophies') state = 'trophies'; else startMode(m); }
+      else if (state === 'done' || state === 'modedone' || state === 'trophies' || (state === 'over' && (mode === 'siege' || mode === 'rush'))) { state = 'title'; mode = 'campaign'; init(); state = 'title'; }
       else if (state === 'map') { state = 'brief'; }
       else if (state === 'brief') { startLevel(level); applyGear(); state = 'play'; }
       else if (state === 'win') { level++; markReached(level); state = 'map'; mapT = 0; } // bros and reserve carry over
@@ -1768,6 +2046,7 @@ function step(dt) {
       sfx('flag');
     }
     mapT += dt;
+    if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) sfx('flag'); }
     if (state === 'brief') briefInput();
     if (state === 'map') mapInput();
     attract(dt);
@@ -1784,6 +2063,9 @@ function step(dt) {
     return;
   }
   stats.time += dt; objShowT = Math.max(0, objShowT - dt);
+  if (mode === 'siege' && ceasefire <= 0) updateSiege(dt);
+  if (mode === 'rush') updateRush(dt);
+  careerT -= dt; if (careerT <= 0) { careerT = 1; checkCareer(); }
   if (ceasefire > 0) { ceasefire -= dt; if (ceasefire <= 0) { showBanner('GO LOUD', 'the quacks are awake now', 1.2); sfx('alert'); } }
   combo.t -= dt; combo.pop = Math.max(0, combo.pop - dt);
   const edt = slowT > 0 ? dt * 0.3 : dt;
@@ -1928,6 +2210,7 @@ function updatePlayer(dt) {
 }
 // the slam lands: smash the floor (keep drilling through soft blocks, up to 4 layers), throw quacks and bodies
 function groundPound() {
+  career.pounds++;
   const cx = P.x + P.w / 2, fy = P.y + P.h + 2, r = Math.floor(fy / T);
   shake = Math.min(12, shake + 5); hitStop = Math.max(hitStop, 0.04); sfx('thud'); sfx('punch'); rumble(0.6, 160);
   fx.push({ kind: 'ring', x: cx, y: fy - 2, r: 30, t: 0.25, max: 0.25 });
@@ -1958,7 +2241,7 @@ function playerSees(e, rangeX, rangeY) {
 function updateEnt(e, dt) {
   e.flash -= dt; if (e.flinch > 0) e.flinch -= dt;
   if (!BOSS[e.type]) e.t += dt; // bosses use t as their own countdown
-  const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone' && e.type !== 'icicle';
+  const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone' && e.type !== 'icicle' && e.type !== 'camdrone';
   if (ground) {
     e.vy = Math.min(e.vy + G * dt, 520);
     e.kx = approach(e.kx, 0, 600 * dt);
@@ -1967,6 +2250,7 @@ function updateEnt(e, dt) {
   if (isQuack(e)) updateQuack(e, dt);
   else switch (e.type) {
     case 'dog': updateDog(e, dt); break;
+    case 'camdrone': updateCamDrone(e, dt); break;
     case 'bomber': {
       if (e.punched) { // punted: fly with the punch, go off on landing or when the fuse runs out
         e.vx = e.kx; e.fuse -= dt;
@@ -2087,6 +2371,7 @@ function updateEnt(e, dt) {
     case 'engine': updateEngine(e, dt); break;
     case 'blimp': updateBlimp(e, dt); break;
     case 'citrus': updateCitrus(e, dt); break;
+    case 'director': updateDirector(e, dt); break;
     case 'icicle': updateIcicle(e, dt); break;
   }
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > LH * T) && !e.dead) {
@@ -2165,7 +2450,8 @@ function updateQuack(e, dt) {
   if (e.type === 'jetpack') { flyJetpack(e, dt); return; }
   if (e.type === 'brute' && e.charge > 0) { bruteCharge(e, dt); return; }
   if (e.type === 'medic' && medicWork(e, dt)) return;
-  const S = { rocketeer: [300, 30], grenadier: [240, 90], guru: [240, 120], scout: [230, 40], sniper: [420, 70], brute: [200, 30] }[e.type] || [230, 26];
+  if (e.fervor > 0) { e.fervor -= dt; e.cool -= dt * 0.7; } // preached at: reloads faster
+  const S = { preacher: [260, 90], mortar: [420, 160], rocketeer: [300, 30], grenadier: [240, 90], guru: [240, 120], scout: [230, 40], sniper: [420, 70], brute: [200, 30] }[e.type] || [230, 26];
   const sees = playerSees(e, S[0], S[1]) && (Math.sign(P.x - e.x) === e.face || e.aware || Math.abs(P.x - e.x) < 50);
   let walk = 0;
   if (sees) {
@@ -2182,6 +2468,39 @@ function updateQuack(e, dt) {
   }
   e.vx = walk + e.kx;
   moveBody(e, dt);
+}
+// camera drone: drifts on patrol filming; once it has you in frame for a moment it dives at you and goes off
+function updateCamDrone(e, dt) {
+  const [ex, ey] = center(e), [px, py] = center(P);
+  if (!e.dive) {
+    if (solidPx(ex + e.dirx * 10, ey) || Math.abs(ex - (e.home0x ?? (e.home0x = ex))) > 60) e.dirx = solidPx(ex + e.dirx * 10, ey) ? -e.dirx : Math.sign(e.home0x - ex);
+    e.vx = e.dirx * 26; e.vy = (e.home + Math.sin(e.t * 3) * 3 - e.y) * 3; e.face = e.dirx;
+    if (playerSees(e, 250, 140)) {
+      if (e.lockT === 0) { sfx('alert'); floatText(ex, ey - 8, 'REC', '#ff3a2a'); }
+      e.lockT += dt; if (e.lockT > 0.7) e.dive = true;
+    } else e.lockT = 0;
+  } else {
+    const a = Math.atan2(py - ey, px - ex);
+    e.vx = approach(e.vx, Math.cos(a) * 175, 420 * dt); e.vy = approach(e.vy, Math.sin(a) * 175, 420 * dt);
+    e.face = Math.sign(e.vx) || e.face; e.fuse -= dt;
+    if (Math.random() < 0.5) part(ex - Math.sign(e.vx) * 5, ey, rand(-10, 10), rand(-10, 10), '#4b4766', 0.4, 2, 0, 'smoke');
+  }
+  e.kx = approach(e.kx, 0, 300 * dt);
+  e.x += (e.vx + e.kx) * dt; e.y += e.vy * dt;
+  if (e.dive && ((P.alive && overlap(e, P)) || solidPx(ex, ey) || e.fuse <= 0)) { e.hp = 0; killEnemy(e); }
+}
+// preacher: a sermon powers up every quack near him (faster fire, tougher skin) until he stops
+function preach(e) {
+  let n = 0;
+  for (const o of ents) if (o !== e && isQuack(o) && !o.dead && Math.hypot(o.x - e.x, o.y - e.y) < 150) { o.fervor = 6; o.aware = true; o.react = Math.min(o.react || 0.4, 0.4); o.face = P.x > o.x ? 1 : -1; n++; }
+  fx.push({ kind: 'ring2', x: e.x + 5, y: e.y + 4, t: 0.5, max: 0.5 }); floatText(e.x + 5, e.y - 10, n ? 'AMEN!' : 'HALLELUJAH', '#f2c94c');
+}
+// mortar crew: marks the ground where you stand, then a shell drops on that spot
+function fireMortar(e) {
+  const [ex, ey] = center(e), tx = e.ax, ty = e.ay, ft = 0.9 + Math.abs(tx - ex) / 600;
+  bullets.push({ x: ex, y: ey - 6, vx: (tx - ex) / ft, vy: (ty - (ey - 6) - 0.5 * G * ft * ft) / ft, grav: G, owner: 'e', kind: 'bomb', life: ft + 1.5, explode: 30, tp: 2, dmg: 5 });
+  sfx('rocket'); e.kx -= e.face * 30;
+  for (let i = 0; i < 6; i++) part(ex + e.face * 6, ey - 8, rand(-30, 30), rand(-80, -20), '#4b4766', rand(0.4, 0.8), 3, 0, 'smoke');
 }
 // each quack's attack once it has spotted you; returns how fast it walks meanwhile
 function quackAttack(e, dt) {
@@ -2248,6 +2567,18 @@ function quackAttack(e, dt) {
     case 'medic': // no one to fix: plink at you with a pistol
       if (e.cool <= 0) { pill(mx, my, e.face * 150, 0); e.cool = rand(1.6, 2.4); e.atk = 0.15; }
       return dist < 90 ? -e.face * 30 : 0;
+    case 'preacher': // raise the book, then the sermon; keeps his distance
+      if (e.cool <= 0 && !e.chant) { e.chant = 1; sfx('horn'); }
+      if (e.chant > 0) { e.chant -= dt; e.atk = 0.2; if (e.chant <= 0) { preach(e); e.cool = rand(4, 5); e.chant = 0; } }
+      return dist < 110 ? -e.face * 30 : 0;
+    case 'mortar': // too close and he backs off; otherwise mark your spot and lob a shell on it
+      if (dist < 64) return -e.face * 42;
+      if (e.cool <= 0 && !e.aim) {
+        const [tx, ty] = center(P), c = Math.floor(tx / T); let r = Math.floor(ty / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++;
+        e.aim = 1.1; e.ax = tx; e.ay = r * T; fx.push({ kind: 'marker', x: tx, y: r * T, t: 1.1 + 0.9 + Math.abs(tx - ex) / 600, max: 2.4 }); sfx('alert');
+      }
+      if (e.aim > 0) { e.kneel = true; e.aim -= dt; if (e.aim <= 0) { fireMortar(e); e.cool = rand(3, 3.8); e.aim = 0; } }
+      return 0;
     case 'guru': // chant, then paratroopers drop in from above
       if (e.cool <= 0 && !e.chant) { e.chant = 1.1; sfx('horn'); }
       if (e.chant > 0) { e.chant -= dt; e.atk = 0.2; if (e.chant <= 0) { callParas(e); e.cool = rand(6, 8); e.chant = 0; } }
@@ -2370,7 +2701,7 @@ function updateDrone(e, dt) {
   e.cool = 0.22; e.aimA = a; sfx('shot');
 }
 function rescue(cage) {
-  cage.dead = true; lives++; stats.rescued++; addScore(1000, false); sfx('rescue'); objHit('cage');
+  cage.dead = true; lives++; stats.rescued++; career.rescues++; addScore(1000, false); sfx('rescue'); objHit('cage');
   if (!unlocked.includes(cage.bro)) unlocked.push(cage.bro);
   const bro = BRO[cage.bro];
   P.bro = bro; P.spec = 3; P.inv = 1; if (!P.mech) { P.x = cage.x + 3; P.y = cage.y; P.vy = -260; P.flip = 0.45; }
@@ -2478,7 +2809,7 @@ function drawBroMech(x, y, face, wp, onGround, vx, bro, flash, kick, punchT) {
 }
 
 // ---------------------------------------------------------------- bosses
-function activateBoss(b, sub) { b.active = true; showBanner(BOSS_NAME[b.type], sub, 3); sfx('roar'); }
+function activateBoss(b, sub) { b.active = true; showBanner(bname(b), b.bossSub || sub, 3); sfx('roar'); }
 // Homeopathitron: a walking pill mech. Walks, fires spreads, jumps for shockwaves, summons quacks;
 // below 40% it goes into overdose mode: faster, and fires homing missiles from its back
 function updateMech(b, dt) {
@@ -2982,13 +3313,64 @@ function drawCitrus(b, t) {
   // stubby arms
   ctx.fillStyle = '#f28a1a'; ctx.fillRect(cx - R - 4, cy + Math.round(Math.sin(t * 8) * 3), 5, 3); ctx.fillRect(cx + R - 1, cy - Math.round(Math.sin(t * 8) * 3), 5, 3);
 }
+// The Director: a camera on a crane. Its spotlight hunts you; stay in it and it shouts ACTION and fires.
+// It drops sandbags, calls in extras, and hides behind three studio lights. With the lights gone it swoops low.
+function updateDirector(b, dt) {
+  b.anim += dt; for (const v of b.vats) v.flash -= dt;
+  if (!b.active) { if (P.alive && P.x > b.trig * T) activateBoss(b, 'Quiet on set! We are faking a moon landing.'); return; }
+  if (b.dying > 0) {
+    b.dying -= dt; b.vy = (b.vy || 0) + 300 * dt; b.y = Math.min(b.y + b.vy * dt, 15 * T - b.h);
+    b.boomT -= dt; if (b.boomT <= 0) { b.boomT = 0.15; explode(b.x + rand(0, b.w), b.y + rand(0, b.h), 22, 0, 'p', 0); }
+    if (b.dying <= 0) { explode(b.x + b.w / 2, b.y + b.h / 2, 70, 0, 'p', 2); bossDown(b); if (b.bossName) showBanner('SHOW CANCELLED', 'no refunds', 3); else showBanner("THAT'S A WRAP", 'the landing was real', 3); }
+    return;
+  }
+  const exposed = b.vats.every((v) => v.dead);
+  b.x += b.dir * (exposed ? 90 : 50) * dt;
+  if (b.x < b.ax0 * T + 20) b.dir = 1; if (b.x + b.w > b.ax1 * T - 20) b.dir = -1;
+  b.y += ((exposed ? 9 * T : 3 * T) - b.y) * dt * 2;
+  // spotlight: drifts toward you; if you stay in it, it locks and shoots
+  const [px, py] = center(P);
+  b.beamX += clamp(px - b.beamX, -110 * dt, 110 * dt);
+  const inBeam = P.alive && Math.abs(px - b.beamX) < 16;
+  b.lock = inBeam ? b.lock + dt : Math.max(0, b.lock - dt * 2);
+  if (b.lock > 0.7) {
+    b.lock = 0; floatText(b.x + b.w / 2, b.y - 6, 'ACTION!', '#f2c94c'); sfx('sniper');
+    const a = Math.atan2(py - b.y - b.h, px - b.x - b.w / 2);
+    for (const k of exposed ? [-0.15, 0, 0.15] : [0]) bullets.push({ x: b.x + b.w / 2, y: b.y + b.h, vx: Math.cos(a + k) * 520, vy: Math.sin(a + k) * 520, owner: 'e', dmg: 1, tdmg: 0.5, life: 1.2, kind: 'slug' });
+  }
+  b.bagT -= dt;
+  if (b.bagT <= 0) { b.bagT = exposed ? 1.8 : 3; bullets.push({ x: px + rand(-20, 20), y: cam.y - 10, vx: 0, vy: 40, grav: G, owner: 'e', kind: 'rock', life: 5, dmg: 1 }); }
+  b.cueT -= dt;
+  if (b.cueT <= 0) { b.cueT = 8; floatText(b.x + b.w / 2, b.y - 6, 'CUE THE EXTRAS', '#e78ac3'); if (ents.filter((o) => o.type === 'para' && !o.dead).length < 4) for (const dx of [-60, 60]) { const q = makeEnt({ type: 'para', c: 0, y: cam.y - 20 }); q.x = clamp(px + dx, b.ax0 * T + 10, b.ax1 * T - 20); ents.push(q); } }
+}
+function drawDirector(b, t) {
+  if (b.dead || !b.active) return;
+  const x = Math.round(b.x), y = Math.round(b.y), fl = b.flash > 0;
+  ctx.fillStyle = '#25223a'; ctx.fillRect(b.ax0 * T, 2 * T, (b.ax1 - b.ax0) * T, 3); // crane rail
+  ctx.fillStyle = '#5c6480'; ctx.fillRect(x + b.w / 2 - 2, 2 * T, 4, Math.max(0, y - 2 * T)); // arm
+  // the spotlight cone down to the floor; red when it is about to fire
+  const lit = b.lock > 0.35;
+  ctx.globalAlpha = lit ? 0.22 + Math.sin(t * 40) * 0.08 : 0.12; ctx.fillStyle = lit ? '#ff6a4a' : '#fff6c2';
+  ctx.beginPath(); ctx.moveTo(x + b.w / 2, y + b.h); ctx.lineTo(b.beamX - 18, 15 * T); ctx.lineTo(b.beamX + 18, 15 * T); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y - 1, b.w + 2, b.h + 2);
+  ctx.fillStyle = fl ? '#fff' : '#3d3d46'; ctx.fillRect(x, y, b.w, b.h); // camera body
+  ctx.fillStyle = '#25223a'; ctx.beginPath(); ctx.arc(x + 8, y - 3, 6, 0, 7); ctx.arc(x + 20, y - 3, 6, 0, 7); ctx.fill(); // film reels
+  ctx.fillStyle = '#8b93ad'; ctx.fillRect(x + (b.dir > 0 ? b.w : -8), y + 6, 8, 10); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x + (b.dir > 0 ? b.w + 6 : -8), y + 8, 2, 6); // lens
+  ctx.fillStyle = Math.floor(t * 3) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(x + 3, y + 3, 3, 3); // recording light
+  for (const v of b.vats) { // studio lights on stands
+    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 8, v.y + 14, 4, 14); continue; }
+    ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 9, v.y + 10, 2, 18); ctx.fillRect(v.x + 3, v.y + 26, 14, 2);
+    ctx.fillStyle = v.flash > 0 ? '#fff' : '#5c6480'; ctx.fillRect(v.x + 2, v.y, 16, 11);
+    ctx.fillStyle = '#fff6c2'; ctx.fillRect(v.x + 4, v.y + 2, 12, 7);
+  }
+}
 function hitVat(e, v, dmg) {
   v.hp -= dmg; v.flash = 0.08;
   if (v.hp <= 0 && !v.dead) {
     v.dead = true; explode(v.x + v.w / 2, v.y + v.h / 2, 36, 0, 'p', e.type === 'engine' ? 2 : 0);
     if (e.type === 'engine') { splash(v.x + 10, v.y + 10, 20); sfx('glass'); } else for (let i = 0; i < 8; i++) chunk(v.x + 8, v.y + 6, rand(-150, 150), rand(-200, 0), i % 2 ? '#25223a' : '#8b93ad');
-    const left = e.vats.filter((o) => !o.dead).length, eng = e.type === 'engine';
-    showBanner(left ? (eng ? 'STABILISER DOWN' : 'GONDOLA DOWN') : (eng ? 'CORE EXPOSED' : 'GAS BAG EXPOSED'), left ? left + ' to go' : (eng ? 'hit the core!' : 'shoot the gas bag!'), 1.6);
+    const left = e.vats.filter((o) => !o.dead).length, words = { engine: ['STABILISER DOWN', 'CORE EXPOSED', 'hit the core!'], blimp: ['GONDOLA DOWN', 'GAS BAG EXPOSED', 'shoot the gas bag!'], director: ['LIGHT DOWN', 'CAMERA EXPOSED', 'shoot the camera!'] }[e.type];
+    showBanner(left ? words[0] : words[1], left ? left + ' to go' : words[2], 1.6);
   }
 }
 function updateEngine(b, dt) {
@@ -3414,12 +3796,18 @@ function updateChopper(dt) {
   if (chopper.state === 'hover') {
     chopper.y = chopper.ty + Math.sin(chopper.t * 3) * 2;
     const ladder = { x: chopper.x - 8, y: chopper.y + 30, w: 16, h: chopper.floor - chopper.y - 30 };
-    if (P.alive && overlap(P, ladder)) { if (P.mech) ejectMech(false); chopper.state = 'leave'; P.ride = true; P.alive = false; sfx('rescue'); showBanner('EXTRACTED', LEVELS[level].name.toLowerCase().replace(/(^|\s)\w/g, (m) => m.toUpperCase()) + ' liberated', 3); }
+    if (P.alive && overlap(P, ladder)) { if (P.mech) ejectMech(false); chopper.state = 'leave'; P.ride = true; P.alive = false; sfx('rescue'); showBanner('EXTRACTED', LV().name.toLowerCase().replace(/(^|\s)\w/g, (m) => m.toUpperCase()) + ' liberated', 3); }
   }
   if (chopper.state === 'leave') {
     chopper.x += 70 * dt; chopper.y -= 60 * dt;
     endT += dt;
-    if (endT > 2.6) { state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); }
+    if (endT > 2.6) {
+      if (stats.deaths === 0) unlock('flawless');
+      if (stats.time < 180) unlock('speed');
+      if (unlocked.length === BROS.length && mode === 'campaign') unlock('allbros');
+      if (mode === 'moon') { state = 'modedone'; unlock('moon'); }
+      else { state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); }
+    }
   }
 }
 
@@ -3447,6 +3835,7 @@ function drawBackground(t) {
   } else if (th.orb === 'bigsun') { // a huge orange sun
     ctx.fillStyle = '#ffb04a'; ctx.beginPath(); ctx.arc(250 - cam.x * 0.02, 160 - cam.y * 0.05, 60, 0, 7); ctx.fill();
     ctx.fillStyle = 'rgba(255,220,140,0.5)'; ctx.beginPath(); ctx.arc(250 - cam.x * 0.02, 160 - cam.y * 0.05, 42, 0, 7); ctx.fill();
+  } else if (th.orb === 'none') { /* underground: no sky */
   } else if (th.orb === 'moon') {
     ctx.fillStyle = '#e8eef8'; ctx.beginPath(); ctx.arc(390 - cam.x * 0.02, 46, 16, 0, 7); ctx.fill();
     ctx.fillStyle = '#c9d4e6'; ctx.beginPath(); ctx.arc(384 - cam.x * 0.02, 42, 4, 0, 7); ctx.arc(395 - cam.x * 0.02, 52, 3, 0, 7); ctx.fill();
@@ -3834,6 +4223,19 @@ function drawQuack(e, t) {
       ctx.fillStyle = '#7a5c36'; ctx.fillRect(F > 0 ? sh.ox : sh.ox + rig.w - 4, sh.uy + 10, 4, 4); ctx.fillStyle = '#d9534f'; ctx.fillRect(F > 0 ? sh.ox + 1 : sh.ox + rig.w - 3, sh.uy + 11, 2, 2); // bag
       break;
     }
+    case 'preacher': { // a book held up; it glows while he preaches
+      const h = drawArm(sh, F, e.chant > 0 ? 'up' : 'aim', coat, skin, swing);
+      ctx.fillStyle = '#5a2030'; ctx.fillRect(h.x - 2, h.y - 2, 5, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(h.x, h.y - 1, 1, 2);
+      if (e.chant > 0) { ctx.globalAlpha = 0.4 + Math.sin(t * 20) * 0.3; ctx.fillStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(h.x, h.y - 4, 5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+      break;
+    }
+    case 'mortar': { // a tube on a base plate in front of him
+      drawArm(sh, F, e.aim > 0 ? 'throw' : 'down', coat, skin, swing);
+      const bx = Math.round(cx + F * 7);
+      ctx.fillStyle = '#25223a'; ctx.fillRect(bx - 3, feet - 2, 7, 2);
+      ctx.fillStyle = white ? '#fff' : '#5a6a3a'; for (let k = 0; k < 5; k++) ctx.fillRect(bx + F * k - 1, feet - 4 - k * 2, 3, 2);
+      break;
+    }
     case 'guru': {
       if (e.chant > 0) {
         drawArm(sh, F, 'up', coat, skin); drawArm({ x: sh.x - F * 5, y: sh.y }, F, 'up', coat, skin);
@@ -3842,6 +4244,7 @@ function drawQuack(e, t) {
       break;
     }
   }
+  if (e.fervor > 0) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.6 + Math.sin(t * 8) * 0.3; ctx.beginPath(); ctx.ellipse(cx, sh.uy - 5, 4, 1.5, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; } // a halo while preached at
   if (e.hacked > 0 && Math.floor(t * 6) % 2) { ctx.fillStyle = '#66c2a5'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('01', x + 5, sh.uy - 3); }
   if (isQuack(e) && e.aware && e.react > 0 && e.burn <= 0) { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 4, sh.uy - 10, 2, 5); ctx.fillRect(x + 4, sh.uy - 4, 2, 2); }
   if (isQuack(e) && e.huh > 0 && !e.aware) { ctx.fillStyle = '#a3abd0'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('?', x + 5, sh.uy - 3); }
@@ -3850,6 +4253,15 @@ function drawEnt(e, t) {
   const x = Math.round(e.x), y = Math.round(e.y), f = e.face > 0 ? 0 : 1;
   if (isQuack(e) || e.type === 'bomber') { drawQuack(e, t); return; }
   switch (e.type) {
+    case 'camdrone': { // body, lens, two rotors, a red REC light
+      const fl = e.flash > 0, sp = Math.floor(t * 30) % 2;
+      ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y + 1, e.w + 2, e.h);
+      ctx.fillStyle = fl ? '#fff' : '#3d3d46'; ctx.fillRect(x, y + 2, e.w, e.h - 2);
+      ctx.fillStyle = '#8b93ad'; ctx.fillRect(x - 3 + sp, y, 5 - sp * 2, 1); ctx.fillRect(x + e.w - 2 + sp, y, 5 - sp * 2, 1); ctx.fillRect(x + 1, y + 1, 1, 1); ctx.fillRect(x + e.w - 2, y + 1, 1, 1);
+      ctx.fillStyle = '#bfe9ff'; ctx.fillRect(e.face > 0 ? x + e.w - 3 : x + 1, y + 4, 2, 2);
+      if (e.dive || Math.floor(t * 3) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(x + 4, y + 3, 2, 1); }
+      break;
+    }
     case 'dog': {
       const fr = !e.onGround ? 2 : Math.abs(e.vx) > 12 ? Math.floor(e.rp * 1.5) % 2 : 3;
       ctx.drawImage((e.flash > 0 ? DOG_W : DOG)[fr][f], x - 2, y - 1);
@@ -3980,6 +4392,7 @@ function drawEnt(e, t) {
     case 'engine': drawEngine(e, t); break;
     case 'blimp': drawBlimp(e, t); break;
     case 'citrus': drawCitrus(e, t); break;
+    case 'director': drawDirector(e, t); break;
     case 'icicle': {
       const sh = e.warn > 0 ? (Math.random() < 0.5 ? -1 : 1) : 0;
       ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.moveTo(x - 1 + sh, y); ctx.lineTo(x + e.w + 1 + sh, y); ctx.lineTo(x + e.w / 2 + sh, y + e.h + 1); ctx.fill();
@@ -4203,6 +4616,8 @@ function drawFx() {
       ctx.globalAlpha = a * 0.45; ctx.save(); ctx.translate(f.x + 5, f.y + 8); ctx.rotate(f.rot); ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore(); ctx.globalAlpha = 1;
     } else if (f.kind === 'acidpool') {
       ctx.globalAlpha = Math.min(1, a * 2); ctx.fillStyle = '#4f9c2f'; ctx.fillRect(f.x - 9, f.y - 2, 18, 2); ctx.fillStyle = '#a6d854'; ctx.fillRect(f.x - 7, f.y - 3, 14, 1); ctx.globalAlpha = 1;
+    } else if (f.kind === 'marker') { // where the mortar shell will land: a red cross that blinks faster as it falls
+      if (Math.floor(f.t * (f.t < 0.8 ? 16 : 6)) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(f.x - 6, f.y - 2, 13, 1); ctx.fillRect(f.x, f.y - 8, 1, 7); ctx.fillRect(f.x - 4, f.y - 6, 1, 1); ctx.fillRect(f.x + 4, f.y - 6, 1, 1); }
     } else if (f.kind === 'ring2') {
       ctx.globalAlpha = a; ctx.strokeStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(f.x, f.y, (1 - a) * 36 + 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
     } else if (f.kind === 'well') {
@@ -4255,7 +4670,7 @@ function drawHud(t) {
   text(String(stats.score).padStart(7, '0'), VW - 126, 15, 8, '#f2c94c');
   text(fmtTime(stats.time), VW - 10, 15, 8, '#a3abd0', 'right');
   text('KILLS ' + stats.kills, VW - 126, 27, 8, '#e7eaf6');
-  text('FREED ' + stats.rescued + '/' + LEVELS[level].cages, VW - 10, 27, 8, '#a6d854', 'right');
+  text('FREED ' + stats.rescued + '/' + LV().cages, VW - 10, 27, 8, '#a6d854', 'right');
   // objectives: shown for a few seconds at the start and whenever one moves, and while the map is open
   if ((objShowT > 0 && banner.t <= 0) || keys.map) {
     const a = keys.map ? 1 : Math.min(1, objShowT * 2);
@@ -4267,6 +4682,12 @@ function drawHud(t) {
     });
     ctx.globalAlpha = 1;
   }
+  if (toast && toast.t > 0) { // trophy pop-up
+    toast.t -= 1 / 60; ctx.globalAlpha = Math.min(1, toast.t * 2); ctx.fillStyle = 'rgba(11,14,31,0.9)'; ctx.fillRect(VW - 172, 42, 168, 22);
+    ctx.fillStyle = '#c9a227'; ctx.fillRect(VW - 168, 46, 6, 6); text('TROPHY', VW - 158, 52, 8, '#a3abd0'); text(toast.name, VW - 158, 61, 8, '#f2c94c'); ctx.globalAlpha = 1;
+  }
+  if (mode === 'siege') text(siege.breakT > 0 ? 'NEXT WAVE IN ' + Math.ceil(siege.breakT) : 'WAVE ' + siege.wave + ' · ' + (siege.queue.length + ents.filter((e) => foe(e)).length) + ' LEFT', VW / 2, 14, 8, '#f2c94c', 'center');
+  if (mode === 'rush') text('BOSS ' + (rush.i + 1) + '/' + RUSH.length + ' · ' + fmtTime(rush.t), VW / 2, 14, 8, '#f2c94c', 'center');
   if (ceasefire > 0) { // the quiet start: a countdown and a bar
     text('SAFE START ' + Math.ceil(ceasefire), VW / 2, 50, 8, '#a6d854', 'center');
     ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 40, 54, 80, 2); ctx.fillStyle = '#a6d854'; ctx.fillRect(VW / 2 - 40, 54, 80 * ceasefire / 10, 2);
@@ -4282,7 +4703,7 @@ function drawHud(t) {
   const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !e.doomed);
   if (B) {
     const w = 200, x = (VW - w) / 2 - 50, y = VH - 18;
-    text(BOSS_NAME[B.type], x + w / 2, y - 4, 8, '#e6e2f0', 'center');
+    text(bname(B), x + w / 2, y - 4, 8, '#e6e2f0', 'center');
     ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
     ctx.fillStyle = B.p2 ? '#b0507a' : '#7570b3'; ctx.fillRect(x, y, w * Math.max(0, B.hp) / B.max, 5);
   }
@@ -4310,26 +4731,45 @@ function drawScreen(t) {
   ctx.fillStyle = state === 'title' ? 'rgba(11,14,31,0.5)' : 'rgba(11,14,31,0.72)'; ctx.fillRect(0, 0, VW, VH);
   const blink = Math.floor(t * 2) % 2 === 0;
   const statRows = (y0) => {
-    const rows = [['SCORE', String(stats.score) + (stats.newHi ? '  NEW BEST' : '')], ['RUN TOTAL', String(runScore)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LEVELS[level].cages], ['BROS LOST', String(stats.deaths)]];
+    const rows = [['SCORE', String(stats.score) + (stats.newHi ? '  NEW BEST' : '')], ['RUN TOTAL', String(runScore)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LV().cages], ['BROS LOST', String(stats.deaths)]];
     rows.forEach(([k, v], i) => { text(k, VW / 2 - 100, y0 + i * 12, 8, '#a3abd0'); text(v, VW / 2 + 100, y0 + i * 12, 8, '#e7eaf6', 'right'); });
   };
   if (state === 'map') { drawWorldMap(t); return; }
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('6 MISSIONS · 22 BROS · 7 BOSSES · 14 QUACK TYPES · 4 PICKUP GUNS', VW / 2, 104, 8, '#8da0cb', 'center');
-    if (hiScore) text('BEST RUN ' + hiScore, VW / 2, 172, 8, '#f2c94c', 'center');
+    text('11 MISSIONS · 3 MODES · 22 BROS · 13 BOSSES · 17 QUACK TYPES · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
+    if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 209 + (i % 22) * 19; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 130, 12, 16); });
-    if (blink) text('PRESS ENTER OR TAP TO START', VW / 2, 190, 8, '#e7eaf6', 'center');
-    text('ARROWS MOVE · UP JUMP · Z FIRE · X SPECIAL · C PUNCH', VW / 2, 216, 8, '#a3abd0', 'center');
-    text('DOUBLE-TAP TO RUN · SHIFT ROLL · DOWN+PUNCH IN AIR SLAMS', VW / 2, 230, 8, '#a3abd0', 'center');
+    TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
+      const sel = i === titleSel, y = 166 + i * 12;
+      if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 12); }
+      const extra = m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
+      text((sel ? '> ' : '  ') + label + extra, VW / 2 - 82, y, 8, sel ? '#a6d854' : '#e7eaf6');
+    });
+    text('UP/DOWN CHOOSE · ENTER START · DOUBLE-TAP RUN · SHIFT ROLL', VW / 2, 236, 8, '#a3abd0', 'center');
+  } else if (state === 'over' && mode === 'siege') {
+    text('THE LAB HAS FALLEN', VW / 2, 96, 24, '#e78ac3', 'center');
+    text('YOU HELD ' + Math.max(0, siege.wave - (siege.breakT > 0 ? 0 : 1)) + ' WAVES · BEST ' + siege.best + ' · SCORE ' + stats.score, VW / 2, 122, 8, '#a3abd0', 'center');
+    if (blink) text('PRESS ENTER FOR THE TITLE', VW / 2, 160, 8, '#e7eaf6', 'center');
+  } else if (state === 'over' && mode === 'rush') {
+    text('RUSH OVER', VW / 2, 96, 24, '#e78ac3', 'center');
+    text('YOU BEAT ' + rush.i + ' OF ' + RUSH.length + ' BOSSES IN ' + fmtTime(rush.t), VW / 2, 122, 8, '#a3abd0', 'center');
+    if (blink) text('PRESS ENTER FOR THE TITLE', VW / 2, 160, 8, '#e7eaf6', 'center');
+  } else if (state === 'modedone') {
+    text(mode === 'rush' ? 'BOSS RUSH CLEARED' : 'MOON BASE CLEARED', VW / 2, 90, 24, '#a6d854', 'center');
+    if (mode === 'rush') text('ALL ' + RUSH.length + ' BOSSES IN ' + fmtTime(rush.t) + ' · BEST ' + fmtTime(rush.best), VW / 2, 116, 8, '#e7eaf6', 'center');
+    else text('THE MOON LANDING WAS REAL, AND SO ARE YOU · SCORE ' + stats.score, VW / 2, 116, 8, '#e7eaf6', 'center');
+    if (blink) text('PRESS ENTER FOR THE TITLE', VW / 2, 160, 8, '#e7eaf6', 'center');
+  } else if (state === 'trophies') {
+    drawTrophies(t);
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
-    text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LEVELS[level].cages, VW / 2, 126, 8, '#a3abd0', 'center');
+    text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LV().cages, VW / 2, 126, 8, '#a3abd0', 'center');
     if (blink) text('PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
   } else if (state === 'win') { // debrief: what happened, what got done, the numbers
-    text(LEVELS[level].name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
-    wrap(LEVELS[level].debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
+    text(LV().name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
+    wrap(LV().debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
     objectives.forEach((o, i) => { const done = o.n >= o.need; text((done ? '+ ' : '- ') + o.text.toUpperCase() + (o.req ? '' : '  BONUS'), VW / 2 - 100, 82 + i * 10, 8, done ? '#a6d854' : '#5c6480'); });
     statRows(140);
     if (blink) text('PRESS ENTER TO CONTINUE', VW / 2, 252, 8, '#e7eaf6', 'center');
@@ -4382,7 +4822,7 @@ function drawFullMap(t) {
   ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
   ctx.imageSmoothingEnabled = false; ctx.drawImage(MINI, ox, oy, w, h);
   mapMarks(ctx, ox, oy, k, 0, LW, Math.floor(t * 4) % 2);
-  text('MAP · ' + LEVELS[level].name, VW / 2, oy - 14, 8, '#a6d854', 'center');
+  text('MAP · ' + LV().name, VW / 2, oy - 14, 8, '#a6d854', 'center');
   const leg = [['#ffffff', 'YOU'], ['#ff5a4a', 'QUACKS'], ['#a6d854', 'CAGES'], ['#f2c94c', 'TARGETS'], ['#d9b36a', 'INTEL'], ['#e78ac3', 'BOSS']];
   leg.forEach(([col, lab], i) => { const lx = 40 + i * 70; ctx.fillStyle = col; ctx.fillRect(lx, oy + h + 14, 4, 4); text(lab, lx + 8, oy + h + 19, 8, '#a3abd0'); });
 }
@@ -4392,11 +4832,11 @@ function wrap(str, n) { // split a sentence into lines of at most n characters
   if (line.trim()) out.push(line.trim());
   return out;
 }
-// world map: the four stops of the campaign joined by a dotted route; done ones are ticked, the next one pulses
+// world map: the stops of the campaign joined by a dotted route; done ones are ticked, the next one pulses
 function drawWorldMap(t) {
   ctx.fillStyle = '#0d1a33'; ctx.fillRect(0, 0, VW, VH);
   ctx.fillStyle = '#12244a'; for (let y = 0; y < VH; y += 6) ctx.fillRect(0, y, VW, 1); // sea lines
-  const land = LEVELS.map((L) => [L.map[0] - 46, L.map[1] - 26, 92, 56]);
+  const land = LEVELS.map((L) => [L.map[0] - 26, L.map[1] - 22, 52, 44]);
   ctx.fillStyle = '#2b3a52'; for (const [x, y, w, h] of land) { ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 7); ctx.fill(); }
   const stops = LEVELS.map((L) => L.map);
   ctx.fillStyle = '#5c6480'; for (let i = 0; i < stops.length - 1; i++) { const [x0, y0] = stops[i], [x1, y1] = stops[i + 1]; for (let k = 0; k <= 20; k += 2) ctx.fillRect(Math.round(x0 + (x1 - x0) * k / 20), Math.round(y0 + (y1 - y0) * k / 20), 2, 2); }
@@ -4404,13 +4844,14 @@ function drawWorldMap(t) {
     const [x, y] = L.map, done = i < level || (i <= reached && i !== level), cur = i === level;
     if (cur) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     ctx.fillStyle = done ? '#a6d854' : cur ? '#f2c94c' : '#5c6480'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
-    text((i + 1) + ' ' + L.name, x, y - 12, 8, done ? '#a6d854' : cur ? '#f2c94c' : '#a3abd0', 'center');
-    if (done) text(i < level ? 'LIBERATED' : 'OPEN', x, y + 16, 8, '#a6d854', 'center');
+    text(String(i + 1), x, y - 9, 8, done ? '#a6d854' : cur ? '#f2c94c' : '#a3abd0', 'center');
   });
-  const [px, py] = LEVELS[level].map, bob = Math.sin(t * 3) * 2; // the bros' plane
+  const [px, py] = LV().map, bob = Math.sin(t * 3) * 2; // the bros' plane
   ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 6, py - 26 + bob, 12, 3); ctx.fillRect(px - 2, py - 30 + bob, 4, 11);
   text('WAR ON THE ANTI-SCIENCE LEAGUE', VW / 2, 20, 16, '#a6d854', 'center');
   text('BROS ' + unlocked.length + ' / ' + BROS.length + ' · RESERVE ' + lives + ' · INTEL ' + dossier.length + ' / ' + LEVELS.length * 3 + ' · RUN ' + runScore, VW / 2, 34, 8, '#a3abd0', 'center');
+  text('MISSION ' + (level + 1) + ' · ' + LV().name, VW / 2, 222, 8, '#f2c94c', 'center');
+  text(LV().sub.toUpperCase(), VW / 2, 233, 8, '#a3abd0', 'center');
   if (reached > 0) text('LEFT/RIGHT PICK ANY MISSION YOU HAVE REACHED', VW / 2, 244, 8, '#8da0cb', 'center');
   if (Math.floor(t * 2) % 2) text('PRESS ENTER FOR THE BRIEFING', VW / 2, 256, 8, '#e7eaf6', 'center');
 }
@@ -4432,7 +4873,7 @@ function applyGear() {
 }
 // briefing from HQ: the mission, the objectives, then deploy
 function drawBriefing(t) {
-  const L = LEVELS[level];
+  const L = LV();
   ctx.fillStyle = '#0b0e1f'; ctx.fillRect(0, 0, VW, VH);
   text('MISSION ' + (level + 1) + ' · ' + L.name, VW / 2, 30, 16, '#a6d854', 'center');
   ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
@@ -4535,8 +4976,10 @@ function collectLights(t) {
     else if (e.type === 'guru' && e.chant > 0) light(e.x + 5, e.y - 6, 30, '#e78ac3', 0.8);
     else if (e.type === 'boss' && e.active) light(e.x + 22 + e.face * 6, e.y + 16, 30, '#d9534f', 0.6);
     else if (e.type === 'crawler' && e.active) light(e.hx, e.hy, 34, '#b3a6ff', 0.6);
+    else if (e.type === 'director' && e.active) { light(e.beamX, 15 * T - 10, 46, '#fff6c2', 0.9); for (const v of e.vats) if (!v.dead) light(v.x + 10, v.y + 6, 50, '#fff6c2', 0.9); }
     else if (e.type === 'rocketeer' && e.aim > 0) light(e.x + 5 + e.face * 10, e.y + 4, 14, '#ff5a4a', 0.6);
   }
+  for (const e of ents) if (e.type === 'camdrone' && !e.dead) light(e.x + 5, e.y + 3, e.dive ? 26 : 12, '#ff3a2a', 0.5);
   for (const d of decor) if (!d.gone && d.kind === 'crystal') light(d.c * T + 8, d.r * T - 8, 44, '#e78ac3', 0.55 + Math.sin(t * 2 + d.seed) * 0.1);
   // acid glows along its surface
   const c0 = Math.max(0, Math.floor(cam.x / T)), c1 = Math.min(LW - 1, Math.floor((cam.x + VW) / T)), r0 = Math.max(1, Math.floor(cam.y / T)), r1 = Math.min(LH - 1, Math.floor((cam.y + VH) / T));
@@ -4643,7 +5086,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

@@ -206,8 +206,8 @@ run(2); check('shooting the gondolas drops them', zep.vats.every((v) => v.dead))
 S.finishObjectives(); S.hitEnemy(zep, 999, 0); k3 = 0; for (; k3 < 900 && !zep.dead; k3++) { S.P.inv = 1e9; run(1); }
 check('then the zeppelin goes down', zep.dead && !!S.chopper, k3 + ' frames');
 
-// level 6: King Citrus
-S.startLevel(5); check('level 6 builds with nothing floating', S.checkCollapse() === 0);
+// the last mission: King Citrus
+S.startLevel(S.nLevels - 1); check('the Citadel builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['citrus', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = 186 * T; S.P.y = 15 * T - 16; run(5);
 check('King Citrus activates', kc.active);
@@ -220,7 +220,7 @@ kc.dizzy = 1; const kh = kc.hp; S.hitEnemy(kc, 5, 0); check('he takes double dam
 S.finishObjectives(); S.hitEnemy(kc, 999, 0); k3 = 0; for (; k3 < 600 && !kc.dead; k3++) { S.P.inv = 1e9; run(1); }
 check('King Citrus is juiced and the chopper comes', kc.dead && !!S.chopper, k3 + ' frames');
 for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, { right: true, jump: (i % 30) < 15 }); if (i % 30 === 0) S.pressed.jump = true; }
-check('extraction on level 6 ends the game', S.state === 'done', S.state);
+check('extraction on the Citadel ends the game', S.state === 'done', S.state);
 drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); }
 check('game-complete screen draws', drew);
 
