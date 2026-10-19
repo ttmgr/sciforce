@@ -1564,6 +1564,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
     return;
   }
   if (e.dizzy > 0) dmg *= 2; // King Citrus takes double while he sees stars
+  if (e.type === 'crawler' && e.state === 'stuck') dmg *= 1.5; // a crawler stuck in the sand
   if (e.fervor > 0) dmg *= 0.6;
   if (e.bug > 0) dmg *= 2; // Hopper marked it
   e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; e.calmT = 0; // a boss you are hitting never calms down // shoot one during the ceasefire and that one fights back
@@ -3121,7 +3122,7 @@ function updateCrawler(b, dt) {
       const tx = clamp(P.x + P.w / 2, b.ax0 * T + 20, b.ax1 * T - 20);
       b.vx = approach(b.vx, Math.sign(tx - b.hx) * 150, 400 * dt); b.vy = (deep - b.hy) * 4;
       if (Math.random() < 0.35) part(b.hx + rand(-8, 8), surfY - 1, rand(-30, 30), rand(-50, -10), theme.dust, 0.4, 2, G);
-      if ((b.t <= 0 && Math.abs(tx - b.hx) < 40) || b.t < -2.5) { b.state = 'rumble'; b.t = 0.75; sfx('creak'); }
+      if ((b.t <= 0 && Math.abs(tx - b.hx) < 40) || b.t < -2.5) { b.state = 'rumble'; b.t = 1.05; sfx('creak'); fx.push({ kind: 'marker', x: b.hx, y: surfY, t: 1.05, max: 1.05 }); } // a red mark shows where it will burst out
       break;
     }
     case 'rumble':
@@ -3136,7 +3137,12 @@ function updateCrawler(b, dt) {
     case 'leap':
       b.vy += G * 0.75 * dt;
       if (!b.spat && b.vy > 0) { b.spat = true; spit(b, 3); }
-      if (b.vy > 0 && b.hy > deep - 10) { b.state = 'under'; b.t = rand(1.2, 1.8); }
+      if (b.vy > 0 && b.hy > surfY - 8) { b.state = 'stuck'; b.t = 1.1; b.vx = 0; b.vy = 0; b.hy = surfY - 6; floatText(b.hx, surfY - 24, 'STUCK!', '#f2c94c'); sfx('thud'); shake += 3; }
+      break;
+    case 'stuck': // head first in the sand, wriggling: its weak moment
+      b.vx = 0; b.vy = 0; b.hx += Math.sin(b.anim * 40) * 0.4;
+      if (Math.random() < 0.5) part(b.hx + rand(-10, 10), surfY - 1, rand(-40, 40), rand(-120, -40), theme.dust, 0.4, 2, G);
+      if (b.t <= 0) { b.state = 'dive'; }
       break;
     case 'rear': {
       const ty = surfY - 50 + Math.sin(b.anim * 2.2) * 36;
@@ -3774,12 +3780,12 @@ function updateBullets(dt, edt) {
         if (!e.vats || !live(e)) continue;
         for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg + (b.poison || 0) * 0.6); break; } // parts can't be poisoned: the dose hits at once
       }
-      if (!b.dead) for (const e of ents) { // the crawler's body is armoured: bullets spark off it
+      if (!b.dead) for (const e of ents) { // the crawler's crystal body is armoured: bullets spark off it, but chip it a little
         if (e.type !== 'crawler' || !live(e)) continue;
         for (const s of e.segs) if (Math.abs(s.x - b.x) < 8 && Math.abs(s.y - b.y) < 8) {
           b.dead = true; sfx('ting');
           if (b.explode) burst(b, b.x, b.y, 'p');
-          else for (let i = 0; i < 3; i++) part(b.x, b.y, -Math.sign(b.vx) * rand(40, 120), rand(-100, 20), '#fff6c2', 0.2, 1, G);
+          else { hitEnemy(e, b.dmg * 0.35, 0); for (let i = 0; i < 3; i++) part(b.x, b.y, -Math.sign(b.vx) * rand(40, 120), rand(-100, 20), '#fff6c2', 0.2, 1, G); }
           break;
         }
       }
@@ -5342,7 +5348,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, get grace() { return grace; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, get grace() { return grace; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; }, setLives(n) { lives = n; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

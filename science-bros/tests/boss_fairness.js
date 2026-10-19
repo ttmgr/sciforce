@@ -52,6 +52,19 @@ for (const [lvl, fin] of LIST) for (const b of S.BROS) {
   check(b.name + ' can hurt ' + (B.bossName || B.type), dealt, 'no damage in 25 s');
   check((B.bossName || B.type) + ' never loses 40 hp in one frame (' + b.name + ')', !spike, spike && spike.toFixed(0) + ' hp at once');
 }
+// the Crystal Crawler: its body chips, it warns before it bursts out, and a leap ends stuck in the sand
+{
+  S.startLevel(1); S.endCeasefire(); step({});
+  const C = S.ents.find((e) => e.type === 'crawler'); S.ents.forEach((e) => { if (e !== C && e.type !== 'flag') e.dead = true; });
+  S.P.x = (C.trig + 2) * T; S.P.y = 2 * T;
+  let marked = false, stuck = false;
+  for (let f = 0; f < 60 * 40 && !(marked && stuck); f++) { S.P.inv = 1e9; step({}); if (C.state === 'rumble' && S.fx.some((x) => x.kind === 'marker')) marked = true; if (C.state === 'stuck') stuck = true; }
+  check('the Crawler shows a mark where it will burst out', marked);
+  check('a Crawler leap ends stuck in the sand', stuck);
+  const sg = C.segs[6], hp = C.hp;
+  S.bullets.push({ x: sg.x - 3, y: sg.y, vx: 300, vy: 0, owner: 'p', dmg: 2, life: 1, kind: 'photon' }); step({});
+  check('a shot on its crystal body chips it', C.hp < hp && C.hp > hp - 2, (hp - C.hp).toFixed(2) + ' damage');
+}
 console.log(hurt + ' of ' + fights + ' bro and boss pairs: the weapon hurt the boss within 25 s');
 console.log(fails ? fails + ' check(s) failed' : 'all boss fairness checks passed');
 process.exit(fails ? 1 : 0);
