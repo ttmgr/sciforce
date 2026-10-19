@@ -248,6 +248,11 @@ const RIG = {
   rocketeer: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#8e2b3c', c: '#3a2c40', t: '#f29e4c' })),
   guru: buildRig(HEADS.turban, BODY_ROBE, Object.assign({}, GOON_PAL, { h: '#f29e4c', c: '#e6e2f0', y: '#f2c94c', k: '#d9b38c', s: '#d9b38c' })),
   para: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#4b5a3a', c: '#3a4a2c' })),
+  jetpack: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#c9a227', c: '#3d4560', t: '#f2c94c' })),
+  sniper: buildRig(HEADS.cap, BODY, Object.assign({}, GOON_PAL, { h: '#3f5a2a', c: '#4b5a3a', t: '#2c3a20', o: '#3f5a2a' })),
+  flamer: buildRig(HEADS.goon, BODY_VEST, Object.assign({}, GOON_PAL, { o: '#3d3d3d', k: '#c9a227', c: '#5a3a26', y: '#25223a' })),
+  brute: buildRig(HEADS.big, BODY_BIG, Object.assign({}, GOON_PAL, { o: '#8e2b3c', c: '#5a2030', t: '#25223a', p: '#3a1520', s: '#8a5a5a' })),
+  medic: buildRig(HEADS.goon, BODY, Object.assign({}, GOON_PAL, { c: '#e9eef6', t: '#d9534f', o: '#e9eef6' })),
   char: buildRig(HEADS.goon, BODY, { o: '#2e2738', k: '#3b3247', e: '#f29e4c', y: '#4b4766', s: '#1d1a26', c: '#2a2438', t: '#3b3247', p: '#1d1a26', b: '#121018' }),
 };
 // dog: its own little 14x8 sprite set
@@ -368,7 +373,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('scout', 47, 11); sp('grunt', 50, 11); sp('barrel', 53, 11); sp('grunt', 56, 11); sp('barrel', 59, 11); sp('propane', 60, 11); sp('grunt', 62, 11); sp('cage', 64, 11, { bro: 'tesla' });
   lamp(49, 10); lamp(56, 10); lamp(63, 10);
   dc('plaque', 52, { r: 10, text: 'QUACK HQ' });
-  sp('grunt', 52); sp('grunt', 58); sp('turret', 66);
+  sp('grunt', 52); sp('medic', 58); sp('turret', 66);
   sp('flag', 72);
 
   // 3. Acid pit with crate bridge and a turret tower
@@ -382,6 +387,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
 
   // 4. Cliff with a cave and a watchtower
   ground(101, 105, 16); ground(106, 108, 13); ground(109, 140, 8);
+  sp('jetpack', 103); sp('sniper', 112);
   fill(112, 11, 125, 13, EMPTY);
   fill(124, 4, 128, 4, BRICK); fill(124, 5, 124, 7, CRATE); fill(128, 5, 128, 7, CRATE); // watchtower on wooden legs
   sp('grenadier', 111); sp('grunt', 114); sp('barrel', 118); sp('grunt', 120); sp('barrel', 123); sp('grunt', 126);
@@ -394,7 +400,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(141, 150, 12); ground(151, 175, 16);
   fill(160, 9, 161, 15, BRICK);
   sp('mechsuit', 142); sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
-  sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
+  sp('flamer', 156); sp('brute', 163); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
   dc('sandbags', 146); dc('sandbags', 153); dc('palm', 164, { lean: -1 }); dc('sign', 171, { text: 'NO SCIENCE' });
 
   // 6. Boss arena and extraction pad
@@ -417,7 +423,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(39, 13, 39, 15, CRATE); fill(40, 13, 40, 15, EMPTY); fill(59, 13, 59, 15, CRATE); fill(58, 13, 58, 15, EMPTY);
   fill(49, 11, 50, 11, EMPTY); fill(48, 8, 50, 8, STEEL);
   bgFill(40, 9, 58, 15, BG_BRICK);
-  sp('shield', 45, 12); sp('grunt', 53, 12); sp('barrel', 55, 12); sp('grenadier', 43, 9); sp('ammo', 47, 9); sp('grunt', 55, 9);
+  sp('shield', 45, 12); sp('medic', 51, 12); sp('grunt', 53, 12); sp('barrel', 55, 12); sp('grenadier', 43, 9); sp('ammo', 47, 9); sp('grunt', 55, 9);
   sp('guru', 52); sp('rocketeer', 57);
   lamp(45, 11); lamp(53, 11); lamp(44, 8); lamp(55, 8);
   dc('plaque', 49, { r: 8, text: 'WELLNESS SPA' }); dc('cactus', 38);
@@ -425,7 +431,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
 
   // 3. Oil field
   fill(74, 13, 77, 15, DIRT);
-  sp('strike', 63); sp('barrel', 65); sp('barrel', 66); sp('dog', 68); sp('propane', 70); sp('barrel', 72); sp('rocketeer', 75); sp('heavy', 80);
+  sp('strike', 63); sp('jetpack', 69); sp('barrel', 65); sp('barrel', 66); sp('dog', 68); sp('propane', 70); sp('barrel', 72); sp('rocketeer', 75); sp('heavy', 80);
   dc('sandbags', 64); dc('crystal', 71); dc('sign', 79, { text: 'TOXINS OUT' });
 
   // 4. Detoxkopter arena: towers to climb so you can reach it
@@ -443,7 +449,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   for (const c of [138, 142, 146, 149]) fill(c, 17, c, 20, STEEL);
   ground(151, 172, 14); fill(158, 11, 161, 13, DIRT);
   sp('grunt', 130); sp('dog', 132); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
-  sp('ammo', 153); sp('strike', 154); sp('heavy', 155); sp('rocketeer', 159); sp('cage', 164, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 170);
+  sp('flamer', 133); sp('ammo', 153); sp('strike', 154); sp('heavy', 155); sp('brute', 157); sp('sniper', 160); sp('rocketeer', 159); sp('cage', 164, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 170);
   dc('sign', 128, { text: 'ACID' }); dc('cactus', 152); dc('crystal', 157); dc('cactus', 166);
   sp('flag', 171);
 
@@ -468,7 +474,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(53, 8, 55, 8, STEEL); fill(44, 16, 64, 16, ICE);
   bgFill(43, 10, 65, 15, BG_BRICK);
   sp('mechsuit', 38);
-  sp('shield', 48, 10); sp('heavy', 56, 10); sp('barrel', 59, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'galileo' });
+  sp('shield', 48, 10); sp('medic', 52, 10); sp('heavy', 56, 10); sp('barrel', 59, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'galileo' });
   sp('guru', 50); sp('rocketeer', 62);
   lamp(47, 9); lamp(54, 9); lamp(61, 9);
   dc('plaque', 54, { r: 8, text: 'CRYO SPA' }); dc('snowman', 69);
@@ -478,7 +484,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(73, 75, 16);
   fill(76, 21, 104, 21, STEEL); fill(76, 17, 104, 20, ACID); fill(76, 16, 104, 16, ICE);
   for (const c of [79, 83, 87, 91, 95, 99, 103]) fill(c, 17, c, 20, STEEL);
-  sp('grunt', 82); sp('shield', 90); sp('dog', 96); sp('bomber', 101);
+  sp('grunt', 82); sp('jetpack', 88); sp('shield', 90); sp('dog', 96); sp('jetpack', 98); sp('bomber', 101);
   dc('sign', 74, { text: 'THIN ICE' });
 
   // 4. Cliff with a tunnel underneath: icicles hang from the tunnel roof, rocketeers wait on top
@@ -487,13 +493,13 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   for (const c of [120, 132, 144]) fill(c, 10, c, 10, STEEL); // bedrock studs hold the tunnel roof up
   for (const c of [118, 123, 129, 135, 141]) sp('icicle', c, 0, { hang: 12 });
   sp('grunt', 120, 13); sp('dog', 126, 13); sp('heavy', 133, 13); sp('grunt', 146, 13);
-  sp('strike', 117); sp('rocketeer', 125); sp('cage', 131, 0, { bro: 'turing' }); sp('grenadier', 138); sp('ammo', 142); sp('rocketeer', 147);
+  sp('strike', 117); sp('sniper', 121); sp('rocketeer', 125); sp('cage', 131, 0, { bro: 'turing' }); sp('grenadier', 138); sp('ammo', 142); sp('rocketeer', 147);
   dc('pine', 115); dc('pine', 128); dc('pine', 149);
 
   // 5. Snow fort
   ground(151, 176, 16);
   fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK);
-  sp('flag', 152); sp('shield', 156); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
+  sp('flag', 152); sp('flamer', 155); sp('shield', 156); sp('brute', 163); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
   dc('sandbags', 154); dc('snowman', 163);
 
   // 6. Tank arena: snow over steel, the extraction pad behind a gate
@@ -706,6 +712,7 @@ function sfx(n) {
       case 'glass': noise(0.2, 0.08, 7000); tone(2800, 1200, 0.15, 'triangle', 0.03); break;
       case 'skid': noise(0.12, 0.04, 2500); break;
       case 'drill': noise(0.08, 0.05, 3500); tone(180, 220, 0.08, 'sawtooth', 0.02); break;
+      case 'sniper': noise(0.3, 0.2, 5000); tone(1200, 200, 0.2, 'square', 0.04); break;
       case 'squish': noise(0.1, 0.12, 900); tone(200, 80, 0.12, 'sine', 0.05); break;
     }
   } catch (e) { /* audio is optional */ }
@@ -921,11 +928,12 @@ function showBanner(text, sub = '', dur = 2) { banner = { text, sub, t: dur, max
 const floatText = (x, y, txt, col = '#f2c94c') => fx.push({ kind: 'text', x, y, txt, col, t: 1.1, max: 1.1 });
 
 // quacks share one brain (patrol, spot, alert, attack); each type adds its own attack
-const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1 };
+const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, jetpack: 1, sniper: 1, flamer: 1, brute: 1, medic: 1 };
 const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1 };
 const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK' };
 const isQuack = (e) => QUACK[e.type] === 1;
 const DIMS = {
+  jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
   cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], icicle: [6, 14, 1], tank: [64, 30, 180], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
@@ -998,7 +1006,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
     return;
   }
   e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12;
-  if (e.type === 'heavy') kx *= 0.08;
+  if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
   if ((isQuack(e) || e.type === 'dog') && how === 'shot') { const [cx, cy] = center(e); bleed(cx - Math.sign(kx) * 3, cy - 2, 3, kx * 0.6); }
@@ -1012,7 +1020,7 @@ function lightPropane(e, kx, fuse) {
   if (e.lit) { e.fuse = Math.min(e.fuse, fuse); return; }
   e.lit = true; e.fuse = fuse; e.dirx = Math.sign(kx) || (Math.random() < 0.5 ? -1 : 1); sfx('hiss');
 }
-function setBurn(e) { if (e.burn > 0 || e.dead || !isQuack(e)) return; e.burn = rand(1.6, 2.2); e.aware = true; e.react = 99; sfx('scream'); }
+function setBurn(e) { if (e.burn > 0 || e.dead || !isQuack(e) || e.type === 'flamer') return; e.burn = rand(1.6, 2.2); e.aware = true; e.react = 99; sfx('scream'); }
 function spawnPickup(x, y, strike = false) {
   const p = makeEnt({ type: 'pickup', c: 0, y: y - 4 });
   p.x = x - 4; p.vy = -220; p.kx = rand(-40, 40); p.strike = strike;
@@ -1034,6 +1042,8 @@ function killEnemy(e, how = 'shot') {
     return;
   }
   if (e.type === 'para' && e.chute) dropChute(e);
+  if (e.type === 'jetpack') setTimeoutGame(() => explode(cx, cy, 18, 3, 'env', 1), 0.05); // the pack goes up
+  if (e.type === 'flamer') setTimeoutGame(() => { explode(cx, cy, 28, 4, 'env', 2); ignite(cx, cy, 3, 24); }, 0.05); // and the fuel tank
   if (e.type === 'shield' && e.shield > 0) dropShield(e, Math.sign(e.kx) || -e.face);
   if (e.type === 'dog') {
     sfx('yelp');
@@ -1050,7 +1060,7 @@ function killEnemy(e, how = 'shot') {
   }
   sfx(Math.random() < 0.3 ? 'scream' : 'hit');
   const vx = clamp(e.kx * 1.3 + e.vx * 0.3, -430, 430);
-  spriteBody('corpse', img, cx, cy, vx, -110 - Math.abs(vx) * 0.45, { sw: rig.w + 2, sh: rig.uh + 6, r: e.type === 'heavy' ? 7 : 5, vr: (Math.sign(vx) || 1) * rand(6, 14), bleed: how === 'burn' ? 0 : 1.2 });
+  spriteBody('corpse', img, cx, cy, vx, -110 - Math.abs(vx) * 0.45, { sw: rig.w + 2, sh: rig.uh + 6, r: e.type === 'heavy' || e.type === 'brute' ? 7 : 5, vr: (Math.sign(vx) || 1) * rand(6, 14), bleed: how === 'burn' ? 0 : 1.2, quack: how === 'burn' ? null : e.type });
   if (how === 'burn') for (let i = 0; i < 6; i++) part(cx, cy, rand(-30, 30), rand(-60, -20), '#4b4766', rand(0.6, 1.2), rand(3, 5), 0, 'smoke');
   else bleed(cx, cy, 10, vx * 0.3);
   if (how === 'punch') hitStop = Math.max(hitStop, 0.05);
@@ -1192,7 +1202,7 @@ function punch() {
     if (e.type === 'barrel' || e.type === 'propane') { e.kx = f * 330; e.vy = -170; if (e.type === 'propane') lightPropane(e, f, 0.35); continue; }
     if (e.type === 'bomber') { e.punched = true; e.run = true; e.fuse = 0.7; e.kx = f * 420; e.vy = -230; continue; }
     if (e.type === 'shield' && e.shield > 0 && f === -e.face) { dropShield(e, f); e.kx = f * 160; e.vy = -100; continue; }
-    if (e.type === 'heavy') { e.kx = f * 140; hitEnemy(e, 3, 0); continue; }
+    if (e.type === 'heavy' || e.type === 'brute') { e.kx = f * 140; hitEnemy(e, 3, 0); continue; }
     if (isQuack(e) || e.type === 'dog') { e.vy = -150; hitEnemy(e, 5, f * 380, 'punch'); continue; }
     hitEnemy(e, 2, f * 40);
   }
@@ -1708,7 +1718,10 @@ function updateQuack(e, dt) {
     e.vx = walk + e.kx; moveBody(e, dt);
     return;
   }
-  const S = { rocketeer: [300, 30], grenadier: [240, 90], guru: [240, 120], scout: [230, 40] }[e.type] || [230, 26];
+  if (e.type === 'jetpack') { flyJetpack(e, dt); return; }
+  if (e.type === 'brute' && e.charge > 0) { bruteCharge(e, dt); return; }
+  if (e.type === 'medic' && medicWork(e, dt)) return;
+  const S = { rocketeer: [300, 30], grenadier: [240, 90], guru: [240, 120], scout: [230, 40], sniper: [420, 70], brute: [200, 30] }[e.type] || [230, 26];
   const sees = playerSees(e, S[0], S[1]) && (Math.sign(P.x - e.x) === e.face || e.aware || Math.abs(P.x - e.x) < 50);
   let walk = 0;
   if (sees) {
@@ -1763,12 +1776,104 @@ function quackAttack(e, dt) {
         if (e.aim <= 0) { bullets.push({ x: mx, y: ey - 3, vx: e.face * 80, vy: 0, owner: 'e', dmg: 6, life: 4, kind: 'rocket', explode: 28, tp: 3 }); sfx('rocket'); e.cool = rand(2.8, 3.6); e.aim = 0; e.kx -= e.face * 60; }
       }
       return 0;
+    case 'sniper': { // a laser sight tracks you, locks for a moment, then one fast shot
+      if (e.cool <= 0 && !e.aim) { e.aim = 1.4; sfx('alert'); }
+      if (e.aim > 0) {
+        e.kneel = true; e.aim -= dt;
+        if (e.aim > 0.3) { const [tx, ty] = center(P); e.ax = tx; e.ay = ty - 1; } // follows you, then locks
+        if (e.aim <= 0) {
+          const a = Math.atan2(e.ay - my, e.ax - mx);
+          bullets.push({ x: mx, y: my, vx: Math.cos(a) * 640, vy: Math.sin(a) * 640, owner: 'e', dmg: 1, tdmg: 1, life: 1.2, kind: 'slug' });
+          sfx('sniper'); e.cool = rand(2.6, 3.4); e.aim = 0; e.kx -= e.face * 40;
+        }
+      }
+      return 0;
+    }
+    case 'flamer': // walk in close, then hose fire
+      if (dist < 76) {
+        e.flameT = (e.flameT || 0) + dt;
+        if (e.flameT < 1.6) { flameCone(e, 64); return 0; }
+        if (e.flameT > 2.6) e.flameT = 0;
+        return 0;
+      }
+      e.flameT = 0; return e.face * 34;
+    case 'brute': // roar, then charge in a straight line, smashing walls and quacks in the way
+      if (e.cool <= 0 && !e.windup) { e.windup = 0.45; sfx('roar'); }
+      if (e.windup > 0) { e.windup -= dt; e.atk = 0.3; if (e.windup <= 0) { e.windup = 0; e.charge = 2.2; e.cool = 2.5; } }
+      return 0;
+    case 'medic': // no one to fix: plink at you with a pistol
+      if (e.cool <= 0) { pill(mx, my, e.face * 150, 0); e.cool = rand(1.6, 2.4); e.atk = 0.15; }
+      return dist < 90 ? -e.face * 30 : 0;
     case 'guru': // chant, then paratroopers drop in from above
       if (e.cool <= 0 && !e.chant) { e.chant = 1.1; sfx('horn'); }
       if (e.chant > 0) { e.chant -= dt; e.atk = 0.2; if (e.chant <= 0) { callParas(e); e.cool = rand(6, 8); e.chant = 0; } }
       return 0;
   }
   return 0;
+}
+// jetpack trooper: hovers about four tiles over the ground, keeps its distance and shoots down at you
+function flyJetpack(e, dt) {
+  e.vy -= G * dt; // the pack holds it up
+  const c = Math.floor((e.x + e.w / 2) / T); let r = Math.floor((e.y + e.h) / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++;
+  const ty = r * T - e.h - 60 + Math.sin(e.t * 2) * 6;
+  e.vy = clamp(e.vy + ((ty - e.y) * 3 - e.vy * 2) * dt * 4, -120, 120);
+  const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && Math.abs(px - ex) < 260 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
+  let want = 0;
+  if (sees) {
+    if (!e.aware) { e.aware = true; e.react = 0.5; sfx('alert'); alertNearby(e); }
+    e.face = px > ex ? 1 : -1; e.react -= dt; e.cool -= dt;
+    want = Math.abs(px - ex) < 90 ? -e.face * 60 : Math.abs(px - ex) > 160 ? e.face * 60 : 0;
+    if (e.react <= 0 && e.cool <= 0) { const a = Math.atan2(py - ey, px - ex); pill(ex + e.face * 6, ey, Math.cos(a) * 170, Math.sin(a) * 170); e.cool = rand(0.9, 1.4); e.atk = 0.15; }
+  } else { e.walkT -= dt; if (e.walkT <= 0) { e.walkT = rand(1.5, 3); e.face *= -1; } want = e.face * 30; }
+  e.vx = approach(e.vx, want, 200 * dt) + e.kx * 0.02;
+  if (Math.random() < 0.7) part(e.x + (e.face > 0 ? 1 : e.w - 2), e.y + 13, rand(-10, 10), rand(40, 90), '', rand(0.15, 0.3), 2, 0, 'fire');
+  moveBody(e, dt);
+}
+// flamethrower cone in front of a quack: burns you and sets everything else alight
+function flameCone(e, reach) {
+  const nx = e.face > 0 ? e.x + e.w + 2 : e.x - 2, ny = e.y + 8;
+  for (let i = 0; i < 2; i++) part(nx, ny + rand(-2, 2), e.face * rand(110, 200), rand(-40, 15), '', rand(0.2, 0.4), 3, 0, 'fire');
+  const box = { x: e.face > 0 ? nx : nx - reach, y: ny - 10, w: reach, h: 18 };
+  if (P.alive && P.inv <= 0 && overlap(P, box)) killPlayer('shot', e.face);
+  for (const o of ents) if (o !== e && isQuack(o) && !o.dead && overlap(o, box)) setBurn(o);
+  if (Math.random() < 0.04) ignite(nx + e.face * rand(10, reach), ny, 1, 4);
+  if (Math.random() < 0.15) sfx('hiss');
+}
+function bruteCharge(e, dt) {
+  e.charge -= dt; e.atk = 0.2;
+  e.vx = e.face * 215 + e.kx * 0.1;
+  for (let yy = e.y + 2; yy < e.y + e.h - 2; yy += 8) { const c = Math.floor((e.face > 0 ? e.x + e.w + 3 : e.x - 3) / T), r = Math.floor(yy / T), v = tileAt(c, r); if (v && v !== STEEL && v !== ACID && v !== ICE) damageTile(c, r, 99); }
+  for (const o of ents) if (o !== e && live(o) && !BOSS[o.type] && !OBJ[o.type] && overlap(o, e)) { o.vy = -200; hitEnemy(o, 99, e.face * 380, 'punch'); }
+  if (P.alive && P.inv <= 0 && overlap(P, { x: e.x - 2, y: e.y, w: e.w + 4, h: e.h })) killPlayer('crush');
+  if (Math.random() < 0.5) part(e.x + e.w / 2 - e.face * 6, e.y + e.h, -e.face * rand(20, 60), -10, theme.dust, 0.3, 2, 0, 'smoke');
+  const x0 = e.x;
+  moveBody(e, dt);
+  if (e.wall || e.charge <= 0 || (e.onGround && !solidPx(e.x + (e.face > 0 ? e.w + 4 : -4), e.y + e.h + 4))) { // hit a wall or a ledge: dazed
+    if (e.wall) { shake = Math.min(10, shake + 3); sfx('thud'); }
+    e.charge = 0; e.stun = 1.2; e.vx = 0; if (!e.wall && Math.abs(e.x - x0) < 1) e.face *= -1;
+  }
+}
+// medic: walks to the nearest fresh quack corpse and brings it back to life (three times at most)
+function medicWork(e, dt) {
+  if ((e.revives || 0) >= 3) return false;
+  let tgt = e.patient && !e.patient.dead && e.patient.life > 0.5 ? e.patient : null;
+  if (!tgt) {
+    let best = 200;
+    for (const b of bodies) if (b.kind === 'corpse' && b.quack && !b.acid && !b.dead && b.life > 2 && Math.abs(b.x - e.x) < best && Math.abs(b.y - e.y) < 40) { best = Math.abs(b.x - e.x); tgt = b; }
+    e.patient = tgt; e.heal = 0;
+  }
+  if (!tgt) return false;
+  const dx = tgt.x - (e.x + e.w / 2);
+  if (Math.abs(dx) > 6) { e.face = Math.sign(dx); e.vx = e.face * 70 + e.kx; e.heal = 0; moveBody(e, dt); return true; }
+  e.vx = e.kx; e.kneel = true; e.heal = (e.heal || 0) + dt; moveBody(e, dt);
+  if (Math.random() < 0.4) part(tgt.x + rand(-6, 6), tgt.y - rand(0, 8), 0, -30, '#a6d854', 0.5, 2);
+  if (e.heal >= 1.3) { // back on his feet
+    tgt.dead = true; e.revives = (e.revives || 0) + 1; e.patient = null; e.heal = 0;
+    const q = makeEnt({ type: tgt.quack, c: 0, y: tgt.y - 10 }); q.x = tgt.x - q.w / 2; q.aware = true; q.react = 0.6; q.face = P.x > q.x ? 1 : -1; q.revived = true;
+    ents.push(q); sfx('rescue'); floatText(tgt.x, tgt.y - 14, 'PLACEBO EFFECT!', '#a6d854');
+    for (let i = 0; i < 12; i++) part(tgt.x, tgt.y, rand(-60, 60), rand(-120, -20), '#a6d854', 0.6, 2);
+  }
+  return true;
 }
 function throwGrenade(e) {
   const [ex, ey] = center(e), [px, py] = center(P), t = clamp(Math.abs(px - ex) / 160, 0.55, 1.2), g = 700;
@@ -2878,6 +2983,40 @@ function drawQuack(e, t) {
       if (e.aim > 0 && Math.floor(t * 16) % 2) { ctx.globalAlpha = 0.45; ctx.fillStyle = '#ff5a4a'; ctx.fillRect(F > 0 ? tx + 15 : tx - 140, ty + 1, 140, 1); ctx.globalAlpha = 1; }
       break;
     }
+    case 'jetpack': {
+      ctx.fillStyle = '#5c6480'; ctx.fillRect(F > 0 ? sh.ox - 1 : sh.ox + rig.w - 4, sh.uy + 7, 5, 8); // the pack
+      ctx.fillStyle = '#d9534f'; ctx.fillRect(F > 0 ? sh.ox : sh.ox + rig.w - 3, sh.uy + 15, 3, 2);
+      const h = drawArm(sh, F, 'aim', coat, skin); rifle(h, F);
+      break;
+    }
+    case 'sniper': { // long rifle with a scope; the sight line glows while it aims and goes solid when it locks
+      const h = drawArm(sh, F, 'aim', coat, skin);
+      ctx.fillStyle = '#25223a'; ctx.fillRect(F > 0 ? h.x : h.x - 12, h.y, 14, 2); ctx.fillStyle = '#5c6480'; ctx.fillRect(F > 0 ? h.x + 3 : h.x - 7, h.y - 2, 5, 2);
+      if (e.aim > 0) {
+        const mx = F > 0 ? h.x + 14 : h.x - 12, my = h.y + 1, locked = e.aim <= 0.3;
+        ctx.globalAlpha = locked ? 0.9 : 0.35 + Math.sin(t * 30) * 0.15; ctx.strokeStyle = '#ff3a2a'; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(e.ax, e.ay); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillStyle = '#ff3a2a'; ctx.fillRect(Math.round(e.ax) - 1, Math.round(e.ay) - 1, 2, 2);
+      }
+      break;
+    }
+    case 'flamer': {
+      ctx.fillStyle = '#8e2b3c'; ctx.fillRect(F > 0 ? sh.ox - 1 : sh.ox + rig.w - 4, sh.uy + 7, 5, 8); ctx.fillStyle = '#f2c94c'; ctx.fillRect(F > 0 ? sh.ox : sh.ox + rig.w - 3, sh.uy + 8, 3, 1); // fuel tank
+      const h = drawArm(sh, F, 'aim', coat, skin); ctx.fillStyle = '#5c6480'; ctx.fillRect(F > 0 ? h.x : h.x - 6, h.y, 8, 2);
+      if (e.flameT > 0 && e.flameT < 1.6 && Math.floor(t * 30) % 2) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(F > 0 ? h.x + 8 : h.x - 9, h.y - 1, 3, 4); }
+      break;
+    }
+    case 'brute': { // fists up; both arms out while charging
+      const h = drawArm(sh, F, e.charge > 0 || e.windup > 0 ? 'punch' : 'down', coat, skin, swing);
+      ctx.fillStyle = skin; ctx.fillRect(h.x - 1, h.y - 1, 4, 4);
+      if (e.charge > 0) drawArm({ x: sh.x - F * 6, y: sh.y + 2 }, F, 'punch', coat, skin);
+      if (e.stun > 0) { ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) { const a = t * 6 + k * 2.1; ctx.fillRect(Math.round(cx + Math.cos(a) * 7), Math.round(sh.uy - 4 + Math.sin(a) * 2), 2, 2); } } // seeing stars
+      break;
+    }
+    case 'medic': {
+      drawArm(sh, F, e.kneel ? 'aim' : 'down', coat, skin, swing);
+      ctx.fillStyle = '#7a5c36'; ctx.fillRect(F > 0 ? sh.ox : sh.ox + rig.w - 4, sh.uy + 10, 4, 4); ctx.fillStyle = '#d9534f'; ctx.fillRect(F > 0 ? sh.ox + 1 : sh.ox + rig.w - 3, sh.uy + 11, 2, 2); // bag
+      break;
+    }
     case 'guru': {
       if (e.chant > 0) {
         drawArm(sh, F, 'up', coat, skin); drawArm({ x: sh.x - F * 5, y: sh.y }, F, 'up', coat, skin);
@@ -3080,6 +3219,7 @@ function drawBullets() {
       case 'pill': ctx.fillStyle = '#f2c94c'; ctx.fillRect(x - 2, y - 1, 2, 2); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y - 1, 2, 2); break;
       case 'bigpill': ctx.fillStyle = '#e78ac3'; ctx.fillRect(x - 3, y - 2, 3, 4); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y - 2, 3, 4); break;
       case 'wave': ctx.fillStyle = '#b4bed0'; ctx.fillRect(x - 4, y - 6, 8, 12); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x - 2, y - 9, 4, 3); break;
+      case 'slug': ctx.fillStyle = '#ff6a4a'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y, 1, 1); break;
       case 'enigma': ctx.fillStyle = '#66c2a5'; ctx.fillRect(x - 2, y, 4, 1); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x, y, 1, 1); break;
       case 'calc': ctx.fillStyle = '#8da0cb'; ctx.fillRect(x - 2, y - 2, 4, 4); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'fission': { const r = 3 - b.gen; ctx.fillStyle = '#e78ac3'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y - 1, 1, 1); break; }

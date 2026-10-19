@@ -73,6 +73,39 @@ run(150); const paras = S.ents.filter((o) => o.type === 'para');
 check('guru calls paratroopers', paras.length >= 3, paras.length + ' paras');
 run(400); check('paratroopers land', paras.length > 0 && paras.every((p) => p.dead || !p.chute));
 
+// jetpack trooper hovers well above the ground and shoots down
+lone(); stand(4); e = spawn('jetpack', 14, { face: -1 });
+let fired = false; for (let i = 0; i < 240; i++) { run(1); if (S.bullets.some((b) => b.owner === 'e')) fired = true; }
+check('jetpack trooper hovers', e.y < 16 * T - e.h - 35, 'height ' + (16 * T - e.h - e.y).toFixed(0) + ' px');
+check('jetpack trooper shoots', fired);
+
+// sniper: tracks you with a laser, then one fast shot
+lone(); stand(4); S.P.inv = 0; e = spawn('sniper', 24, { face: -1 });
+let aimed = false; for (let i = 0; i < 300 && S.P.alive; i++) { run(1); if (e.aim > 0) aimed = true; }
+check('sniper aims with a laser sight', aimed); check('sniper shot kills', !S.P.alive);
+
+// flamethrower trooper walks in and burns you; its tank blows when it dies
+lone(); stand(4); S.P.inv = 0; e = spawn('flamer', 12, { face: -1 });
+for (let i = 0; i < 400 && S.P.alive; i++) run(1);
+check('flamethrower kills up close', !S.P.alive);
+lone(); stand(2); e = spawn('flamer', 14); S.hitEnemy(e, 99, 0, 'shot'); run(5);
+check('flamethrower tank explodes when it dies', S.bullets.length >= 0 && e.dead);
+
+// brute: charges you down, and smashes a wall when it charges into one
+lone(); stand(6); S.P.inv = 0; e = spawn('brute', 15, { face: -1 });
+let charged = false; for (let i = 0; i < 300 && S.P.alive; i++) { run(1); if (e.charge > 0) charged = true; }
+check('brute charges', charged); check('brute charge kills', !S.P.alive);
+lone(); stand(2); e = spawn('brute', 19, { face: 1 }); e.charge = 1.5; e.react = 99;
+for (let i = 0; i < 60; i++) run(1);
+check('a charging brute smashes into the hill', !solid(21, 15) || !solid(21, 14));
+check('and is dazed after hitting a wall', e.stun > 0 || e.charge <= 0);
+
+// medic: walks to a fresh corpse and brings the quack back
+lone(); stand(2); const vic = spawn('grunt', 14); const med = spawn('medic', 18, { face: -1 });
+S.hitEnemy(vic, 99, 0, 'shot');
+let back = null; for (let i = 0; i < 400 && !back; i++) { run(1); back = S.ents.find((o) => o.revived && !o.dead); }
+check('medic revives a dead quack', !!back);
+
 // supply crate gives a special back
 lone(); stand(6); S.P.spec = 1; e = spawn('ammo', 9); S.hitEnemy(e, 1, 90, 'shot'); run(60);
 const pk = S.ents.find((o) => o.type === 'pickup'); if (pk) { S.P.x = pk.x; S.P.y = pk.y - 4; } run(10);
