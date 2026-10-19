@@ -61,14 +61,16 @@ run(180);
 check('left bunker roof collapsed', !solid(47, 9) && !solid(47, 10));
 check('roof right of the girder still up', solid(60, 9) && solid(60, 10));
 
-// 6. acid bridge: cut the crates around the tower and it sinks with its turret
+// 6. acid bridge: cut the crates under the tower and it drops, half onto a steel pile, half into the acid
 fresh();
 S.P.x = 70 * T;
 const turret = S.ents.find((e) => e.type === 'turret' && Math.abs(e.x / T - 88) < 1);
-breakAll([[85, 16], [86, 16], [87, 16], [90, 16], [91, 16]]);
+const ty0 = turret.y;
+breakAll([[88, 16], [89, 16]]);
 run(240);
 check('tower fell out of rows 12-15', !solid(88, 12) && !solid(89, 12));
-check('turret on the tower destroyed', turret.dead);
+check('turret on the tower came down', turret.dead || turret.y > ty0 + 8, 'dropped ' + (turret.y - ty0).toFixed(0) + ' px');
+check('steel piles still stand in the acid', solid(80, 17) && solid(96, 17));
 
 // 7. punch sends a quack flying
 fresh();
@@ -81,6 +83,7 @@ check('punch kills and launches', g.dead && flung && flung.vx > 250, flung && 'v
 // 8. shot propane tank rockets upward, then blows
 fresh();
 const tank = S.ents.find((e) => e.type === 'propane');
+S.ents.forEach((e) => { if (e !== tank && Math.abs(e.x - tank.x) < 8 * T) e.dead = true; }); // nothing in its flight path
 const y0 = tank.y;
 S.P.x = 4 * T;
 S.hitEnemy(tank, 1, 90);

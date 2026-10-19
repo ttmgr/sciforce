@@ -24,3 +24,4 @@ for(;i<60*120 && !S.boss.dead;i++){ P.inv=1e9; P.x=Math.min(P.x,190*16); run(1,{
 console.log('boss dead',S.boss.dead,'after s',(i/60).toFixed(1),'hp',S.boss.hp, 'chopper',!!S.chopper);
 for(i=0;i<60*20 && S.state==='play';i++){ P.inv=1e9; run(1,{right:true}); }
 console.log('final',S.state,'P col',(P.x/16).toFixed(1), S.chopper&&S.chopper.state);
+S.render(0); console.log('level-clear screen drew without errors');
