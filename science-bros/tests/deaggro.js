@@ -34,10 +34,12 @@ S.P.inv = 1e9; S.P.x = (B.trig + 3) * T; S.P.y = 13 * T; run(60);
 check('it wakes again when you walk back in', B.active);
 const hp = B.hp; S.hitEnemy(B, 5, 0); check('and it kept its damage', B.hp === hp - 5 && hp <= B.max);
 // leave the arena
-S.P.x = (B.trig - 8) * T; S.P.y = 13 * T; run(60);
-check('stepping out briefly does not calm it', B.active);
+S.P.x = (B.ax0 - 2) * T; S.P.y = 13 * T; run(60 * 5);
+check('fighting it from just outside the arena does not calm it', B.active);
+S.P.x = (B.ax0 - 20) * T; S.P.y = 2 * T; run(60);
+check('walking away briefly does not calm it', B.active);
 run(150);
-check('staying out for a few seconds calms it', !B.active);
+check('staying far away for a few seconds calms it', !B.active);
 
 // every boss calms when you die
 for (let l = 0; l < S.nLevels; l++) {

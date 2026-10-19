@@ -199,7 +199,7 @@ const BROS = [
     pal: { h: '#1f1715', s: '#8a5a3c', e: '#1b1d2e', g: '#c9d4e6', c: '#3a7a9a', t: '#e9eef6', p: '#2a2e42', b: '#15161f' } },
   { id: 'meitner', name: 'Lise Meitbro', weapon: 'Fission shots', wdesc: 'an orb that splits twice into four blasts', special: 'Chain reaction', sdesc: 'a line of blasts marches out ahead of you', formula: 'U-235 + n > Ba + Kr', gun: '#e78ac3',
     pal: { h: '#8b8b96', s: '#f2cfb1', e: '#1b1d2e', c: '#e9eef6', t: '#7570b3', p: '#3a3550', b: '#25283a' } },
-  { id: 'archimedes', name: 'Archimedes Bro', weapon: 'Screw drill', wdesc: 'a drill that chews through rock and quacks', special: 'The lever', sdesc: 'throws everything on screen into the air', formula: 'give me a place to stand', gun: '#c9a227',
+  { id: 'archimedes', name: 'Archimedes Bro', weapon: 'Screw drill', wdesc: 'a drill that chews through rock and quacks and throws the rubble ahead', special: 'The lever', sdesc: 'throws everything on screen into the air', formula: 'give me a place to stand', gun: '#c9a227',
     pal: { g: '#5f9a2c', w: '#eef1f6', s: '#e8c09a', e: '#1b1d2e', c: '#e6e2d0', t: '#c9a227', p: '#5a4632', b: '#3a3326' } },
   { id: 'mendel', name: 'Gregor Mendbro', weapon: 'Pea shooter', wdesc: 'a fast spray of hard peas', special: 'Punnett square', sdesc: 'plants three pea turrets for 9 s', formula: '3 : 1', gun: '#7bc043',
     pal: { h: '#6b5a4a', s: '#f0c9a4', e: '#1b1d2e', c: '#2a2a2a', t: '#e9eef6', p: '#2a2a2a', b: '#1a1a1a' } },
@@ -1006,7 +1006,7 @@ function updateCollapse(dt) {
     let blocked = false;
     for (const e of ents) {
       if (e.dead || !overlap(e, box)) continue;
-      if (e.type === 'cage' || e.type === 'boss' || e.type === 'flag') { if (e.type === 'boss') hitEnemy(e, 4); blocked = e.type !== 'flag'; if (blocked) break; continue; }
+      if (e.type === 'cage' || BOSS[e.type] || e.type === 'flag') { if (BOSS[e.type]) hitEnemy(e, 8, 0, 'blast'); blocked = e.type !== 'flag'; if (blocked) break; continue; } // a block shatters on a boss: it hurts, but it is no instant kill
       if (HITTABLE[e.type]) { e.kx = 0; hitEnemy(e, 99, 0, 'crush'); }
     }
     if (blocked) { shatter(f); continue; }
@@ -1566,7 +1566,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (e.dizzy > 0) dmg *= 2; // King Citrus takes double while he sees stars
   if (e.fervor > 0) dmg *= 0.6;
   if (e.bug > 0) dmg *= 2; // Hopper marked it
-  e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; // shoot one during the ceasefire and that one fights back
+  e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; e.calmT = 0; // a boss you are hitting never calms down // shoot one during the ceasefire and that one fights back
   if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
@@ -1806,9 +1806,11 @@ function fireWeapon() {
       bullets.push({ x: gx, y: gy, vx: f * 430, vy: rand(-8, 8), owner: 'p', dmg: 1, tdmg: 0.3, life: 1.2, kind: 'enigma', bounces: 3 });
       P.cool = 0.13; P.recoil = 1; sfx('shot'); break;
     case 'johnson': { // solve the trajectory to the nearest quack ahead
-      const tgt = enemiesNear(gx, gy, 280, (e) => !OBJ[e.type] && (center(e)[0] - gx) * f > 0).sort((a, b) => Math.abs(center(a)[0] - gx) - Math.abs(center(b)[0] - gx))[0];
+      const pts = enemiesNear(gx, gy, 280, (e) => !OBJ[e.type] && !(e.vats && e.vats.some((v) => !v.dead)) && (center(e)[0] - gx) * f > 0).map(center)
+        .concat(partsNear(gx, gy, 280).map(([, v]) => [v.x + v.w / 2, v.y + v.h / 2]).filter(([x]) => (x - gx) * f > 0)); // a shielded boss: aim at its parts
+      const tgt = pts.sort((a, b) => Math.abs(a[0] - gx) - Math.abs(b[0] - gx))[0];
       let vx = f * 200, vy = -260;
-      if (tgt) { const [tx, ty] = center(tgt), t = clamp(Math.abs(tx - gx) / 220, 0.45, 1.3); vx = (tx - gx) / t; vy = (ty - gy - 0.5 * 600 * t * t) / t; }
+      if (tgt) { const [tx, ty] = tgt, t = clamp(Math.abs(tx - gx) / 220, 0.45, 1.3); vx = (tx - gx) / t; vy = (ty - gy - 0.5 * 600 * t * t) / t; }
       bullets.push({ x: gx, y: gy - 2, vx, vy, grav: 600, owner: 'p', dmg: 3, life: 3, kind: 'calc', explode: 16, tp: 1.5 });
       P.cool = 0.45; sfx('throw'); break;
     }
@@ -1821,7 +1823,7 @@ function fireWeapon() {
     case 'feynman': bullets.push({ x: gx, y: gy, by: gy, vx: f * 300, vy: 0, owner: 'p', dmg: 1, tdmg: 0.4, life: 0.8, kind: 'qwave', phase: 0, pierce: 2 }); P.cool = 0.14; sfx('beam'); break;
     case 'fleming': spores(gx, gy, f); P.cool = 0.1; break;
     case 'sagan': bullets.push({ x: gx, y: gy, vx: f * 220, vy: 0, owner: 'p', dmg: 1.2, tdmg: 0, life: 1.5, kind: 'dot', pierce: 99 }); P.cool = 0.22; sfx('beam'); break;
-    case 'wegener': bullets.push({ x: gx, y: P.y + P.h - 7, vx: f * 240, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0, life: 0.8, kind: 'pwave', pierce: 99, lift: 260 }); P.cool = 0.4; sfx('thud'); break;
+    case 'wegener': bullets.push({ x: gx, y: P.y + P.h - 7, vx: f * 240, vy: 0, owner: 'p', dmg: 2, tdmg: 0, life: 0.8, kind: 'pwave', pierce: 99, lift: 260 }); P.cool = 0.4; sfx('thud'); break;
     case 'hubble': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 380, vy: 0, owner: 'p', dmg: 0.6, tdmg: 0.5, life: 0.9, kind: 'red' }); P.cool = 0.16; sfx('shot'); break;
     case 'hawking': for (let k = 0; k < 3; k++) { const a = rand(-0.09, 0.09); bullets.push({ x: gx, y: gy, vx: f * 520 * Math.cos(a), vy: 520 * Math.sin(a), owner: 'p', dmg: 0.6, tdmg: 0.3, life: 0.45, kind: 'hawk' }); } P.cool = 0.12; sfx('beam'); break;
     case 'hopper': for (let k = 0; k < 3; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face; bullets.push({ x: P.x + (ff > 0 ? P.w + 2 : -2), y: P.y + 8, vx: ff * 470, vy: rand(-8, 8), owner: 'p', dmg: 1.1, tdmg: 0.5, life: 0.6, kind: 'bit' }); sfx('shot'); P.recoil = 1; }, k * 0.05); P.cool = 0.36; break;
@@ -1877,6 +1879,11 @@ function punch() {
 function enemiesNear(x, y, range, filter) {
   return ents.filter((e) => live(e) && Math.hypot(center(e)[0] - x, center(e)[1] - y) < range && (!filter || filter(e)));
 }
+// boss parts (the Engine's vats, the Zeppelin's gondolas, the Director's lights): every weapon can hit them,
+// not only bullets and blasts
+function partAt(x, y) { for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && x >= v.x && x <= v.x + v.w && y >= v.y && y <= v.y + v.h) return [e, v]; return null; }
+function hitPartsIn(box, dmg) { for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && overlap(v, box)) hitVat(e, v, dmg); }
+function partsNear(x, y, range) { const out = []; for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && Math.hypot(v.x + v.w / 2 - x, v.y + v.h / 2 - y) < range) out.push([e, v]); return out; }
 function zap(gx, gy, f) {
   sfx('zap');
   const pts = [[gx, gy]];
@@ -1885,6 +1892,11 @@ function zap(gx, gy, f) {
   for (let k = 0; k < 4; k++) {
     const range = k === 0 ? 140 : 90;
     const cands = enemiesNear(cx, cy, range, (e) => !hitSet.has(e) && (k > 0 || (center(e)[0] - gx) * f > -6) && los(cx, cy, center(e)[0], center(e)[1]));
+    if (k === 0) { // a boss part closer than any quack takes the arc
+      const pc = partsNear(cx, cy, range).filter(([, v]) => (v.x + v.w / 2 - gx) * f > -6 && los(cx, cy, v.x + v.w / 2, v.y + v.h / 2)).sort((a, b) => Math.abs(a[1].x - cx) - Math.abs(b[1].x - cx))[0];
+      const ce = cands.length ? Math.min(...cands.map((e) => Math.hypot(center(e)[0] - cx, center(e)[1] - cy))) : 1e9;
+      if (pc && Math.hypot(pc[1].x + pc[1].w / 2 - cx, pc[1].y + pc[1].h / 2 - cy) < ce) { pts.push([pc[1].x + pc[1].w / 2, pc[1].y + pc[1].h / 2]); hitVat(pc[0], pc[1], 2); break; }
+    }
     if (!cands.length) break;
     cands.sort((a, b) => Math.hypot(center(a)[0] - cx, center(a)[1] - cy) - Math.hypot(center(b)[0] - cx, center(b)[1] - cy));
     const e = cands[0]; hitSet.add(e);
@@ -1905,18 +1917,22 @@ function sunbeam(gx, gy, f) {
     ex = gx + f * d;
     if (solidPx(ex, gy)) { const c = Math.floor(ex / T), r = Math.floor(gy / T); damageTile(c, r, 0.25); if (tileAt(c, r) === CRATE && Math.random() < 0.08) ignite(ex, gy - 8, 1, 2); break; }
     for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && gy >= e.y && gy <= e.y + e.h) { hitEnemy(e, 0.35, f * 10); setBurn(e); }
+    const pa = partAt(ex, gy); if (pa) { hitVat(pa[0], pa[1], 0.35); break; }
   }
   fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.07, max: 0.07, col: '#f2c94c' });
   if (Math.random() < 0.3) sfx('beam');
 }
 // Archimedes' screw: chews the blocks and quacks right in front of you
 function drill(f) {
-  const x0 = f > 0 ? P.x + P.w + 1 : P.x - 21, box = { x: x0, y: P.y + 3, w: 20, h: 10 };
+  const x0 = f > 0 ? P.x + P.w + 1 : P.x - 27, box = { x: x0, y: P.y - 2, w: 26, h: 16 };
   for (let yy = box.y; yy < box.y + box.h; yy += 8) for (let xx = box.x; xx < box.x + box.w; xx += 8) {
     const c = Math.floor(xx / T), r = Math.floor(yy / T), v = tileAt(c, r);
     if (v && v !== STEEL && v !== ACID) { damageTile(c, r, 0.55); if (Math.random() < 0.2) part(xx, yy, -f * rand(20, 120), rand(-100, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
   }
   for (const e of ents) if (live(e) && overlap(e, box)) { hitEnemy(e, 0.35, f * 30); if (Math.random() < 0.3) bleed(e.x + e.w / 2, e.y + 8, 2, f * 60); }
+  hitPartsIn(box, 0.35);
+  P.chipT = (P.chipT || 0) - 0.05; // the screw throws out the rubble it chews: a short spray of rock chips
+  if (P.chipT <= 0) { P.chipT = 0.15; bullets.push({ x: x0 + (f > 0 ? 24 : 2), y: P.y + 7 + rand(-3, 3), vx: f * rand(280, 340), vy: rand(-40, 10), grav: 300, owner: 'p', dmg: 0.6, tdmg: 0.2, life: 0.35, kind: 'chip' }); }
   if (Math.random() < 0.5) part(P.x + 5 + f * 18, P.y + 8, f * rand(10, 60), rand(-60, 20), '#fff6c2', 0.15, 1, G);
   if (Math.random() < 0.25) sfx('drill');
 }
@@ -1927,6 +1943,7 @@ function arcWeld(gx, gy, f) {
     ex = gx + f * d;
     if (solidPx(ex, gy)) { damageTile(Math.floor(ex / T), Math.floor(gy / T), 0.35); break; }
     for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && gy >= e.y - 2 && gy <= e.y + e.h + 2) { hitEnemy(e, 0.3, f * 15); if (isQuack(e)) e.stun = Math.max(e.stun || 0, 0.15); }
+    const pa = partAt(ex, gy); if (pa) { hitVat(pa[0], pa[1], 0.3); break; }
   }
   for (let k = 1; k <= 4; k++) pts.push([gx + (ex - gx) * k / 4, gy + (k < 4 ? rand(-4, 4) : 0)]);
   fx.push({ kind: 'bolt', pts, t: 0.06, max: 0.06, col: '#8fd3ff' });
@@ -1937,6 +1954,8 @@ function spores(gx, gy, f) {
   for (let i = 0; i < 3; i++) part(gx, gy + rand(-3, 3), f * rand(60, 160), rand(-30, 20), i % 2 ? '#a6d854' : '#7bc043', rand(0.3, 0.6), 2, 0, 'smoke');
   const box = { x: f > 0 ? gx : gx - 56, y: gy - 10, w: 56, h: 20 };
   for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) e.sick = Math.max(e.sick || 0, 4);
+  for (const e of ents) if (BOSS[e.type] && live(e) && overlap(e, box)) hitEnemy(e, 0.4, 0); // bosses don't get sick: the mould eats into them instead
+  hitPartsIn(box, 0.4);
   if (Math.random() < 0.15) sfx('hiss');
 }
 function beam(gx, gy, f) {
@@ -1953,6 +1972,7 @@ function beam(gx, gy, f) {
       if (e.dead || !HITTABLE[e.type] || hitSet.has(e)) continue;
       if (ex >= e.x && ex <= e.x + e.w && gy >= e.y && gy <= e.y + e.h) { hitSet.add(e); hitEnemy(e, 0.8, f * 20); }
     }
+    const pa = partAt(ex, gy); if (pa && !hitSet.has(pa[1])) { hitSet.add(pa[1]); hitVat(pa[0], pa[1], 0.8); }
   }
   fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.07, max: 0.07, col: '#b3a6ff' });
 }
@@ -2335,7 +2355,8 @@ function playerSees(e, rangeX, rangeY) {
 // a boss calms down when you die or step back out of its arena for a moment; it wakes again when you walk back in
 function bossCalm(e, dt) {
   if (!e.active || e.dying > 0 || e.doomed || !e.trig) return;
-  const away = !P.alive || P.x + P.w < (e.trig - 2) * T;
+  const edge = Math.min(e.ax0 !== undefined ? e.ax0 : e.trig, e.trig) - 3; // well outside the arena, and far from the boss
+  const away = !P.alive || (P.x + P.w < edge * T && Math.abs(P.x - (e.x + e.w / 2)) > 10 * T);
   e.calmT = away ? (e.calmT || 0) + dt : 0;
   if (e.calmT < (P.alive ? 2.5 : 0.6)) return;
   e.active = false; e.calmT = 0; e.vx = 0;
@@ -3280,8 +3301,12 @@ function updateBlimp(b, dt) {
     if (b.y + b.h > b.fy || b.dying <= 0) { explode(b.x + b.w / 2, b.fy - 10, 80, 10, 'p', 4); for (let i = 0; i < 24; i++) chunk(b.x + rand(0, b.w), b.fy - 20, rand(-260, 260), rand(-380, -80), ['#c9c4b4', '#8b93ad', '#25223a'][i % 3]); bossDown(b); }
     return;
   }
-  const speed = exposed ? 70 : 40, ty = b.fy - (exposed ? 140 : 160) + Math.sin(b.anim * 0.8) * 4;
-  b.x += b.dir * speed * dt; b.y += (ty - b.y) * dt;
+  // every 7 s it sinks low for a troop drop: then a jump shot from the ground reaches the gondolas (and later the gas bag)
+  b.dipT = (b.dipT === undefined ? 6 : b.dipT) - dt;
+  if (b.dipT < 0 && b.dipT + dt >= 0) floatText(b.x + b.w / 2, b.y + b.h + 10, 'DROP RUN', '#f2c94c');
+  if (b.dipT < -3.2) b.dipT = 7;
+  const dip = b.dipT < 0, speed = dip ? 25 : exposed ? 70 : 40, ty = b.fy - (dip ? (exposed ? 64 : 52) : exposed ? 140 : 160) + Math.sin(b.anim * 0.8) * 4;
+  b.x += b.dir * speed * dt; b.y += (ty - b.y) * dt * (dip ? 3 : 1); // it sinks fast on a drop run, so it stays low for about 2 s
   if (b.x < b.ax0 * T) { b.x = b.ax0 * T; b.dir = 1; } if (b.x + b.w > b.ax1 * T) { b.x = b.ax1 * T - b.w; b.dir = -1; }
   for (const v of b.vats) { // each gondola gunner shoots at you
     if (v.dead) continue; v.cool -= dt;
@@ -3434,7 +3459,13 @@ function updateDirector(b, dt) {
   const exposed = b.vats.every((v) => v.dead);
   b.x += b.dir * (exposed ? 90 : 50) * dt;
   if (b.x < b.ax0 * T + 20) b.dir = 1; if (b.x + b.w > b.ax1 * T - 20) b.dir = -1;
-  b.y += ((exposed ? 9 * T : 3 * T) - b.y) * dt * 2;
+  // once exposed it swoops down every few seconds to film you up close, low enough to shoot from the floor
+  b.swoopT = (b.swoopT === undefined ? 3 : b.swoopT) - dt;
+  if (b.swoopT < -2.5) b.swoopT = 2.5;
+  let fr = 2; while (fr < LH - 1 && !isSolidT(tileAt(Math.floor((b.x + b.w / 2) / T), fr))) fr++;
+  const swoop = exposed && b.swoopT < 0;
+  if (swoop && b.swoopT + dt >= 0) floatText(b.x + b.w / 2, b.y - 6, 'CLOSE-UP!', '#e78ac3');
+  b.y += ((swoop ? fr * T - 26 : exposed ? 9 * T : 3 * T) - b.y) * dt * (swoop ? 4 : 2);
   // spotlight: drifts toward you; if you stay in it, it locks and shoots
   const [px, py] = center(P);
   b.beamX += clamp(px - b.beamX, -110 * dt, 110 * dt);
@@ -3666,6 +3697,11 @@ function updateBullets(dt, edt) {
     if (b.kind === 'pwave') { // a ripple that runs along the ground
       if (solidPx(b.x + Math.sign(b.vx) * 5, b.y) || !solidPx(b.x, b.y + 9)) { b.dead = true; continue; }
       if (Math.random() < 0.6) part(b.x, b.y + 5, rand(-30, 30), rand(-90, -30), theme.dust, 0.3, 2, G);
+      const col = { x: b.x - 4, y: b.y - 64, w: 8, h: 66 }; // the shock goes up as well: it hits what hovers just above the ground
+      if (!b.hits) b.hits = new Set();
+      for (const e of ents) if (live(e) && !b.hits.has(e) && overlap(e, col) && !(e.x <= b.x && b.x <= e.x + e.w && e.y <= b.y && b.y <= e.y + e.h)) { b.hits.add(e); bulletHit(b, e); }
+      for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && !b.hits.has(v) && overlap(v, col)) { b.hits.add(v); hitVat(e, v, b.dmg); }
+      for (const e of ents) if (e.type === 'crawler' && live(e) && !b.hits.has(e) && e.segs.some((sg) => Math.abs(sg.x - b.x) < 10 && sg.y > b.y && sg.y - b.y < 64)) { b.hits.add(e); hitEnemy(e, b.dmg, 0, 'blast'); } // it shakes a crawler burrowing under it
     }
     if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) damageTile(Math.floor(b.x / T), Math.floor(b.y / T), 0.15); // they cut through
     if (b.kind === 'fission' && b.gen < 2 && b.life <= 0) { // split into two smaller orbs
@@ -3736,7 +3772,7 @@ function updateBullets(dt, edt) {
       }
       if (!b.dead) for (const e of ents) { // the engine's stabiliser vats
         if (!e.vats || !live(e)) continue;
-        for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg); break; }
+        for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg + (b.poison || 0) * 0.6); break; } // parts can't be poisoned: the dose hits at once
       }
       if (!b.dead) for (const e of ents) { // the crawler's body is armoured: bullets spark off it
         if (e.type !== 'crawler' || !live(e)) continue;
@@ -4714,6 +4750,7 @@ function drawBullets() {
       case 'dot': ctx.fillStyle = '#4f8fd0'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'star': ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 3, 2, 6); ctx.fillRect(x - 3, y - 1, 6, 2); break;
       case 'pwave': ctx.fillStyle = '#c9a27a'; ctx.fillRect(x - 3, y - 2, 6, 9); ctx.fillStyle = '#e6d2b0'; ctx.fillRect(x - 1, y - 5, 2, 3); break;
+      case 'chip': ctx.fillStyle = '#8b7a6a'; ctx.fillRect(x - 1, y - 1, 2, 2); break;
       case 'hawk': ctx.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#b3a6ff'; ctx.fillRect(x - 1, y, 2, 1); break;
       case 'bit': ctx.fillStyle = '#66c2a5'; ctx.fillRect(x - 2, y - 1, 4, 2); ctx.fillStyle = '#dff8ff'; ctx.fillRect(x + (b.vx > 0 ? 1 : -2), y - 1, 1, 2); break;
       case 'parity': ctx.fillStyle = b.vx > 0 ? '#8fd3ff' : '#e78ac3'; ctx.fillRect(x - 3, y - 1, 6, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 2, 2); break;
