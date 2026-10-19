@@ -1232,6 +1232,7 @@ function pauseMenu() {
 let state = 'title', paused = false;
 let ents, bullets, parts, fx, P, boss, chopper, unlocked, lives, stats, checkpoint, slowT, shake, banner, endT;
 let ceasefire = 0; // seconds left of the quiet start of a mission
+let grace = 0; // after a respawn: a few seconds before the quacks pick up the new bro
 // ---- trophies: unlocked once, kept in this browser; counters add up across every game you play
 const ACH = [
   ['first', 'FIRST BLOOD', 'Defeat a quack'], ['combo10', 'COMBO KING', 'Reach a x10 combo'], ['demo', 'DEMOLITION', 'Break 500 blocks'],
@@ -1533,7 +1534,7 @@ function startLevel(n) {
   for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
   G = levelDef(n).grav || 900;
-  objectives = (levelDef(n).objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; ceasefire = levelDef(n).ceasefire !== undefined ? levelDef(n).ceasefire : 10;
+  objectives = (levelDef(n).objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; grace = 0; ceasefire = levelDef(n).ceasefire !== undefined ? levelDef(n).ceasefire : 10;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
@@ -2092,6 +2093,13 @@ function respawn() {
   let r = Math.floor(P.y / T); for (let k = 0; k < 9 && r > 1 && !isSolidT(tileAt(c, r - 1)); k++) r--;
   P.y = r * T; P.chute = true; P.inv = 3;
   showBanner(bro.name.toUpperCase(), bro.weapon + ' · ' + bro.special, 1.6);
+  // everyone loses track of you: quacks forget, and a new bro gets a few quiet seconds unless he shoots first
+  grace = 3;
+  for (const b of bullets) if (b.owner === 'e') { b.dead = true; part(b.x, b.y, 0, -20, '#8b84a6', 0.3, 2, 0, 'smoke'); } // shots still in the air fizzle out
+  for (const o of ents) {
+    if (isQuack(o) || o.type === 'dog') Object.assign(o, { aware: false, provoked: false, lost: 0, react: 0.6, aim: 0, windup: 0, chant: 0, fireT: 0, spin: 0, charge: 0, huh: 1 });
+    if (o.type === 'camdrone') Object.assign(o, { dive: false, lockT: 0, vx: 0, vy: 0, fuse: 4 });
+  }
 }
 
 // ---------------------------------------------------------------- update
@@ -2148,7 +2156,7 @@ function step(dt) {
     if (pressed.dash) P.wantDash = true;
     return;
   }
-  stats.time += dt; objShowT = Math.max(0, objShowT - dt);
+  stats.time += dt; objShowT = Math.max(0, objShowT - dt); grace = Math.max(0, grace - dt);
   if (mode === 'siege' && ceasefire <= 0) updateSiege(dt);
   if (mode === 'rush') updateRush(dt);
   careerT -= dt; if (careerT <= 0) { careerT = 1; checkCareer(); }
@@ -2320,12 +2328,23 @@ function groundPound() {
 
 function playerSees(e, rangeX, rangeY) {
   if (!P.alive) return false;
-  if (ceasefire > 0 && !e.provoked) return false; // the first 10 s of a mission: they don't notice you
+  if ((ceasefire > 0 || grace > 0) && !e.provoked) return false; // the first 10 s of a mission, and just after a respawn: they don't notice you
   const [ex, ey] = center(e), [px, py] = center(P);
   return Math.abs(px - ex) < rangeX && Math.abs(py - ey) < rangeY && los(ex, ey - 2, px, py - 2);
 }
+// a boss calms down when you die or step back out of its arena for a moment; it wakes again when you walk back in
+function bossCalm(e, dt) {
+  if (!e.active || e.dying > 0 || e.doomed || !e.trig) return;
+  const away = !P.alive || P.x + P.w < (e.trig - 2) * T;
+  e.calmT = away ? (e.calmT || 0) + dt : 0;
+  if (e.calmT < (P.alive ? 2.5 : 0.6)) return;
+  e.active = false; e.calmT = 0; e.vx = 0;
+  for (const b of bullets) if (b.owner === 'e' && (b.kind === 'missile' || b.kind === 'bomb')) b.dead = true; // its homing missiles and bombs fizzle
+  floatText(e.x + e.w / 2, e.y - 8, 'HMPH', '#a3abd0');
+}
 function updateEnt(e, dt) {
   e.flash -= dt; if (e.flinch > 0) e.flinch -= dt; if (e.bug > 0) e.bug -= dt;
+  if (BOSS[e.type]) { bossCalm(e, dt); if (!e.active && grace > 0) return; } // no boss wakes up on a bro that is still parachuting in
   if (!BOSS[e.type]) e.t += dt; // bosses use t as their own countdown
   const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone' && e.type !== 'icicle' && e.type !== 'camdrone';
   if (ground) {
@@ -2678,7 +2697,7 @@ function flyJetpack(e, dt) {
   const c = Math.floor((e.x + e.w / 2) / T); let r = Math.floor((e.y + e.h) / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++;
   const ty = r * T - e.h - 60 + Math.sin(e.t * 2) * 6;
   e.vy = clamp(e.vy + ((ty - e.y) * 3 - e.vy * 2) * dt * 4, -120, 120);
-  const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && (ceasefire <= 0 || e.provoked) && Math.abs(px - ex) < 260 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
+  const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && ((ceasefire <= 0 && grace <= 0) || e.provoked) && Math.abs(px - ex) < 260 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
   let want = 0;
   if (sees) {
     if (!e.aware) { e.aware = true; e.react = 0.5; sfx('alert'); alertNearby(e); }
@@ -5286,7 +5305,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, get grace() { return grace; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();
