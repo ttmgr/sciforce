@@ -20,7 +20,7 @@ const setup = (id) => {
 };
 const quack = (c, extra = {}) => { const e = Object.assign(S.makeEnt({ type: 'grunt', c, from: 0 }), { face: -1, react: 99, cool: 99 }, extra); S.ents.push(e); return e; };
 
-check('there are 12 bros', S.BROS.length === 12, S.BROS.length + ' bros');
+check('there are 18 bros', S.BROS.length === 18, S.BROS.length + ' bros');
 for (const b of S.BROS) {
   setup(b.id);
   const q = quack(12); // 8 tiles ahead; the bro walks toward it firing
@@ -46,6 +46,33 @@ setup('archimedes'); const ar = quack(12); S.pressed.special = true; run(1);
 check('Archimedes lever throws quacks up', ar.vy < -300 || ar.dead);
 for (i = 0; i < 180 && !ar.dead; i++) run(1);
 check('and they come down hard', ar.dead);
+
+// upgrades and new mechanics
+setup('einstein'); const p1 = quack(10), p2 = quack(10.6); for (let k = 0; k < 120 && !(p1.dead && p2.dead); k++) { p1.react = p2.react = 99; p1.cool = p2.cool = 99; run(1, { fire: true }); }
+check('Einstein photons pass through the first quack', p1.dead && p2.dead);
+setup('pasteur'); q = quack(10); S.P.cool = 0; run(1, { fire: true }); run(20);
+check('Pasteur darts poison', q.dead || q.poison > 0);
+setup('fleming'); const s1 = quack(6), s2 = quack(6.4); for (let k = 0; k < 4; k++) run(1, { fire: true });
+check('Fleming spores make quacks sick', s1.sick > 0 || s1.dead);
+setup('hypatia'); S.P.cool = 0; run(1, { fire: true }); const disc = S.bullets.find((b) => b.kind === 'disc'); let back = false;
+for (let k = 0; k < 120 && disc && !disc.dead; k++) { run(1); if (disc.back) back = true; }
+check('Hypatia disc flies out and comes back to her', back && disc.dead);
+setup('faraday'); S.pressed.special = true; run(1); S.P.inv = 0;
+S.bullets.push({ x: S.P.x + 30, y: S.P.y + 8, vx: -165, vy: 0, owner: 'e', dmg: 1, tdmg: 0, life: 2, kind: 'pill' }); run(20);
+check('Faraday cage sends a shot back', S.P.alive && S.bullets.some((b) => b.kind === 'pill' && b.owner === 'p' && b.vx > 0));
+setup('mendel'); const m1 = quack(14); S.pressed.special = true; run(1); for (let k = 0; k < 240 && !m1.dead; k++) { m1.react = 99; m1.cool = 99; run(1); }
+check('Mendel pea turrets shoot a quack', m1.dead);
+setup('tesla'); const t1 = quack(8); S.P.cool = 0; run(1, { fire: true });
+check('Tesla arcs stun', t1.dead || t1.stun > 0);
+// pickup guns
+for (const g of ['shotgun', 'rocket', 'minigun', 'railgun']) {
+  setup('einstein'); const pk = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'gun' }); pk.gun = g; pk.x = S.P.x; S.ents.push(pk); run(3);
+  const tq = quack(12); let k = 0; for (; k < 300 && !tq.dead; k++) { tq.react = 99; tq.cool = 99; run(1, { fire: true, right: S.P.x < tq.x - 40 }); }
+  check(g + ' pickup replaces the weapon and kills', tq.dead, k + ' frames');
+}
+setup('einstein'); const gp = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'gun' }); gp.gun = 'railgun'; gp.x = S.P.x; S.ents.push(gp); run(3);
+for (let k = 0; k < 600 && S.P.alt; k++) run(1, { fire: true });
+check('a pickup gun runs out and you get your own weapon back', !S.P.alt);
 
 console.log(fails ? fails + ' check(s) failed' : 'all bro checks passed');
 process.exit(fails ? 1 : 0);

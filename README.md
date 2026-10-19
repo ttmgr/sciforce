@@ -2,10 +2,10 @@
 
 ## Science Bros
 
-Broforce-style run-and-gun platformer: a 4-mission campaign (Operation Infinite Dilution), 12 scientist bros, 14 quack types, 5 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
+Broforce-style run-and-gun platformer: a 4-mission campaign (Operation Infinite Dilution), 18 scientist bros, 4 pickup guns, 14 quack types, 5 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
 
 - Game: `science-bros/index.html`. Open it in a browser.
-- Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; Shift or V dash-roll, keep holding to sprint (also jumps out of the mech); Up/Down on a ladder climbs; hold Tab for the map; P pause menu; M mute.
+- Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; tap left or right twice quickly to run (or push a gamepad stick all the way); Shift or V dodge-roll (also jumps out of the mech); Up/Down on a ladder climbs; hold Tab for the map; P pause menu; M mute.
 - Gamepad (standard mapping): stick or d-pad move, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause. Explosions rumble pads that support it.
 
 ### Campaign
@@ -32,7 +32,15 @@ A minimap in the bottom-right corner shows the level around you. Hold Tab for th
 - **Bros (12):** Einstein, Curie, Tesla, Newton and Franklin on mission 1. Mission 2 adds Ada Lovebro (three-card spread; drone) and Charles Darbro (homing finches; natural selection). Mission 3 adds Galileo Galilbro (a sun lens that sets things alight; a sun that orbits you) and Alan Turbro (ricochet rounds; hacks the quacks on screen into fighting each other). Mission 4 adds Katherine Johnbro (shells that land on the nearest quack; orbital strikes), Lise Meitbro (fission shots that split twice; a chain reaction that marches ahead) and Archimedes Bro (a screw drill that bores through rock; a lever that throws everything on screen into the air).
 - **More quacks:** jetpack troopers hover and shoot down; snipers track you with a laser sight that locks before one fast shot; flamethrower troopers burn what is in front of them and their tanks blow when they die; brutes charge through walls and other quacks and are dazed when they hit one; medics revive fresh quack corpses (three times at most), so shoot them first.
 - **Objects and items:** ladders, bounce pads, proximity mines, alarm boxes (once a quack nearby spots you, it calls paratroopers; shoot it first), fuel tanks (huge blasts), blue item crates (shield that stops one killing blow, overclock for double fire rate, jetpack, extra bro), intel files, and objective targets.
-- Supply crates refill one special. Animations: holding Shift sprints with a lean and dust, turning at speed skids, the gun swings with the stride when you're not shooting, hit quacks flinch, freed bros flip out of the cage. Steel piles under the acid bridges stay up even if the crates burn away.
+- Supply crates refill one special. Animations: running leans forward and kicks up dust, turning at speed skids, the gun swings with the stride when you're not shooting, hit quacks flinch, freed bros flip out of the cage. Steel piles under the acid bridges stay up even if the crates burn away.
+
+### Weapons
+
+- **Pickup guns** come from orange crates (and sometimes from blue item crates). Each replaces your bro's weapon until its ammo runs out: shotgun (7 pellets, big kick), rocket launcher, minigun, and railgun (one line through every quack and every block that is not steel). Ammo shows on the HUD.
+- **Upgrades:** Einstein's photons pass through the first quack, and he fires faster during time dilation; Curie's vials leave a radiation puddle; Tesla's arc chains to four quacks and stuns them; Newton's apples bounce once before going off; Franklin's X-ray cuts through one block; Ada fires five cards and her drone lasts 12 s; Darwin sends three finches.
+- **New bros (18 in all):** Gregor Mendbro (pea shooter; three pea turrets), Louis Pastbro (darts that poison; a heat wave that cooks nearby quacks), Michael Farabro (an arc welder that cuts quacks and stone; a cage that bounces every shot back for 6 s), Hypatia Bro (a disc that flies out and comes back through quacks; six discs that spiral out), Richard Feynbro (wavy shots that pass through two quacks; shots in every direction), Alexander Flembro (spores that make quacks sick, and sickness spreads; every quack on screen falls sick).
+- Each cage holds a random bro you have not freed yet. There are 15 cages across the four missions, so a run never frees all 17.
+- **Hit boxes:** bullets are tested along the path they travelled each frame, so fast shots cannot skip through anything; enemy shots must touch a box a pixel inside your sprite. The pause menu can show all hitboxes.
 
 ### Moves
 

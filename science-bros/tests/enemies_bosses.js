@@ -27,7 +27,7 @@ check('title screen draws', drew);
 // levels
 S.reset(); check('level 1 builds with nothing floating', S.checkCollapse() === 0);
 S.startLevel(1); check('level 2 builds with nothing floating', S.checkCollapse() === 0);
-check('level 2 has 2 cages and 2 bosses', S.ents.filter((e) => e.type === 'cage').length === 2 && S.ents.some((e) => e.type === 'kopter') && S.ents.some((e) => e.type === 'crawler'));
+check('level 2 has 3 cages and 2 bosses', S.ents.filter((e) => e.type === 'cage').length === 3 && S.ents.some((e) => e.type === 'kopter') && S.ents.some((e) => e.type === 'crawler'));
 
 // riot shield: blocks from the front, not from behind, and a punch knocks it away
 lone(); stand(10); let e = spawn('shield', 14, { face: -1 });
@@ -152,7 +152,7 @@ check('level-clear screen draws', drew);
 
 // level 3: builds clean, icicles drop on what walks under them, ice is slippery, the tank fights and the game ends
 S.startLevel(2); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
-check('level 3 has 2 cages, a mech and the tank', S.ents.filter((o) => o.type === 'cage').length === 2 && S.ents.some((o) => o.type === 'mechsuit') && S.ents.some((o) => o.type === 'tank'));
+check('level 3 has 3 cages, a mech and the tank', S.ents.filter((o) => o.type === 'cage').length === 3 && S.ents.some((o) => o.type === 'mechsuit') && S.ents.some((o) => o.type === 'tank'));
 run(1); S.ents.forEach((o) => { if (!['tank', 'icicle', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const ic = S.ents.find((o) => o.type === 'icicle');
 const q = Object.assign(S.makeEnt({ type: 'grunt', c: 118, from: 13 }), { face: 1 }); S.ents.push(q);
@@ -176,7 +176,7 @@ check('extraction on level 3 leads on to level 4', S.state === 'win', S.state);
 
 // level 4: the Succussion Engine
 S.startLevel(3); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
-check('level 4 has 3 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 3 && S.ents.some((o) => o.type === 'engine'));
+check('level 4 has 4 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 4 && S.ents.some((o) => o.type === 'engine'));
 run(1); S.ents.forEach((o) => { if (!['engine', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = 192 * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
 check('Succussion Engine activates', eng.active);

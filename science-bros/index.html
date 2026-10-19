@@ -73,7 +73,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 
   <div class="bar">
     <ul class="keys">
-      <li><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move</li>
+      <li><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move; tap twice quickly to run</li>
       <li><kbd>↑</kbd> / <kbd>W</kbd> / <kbd>Space</kbd> jump; hold against a wall to climb</li>
       <li><kbd>Z</kbd> / <kbd>J</kbd> fire</li>
       <li><kbd>X</kbd> / <kbd>K</kbd> special (3 per bro)</li>
@@ -121,6 +121,12 @@ const HEADS = {
   turing:   ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..sssses....', '..ssssss....', '...ssss.....'],
   johnson:  ['..hhhhh.....', '.hhhhhhh....', '.hhssssss...', '.hgggggg....', '..ssssss....', '...ssss.....'],
   meitner:  ['....hh......', '...hhhh.....', '..hhhhhh....', '.hhsssse....', '..ssssss....', '...ssss.....'],
+  mendel:   ['....ssss....', '..hssssssh..', '.hhssssssh..', '.hhsssses...', '..hssssss...', '...ssss.....'],
+  pasteur:  ['...hhhh.....', '..hhhhhhh...', '.hhssssss...', '..sssses....', '..wwwwww....', '...wwww.....'],
+  faraday:  ['...hhhhh....', '..hhhhhhhh..', '.hhssssssh..', '.hssssesh...', '..ssssss....', '...ssss.....'],
+  hypatia:  ['..gggggg....', '.hhhhhhhh...', 'hhhssssss...', 'hhhsssese...', 'hh.ssssss...', 'h..sssss....'],
+  feynman:  ['..hhhhhh....', '.hhhhhhhh...', '.hhssssss...', '..sssses....', '..ssssss....', '...ssss.....'],
+  fleming:  ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..gggggg....', '..ssssss....', '...ssss.....'],
   archimedes: ['...gggg.....', '..ssssssg...', '.wssssses...', '.wwssssss...', '.wwwwwwww...', '..wwwww.....'],
   helmet:   ['....hhhh....', '..hhhhhhhh..', '.hhhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
   cap:      ['............', '...hhhhh....', '..hhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
@@ -184,6 +190,18 @@ const BROS = [
     pal: { h: '#8b8b96', s: '#f2cfb1', e: '#1b1d2e', c: '#e9eef6', t: '#7570b3', p: '#3a3550', b: '#25283a' } },
   { id: 'archimedes', name: 'Archimedes Bro', weapon: 'Screw drill', wdesc: 'a drill that chews through rock and quacks', special: 'The lever', sdesc: 'throws everything on screen into the air', formula: 'give me a place to stand', gun: '#c9a227',
     pal: { g: '#5f9a2c', w: '#eef1f6', s: '#e8c09a', e: '#1b1d2e', c: '#e6e2d0', t: '#c9a227', p: '#5a4632', b: '#3a3326' } },
+  { id: 'mendel', name: 'Gregor Mendbro', weapon: 'Pea shooter', wdesc: 'a fast spray of hard peas', special: 'Punnett square', sdesc: 'plants three pea turrets for 9 s', formula: '3 : 1', gun: '#7bc043',
+    pal: { h: '#6b5a4a', s: '#f0c9a4', e: '#1b1d2e', c: '#2a2a2a', t: '#e9eef6', p: '#2a2a2a', b: '#1a1a1a' } },
+  { id: 'pasteur', name: 'Louis Pastbro', weapon: 'Vaccine darts', wdesc: 'darts that poison quacks over time', special: 'Pasteurize', sdesc: 'a heat wave that cooks every quack close by', formula: '72 C for 15 s', gun: '#bfe9ff',
+    pal: { h: '#2a2420', w: '#3a2a20', s: '#efc9a6', e: '#1b1d2e', c: '#e9eef6', t: '#3a7a9a', p: '#2f3346', b: '#25283a' } },
+  { id: 'faraday', name: 'Michael Farabro', weapon: 'Arc welder', wdesc: 'a short electric arc that cuts quacks and stone', special: 'Faraday cage', sdesc: 'a cage that bounces every shot back for 6 s', formula: 'E inside = 0', gun: '#8fd3ff',
+    pal: { h: '#8b7a6a', s: '#f0c9a4', e: '#1b1d2e', c: '#3a3550', t: '#c9a227', p: '#2a2e42', b: '#15161f' } },
+  { id: 'hypatia', name: 'Hypatia Bro', weapon: 'Astrolabe disc', wdesc: 'a disc that flies out and comes back, cutting through quacks', special: 'Celestial orbit', sdesc: 'six discs spiral out around you', formula: 'conic sections', gun: '#f2c94c',
+    pal: { g: '#c9a227', h: '#1f1715', s: '#c99a74', e: '#1b1d2e', c: '#e6e2d0', t: '#8e2b3c', p: '#e6e2d0', b: '#7a5c36' } },
+  { id: 'feynman', name: 'Richard Feynbro', weapon: 'Wave function', wdesc: 'wavy shots that pass through two quacks', special: 'Path integral', sdesc: 'shots in every direction at once', formula: 'sum over histories', gun: '#e78ac3',
+    pal: { h: '#4a3a30', s: '#f0c9a4', e: '#1b1d2e', c: '#e9eef6', t: '#5c6480', p: '#25283a', b: '#15161f' } },
+  { id: 'fleming', name: 'Alexander Flembro', weapon: 'Mould spores', wdesc: 'a spore cloud that makes quacks sick, and sickness spreads', special: 'Penicillin', sdesc: 'every quack on screen falls sick', formula: 'a dirty Petri dish', gun: '#a6d854',
+    pal: { h: '#b4b4bc', s: '#f0c9a4', e: '#1b1d2e', g: '#c9d4e6', c: '#e9eef6', t: '#8e2b3c', p: '#2a2e42', b: '#15161f' } },
 ];
 const BRO = {};
 for (const b of BROS) { b.spr = buildSprites(HEADS[b.id], b.pal); b.white = buildSprites(HEADS[b.id], WHITE); BRO[b.id] = b; }
@@ -363,7 +381,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(0, 20, 16); ground(21, 26, 14); ground(27, 33, 15); ground(34, 43, 13);
   fill(38, 11, 40, 12, DIRT);
   sp('grunt', 17); sp('propane', 22); sp('grunt', 24); sp('ammo', 26); sp('barrel', 29); sp('grunt', 31); sp('dog', 33); sp('cage', 36, 0, { bro: 'curie' }); sp('grunt', 42);
-  sp('pickup', 35, 0, { item: 'intel' }); sp('spring', 32);
+  sp('pickup', 35, 0, { item: 'intel' }); sp('spring', 32); sp('guncrate', 40);
   dc('palm', 2); dc('palm', 9, { lean: -1 }); dc('sign', 12, { text: '100% NATURAL' }); dc('palm', 19); dc('palm', 30, { lean: -1 }); dc('sandbags', 41);
 
   // 2. Bunker
@@ -404,7 +422,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(141, 150, 12); ground(151, 175, 16);
   fill(160, 9, 161, 15, BRICK);
   sp('mechsuit', 142); sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
-  sp('flamer', 156); sp('fueltank', 154); sp('mine', 159); sp('mine', 162); sp('brute', 163); sp('target', 165, 0, { skin: 'vat' }); sp('pickup', 149, 0, { item: 'intel' }); sp('itemcrate', 143); sp('alarm', 152); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
+  sp('cage', 147); sp('guncrate', 151); sp('flamer', 156); sp('fueltank', 154); sp('mine', 159); sp('mine', 162); sp('brute', 163); sp('target', 165, 0, { skin: 'vat' }); sp('pickup', 149, 0, { item: 'intel' }); sp('itemcrate', 143); sp('alarm', 152); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
   dc('sandbags', 146); dc('sandbags', 153); dc('palm', 164, { lean: -1 }); dc('sign', 171, { text: 'NO SCIENCE' });
 
   // 6. Boss arena and extraction pad
@@ -418,7 +436,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
 function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Dunes
   ground(0, 14, 15); ground(15, 20, 14); ground(21, 27, 13); ground(28, 36, 15);
-  sp('grunt', 12); sp('dog', 18); sp('cage', 22, 0, { bro: 'ada' }); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
+  sp('guncrate', 8); sp('grunt', 12); sp('dog', 18); sp('cage', 22, 0, { bro: 'ada' }); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
   dc('cactus', 3); dc('sign', 7, { text: 'DETOX 4 LIFE' }); dc('cactus', 11); dc('crystal', 16); dc('cactus', 25); dc('palm', 35, { lean: -1 });
 
   // 2. The Wellness Retreat: two floors, crate doors, a hole in the middle floor to climb through
@@ -453,7 +471,7 @@ function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   fill(135, 21, 150, 21, STEEL); fill(135, 17, 150, 20, ACID); fill(135, 16, 150, 16, CRATE);
   for (const c of [138, 142, 146, 149]) fill(c, 17, c, 20, STEEL);
   ground(151, 172, 14); fill(158, 11, 161, 13, DIRT);
-  sp('mine', 128); sp('mine', 131); sp('grunt', 130); sp('dog', 132); sp('pickup', 160, 11, { item: 'intel' }); sp('itemcrate', 168); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
+  sp('cage', 127, 0); sp('guncrate', 129); sp('mine', 128); sp('mine', 131); sp('grunt', 130); sp('dog', 132); sp('pickup', 160, 11, { item: 'intel' }); sp('itemcrate', 168); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
   sp('flamer', 133); sp('ammo', 153); sp('strike', 154); sp('heavy', 155); sp('brute', 157); sp('sniper', 160); sp('rocketeer', 159); sp('cage', 164, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 170);
   dc('sign', 128, { text: 'ACID' }); dc('cactus', 152); dc('crystal', 157); dc('cactus', 166);
   sp('flag', 171);
@@ -469,7 +487,7 @@ function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Loading yard: container stacks, fuel tanks, mines
   ground(0, 40, 16);
   fill(14, 13, 17, 15, BRICK); fill(26, 12, 31, 15, BRICK); fill(28, 10, 30, 11, CRATE);
-  sp('grunt', 9); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
+  sp('guncrate', 6); sp('grunt', 9); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
   dc('sign', 4, { text: 'DILUTION PLANT' }); dc('sandbags', 21);
 
   // 2. Factory hall: catwalk with a ladder, two dilution vats on the floor
@@ -491,7 +509,7 @@ function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(92, 100, 16); fill(101, 21, 103, 21, STEEL); fill(101, 17, 103, 20, ACID);
   ground(104, 112, 15); fill(113, 21, 115, 21, STEEL); fill(113, 17, 115, 20, ACID);
   ground(116, 130, 16);
-  sp('mechsuit', 84); sp('dog', 94); sp('brute', 98); sp('itemcrate', 95); sp('rocketeer', 108); sp('strike', 107); sp('fueltank', 110);
+  sp('mechsuit', 84); sp('cage', 86); sp('guncrate', 91); sp('dog', 94); sp('brute', 98); sp('itemcrate', 95); sp('rocketeer', 108); sp('strike', 107); sp('fueltank', 110);
   sp('grunt', 119); sp('alarm', 118); sp('flamer', 122); sp('pickup', 124, 0, { item: 'intel' }); sp('spring', 126);
   dc('sign', 87, { text: 'DO NOT DRINK' });
   sp('flag', 128);
@@ -514,7 +532,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Snowy slopes with a frozen pond (ice is slippery)
   ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
   fill(12, 14, 17, 14, ICE);
-  sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
+  sp('guncrate', 5); sp('cage', 28); sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
   dc('pine', 3); dc('sign', 6, { text: 'COLD CURES ALL' }); dc('pine', 9); dc('snowman', 20); dc('pine', 29); dc('pine', 35);
 
   // 2. The Cryo Spa: brick, crate doors, an ice floor, a mech parked outside
@@ -552,7 +570,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   ground(151, 176, 16);
   fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK); fill(169, 8, 169, 15, LADDER);
   sp('pickup', 158, 0, { item: 'intel' }); sp('mine', 157); sp('mine', 164); sp('fueltank', 166); sp('alarm', 154);
-  sp('flag', 152); sp('flamer', 155); sp('shield', 156); sp('brute', 163); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
+  sp('flag', 152); sp('guncrate', 153); sp('flamer', 155); sp('shield', 156); sp('brute', 163); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
   dc('sandbags', 154); dc('snowman', 163);
 
   // 6. Tank arena: snow over steel, the extraction pad behind a gate
@@ -565,25 +583,25 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
 // the campaign: Operation Infinite Dilution. Each level has a briefing, objectives (required ones gate the
 // chopper), three intel files that tell the story, a debrief, and a spot on the world map.
 const LEVELS = [
-  { name: 'PLACEBO ISLAND', sub: 'Smash the vats, destroy the Homeopathitron', theme: 'island', build: buildIsland, cages: 4, pad: [227, 16], map: [118, 168],
+  { name: 'PLACEBO ISLAND', sub: 'Smash the vats, destroy the Homeopathitron', theme: 'island', build: buildIsland, cages: 5, pad: [227, 16], map: [118, 168],
     brief: 'Dr. Placebo has taken Placebo Island and is brewing medicine that is 100% water. He is holding four of our scientists in cages. Smash his three placebo vats, free our people and take down his walking pill, the Homeopathitron.',
     debrief: 'The island is clear. The shipping logs point to a spa out in the Detox Desert.',
-    objectives: [{ id: 'vat', text: 'Smash the placebo vats', need: 3, req: true }, { id: 'boss', text: 'Destroy the Homeopathitron', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    objectives: [{ id: 'vat', text: 'Smash the placebo vats', need: 3, req: true }, { id: 'boss', text: 'Destroy the Homeopathitron', req: true }, { id: 'cage', text: 'Free the scientists', need: 5 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Shipping log: all vats go to the Wellness Spa, Detox Desert.', 'Memo: the more you dilute it, the stronger it gets. - Dr. P', 'Map scrap: a mountain lab marked CRYO, a factory marked DILUTION PLANT.'] },
-  { name: 'DETOX DESERT', sub: 'Topple the mast, down the kopter, kill the Crawler', theme: 'desert', build: buildDesert, cages: 2, pad: [230, 12], map: [212, 118],
+  { name: 'DETOX DESERT', sub: 'Topple the mast, down the kopter, kill the Crawler', theme: 'desert', build: buildDesert, cages: 3, pad: [230, 12], map: [212, 118],
     brief: 'The Wellness Spa sells detox to millions and pumps the ads out over a radio mast. Topple the mast, shoot down the Detoxkopter that guards the airspace and kill the Crystal Crawler that lives under the sand.',
     debrief: 'The ads are off the air. An invoice in the spa office was addressed to Dr. Placebo, Cryo Summit.',
-    objectives: [{ id: 'radio', text: 'Topple the radio mast', req: true }, { id: 'kopter', text: 'Shoot down the Detoxkopter', req: true }, { id: 'boss', text: 'Kill the Crystal Crawler', req: true }, { id: 'cage', text: 'Free the scientists', need: 2 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    objectives: [{ id: 'radio', text: 'Topple the radio mast', req: true }, { id: 'kopter', text: 'Shoot down the Detoxkopter', req: true }, { id: 'boss', text: 'Kill the Crystal Crawler', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Spa brochure: our crystals absorb toxins. And radio waves. And scientists.', 'Radio script: ice baths cure everything. Visit Cryo Summit.', 'Invoice: one Snake Oil Tank, delivered to Dr. Placebo, Cryo Summit.'] },
-  { name: 'CRYO SUMMIT', sub: 'Wipe the servers, stop the Snake Oil Tank', theme: 'snow', build: buildCryo, cages: 2, pad: [230, 16], map: [300, 78],
+  { name: 'CRYO SUMMIT', sub: 'Wipe the servers, stop the Snake Oil Tank', theme: 'snow', build: buildCryo, cages: 3, pad: [230, 16], map: [300, 78],
     brief: 'Dr. Placebo himself is hiding at Cryo Summit. Wipe the two server racks that hold his customer list, free our people and stop his Snake Oil Tank.',
     debrief: 'Dr. Placebo bailed out of the tank in an escape pod. The diary says he has gone to the Dilution Plant to start the Engine.',
-    objectives: [{ id: 'server', text: 'Wipe the server racks', need: 2, req: true }, { id: 'boss', text: 'Stop the Snake Oil Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 2 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    objectives: [{ id: 'server', text: 'Wipe the server racks', need: 2, req: true }, { id: 'boss', text: 'Stop the Snake Oil Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Server log: customer list 4.2 million. Repeat customers: all of them.', 'Diary: if the summit falls, I flee to the Dilution Plant and start the Engine.', 'Blueprint: the Succussion Engine. Three stabiliser vats feed its core.'] },
-  { name: 'DILUTION PLANT', sub: 'Smash the vats, shut down the Succussion Engine', theme: 'plant', build: buildPlant, cages: 3, pad: [233, 15], map: [388, 186],
+  { name: 'DILUTION PLANT', sub: 'Smash the vats, shut down the Succussion Engine', theme: 'plant', build: buildPlant, cages: 4, pad: [233, 15], map: [388, 186],
     brief: 'This is it. The Succussion Engine will shake a drop of nothing into the world water supply until no medicine works. Free our last three scientists, smash the two dilution vats in the hall, then knock out the Engine: its three stabiliser vats first, then the core.',
     debrief: 'The Engine is scrap and Dr. Placebo is in handcuffs.',
-    objectives: [{ id: 'vat', text: 'Smash the dilution vats', need: 2, req: true }, { id: 'boss', text: 'Shut down the Succussion Engine', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    objectives: [{ id: 'vat', text: 'Smash the dilution vats', need: 2, req: true }, { id: 'boss', text: 'Shut down the Succussion Engine', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Recipe card: one drop of nothing, shaken one hundred times. Repeat.', 'Sticky note: who needs evidence when you have testimonials?', 'Final page: peer review is just other people\'s opinions. (It is not.)'] },
 ];
 const ENDING = 'The Succussion Engine is scrap and the water is safe. Dr. Placebo is on his way to a very long, very real trial, with real evidence. Science wins.';
@@ -1013,7 +1031,7 @@ const DIMS = {
   jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
-  cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1],
+  cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], peaplant: [8, 10, 1], guncrate: [12, 12, 1],
   spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
@@ -1035,6 +1053,7 @@ function makeEnt(s) {
   if (s.type === 'cage') e.bro = s.bro;
   if (s.type === 'pickup') { e.item = s.item; e.keep = !!s.item; }
   if (s.type === 'itemcrate') e.item = s.item;
+  if (s.type === 'guncrate') e.gun = s.gun;
   if (s.type === 'target') { e.skin = s.skin; if (s.skin === 'radio') { e.h = 56; e.y = surf(s.c, s.from) * T - 56; } }
   if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; }
   if (s.type === 'flag') e.on = false;
@@ -1092,9 +1111,9 @@ function startLevel(n) {
 function init() { newGame(); startLevel(0); }
 
 // ---------------------------------------------------------------- combat
-const HITTABLE = { mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1 };
+const HITTABLE = { guncrate: 1, mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
-const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, mine: 1, alarm: 1, target: 1 };
+const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, guncrate: 1, mine: 1, alarm: 1, target: 1 };
 const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
 const foe = (e) => live(e) && !OBJ[e.type];
 // how: 'shot' and 'blast' leave a ragdoll, 'gib' and 'crush' tear the body apart, 'burn' leaves a charred body, 'punch' sends it flying
@@ -1132,7 +1151,7 @@ function spawnPickup(x, y, strike = false) {
   ents.push(p);
   return p;
 }
-const ITEM_COL = { special: '#a6d854', strike: '#d9534f', shield: '#8fd3ff', overclock: '#f2c94c', jetpack: '#b4bed0', life: '#e78ac3', intel: '#f2c94c' };
+const ITEM_COL = { gun: '#c96a2a', special: '#a6d854', strike: '#d9534f', shield: '#8fd3ff', overclock: '#f2c94c', jetpack: '#b4bed0', life: '#e78ac3', intel: '#f2c94c' };
 function killEnemy(e, how = 'shot') {
   if (BOSS[e.type]) { bossDying(e); return; }
   e.dead = true;
@@ -1142,7 +1161,8 @@ function killEnemy(e, how = 'shot') {
   if (e.type === 'fueltank') { explode(cx, cy, 72, 8, 'env', 5); ignite(cx, cy, 6, 60); shake += 6; return; }
   if (e.type === 'mine') { explode(cx, cy, 30, 6, 'env', 2); return; }
   if (e.type === 'alarm') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-120, 120), rand(-200, -60), i % 2 ? '#d9534f' : '#5c6480'); floatText(cx, cy - 10, 'ALARM DOWN', '#a6d854'); return; }
-  if (e.type === 'itemcrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#3a7a9a' : '#bfe9ff'); const pk = spawnPickup(cx, cy); pk.item = e.item || ['shield', 'overclock', 'jetpack', 'life'][(Math.random() * 4) | 0]; return; }
+  if (e.type === 'guncrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#c96a2a' : '#25223a'); const pk = spawnPickup(cx, cy); pk.item = 'gun'; pk.gun = e.gun || Object.keys(GUNS)[(Math.random() * 4) | 0]; return; }
+  if (e.type === 'itemcrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#3a7a9a' : '#bfe9ff'); const pk = spawnPickup(cx, cy); pk.item = e.item || ['shield', 'overclock', 'jetpack', 'life', 'gun'][(Math.random() * 5) | 0]; if (pk.item === 'gun') pk.gun = Object.keys(GUNS)[(Math.random() * 4) | 0]; return; }
   if (e.type === 'target') { // objective target: vat, radio mast or server rack
     explode(cx, cy, 40, 6, 'p', 3); objHit(e.skin);
     for (let i = 0; i < 14; i++) chunk(cx + rand(-8, 8), cy + rand(-12, 12), rand(-200, 200), rand(-300, -60), { vat: ['#a6d854', '#bfe9ff'], radio: ['#8b93ad', '#d9534f'], server: ['#25223a', '#66c2a5'] }[e.skin][i % 2]);
@@ -1192,6 +1212,7 @@ function airstrike() {
 function givePickup(item, e) {
   switch (item) {
     case 'strike': airstrike(); break;
+    case 'gun': P.alt = { kind: e.gun, ammo: GUNS[e.gun].ammo }; showBanner(GUNS[e.gun].name, GUNS[e.gun].ammo + ' shots', 1.2); break;
     case 'shield': P.shield = 20; showBanner('SHIELD', 'stops one killing blow, 20 s', 1.2); break;
     case 'overclock': P.over = 9; showBanner('OVERCLOCK', 'double fire rate, 9 s', 1.2); break;
     case 'jetpack': P.jet = 7; showBanner('JETPACK', 'hold jump in the air to fly, 7 s', 1.2); break;
@@ -1283,26 +1304,61 @@ function explode(x, y, r, dmg, owner, tp) {
 const timers = [];
 function setTimeoutGame(fn, t) { timers.push({ fn, t }); }
 
+const GUNS = {
+  shotgun: { name: 'SHOTGUN', ammo: 14, col: '#7a5c36' }, rocket: { name: 'ROCKET LAUNCHER', ammo: 8, col: '#4b5a3a' },
+  minigun: { name: 'MINIGUN', ammo: 160, col: '#25223a' }, railgun: { name: 'RAILGUN', ammo: 6, col: '#8fd3ff' },
+};
+// a picked-up gun replaces the bro's weapon until its ammo runs out
+function fireAlt(f, gx, gy) {
+  const A = P.alt;
+  switch (A.kind) {
+    case 'shotgun':
+      for (let k = 0; k < 7; k++) { const a = rand(-0.32, 0.32); bullets.push({ x: gx, y: gy, vx: f * rand(400, 480) * Math.cos(a), vy: 440 * Math.sin(a), owner: 'p', dmg: 1.1, tdmg: 0.6, life: 0.32, kind: 'pellet', knock: 160 }); }
+      P.cool = 0.55; P.vx -= f * 90; P.recoil = 3; shake = Math.min(10, shake + 2); sfx('boom'); break;
+    case 'rocket':
+      bullets.push({ x: gx, y: gy - 1, vx: f * 140, vy: 0, owner: 'p', kind: 'rocket', explode: 34, tp: 4, dmg: 9, life: 3 });
+      P.cool = 0.7; P.vx -= f * 50; P.recoil = 3; sfx('rocket'); break;
+    case 'minigun': {
+      const a = rand(-0.1, 0.1); bullets.push({ x: gx, y: gy, vx: f * 520 * Math.cos(a), vy: 520 * Math.sin(a), owner: 'p', dmg: 0.8, tdmg: 0.5, life: 0.5, kind: 'photon' });
+      body({ kind: 'shell', x: P.x + P.w / 2, y: gy - 1, vx: -f * rand(40, 90), vy: rand(-170, -110), col: '#f2c94c', s: 2, r: 1, bounce: 0.5, fric: 0.6, vr: rand(-30, 30), life: 1.5 });
+      P.cool = 0.045; P.recoil = 1; P.vx -= f * 6; sfx('mg'); break;
+    }
+    case 'railgun': { // one line through everything that is not steel
+      let ex = gx;
+      for (let d = 0; d < 420; d += 4) {
+        ex = gx + f * d; const c = Math.floor(ex / T), r = Math.floor(gy / T), v = tileAt(c, r);
+        if (v === STEEL) break;
+        if (isSolidT(v)) damageTile(c, r, 3);
+      }
+      for (const e of ents) if (live(e) && segHit(gx, gy, ex, gy, e, 1)) hitEnemy(e, 7, f * 300, 'gib');
+      fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.25, max: 0.25, col: '#8fd3ff' });
+      P.cool = 1; P.vx -= f * 140; P.recoil = 4; shake = Math.min(12, shake + 4); sfx('sniper'); break;
+    }
+  }
+  A.ammo--; if (A.ammo <= 0) { P.alt = null; floatText(P.x + 5, P.y - 8, 'OUT OF AMMO', '#e78ac3'); }
+  fx.push({ kind: 'muzzle', x: gx + f * 2, y: gy, f, t: 0.06, max: 0.06 });
+}
 function fireWeapon() {
   const f = P.face, gx = P.x + (f > 0 ? P.w + 2 : -2), gy = P.y + 8;
+  if (P.alt) { fireAlt(f, gx, gy); return; }
   switch (P.bro.id) {
     case 'einstein':
-      bullets.push({ x: gx, y: gy, vx: f * 470, vy: rand(-12, 12), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.55, kind: 'photon' });
+      bullets.push({ x: gx, y: gy, vx: f * 500, vy: rand(-10, 10), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.55, kind: 'photon', pierce: 1 });
       body({ kind: 'shell', x: P.x + P.w / 2, y: gy - 1, vx: -f * rand(40, 90), vy: rand(-170, -110), col: '#f2c94c', s: 2, r: 1, bounce: 0.5, fric: 0.6, vr: rand(-30, 30), life: 2.5 });
       P.cool = 0.09; P.recoil = 1; sfx('shot'); break;
     case 'curie':
-      bullets.push({ x: gx, y: gy - 2, vx: f * 230 + P.vx * 0.4, vy: -210, grav: 750, owner: 'p', dmg: 4, life: 3, kind: 'vial', explode: 30, tp: 3 });
+      bullets.push({ x: gx, y: gy - 2, vx: f * 230 + P.vx * 0.4, vy: -210, grav: 750, owner: 'p', dmg: 4, life: 3, kind: 'vial', explode: 30, tp: 3, rad: 22 });
       P.cool = 0.48; sfx('throw'); break;
     case 'newton':
-      bullets.push({ x: gx, y: gy - 2, vx: f * 320, vy: -110, grav: 600, owner: 'p', dmg: 4, life: 2.5, kind: 'apple', explode: 13, tp: 2.6, knock: 260 });
+      bullets.push({ x: gx, y: gy - 2, vx: f * 320, vy: -110, grav: 600, owner: 'p', dmg: 5, life: 2.5, kind: 'apple', explode: 16, tp: 2.8, knock: 260, bounce: 1 });
       P.cool = 0.36; P.vx -= f * 70; P.recoil = 2; sfx('throw'); break;
     case 'tesla': zap(gx, gy, f); P.cool = 0.26; break;
     case 'franklin': beam(gx, gy, f); P.cool = 0.11; P.recoil = 1; break;
     case 'ada':
-      for (const a of [-0.13, 0, 0.13]) bullets.push({ x: gx, y: gy, vx: f * 400 * Math.cos(a), vy: 400 * Math.sin(a), owner: 'p', dmg: 1, tdmg: 0.5, life: 0.5, kind: 'card' });
+      for (const a of [-0.24, -0.12, 0, 0.12, 0.24]) bullets.push({ x: gx, y: gy, vx: f * 400 * Math.cos(a), vy: 400 * Math.sin(a), owner: 'p', dmg: 1, tdmg: 0.5, life: 0.5, kind: 'card' });
       P.cool = 0.24; P.recoil = 1.5; sfx('shot'); break;
     case 'darwin':
-      for (const k of [-1, 1]) bullets.push({ x: gx, y: gy - 2, vx: f * 210, vy: k * 70 - 20, ang: Math.atan2(k * 70 - 20, f * 210), owner: 'p', dmg: 2, tdmg: 0.3, life: 1.8, kind: 'finch' });
+      for (const k of [-1, 0, 1]) bullets.push({ x: gx, y: gy - 2, vx: f * 210, vy: k * 70 - 20, ang: Math.atan2(k * 70 - 20, f * 210), owner: 'p', dmg: 2, tdmg: 0.3, life: 1.8, kind: 'finch' });
       P.cool = 0.38; sfx('chirp'); break;
     case 'galileo': sunbeam(gx, gy, f); P.cool = 0.12; break;
     case 'turing':
@@ -1317,7 +1373,14 @@ function fireWeapon() {
     }
     case 'meitner': bullets.push({ x: gx, y: gy, vx: f * 250, vy: 0, owner: 'p', dmg: 2, life: 0.3, kind: 'fission', gen: 0, explode: 14, tp: 1.2 }); P.cool = 0.42; sfx('zap'); break;
     case 'archimedes': drill(f); P.cool = 0.05; break;
+    case 'mendel': { const a = rand(-0.09, 0.09); bullets.push({ x: gx, y: gy, vx: f * 380 * Math.cos(a), vy: 380 * Math.sin(a), owner: 'p', dmg: 0.6, tdmg: 0.25, life: 0.5, kind: 'pea' }); P.cool = 0.07; sfx('shot'); break; }
+    case 'pasteur': bullets.push({ x: gx, y: gy, vx: f * 520, vy: 0, owner: 'p', dmg: 1, tdmg: 0.2, life: 0.6, kind: 'dart', poison: 2.5 }); P.cool = 0.3; sfx('shot'); break;
+    case 'faraday': arcWeld(gx, gy, f); P.cool = 0.05; break;
+    case 'hypatia': if (bullets.filter((b) => b.kind === 'disc').length < 2) { bullets.push({ x: gx, y: gy, vx: f * 380, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0.4, life: 2, kind: 'disc', pierce: 99, dir: f, spin: 0 }); sfx('throw'); } P.cool = 0.3; break;
+    case 'feynman': bullets.push({ x: gx, y: gy, by: gy, vx: f * 300, vy: 0, owner: 'p', dmg: 1, tdmg: 0.4, life: 0.8, kind: 'qwave', phase: 0, pierce: 2 }); P.cool = 0.14; sfx('beam'); break;
+    case 'fleming': spores(gx, gy, f); P.cool = 0.1; break;
   }
+  if (slowT > 0) P.cool *= 0.6; // dilated time: you shoot faster
   fx.push({ kind: 'muzzle', x: gx + f * 2, y: gy, f, t: 0.05, max: 0.05 });
   part(gx + f * 2, gy, f * 40, rand(-20, 20), '#fff6c2', 0.08, 2);
 }
@@ -1359,14 +1422,14 @@ function zap(gx, gy, f) {
   const pts = [[gx, gy]];
   let cx = gx, cy = gy;
   const hitSet = new Set();
-  for (let k = 0; k < 3; k++) {
-    const range = k === 0 ? 130 : 80;
+  for (let k = 0; k < 4; k++) {
+    const range = k === 0 ? 140 : 90;
     const cands = enemiesNear(cx, cy, range, (e) => !hitSet.has(e) && (k > 0 || (center(e)[0] - gx) * f > -6) && los(cx, cy, center(e)[0], center(e)[1]));
     if (!cands.length) break;
     cands.sort((a, b) => Math.hypot(center(a)[0] - cx, center(a)[1] - cy) - Math.hypot(center(b)[0] - cx, center(b)[1] - cy));
     const e = cands[0]; hitSet.add(e);
     [cx, cy] = center(e); pts.push([cx, cy]);
-    hitEnemy(e, 2, f * 60);
+    hitEnemy(e, 2, f * 60); if (isQuack(e) && !e.dead) e.stun = Math.max(e.stun || 0, 0.5); // jolted stiff
   }
   if (pts.length === 1) {
     let ex = gx, ey = gy;
@@ -1397,13 +1460,35 @@ function drill(f) {
   if (Math.random() < 0.5) part(P.x + 5 + f * 18, P.y + 8, f * rand(10, 60), rand(-60, 20), '#fff6c2', 0.15, 1, G);
   if (Math.random() < 0.25) sfx('drill');
 }
+// Faraday's arc welder: a crackling arc about four tiles long that burns through quacks and cuts stone
+function arcWeld(gx, gy, f) {
+  let ex = gx; const pts = [[gx, gy]];
+  for (let d = 0; d < 64; d += 4) {
+    ex = gx + f * d;
+    if (solidPx(ex, gy)) { damageTile(Math.floor(ex / T), Math.floor(gy / T), 0.35); break; }
+    for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && gy >= e.y - 2 && gy <= e.y + e.h + 2) { hitEnemy(e, 0.3, f * 15); if (isQuack(e)) e.stun = Math.max(e.stun || 0, 0.15); }
+  }
+  for (let k = 1; k <= 4; k++) pts.push([gx + (ex - gx) * k / 4, gy + (k < 4 ? rand(-4, 4) : 0)]);
+  fx.push({ kind: 'bolt', pts, t: 0.06, max: 0.06, col: '#8fd3ff' });
+  if (Math.random() < 0.3) sfx('zap');
+}
+// Fleming's spores: a short green cloud; quacks it touches fall sick, and sickness spreads between them
+function spores(gx, gy, f) {
+  for (let i = 0; i < 3; i++) part(gx, gy + rand(-3, 3), f * rand(60, 160), rand(-30, 20), i % 2 ? '#a6d854' : '#7bc043', rand(0.3, 0.6), 2, 0, 'smoke');
+  const box = { x: f > 0 ? gx : gx - 56, y: gy - 10, w: 56, h: 20 };
+  for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) e.sick = Math.max(e.sick || 0, 4);
+  if (Math.random() < 0.15) sfx('hiss');
+}
 function beam(gx, gy, f) {
   sfx('beam');
-  let ex = gx;
+  let ex = gx, pen;
   const hitSet = new Set();
   for (let d = 0; d < 200; d += 3) {
     ex = gx + f * d;
-    if (solidPx(ex, gy)) { damageTile(Math.floor(ex / T), Math.floor(gy / T), 0.7); part(ex, gy, -f * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G); break; }
+    if (solidPx(ex, gy)) { // X-rays pass through one block, cutting it
+      const c = Math.floor(ex / T); damageTile(c, Math.floor(gy / T), 0.9); part(ex, gy, -f * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G);
+      if (pen === undefined) { pen = c; } else if (c !== pen) break;
+    }
     for (const e of ents) {
       if (e.dead || !HITTABLE[e.type] || hitSet.has(e)) continue;
       if (ex >= e.x && ex <= e.x + e.w && gy >= e.y && gy <= e.y + e.h) { hitSet.add(e); hitEnemy(e, 0.8, f * 20); }
@@ -1436,7 +1521,7 @@ function useSpecial() {
       break;
     case 'ada': {
       const d = makeEnt({ type: 'drone', c: 0, y: P.y - 18 });
-      d.x = P.x; d.life = 8; d.cool = 0.3; ents.push(d);
+      d.x = P.x; d.life = 12; d.cool = 0.3; ents.push(d);
       break;
     }
     case 'darwin': // the weak drop dead, the strong take a beating
@@ -1460,6 +1545,14 @@ function useSpecial() {
     case 'meitner': // a chain of blasts walks out along the ground ahead of you
       for (let i = 0; i < 8; i++) setTimeoutGame(() => { const x = P.x + 5 + f * (34 + i * 24), c = Math.floor(x / T); let r = Math.floor((P.y + 8) / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++; explode(x, r * T - 4, 28, 8, 'p', 3); }, i * 0.1);
       break;
+    case 'mendel': // three pea turrets sprout in front of you
+      for (const k of [1, 2, 3]) { const pl = makeEnt({ type: 'peaplant', c: Math.floor((P.x + f * k * 22) / T), from: Math.floor(P.y / T) }); pl.life = 9; pl.cool = k * 0.1; ents.push(pl); }
+      break;
+    case 'pasteur': fx.push({ kind: 'heat', x: P.x + 5, y: P.y + 8, r: 0, t: 0.5, max: 0.5, done: new Set() }); sfx('boom'); break;
+    case 'faraday': P.cage = 6; showBanner('FARADAY CAGE', 'shots bounce back for 6 s', 1.2); break;
+    case 'hypatia': for (let k = 0; k < 6; k++) bullets.push({ x: P.x + 5, y: P.y + 8, vx: 0, vy: 0, owner: 'p', dmg: 2, tdmg: 0.6, life: 2.5, kind: 'orbit', pierce: 99, ang: k * Math.PI / 3, rad: 8 }); break;
+    case 'feynman': for (let k = 0; k < 20; k++) { const a = k * Math.PI / 10; bullets.push({ x: P.x + 5, y: P.y + 8, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, owner: 'p', dmg: 2, tdmg: 0.5, life: 0.7, kind: 'photon', pierce: 1 }); } break;
+    case 'fleming': for (const e of ents) if (isQuack(e) && !e.dead && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.sick = 8; floatText(e.x + 5, e.y - 6, 'ACHOO', '#a6d854'); } fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#7bc043' }); break;
     case 'archimedes': // give me a lever: everything on screen goes up, and comes down hard
       for (const e of ents) if (live(e) && !BOSS[e.type] && e.type !== 'icicle' && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.vy = -520; e.kx += rand(-120, 120); e.lever = true; }
       for (const b of bodies) if (Math.abs(b.x - (cam.x + VW / 2)) < VW / 2) { b.vy = -rand(400, 600); b.rest = false; }
@@ -1590,6 +1683,7 @@ function updatePlayer(dt) {
   P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
   if (P.mech) { updateMechSuit(dt); return; }
   P.flip = Math.max(0, (P.flip || 0) - dt); P.aimT = Math.max(0, (P.aimT || 0) - dt);
+  P.cage = Math.max(0, (P.cage || 0) - dt);
   P.shield = Math.max(0, (P.shield || 0) - dt); P.over = Math.max(0, (P.over || 0) - dt); P.jet = Math.max(0, (P.jet || 0) - dt);
   if (P.jet > 0 && keys.jump && !P.onGround && P.coy <= 0 && !P.ladder) { // jetpack thrust
     P.vy = Math.max(P.vy - 2300 * dt, -170);
@@ -1799,8 +1893,17 @@ function updateEnt(e, dt) {
       }
       if (e.rung > 0) { e.rung -= dt; if (Math.floor(e.rung * 4) !== Math.floor((e.rung + dt) * 4)) sfx('siren'); }
       break;
-    case 'fueltank': case 'itemcrate': case 'target': e.vx = e.kx * 0.2; moveBody(e, dt); break;
+    case 'fueltank': case 'itemcrate': case 'guncrate': case 'target': e.vx = e.kx * 0.2; moveBody(e, dt); break;
     case 'drone': updateDrone(e, dt); break;
+    case 'peaplant': { // Mendel's turret: shoots peas at the nearest quack it can see
+      e.vx = 0; moveBody(e, dt); e.life -= dt; e.cool -= dt;
+      if (e.life <= 0) { e.dead = true; for (let i = 0; i < 5; i++) chunk(e.x + 4, e.y + 4, rand(-80, 80), rand(-120, -30), '#7bc043'); break; }
+      if (e.cool > 0) break;
+      const [px, py] = [e.x + 4, e.y + 2];
+      const tgt = enemiesNear(px, py, 200, (o) => !OBJ[o.type] && los(px, py, center(o)[0], center(o)[1])).sort((a, b) => Math.abs(center(a)[0] - px) - Math.abs(center(b)[0] - px))[0];
+      if (tgt) { const a = Math.atan2(center(tgt)[1] - py, center(tgt)[0] - px); bullets.push({ x: px, y: py, vx: Math.cos(a) * 360, vy: Math.sin(a) * 360, owner: 'p', dmg: 0.7, tdmg: 0.2, life: 0.6, kind: 'pea' }); e.face = Math.cos(a) > 0 ? 1 : -1; e.cool = 0.18; } else e.cool = 0.1;
+      break;
+    }
     case 'mechsuit':
       e.vx = 0; moveBody(e, dt);
       if (P.alive && !P.mech && (P.boardCool || 0) <= 0 && overlap(P, e)) boardMech(e);
@@ -1845,6 +1948,15 @@ function updateEnt(e, dt) {
     if (e.type === 'cage' || e.type === 'pickup') { e.dead = true; } else if (HITTABLE[e.type]) { e.hp = 0; killEnemy(e); }
   }
   e.rp += Math.abs(e.vx) * dt * 0.09;
+  if (e.poison > 0 && !e.dead) { // poison: a little damage several times a second
+    e.poison -= dt; e.ptick = (e.ptick || 0) - dt;
+    if (e.ptick <= 0) { e.ptick = 0.25; hitEnemy(e, 0.35, 0, 'shot'); part(e.x + rand(0, e.w), e.y + rand(0, 6), 0, -20, '#7bc043', 0.4, 1); }
+  }
+  if (e.sick > 0 && !e.dead && isQuack(e)) { // sick: wobbles, slowly dies, and coughs it onto quacks it touches
+    e.sick -= dt; e.ptick = (e.ptick || 0) - dt;
+    if (e.ptick <= 0) { e.ptick = 0.3; hitEnemy(e, 0.3, 0, 'shot'); part(e.x + 5, e.y + 2, rand(-20, 20), -15, '#a6d854', 0.6, 2, 0, 'smoke'); }
+    for (const o of ents) if (o !== e && isQuack(o) && !o.dead && !(o.sick > 0) && overlap(o, e)) o.sick = 4;
+  }
   if (e.lever && e.onGround && !e.dead) { e.lever = false; if (vyp > 250) { hitEnemy(e, 4, 0, 'crush'); shake = Math.min(10, shake + 1); } }
 }
 const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -2732,13 +2844,35 @@ function segHit(x0, y0, x1, y1, b, m) {
 }
 // the box enemy shots must touch to kill you: a pixel inside the sprite on the sides and the top of the hair
 const hurtbox = () => ({ x: P.x + 1, y: P.y + 2, w: P.w - 2, h: P.h - 2 });
+// an explosive bullet goes off; some leave something behind
+function burst(b, x, y, own) {
+  explode(x, y, b.explode, b.dmg, own, b.tp);
+  if (b.rad) fx.push({ kind: 'rad', x, y, r: b.rad, t: 2.6, max: 2.6, tick: 0 });
+}
+// a player bullet hits something: damage plus whatever the weapon adds (poison, sickness, a stun)
+function bulletHit(b, e) {
+  hitEnemy(e, b.dmg, Math.sign(b.vx) * (b.knock || 90));
+  if (b.poison && !e.dead) e.poison = Math.min(6, (e.poison || 0) + b.poison);
+  if (b.sick && isQuack(e) && !e.dead) e.sick = Math.max(e.sick || 0, b.sick);
+  if (b.stun && isQuack(e) && !e.dead) e.stun = Math.max(e.stun || 0, b.stun);
+}
 function updateBullets(dt, edt) {
   for (const b of bullets) {
     if (b.dead) continue;
     const d = b.owner === 'e' ? edt : dt, own = b.owner === 'e' ? 'env' : 'p';
     b.life -= d;
-    if (b.life <= 0 && !(b.kind === 'fission' && b.gen < 2)) { b.dead = true; if (b.explode) explode(b.x, b.y, b.explode, b.dmg, own, b.tp); continue; }
+    if (b.life <= 0 && !(b.kind === 'fission' && b.gen < 2)) { b.dead = true; if (b.explode) burst(b, b.x, b.y, own); continue; }
     if (b.kind === 'grenade') { updateGrenade(b, d); continue; }
+    if (b.kind === 'disc') { // boomerang: slows, turns, flies back to you; caught when it returns
+      b.spin += d * 30; b.vx -= b.dir * 760 * d;
+      if (b.vx * b.dir < 0) { b.vy = clamp((P.y + 8 - b.y) * 4, -200, 200); if (!b.back) { b.back = true; if (b.hits) b.hits.clear(); } } // on the way back it can cut the same quacks again
+      if (b.back && Math.abs(b.x - P.x - 5) < 10 && Math.abs(b.y - P.y - 8) < 14) { b.dead = true; continue; }
+    }
+    if (b.kind === 'orbit') { // spiral out around where you stand
+      b.ang += d * 6; b.rad += d * 70; b.vx = 0; b.vy = 0; b.x = P.x + 5 + Math.cos(b.ang) * b.rad; b.y = P.y + 8 + Math.sin(b.ang) * b.rad * 0.7;
+    }
+    if (b.kind === 'qwave') { b.phase += d * 18; b.vy = Math.cos(b.phase) * 150; }
+    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) damageTile(Math.floor(b.x / T), Math.floor(b.y / T), 0.15); // they cut through
     if (b.kind === 'fission' && b.gen < 2 && b.life <= 0) { // split into two smaller orbs
       b.dead = true; sfx('zap');
       for (const k of [-1, 1]) { const a = Math.atan2(b.vy, b.vx) + k * 0.35, sp = Math.hypot(b.vx, b.vy); bullets.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, owner: 'p', dmg: 2, life: b.gen === 0 ? 0.3 : 0.4, kind: 'fission', gen: b.gen + 1, explode: 14, tp: 1.2 }); }
@@ -2765,7 +2899,8 @@ function updateBullets(dt, edt) {
       if (P.alive && P.inv <= 0 && Math.abs(P.x + 5 - b.x) < 8 && P.y + P.h > b.y - 6) killPlayer('shot', Math.sign(b.vx));
       continue;
     }
-    if (b.kind === 'enigma' && solidPx(b.x, b.y) && b.bounces > 0) { // ricochet: step back out of the wall and bounce off it
+    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
+    else if (b.kind === 'enigma' && solidPx(b.x, b.y) && b.bounces > 0) { // ricochet: step back out of the wall and bounce off it
       b.bounces--; damageTile(Math.floor(b.x / T), Math.floor(b.y / T), 0.3);
       const px = b.x - b.vx * d, py = b.y - b.vy * d;
       if (solidPx(px, b.y)) b.vy = -b.vy; else b.vx = -b.vx;
@@ -2773,11 +2908,17 @@ function updateBullets(dt, edt) {
       part(b.x, b.y, rand(-40, 40), rand(-60, 0), '#66c2a5', 0.2, 1);
       continue;
     }
-    if (solidPx(b.x, b.y) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
+    if (b.bounce > 0 && solidPx(b.x, b.y)) {
+      b.bounce--; const px = b.x - b.vx * d, py = b.y - b.vy * d;
+      if (solidPx(px, b.y)) { b.vy = -b.vy * 0.55; b.vx *= 0.8; } else b.vx = -b.vx * 0.6;
+      b.x = px; b.y = py; sfx('clink');
+      continue;
+    }
+    if ((solidPx(b.x, b.y) && b.kind !== 'disc' && b.kind !== 'orbit') || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
       b.dead = true;
       if (b.kind === 'glob') { splash(b.x, b.y - 2, 6); acidPool(b.x - b.vx * d, b.y - b.vy * d); continue; }
       if (b.kind === 'rock') { for (let i = 0; i < 4; i++) chunk(b.x, b.y - 2, rand(-100, 100), rand(-150, -40), '#62626c'); sfx('crumble'); continue; }
-      if (b.explode) { explode(b.x - b.vx * d, b.y - b.vy * d, b.explode, b.dmg, own, b.tp); continue; }
+      if (b.explode) { burst(b, b.x - b.vx * d, b.y - b.vy * d, own); continue; }
       damageTile(Math.floor(b.x / T), Math.floor(b.y / T), b.tdmg || 0.5);
       part(b.x, b.y, -b.vx * 0.2, rand(-80, -10), b.owner === 'e' ? '#f2c94c' : '#d8e2ff', 0.25, 1, G);
       continue;
@@ -2786,21 +2927,27 @@ function updateBullets(dt, edt) {
       for (const e of ents) {
         if (!live(e)) continue;
         if (e !== b.src && segHit(ox, oy, b.x, b.y, e, 2)) { // never the quack that fired it
+          if (b.pierce && !b.explode) { // goes on through, once per target
+            if (!b.hits) b.hits = new Set();
+            if (b.hits.has(e)) continue;
+            b.hits.add(e); bulletHit(b, e);
+            if (b.hits.size <= b.pierce) continue;
+          }
           b.dead = true;
-          if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'p', b.tp);
-          else hitEnemy(e, b.dmg, Math.sign(b.vx) * 90);
+          if (b.explode) burst(b, b.x, b.y, 'p');
+          else if (!b.pierce) bulletHit(b, e);
           break;
         }
       }
       if (!b.dead) for (const e of ents) { // the engine's stabiliser vats
         if (e.type !== 'engine' || !live(e)) continue;
-        for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'p', b.tp); else hitVat(e, v, b.dmg); break; }
+        for (const v of e.vats) if (!v.dead && b.x > v.x && b.x < v.x + v.w && b.y > v.y && b.y < v.y + v.h) { b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg); break; }
       }
       if (!b.dead) for (const e of ents) { // the crawler's body is armoured: bullets spark off it
         if (e.type !== 'crawler' || !live(e)) continue;
         for (const s of e.segs) if (Math.abs(s.x - b.x) < 8 && Math.abs(s.y - b.y) < 8) {
           b.dead = true; sfx('ting');
-          if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'p', b.tp);
+          if (b.explode) burst(b, b.x, b.y, 'p');
           else for (let i = 0; i < 3; i++) part(b.x, b.y, -Math.sign(b.vx) * rand(40, 120), rand(-100, 20), '#fff6c2', 0.2, 1, G);
           break;
         }
@@ -2816,10 +2963,15 @@ function updateBullets(dt, edt) {
         if (Math.random() < 0.4) bleed(o.x, o.y, 2, b.vx * 0.1);
       }
     } else {
+      if (P.cage > 0 && P.alive && Math.hypot(b.x - P.x - 5, b.y - P.y - 8) < 20) { // Faraday cage: the shot bounces back as yours
+        b.owner = 'p'; b.vx = -b.vx; b.vy = -b.vy; b.home = false; b.ang = (b.ang || 0) + Math.PI; sfx('ting');
+        for (let i = 0; i < 3; i++) part(b.x, b.y, rand(-60, 60), rand(-60, 60), '#8fd3ff', 0.2, 1);
+        continue;
+      }
       const m = SHOOTABLE[b.kind] || b.kind === 'glob' || b.kind === 'rock' ? 3 : 0;
       if (P.alive && P.inv <= 0 && segHit(ox, oy, b.x, b.y, P.mech ? P : hurtbox(), m)) {
         b.dead = true;
-        if (b.explode) explode(b.x, b.y, b.explode, b.dmg, 'env', b.tp); else killPlayer(b.kind === 'glob' ? 'gib' : 'shot', Math.sign(b.vx));
+        if (b.explode) burst(b, b.x, b.y, 'env'); else killPlayer(b.kind === 'glob' ? 'gib' : 'shot', Math.sign(b.vx));
       }
     }
   }
@@ -2860,6 +3012,13 @@ function updateFx(dt, edt) {
       if (f.hitT <= 0) { f.hitT = 0.15; for (const e of ents) if (live(e) && Math.hypot(center(e)[0] - f.x, center(e)[1] - f.y) < 12) { hitEnemy(e, 1, Math.sign(center(e)[0] - f.x) * 60); setBurn(e); } }
       const c = Math.floor(f.x / T), r = Math.floor(f.y / T); if (isSolidT(tileAt(c, r))) damageTile(c, r, 2 * dt);
     } else if (f.kind === 'pod') { f.vy -= 60 * dt; f.y += f.vy * dt; f.x += 30 * dt; if (Math.random() < 0.8) part(f.x, f.y + 6, rand(-10, 10), rand(40, 90), '', 0.3, 2, 0, 'fire');
+    } else if (f.kind === 'heat') { // Pasteur's heat wave: a ring that grows and cooks every quack it reaches
+      f.r = (1 - f.t / f.max) * 150;
+      for (const e of ents) if (live(e) && !f.done.has(e) && Math.hypot(center(e)[0] - f.x, center(e)[1] - f.y) < f.r) { f.done.add(e); hitEnemy(e, 3, Math.sign(center(e)[0] - f.x) * 160, 'blast'); setBurn(e); }
+    } else if (f.kind === 'rad') { // Curie's radiation: a glowing puddle that hurts quacks standing in it
+      f.tick -= dt;
+      if (Math.random() < 0.4) part(f.x + rand(-f.r, f.r), f.y + rand(-6, 4), 0, rand(-30, -10), '#a6d854', 0.6, 2);
+      if (f.tick <= 0) { f.tick = 0.25; for (const e of ents) if (foe(e) && Math.hypot(center(e)[0] - f.x, center(e)[1] - f.y) < f.r + 6) hitEnemy(e, 0.5, 0, 'shot'); }
     } else if (f.kind === 'jet') {
       f.x += f.dir * 560 * dt; f.drop -= dt;
       if (f.x > f.from && f.x < f.to && f.drop <= 0) { f.drop = 0.075; bullets.push({ x: f.x, y: f.y + 6, vx: f.dir * 140, vy: 80, grav: 700, owner: 'p', dmg: 8, life: 4, kind: 'bomb', explode: 34, tp: 4 }); }
@@ -3196,6 +3355,7 @@ function drawPlayer() {
   if (P.inv > 0 && Math.floor(P.inv * 15) % 2 && !P.ride) return;
   if (P.mech) { drawBroMech(P.x, P.y, P.face, P.mech.wp, P.onGround, P.vx, P.bro, P.mech.hurt > 0, P.mech.kick, P.punch); return; }
   if (P.shield > 0 && (P.shield > 3 || Math.floor(P.shield * 6) % 2)) { ctx.globalAlpha = 0.3 + Math.sin(anim0() * 6) * 0.08; ctx.strokeStyle = '#8fd3ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(P.x + 5, P.y + 8, 12, 0, 7); ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1; }
+  if (P.cage > 0) { ctx.strokeStyle = '#8fd3ff'; ctx.globalAlpha = 0.5; for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(P.x + 5 + k * 6, P.y - 6); ctx.lineTo(P.x + 5 + k * 6, P.y + 18); ctx.stroke(); } ctx.strokeRect(P.x - 8.5, P.y - 6.5, 27, 25); ctx.globalAlpha = 1; }
   if (P.jet > 0) { ctx.fillStyle = '#b4bed0'; ctx.fillRect(Math.round(P.x + (P.face > 0 ? -1 : P.w - 3)), Math.round(P.y + 5), 4, 8); }
   const rig = P.bro.rig, cx = P.x + P.w / 2, feet = P.y + P.h + 1;
   const pose = P.ride ? { leg: 'climb', fr: 0, bob: 0 } : poseOf(P);
@@ -3216,6 +3376,14 @@ function drawPlayer() {
 const anim0 = () => performance.now() / 1000;
 function drawBroGun(bro, hx, hy, f) {
   const gx = Math.round(f > 0 ? hx : hx - 5), gy = Math.round(hy);
+  if (P.alt && bro === P.bro) { // a big borrowed gun
+    const A = P.alt, bx = f > 0 ? gx - 2 : gx - 5;
+    ctx.fillStyle = GUNS[A.kind].col; ctx.fillRect(bx, gy - 1, 12, 3); ctx.fillRect(f > 0 ? bx + 1 : bx + 8, gy + 2, 3, 2);
+    if (A.kind === 'rocket') { ctx.fillRect(bx - 1, gy - 2, 14, 4); ctx.fillStyle = '#d9534f'; ctx.fillRect(f > 0 ? bx + 12 : bx - 2, gy - 2, 2, 4); }
+    if (A.kind === 'minigun') { ctx.fillStyle = '#5c6480'; ctx.fillRect(f > 0 ? bx + 12 : bx - 4, gy - 1, 4, 3); }
+    if (A.kind === 'railgun') { ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + 3, gy, 6, 1); }
+    return;
+  }
   ctx.fillStyle = bro.gun;
   switch (bro.id) {
     case 'einstein': ctx.fillRect(gx, gy, 7, 2); ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx + (f > 0 ? 6 : 0), gy, 1, 1); break;
@@ -3229,6 +3397,12 @@ function drawBroGun(bro, hx, hy, f) {
     case 'turing': ctx.fillStyle = '#25223a'; ctx.fillRect(gx, gy, 6, 2); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 1, gy + 2, 3, 1); break;
     case 'johnson': ctx.fillStyle = '#5c6480'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : 0), gy - 2, 1, 2); break;
     case 'meitner': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx + 1, gy - 2, 4, 4); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 2, gy - 1, 2, 2); break;
+    case 'mendel': ctx.fillStyle = '#7bc043'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = '#4a7a2a'; ctx.fillRect(gx + (f > 0 ? 5 : 0), gy - 1, 1, 3); break;
+    case 'pasteur': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx, gy, 7, 2); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 2, gy - 1, 3, 1); break;
+    case 'faraday': ctx.fillStyle = '#5c6480'; ctx.fillRect(gx, gy - 1, 5, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : -1), gy - 1, 1, 3); break;
+    case 'hypatia': ctx.fillStyle = bro.gun; ctx.beginPath(); ctx.arc(gx + 2, gy, 3, 0, 7); ctx.fill(); break;
+    case 'feynman': ctx.fillStyle = '#7a5c36'; ctx.fillRect(gx, gy - 2, 3, 4); ctx.fillRect(gx + 3, gy - 1, 3, 3); break;
+    case 'fleming': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx, gy - 1, 5, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 1, gy, 3, 1); break;
     case 'archimedes': { // the screw spins
       const ph = Math.floor(anim0() * 30) % 2, dx = f > 0 ? gx : gx - 4;
       ctx.fillStyle = '#7a5c36'; ctx.fillRect(dx, gy - 1, 4, 3);
@@ -3358,6 +3532,17 @@ function drawEnt(e, t) {
       ctx.fillStyle = '#a6d854'; ctx.fillRect(x + 5, y + 3, 2, 6); ctx.fillRect(x + 3, y + 5, 6, 2);
       break;
     }
+    case 'peaplant': {
+      ctx.fillStyle = '#4a7a2a'; ctx.fillRect(x + 3, y + 3, 2, 7); ctx.fillRect(x, y + 6, 3, 2); ctx.fillRect(x + 5, y + 5, 3, 2);
+      ctx.fillStyle = '#7bc043'; ctx.fillRect(x + 1, y, 6, 4); ctx.fillStyle = '#25223a'; ctx.fillRect(e.face > 0 ? x + 6 : x, y + 1, 2, 2);
+      break;
+    }
+    case 'guncrate': { // orange weapon crate
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#c96a2a'; ctx.fillRect(x, y, e.w, e.h);
+      ctx.fillStyle = '#8a4a1a'; ctx.fillRect(x, y, e.w, 2); ctx.fillRect(x, y + e.h - 2, e.w, 2);
+      ctx.fillStyle = '#25223a'; ctx.fillRect(x + 2, y + 5, 8, 2); ctx.fillRect(x + 3, y + 7, 2, 2);
+      break;
+    }
     case 'spring': {
       const sq = e.squish > 0 ? 3 : 0;
       ctx.fillStyle = '#5c6480'; ctx.fillRect(x, y + 4, 12, 2);
@@ -3399,6 +3584,7 @@ function drawEnt(e, t) {
     case 'pickup': {
       const by = y + Math.round(Math.sin(e.t * 5) * 1.5);
       const item = e.item || (e.strike ? 'strike' : 'special');
+      if (item === 'gun') { ctx.fillStyle = GUNS[e.gun].col; ctx.fillRect(x - 2, by + 3, 11, 3); ctx.fillRect(x, by + 6, 3, 2); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 7, by + 2, 2, 1); break; }
       if (item === 'shield') { ctx.strokeStyle = '#8fd3ff'; ctx.beginPath(); ctx.arc(x + 4, by + 4, 4, 0, 7); ctx.stroke(); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x + 3, by + 2, 2, 2); break; }
       if (item === 'overclock') { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 4, by, 2, 4); ctx.fillRect(x + 2, by + 3, 4, 2); ctx.fillRect(x + 2, by + 5, 2, 3); break; }
       if (item === 'jetpack') { ctx.fillStyle = '#b4bed0'; ctx.fillRect(x + 1, by + 1, 6, 6); ctx.fillStyle = '#d9534f'; ctx.fillRect(x + 2, by + 7, 1, 2); ctx.fillRect(x + 5, by + 7, 1, 2); break; }
@@ -3597,6 +3783,11 @@ function drawBullets() {
       case 'wave': ctx.fillStyle = '#b4bed0'; ctx.fillRect(x - 4, y - 6, 8, 12); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x - 2, y - 9, 4, 3); break;
       case 'rock': ctx.fillStyle = '#62626c'; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.fillStyle = '#3e3e46'; ctx.fillRect(x - 1, y, 3, 2); break;
       case 'slug': ctx.fillStyle = '#ff6a4a'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y, 1, 1); break;
+      case 'pea': ctx.fillStyle = '#7bc043'; ctx.fillRect(x - 1, y - 1, 3, 3); ctx.fillStyle = '#c9f08f'; ctx.fillRect(x, y - 1, 1, 1); break;
+      case 'dart': ctx.fillStyle = '#e9eef6'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#7bc043'; ctx.fillRect(x + (b.vx > 0 ? 2 : -3), y, 2, 1); ctx.fillStyle = '#d9534f'; ctx.fillRect(x - (b.vx > 0 ? 4 : -3), y - 1, 2, 3); break;
+      case 'disc': case 'orbit': { ctx.save(); ctx.translate(x, y); ctx.rotate(b.spin || b.ang * 3); ctx.fillStyle = '#c9a227'; ctx.fillRect(-3, -3, 6, 6); ctx.fillStyle = '#f2c94c'; ctx.fillRect(-1, -4, 2, 8); ctx.fillRect(-4, -1, 8, 2); ctx.restore(); break; }
+      case 'qwave': ctx.fillStyle = '#e78ac3'; ctx.fillRect(x - 2, y - 1, 4, 3); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y, 2, 1); break;
+      case 'pellet': ctx.fillStyle = '#f2c94c'; ctx.fillRect(x - 1, y, 2, 1); break;
       case 'enigma': ctx.fillStyle = '#66c2a5'; ctx.fillRect(x - 2, y, 4, 1); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x, y, 1, 1); break;
       case 'calc': ctx.fillStyle = '#8da0cb'; ctx.fillRect(x - 2, y - 2, 4, 4); ctx.fillStyle = '#e9eef6'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'fission': { const r = 3 - b.gen; ctx.fillStyle = '#e78ac3'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y - 1, 1, 1); break; }
@@ -3654,6 +3845,10 @@ function drawFx() {
       ctx.fillRect(-18, -9, 4, 7); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(6, -3, 6, 2);
       ctx.fillStyle = Math.random() < 0.5 ? '#fff6c2' : '#f29e4c'; ctx.fillRect(-24, -1, 6, 3);
       ctx.restore();
+    } else if (f.kind === 'heat') {
+      ctx.globalAlpha = a; ctx.strokeStyle = '#f29e4c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1;
+    } else if (f.kind === 'rad') {
+      ctx.globalAlpha = 0.25 * a + 0.1; ctx.fillStyle = '#a6d854'; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, 6, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     } else if (f.kind === 'pod') {
       ctx.fillStyle = '#e6e2f0'; ctx.beginPath(); ctx.arc(f.x, f.y, 5, Math.PI, 0); ctx.fill(); ctx.fillRect(f.x - 5, f.y, 10, 5); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(f.x - 2, f.y - 3, 4, 3);
     } else if (f.kind === 'sun') {
@@ -3713,6 +3908,7 @@ function drawHud(t) {
   for (let i = 0; i < 3; i++) { const fx0 = 40 + i * 9, on = i < P.spec; ctx.fillStyle = on ? '#e9eef6' : '#2a3160'; ctx.fillRect(fx0 + 2, 19, 3, 2); ctx.fillStyle = on ? '#8da0cb' : '#2a3160'; ctx.fillRect(fx0, 21, 7, 6); }
   for (let i = 0; i < Math.min(lives, 9); i++) ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 7, 70 + i * 10, 20, 9, 5);
   if (lives > 9) text('+' + (lives - 9), 162, 26, 8, '#e7eaf6');
+  if (P.alt) text(GUNS[P.alt.kind].name + ' ' + P.alt.ammo, 104, 34, 8, '#c96a2a');
   if (P.mech) { ctx.fillStyle = '#2a3160'; ctx.fillRect(104, 31, 60, 2); ctx.fillStyle = P.mech.hp < 8 ? '#d9534f' : '#f2c94c'; ctx.fillRect(104, 31, 60 * Math.max(0, P.mech.hp) / P.mech.max, 2); }
   ctx.fillStyle = '#2a3160'; ctx.fillRect(40, 31, 60, 2);
   ctx.fillStyle = P.dcool > 0 ? '#5c6480' : '#a6d854'; ctx.fillRect(40, 31, 60 * (1 - Math.max(0, P.dcool) / 0.6), 2);
@@ -3779,12 +3975,12 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('4 LEVELS · 12 BROS · 5 BOSSES · 14 QUACK TYPES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('4 MISSIONS · 18 BROS · 5 BOSSES · 14 QUACK TYPES · 4 PICKUP GUNS', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST RUN ' + hiScore, VW / 2, 172, 8, '#f2c94c', 'center');
-    BROS.forEach((b, i) => { const x = VW / 2 - 190 + i * 32; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 126, 18, 24); });
+    BROS.forEach((b, i) => { const x = VW / 2 - 202 + (i % 18) * 23; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 128, 15, 20); });
     if (blink) text('PRESS ENTER OR TAP TO START', VW / 2, 190, 8, '#e7eaf6', 'center');
     text('ARROWS MOVE · UP JUMP · Z FIRE · X SPECIAL · C PUNCH', VW / 2, 216, 8, '#a3abd0', 'center');
-    text('SHIFT DASH · DOWN+PUNCH IN AIR SLAMS · GAMEPAD WORKS', VW / 2, 230, 8, '#a3abd0', 'center');
+    text('DOUBLE-TAP TO RUN · SHIFT ROLL · DOWN+PUNCH IN AIR SLAMS', VW / 2, 230, 8, '#a3abd0', 'center');
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
     text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LEVELS[level].cages, VW / 2, 126, 8, '#a3abd0', 'center');
