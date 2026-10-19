@@ -44,7 +44,7 @@ Walk into a parked mech (Level 1 cliff fort, Level 2 canyon, Level 3 outside the
 - Snow, aurora and a pine skyline on the Cryo Summit.
 - Title screen plays over the level with explosions going off in the background.
 - Pause menu (P): screen shake, scanlines, music and lighting on/off (saved in this browser), restart level, quit to title.
-- New HUD: portrait, specials as flasks, the bro reserve as heads, dash cooldown, score. Kills inside 1.6 s chain into a combo that multiplies the points; score and best combo show on the end screens.
+- New HUD: portrait, specials as flasks, the bro reserve as heads, dash cooldown, score. Kills inside 1.6 s chain into a combo that multiplies the points; score, run total and best combo show on the end screens, and the best run is saved in this browser and shown on the title.
 
 ### Animation and sound
 

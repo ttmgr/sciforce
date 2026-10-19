@@ -781,6 +781,14 @@ document.getElementById('fs').addEventListener('click', () => {
 // Toggled from the pause menu; kept in this browser only.
 const settings = { shake: true, scanlines: false, music: true, lighting: true };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
+let hiScore = 0;
+try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
+// the run's score is the sum over levels; the best run is kept in this browser
+let runScore = 0;
+function bankScore() {
+  runScore += stats.score;
+  if (runScore > hiScore) { hiScore = runScore; stats.newHi = true; try { localStorage.setItem('sciencebros.hiscore', String(hiScore)); } catch (e) { /* storage blocked */ } }
+}
 const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
 const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
@@ -937,7 +945,7 @@ function newPlayer(x, y, bro) {
     dash: 0, dcool: 0, dashDir: 1, wlock: 0, pound: 0, layers: 0 };
 }
 // a new run: only Einstein, three bros in reserve
-function newGame() { unlocked = ['einstein']; lives = 3; }
+function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; }
 function startLevel(n) {
   level = n;
   buildTiles(THEMES[LEVELS[n].theme]);
@@ -1337,7 +1345,7 @@ function step(dt) {
 
   if (!P.alive && !P.ride) {
     endT -= dt;
-    if (endT <= 0) { if (lives > 0) respawn(); else { state = 'over'; } }
+    if (endT <= 0) { if (lives > 0) respawn(); else { state = 'over'; bankScore(); runScore -= stats.score; } } // a failed attempt can set a best, but a retry starts the level's score again
   }
   if (banner.t > 0) banner.t -= dt;
   shake = Math.max(0, shake - dt * 25);
@@ -2419,7 +2427,7 @@ function updateChopper(dt) {
   if (chopper.state === 'leave') {
     chopper.x += 70 * dt; chopper.y -= 60 * dt;
     endT += dt;
-    if (endT > 2.6) state = level < LEVELS.length - 1 ? 'win' : 'done';
+    if (endT > 2.6) { state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); }
   }
 }
 
@@ -3083,12 +3091,13 @@ function drawScreen(t) {
   ctx.fillStyle = state === 'title' ? 'rgba(11,14,31,0.5)' : 'rgba(11,14,31,0.72)'; ctx.fillRect(0, 0, VW, VH);
   const blink = Math.floor(t * 2) % 2 === 0;
   const statRows = (y0) => {
-    const rows = [['SCORE', String(stats.score)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LEVELS[level].cages], ['BROS LOST', String(stats.deaths)]];
+    const rows = [['SCORE', String(stats.score) + (stats.newHi ? '  NEW BEST' : '')], ['RUN TOTAL', String(runScore)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LEVELS[level].cages], ['BROS LOST', String(stats.deaths)]];
     rows.forEach(([k, v], i) => { text(k, VW / 2 - 100, y0 + i * 12, 8, '#a3abd0'); text(v, VW / 2 + 100, y0 + i * 12, 8, '#e7eaf6', 'right'); });
   };
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
     text('3 LEVELS · 7 BROS · 4 BOSSES · 1 MECH', VW / 2, 104, 8, '#8da0cb', 'center');
+    if (hiScore) text('BEST RUN ' + hiScore, VW / 2, 172, 8, '#f2c94c', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 138 + i * 40; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 122, 24, 32); });
     if (blink) text('PRESS ENTER OR TAP TO START', VW / 2, 190, 8, '#e7eaf6', 'center');
     text('ARROWS MOVE · UP JUMP · Z FIRE · X SPECIAL · C PUNCH', VW / 2, 216, 8, '#a3abd0', 'center');
