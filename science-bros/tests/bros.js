@@ -20,7 +20,7 @@ const setup = (id) => {
 };
 const quack = (c, extra = {}) => { const e = Object.assign(S.makeEnt({ type: 'grunt', c, from: 0 }), { face: -1, react: 99, cool: 99 }, extra); S.ents.push(e); return e; };
 
-check('there are 22 bros', S.BROS.length === 22, S.BROS.length + ' bros');
+check('there are 28 bros', S.BROS.length === 28, S.BROS.length + ' bros');
 for (const b of S.BROS) {
   setup(b.id);
   const q = quack(12); // 8 tiles ahead; the bro walks toward it firing

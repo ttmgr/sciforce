@@ -61,7 +61,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
     <h1>Science Bros</h1>
     <div class="lvl">War on the Anti-Science League · 11 missions · 3 bonus modes</div>
   </header>
-  <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut a structure loose and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin. Then fight through the League's five strongholds (the Chemtrail Airfield, the Quartz Caverns, the Miasma Marsh, the Zodiac Observatory and the Perpetual Motion Works) to the Citrus Citadel, and juice King Citrus. Each freed scientist adds one bro to your reserve. From the title menu you can also hold the Lab Siege, run the Boss Rush or land on the Moon Base.</p>
+  <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut the base of an outlined brick or crate structure and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin. Then fight through the League's five strongholds (the Chemtrail Airfield, the Quartz Caverns, the Miasma Marsh, the Zodiac Observatory and the Perpetual Motion Works) to the Citrus Citadel, and juice King Citrus. Each freed scientist adds one bro to your reserve. From the title menu you can also hold the Lab Siege, run the Boss Rush or land on the Moon Base.</p>
 
   <div class="stage">
     <canvas id="game" width="480" height="270" tabindex="0" aria-label="Science Bros game screen"></canvas>
@@ -132,6 +132,12 @@ const HEADS = {
   wegener:  ['..hhhhhhh...', '.hhhhhhhhh..', '..sssssss...', '..sssses....', '..wwwwss....', '...ssss.....'],
   hubble:   ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..sssses....', '..ssssss....', '...sssggg...'],
   mendeleev: ['.hhhhhhh....', 'hhhhhhhhh...', 'hhssssssh...', 'hhsssseh....', 'hwwwwwwh....', '.wwwwwww....'],
+  hawking:  ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..gggggg....', '..ssssss....', '...ssss.....'],
+  hopper:   ['..hhhhhh....', '.hhhhhhhh...', '.hhssssss...', '.hsssses....', '..ssssss....', '...ssss.....'],
+  wu:       ['....hh......', '...hhhh.....', '..hhhhhhh...', '.hhsssses...', '.hhssssss...', '...sssss....'],
+  hodgkin:  ['..hhhhh.....', '.hhhhhhhh...', 'hhhssssss...', 'hhsssses....', '.hssssss....', '...ssss.....'],
+  davinci:  ['..gggggg....', '.gggggggg...', 'wwssssss....', 'wwsssses....', 'wwwwwwww....', '.wwwwwww....'],
+  rutherford: ['....ssss....', '..hssssssh..', '..sssssss...', '..sssses....', '..mmmmmm....', '...ssss.....'],
   archimedes: ['...gggg.....', '..ssssssg...', '.wssssses...', '.wwssssss...', '.wwwwwwww...', '..wwwww.....'],
   helmet:   ['....hhhh....', '..hhhhhhhh..', '.hhhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
   cap:      ['............', '...hhhhh....', '..hhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
@@ -215,6 +221,18 @@ const BROS = [
     pal: { h: '#3a2a20', g: '#5a3a26', s: '#f0c9a4', e: '#1b1d2e', c: '#3a3550', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
   { id: 'mendeleev', name: 'Dmitri Mendelbro', weapon: 'Periodic table', wdesc: 'each shot is a random element: sodium, helium, iron, neon or uranium', special: 'Missing elements', sdesc: 'eight element blasts across the screen', formula: '118 and counting', gun: '#c9a227',
     pal: { h: '#9a9aa2', w: '#b4b4bc', s: '#f0c9a4', e: '#1b1d2e', c: '#2a2a2a', t: '#c9a227', p: '#2a2a2a', b: '#1a1a1a' } },
+  { id: 'hawking', name: 'Stephen Hawkbro', weapon: 'Hawking radiation', wdesc: 'a fast spray of tiny particles', special: 'Black hole', sdesc: 'a black hole that pulls quacks in, eats blocks, then goes off', formula: 'T = hbar c^3 / 8 pi G M k', gun: '#b3a6ff',
+    pal: { h: '#5a3a26', g: '#2a2a2a', s: '#f0c9a4', e: '#1b1d2e', c: '#3a4a6a', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
+  { id: 'hopper', name: 'Grace Hopbro', weapon: 'Compiler burst', wdesc: 'three quick rounds per pull', special: 'First bug', sdesc: 'every quack on screen is marked as a bug and takes double damage for 8 s', formula: 'a moth in relay 70', gun: '#66c2a5',
+    pal: { h: '#b4b4bc', s: '#f0c9a4', e: '#1b1d2e', c: '#1f2a4a', t: '#c9a227', p: '#1f2a4a', b: '#15161f' } },
+  { id: 'wu', name: 'Chien-Shiung Wubro', weapon: 'Parity shots', wdesc: 'one shot forward and its mirror image backward', special: 'Parity violation', sdesc: 'every quack on screen is flipped round and knocked flat', formula: 'Co-60, 1956', gun: '#8fd3ff',
+    pal: { h: '#16161f', s: '#efcfa8', e: '#1b1d2e', c: '#2a5a9a', t: '#e6e2f0', p: '#1f2a4a', b: '#15161f' } },
+  { id: 'hodgkin', name: 'Dorothy Hodgbro', weapon: 'Crystal shards', wdesc: 'a fan of three shards that each pass through one quack', special: 'Crystal lattice', sdesc: 'crystal spikes burst out of the ground in a line ahead', formula: 'penicillin, B12, insulin', gun: '#b3a6ff',
+    pal: { h: '#6a4a30', s: '#f2cfb1', e: '#1b1d2e', c: '#7a4a8a', t: '#bfe9ff', p: '#3a3550', b: '#25283a' } },
+  { id: 'davinci', name: 'Leonardo da Vinbro', weapon: 'Crossbow', wdesc: 'heavy bolts that pass through two quacks and knock them back', special: 'Flying machine', sdesc: 'flap your wings: fly for 8 s', formula: 'Codex on the flight of birds', gun: '#c9a227',
+    pal: { g: '#8e2b3c', w: '#e6e2da', s: '#e8c09a', e: '#1b1d2e', c: '#8e2b3c', t: '#c9a227', p: '#5a4632', b: '#3a3326' } },
+  { id: 'rutherford', name: 'Ernest Rutherbro', weapon: 'Alpha particles', wdesc: 'heavy particles that bounce off walls twice', special: 'Gold foil', sdesc: 'a fan of twelve alpha particles that bounce all over', formula: 'like a shell bouncing off tissue paper', gun: '#f2c94c',
+    pal: { h: '#8a7a6a', m: '#6a5a4a', s: '#f0c9a4', e: '#1b1d2e', c: '#5a4632', t: '#e9eef6', p: '#3a3326', b: '#25211a' } },
 ];
 const BRO = {};
 for (const b of BROS) { b.spr = buildSprites(HEADS[b.id], b.pal); b.white = buildSprites(HEADS[b.id], WHITE); BRO[b.id] = b; }
@@ -355,6 +373,14 @@ const THEMES = {
   snow: { sky: ['#07112a', '#16284f', '#2f4a72'], stars: true, orb: 'moon', aurora: true, hill: '#1b2a48', city: '#122038', cityKind: 'pines', win: ['#bfe9ff', '#a6d854'], beam: '#bfe9ff',
     dirt: ['#4a5068', '#59617c', '#3b4057', '#646d8a'], top: ['#c9d8ea', '#ffffff'], dust: '#cfd8e8', ambient: 0.45, dark: '#030818', snow: true, acid: ['#1f5a86', '#6fc3f0', '#dff4ff'] },
 };
+// extra looks per theme: grass blades on top of the earth, cloud colour (none underground), what floats in the air
+const LOOK = {
+  island: { grass: 1, cloud: '#4a4f8a', motes: 'fly' }, desert: { cloud: '#c96a6a', motes: 'dust' }, edge: { grass: 1, cloud: '#6a5a8a' },
+  citrus: { cloud: '#c95a2a', motes: 'ember' }, sky: { grass: 1, cloud: '#ffffff' }, cave: { motes: 'fly' }, swamp: { grass: 1, cloud: '#3a4a3a', motes: 'fly' },
+  astro: { cloud: '#2a3a7a' }, rust: { cloud: '#5a3a2a', motes: 'dust' }, moon: {}, plant: { cloud: '#3a3a34', motes: 'dust' }, snow: { cloud: '#3a5072' },
+};
+for (const k in THEMES) THEMES[k].look = LOOK[k] || {};
+const mixHex = (a, b, k) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), ch = (sh) => Math.round(((pa >> sh) & 255) * (1 - k) + ((pb >> sh) & 255) * k); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; };
 let theme = THEMES.island;
 const TILE_IMG = [], BG_IMG = [];
 const TILE_COL = [null, null, ['#4a5677', '#303a56'], ['#93a0b8', '#6f7c96'], ['#7a5c36', '#5a4226'], null, ['#dff4ff', '#8fc7e8']];
@@ -362,12 +388,24 @@ function buildTiles(th) {
   theme = th; skyGrad = null;
   const speck = (g, cols, n) => { for (let i = 0; i < n; i++) { g.fillStyle = cols[i % cols.length]; g.fillRect((Math.random() * 15) | 0, (Math.random() * 15) | 0, 1 + (Math.random() * 2 | 0), 1); } };
   const make = (fn) => { const arr = []; for (let v = 0; v < 4; v++) { const c = mk(T, T); fn(c.getContext('2d'), v); arr.push(c); } return arr; };
-  TILE_IMG[DIRT] = make((g) => { g.fillStyle = th.dirt[0]; g.fillRect(0, 0, T, T); speck(g, th.dirt.slice(1), 14); });
+  TILE_IMG[DIRT] = make((g, v) => {
+    g.fillStyle = th.dirt[0]; g.fillRect(0, 0, T, T);
+    g.fillStyle = th.dirt[2]; g.fillRect(0, 5 + v, T, 1); g.fillRect(0, 12 - v, T, 1); // faint layers in the earth
+    speck(g, th.dirt.slice(1), 14);
+    for (let k = 0; k < 2; k++) { const px = (v * 5 + k * 7 + 2) % 13, py = (v * 3 + k * 6 + 3) % 12; g.fillStyle = th.dirt[3]; g.fillRect(px, py, 3, 2); g.fillStyle = th.dirt[2]; g.fillRect(px, py + 2, 3, 1); g.fillStyle = '#ffffff22'; g.fillRect(px, py, 1, 1); } // pebbles
+    if (v === 1) { g.fillStyle = th.dirt[2]; g.fillRect(3, 2, 1, 4); g.fillRect(4, 5, 3, 1); g.fillRect(7, 6, 1, 3); } // a root
+  });
   TILE_IMG[BRICK] = make((g, v) => {
-    g.fillStyle = '#4a5677'; g.fillRect(0, 0, T, T);
-    g.fillStyle = '#303a56';
-    for (let r = 0; r < 4; r++) { g.fillRect(0, r * 4 + 3, T, 1); const o = (r % 2) * 4 + v % 2 * 0; g.fillRect(o, r * 4, 1, 3); g.fillRect(o + 8, r * 4, 1, 3); }
-    g.fillStyle = '#5a6788'; g.fillRect(1, 0, 6, 1); g.fillRect(9, 4, 6, 1);
+    g.fillStyle = '#303a56'; g.fillRect(0, 0, T, T); // mortar
+    const tones = ['#4a5677', '#46526f', '#4f5b7d', '#435070'];
+    for (let r = 0; r < 4; r++) for (let b = -1; b < 2; b++) {
+      const x0 = b * 8 + (r % 2) * 4 + 1, x1 = Math.min(T, x0 + 7), xs = Math.max(0, x0);
+      if (x1 <= xs) continue;
+      g.fillStyle = tones[(r * 3 + b + v * 2 + 4) & 3]; g.fillRect(xs, r * 4, x1 - xs, 3);
+      g.fillStyle = '#5f6c90'; g.fillRect(xs, r * 4, x1 - xs, 1); // lit top of each brick
+      g.fillStyle = '#3a4562'; g.fillRect(Math.max(xs, x1 - 1), r * 4, 1, 3); // shaded right end
+    }
+    if (v === 2) { g.fillStyle = '#25304a'; g.fillRect(10, 9, 3, 1); g.fillRect(12, 10, 1, 2); } // a crack
   });
   TILE_IMG[STEEL] = make((g) => {
     g.fillStyle = '#6f7c96'; g.fillRect(0, 0, T, T);
@@ -931,17 +969,20 @@ let blastAt = null;
 // A solid tile stays up while a chain of solid neighbours links it to bedrock (the bottom row) or to steel.
 // Anything cut loose shakes for a moment, then drops as single blocks that crush what is under them.
 let shk, shakeList, falling, collapseDirty = false;
+// only built blocks can fall: brick, crates and ice. Earth and steel stay where they are, like in Broforce.
+const LOOSE = (v) => v === BRICK || v === CRATE || v === ICE;
+// a loose block stays up while a chain of loose blocks links it to something holding it: earth under it, or steel on any side
 function checkCollapse() {
   collapseDirty = false;
   const N = LW * LH, seen = new Uint8Array(N), q = [];
-  for (let i = 0; i < N; i++) if (tiles[i] === STEEL || (i >= N - LW && isSolidT(tiles[i]))) { seen[i] = 1; q.push(i); }
+  for (let i = 0; i < N; i++) if (isSolidT(tiles[i]) && (!LOOSE(tiles[i]) || i >= N - LW)) { seen[i] = 1; q.push(i); }
   while (q.length) {
-    const i = q.pop(), c = i % LW;
-    const nb = [i - LW, i + LW, c > 0 ? i - 1 : -1, c < LW - 1 ? i + 1 : -1];
-    for (const j of nb) if (j >= 0 && j < N && !seen[j] && isSolidT(tiles[j])) { seen[j] = 1; q.push(j); }
+    const i = q.pop(), c = i % LW, v = tiles[i], all = LOOSE(v) || v === STEEL || i >= N - LW;
+    const nb = all ? [i - LW, i + LW, c > 0 ? i - 1 : -1, c < LW - 1 ? i + 1 : -1] : [i - LW]; // earth only holds what sits on top of it
+    for (const j of nb) if (j >= 0 && j < N && !seen[j] && LOOSE(tiles[j])) { seen[j] = 1; q.push(j); }
   }
   let n = 0;
-  for (let i = 0; i < N; i++) if (isSolidT(tiles[i]) && !seen[i] && shk[i] <= 0) { shk[i] = 0.5; shakeList.push(i); n++; }
+  for (let i = 0; i < N; i++) if (LOOSE(tiles[i]) && !seen[i] && shk[i] <= 0) { shk[i] = 0.5; shakeList.push(i); n++; }
   if (n) sfx('creak');
   return n;
 }
@@ -1162,7 +1203,7 @@ document.getElementById('fs').addEventListener('click', () => {
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
-const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false };
+const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false, gore: 1 }; // gore: 0 off, 1 on, 2 extra
 try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
 let hiScore = 0;
 try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
@@ -1173,14 +1214,15 @@ function bankScore() {
   if (runScore > hiScore) { hiScore = runScore; stats.newHi = true; try { localStorage.setItem('sciencebros.hiscore', String(hiScore)); } catch (e) { /* storage blocked */ } }
 }
 const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
-const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
+const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['BLOOD AND GORE', 'gore'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
   if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
   if (pressed.down) menuSel = (menuSel + 1) % MENU.length;
   if (pressed.fire || pressed.start || pressed.melee) {
     const [, key] = MENU[menuSel];
-    if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
+    if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('flag'); }
+    else if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
     else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); }
     else { paused = false; state = 'title'; init(); }
   }
@@ -1315,6 +1357,11 @@ function spriteBody(kind, img, x, y, vx, vy, o = {}) {
 }
 // cut a 12x16 character sprite into head, torso and legs that fly apart
 function gibs(img, cx, cy, vx0, vy0, n = 1) {
+  if (!settings.gore) { for (let i = 0; i < 8; i++) part(cx + rand(-5, 5), cy + rand(-6, 6), rand(-60, 60), rand(-80, -10), '#8b84a6', rand(0.5, 1), rand(4, 7), 0, 'smoke'); return; } // gore off: a puff of dust
+  if (settings.gore === 2) { // extra: red mist and meat chunks that drip as they fly
+    for (let i = 0; i < 7; i++) body({ kind: 'chunk', x: cx + rand(-4, 4), y: cy + rand(-6, 4), vx: vx0 + rand(-200, 200), vy: vy0 + rand(-320, -100), col: ['#9b2335', '#6e1423', '#e6e2da', '#c94a5a'][i % 4], s: 2 + (i % 3), r: 1.5, bounce: 0.25, fric: 0.5, vr: rand(-16, 16), life: rand(5, 8), bleed: 1 });
+    for (let i = 0; i < 14; i++) part(cx + rand(-6, 6), cy + rand(-6, 6), rand(-50, 50), rand(-50, 10), i % 2 ? 'rgba(155,35,53,0.5)' : 'rgba(110,20,35,0.5)', rand(0.4, 0.9), rand(4, 8), 0, 'smoke');
+  }
   const W = img.width || 12, H = img.height || 16, a = Math.round(H * 0.375), b = Math.round(H * 0.75), hw = W >> 1;
   const cuts = [[0, 0, W, a], [0, a, W, b - a], [0, b, hw, H - b], [hw, b, W - hw, H - b]];
   for (let k = 0; k < cuts.length; k++) {
@@ -1325,14 +1372,18 @@ function gibs(img, cx, cy, vx0, vy0, n = 1) {
 }
 function gibBody(b) { if (b.dead) return; b.dead = true; gibs(b.img, b.x, b.y, b.vx * 0.5, -60, 0.8); }
 function bleed(x, y, n, vx0 = 0) {
-  for (let i = 0; i < n; i++) part(x, y, vx0 + rand(-140, 140), rand(-240, -20), i % 3 ? '#9b2335' : '#6e1423', rand(0.5, 1.2), 1 + (i % 2), G, 'blood');
+  const g = settings.gore | 0;
+  if (!g) { for (let i = 0; i < Math.min(n, 4); i++) part(x, y, rand(-40, 40), rand(-60, -10), '#8b84a6', 0.4, 2, 0, 'smoke'); return; } // gore off: dust, no blood
+  n *= g;
+  for (let i = 0; i < n; i++) part(x, y, vx0 + rand(-140, 140), rand(-240, -20), i % 3 ? '#9b2335' : '#6e1423', rand(0.5, 1.2), 1 + (i % 2) + (g === 2 && i % 5 === 0 ? 1 : 0), G, 'blood');
+  if (vx0) for (let i = 0; i < 4 * g; i++) part(x, y, Math.sign(vx0) * rand(220, 400), rand(-90, 30), i % 2 ? '#9b2335' : '#7a1a2a', 0.6, 1 + (i % 2), G * 0.3, 'blood'); // spatter on the wall behind
 }
 function decal(x, y, col, sz) {
   const c = Math.floor(x / T), r = Math.floor(y / T);
   if (!isSolidT(tileAt(c, r)) || c < 0 || c >= LW) return;
   const i = r * LW + c;
   let a = decals.get(i); if (!a) decals.set(i, (a = []));
-  if (a.length < 26) a.push([Math.floor(x), Math.floor(y), col, sz]);
+  if (a.length < (settings.gore === 2 ? 52 : 26)) a.push([Math.floor(x), Math.floor(y), col, sz]); // extra gore: stains can pile up thicker
 }
 function splash(x, y, n) {
   sfx('splash');
@@ -1344,16 +1395,22 @@ function updateBodies(dt) {
     if (b.dead) continue;
     if (b.acid > 0) { b.acid += dt; b.y += 10 * dt; b.vx *= 0.9; if (Math.random() < 0.2) part(b.x + rand(-4, 4), b.y - 4, 0, -30, '#c9f08f', 0.5, 2); continue; }
     if (solidPx(b.x, b.y)) { b.y -= 3; b.vy = Math.min(b.vy, 0); b.rest = false; continue; } // buried by a landing block: pop out
-    if (b.rest) { if (!solidPx(b.x, b.y + b.r + 1)) b.rest = false; else continue; }
+    if (b.rest) {
+      if (!solidPx(b.x, b.y + b.r + 1)) b.rest = false;
+      else { // a corpse slowly leaves a pool of blood under it
+        if (b.kind === 'corpse' && settings.gore && (b.pool || 0) < 4 + settings.gore * 3 && !b.acid) { b.poolT = (b.poolT || 0) - dt; if (b.poolT <= 0) { b.poolT = 0.3; b.pool = (b.pool || 0) + 1; const fy = Math.floor((b.y + b.r + 1) / T) * T; for (const d of [-1, 1]) decal(b.x + d * b.pool * 1.5, fy, b.pool % 2 ? '#6e1423' : '#9b2335', 2); } }
+        continue;
+      }
+    }
     b.vy = Math.min(b.vy + G * dt, 600);
     const nx = b.x + b.vx * dt, sxn = Math.sign(b.vx);
-    if (sxn && solidPx(nx + sxn * b.r, b.y)) { b.vx *= -b.bounce; b.vr *= -0.5; if (b.bleed > 0) decal(nx + sxn * (b.r + 1), b.y, '#9b2335', 2); }
+    if (sxn && solidPx(nx + sxn * b.r, b.y)) { b.vx *= -b.bounce; b.vr *= -0.5; if (b.bleed > 0 && settings.gore) decal(nx + sxn * (b.r + 1), b.y, '#9b2335', 2); }
     else b.x = nx;
     const ny = b.y + b.vy * dt;
     if (b.vy > 0 && solidPx(b.x, ny + b.r)) {
       const hard = b.vy;
       b.y = Math.floor((ny + b.r) / T) * T - b.r - 0.01;
-      if (b.bleed > 0 && hard > 120) decal(b.x + rand(-2, 2), b.y + b.r + 1, '#9b2335', 2);
+      if (b.bleed > 0 && hard > 120 && settings.gore) decal(b.x + rand(-2, 2), b.y + b.r + 1, '#9b2335', 2);
       if (b.kind === 'shell' && hard > 80) sfx('clink');
       b.vy = -hard * b.bounce; b.vx *= b.fric; b.vr = b.vx / Math.max(1, b.r) * 0.6;
       if (Math.abs(b.vy) < 35 && Math.abs(b.vx) < 10) {
@@ -1363,7 +1420,7 @@ function updateBodies(dt) {
     } else if (b.vy < 0 && solidPx(b.x, ny - b.r)) { b.vy *= -b.bounce; }
     else b.y = ny;
     b.rot += b.vr * dt;
-    if (b.bleed > 0) { b.bleed -= dt; if (Math.random() < 0.35) part(b.x, b.y, rand(-20, 20), rand(-30, 10), '#9b2335', 0.6, 1, G, 'blood'); }
+    if (b.bleed > 0) { b.bleed -= dt; if (settings.gore && Math.random() < 0.35) part(b.x, b.y, rand(-20, 20), rand(-30, 10), '#9b2335', 0.6, 1, G, 'blood'); }
     if (b.kind === 'block' && b.vx * b.vx + b.vy * b.vy > 220 * 220) for (const e of ents) {
       if (!live(e) || BOSS[e.type] || !(isQuack(e) || e.type === 'dog' || e.type === 'bomber') || Math.abs(e.x + e.w / 2 - b.x) > e.w / 2 + 4 || Math.abs(e.y + e.h / 2 - b.y) > e.h / 2 + 4) continue;
       hitEnemy(e, 2, Math.sign(b.vx) * 200, 'blast'); b.vx *= 0.4; b.vy *= 0.4; break;
@@ -1473,8 +1530,7 @@ function startLevel(n) {
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
   boss = ents.find((e) => e.final); chopper = null;
-  const pool = BROS.map((b) => b.id).filter((id) => !unlocked.includes(id)).sort(() => Math.random() - 0.5);
-  for (const c of ents) if (c.type === 'cage') c.bro = pool.length ? pool.pop() : BROS[(Math.random() * BROS.length) | 0].id;
+  for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
   G = levelDef(n).grav || 900;
   objectives = (levelDef(n).objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; ceasefire = levelDef(n).ceasefire !== undefined ? levelDef(n).ceasefire : 10;
@@ -1508,6 +1564,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   }
   if (e.dizzy > 0) dmg *= 2; // King Citrus takes double while he sees stars
   if (e.fervor > 0) dmg *= 0.6;
+  if (e.bug > 0) dmg *= 2; // Hopper marked it
   e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; // shoot one during the ceasefire and that one fights back
   if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
@@ -1765,6 +1822,12 @@ function fireWeapon() {
     case 'sagan': bullets.push({ x: gx, y: gy, vx: f * 220, vy: 0, owner: 'p', dmg: 1.2, tdmg: 0, life: 1.5, kind: 'dot', pierce: 99 }); P.cool = 0.22; sfx('beam'); break;
     case 'wegener': bullets.push({ x: gx, y: P.y + P.h - 7, vx: f * 240, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0, life: 0.8, kind: 'pwave', pierce: 99, lift: 260 }); P.cool = 0.4; sfx('thud'); break;
     case 'hubble': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 380, vy: 0, owner: 'p', dmg: 0.6, tdmg: 0.5, life: 0.9, kind: 'red' }); P.cool = 0.16; sfx('shot'); break;
+    case 'hawking': for (let k = 0; k < 3; k++) { const a = rand(-0.09, 0.09); bullets.push({ x: gx, y: gy, vx: f * 520 * Math.cos(a), vy: 520 * Math.sin(a), owner: 'p', dmg: 0.6, tdmg: 0.3, life: 0.45, kind: 'hawk' }); } P.cool = 0.12; sfx('beam'); break;
+    case 'hopper': for (let k = 0; k < 3; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face; bullets.push({ x: P.x + (ff > 0 ? P.w + 2 : -2), y: P.y + 8, vx: ff * 470, vy: rand(-8, 8), owner: 'p', dmg: 1.1, tdmg: 0.5, life: 0.6, kind: 'bit' }); sfx('shot'); P.recoil = 1; }, k * 0.05); P.cool = 0.36; break;
+    case 'wu': for (const d of [f, -f]) bullets.push({ x: d === f ? gx : P.x + (f > 0 ? -2 : P.w + 2), y: gy, vx: d * 420, vy: 0, owner: 'p', dmg: 1.2, tdmg: 0.5, life: 0.6, kind: 'parity' }); P.cool = 0.17; sfx('shot'); break;
+    case 'hodgkin': for (const a of [-0.13, 0, 0.13]) bullets.push({ x: gx, y: gy, vx: f * 430 * Math.cos(a), vy: 430 * Math.sin(a), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.5, kind: 'xtal', pierce: 1 }); P.cool = 0.22; sfx('glass'); break;
+    case 'davinci': bullets.push({ x: gx, y: gy, vx: f * 560, vy: -10, grav: 120, owner: 'p', dmg: 3, tdmg: 0.8, life: 1, kind: 'bolt2', pierce: 2, knock: 220 }); P.cool = 0.42; P.recoil = 2; sfx('throw'); break;
+    case 'rutherford': bullets.push({ x: gx, y: gy, vx: f * 360, vy: rand(-30, 30), owner: 'p', dmg: 2, tdmg: 0.8, life: 1.2, kind: 'alpha', bounce: 2 }); P.cool = 0.24; sfx('shot'); break;
     case 'mendeleev': { // a random element each shot
       const el = ['Na', 'He', 'Fe', 'Ne', 'U'][(Math.random() * 5) | 0];
       const o = { x: gx, y: gy, vx: f * 400, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0.5, life: 0.7, kind: 'elem', el };
@@ -1958,6 +2021,16 @@ function useSpecial() {
         e.vy = -150; hitEnemy(e, 2, 0, 'blast');
       }
       break;
+    case 'hawking': fx.push({ kind: 'hole', x: gx + f * 80, y: gy - 12, t: 3, max: 3, eat: 0 }); break;
+    case 'hopper': // every quack on screen is a bug now: double damage for 8 s
+      for (const e of ents) if (foe(e) && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.bug = 8; e.stun = Math.max(e.stun || 0, 1); floatText(e.x + 5, e.y - 6, 'BUG', '#66c2a5'); }
+      fx.push({ kind: 'screen', t: 0.15, max: 0.15, col: '#66c2a5' }); break;
+    case 'wu': // parity violation: everyone on screen turned round and knocked flat
+      for (const e of ents) if (foe(e) && !BOSS[e.type] && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { hitEnemy(e, 2, 0, 'blast'); e.face = -e.face; e.stun = 2.5; e.vy = -200; }
+      fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#8fd3ff' }); shake += 4; break;
+    case 'hodgkin': for (let k = 1; k <= 8; k++) setTimeoutGame(() => { const x = P.x + 5 + f * k * 26, c = Math.floor(x / T); let r = Math.floor((P.y - 20) / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++; fx.push({ kind: 'spike', x, y: r * T, t: 0.6, max: 0.6 }); explode(x, r * T - 8, 16, 6, 'p', 0); sfx('glass'); }, k * 0.07); break;
+    case 'davinci': P.jet = 8; P.vy = Math.min(P.vy, -220); break;
+    case 'rutherford': for (let k = 0; k < 12; k++) { const a = -0.6 + k * 0.11; bullets.push({ x: gx, y: gy, vx: f * 380 * Math.cos(a), vy: 380 * Math.sin(a), owner: 'p', dmg: 3, tdmg: 1, life: 1.6, kind: 'alpha', bounce: 3, pierce: 1 }); } break;
     case 'hubble': // everything flies away from you
       fx.push({ kind: 'ring', x: P.x + 5, y: P.y + 8, r: 120, t: 0.4, max: 0.4 }); sfx('boom'); shake += 5;
       for (const e of ents) if (live(e) && !BOSS[e.type] && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { const sgn = Math.sign(center(e)[0] - P.x - 5) || 1; e.kx = sgn * 520; e.vy = -320; e.lever = true; hitEnemy(e, 3, 0, 'blast'); }
@@ -1996,11 +2069,23 @@ function killPlayer(how = 'shot', dir = 0) {
   hitStop = Math.max(hitStop, 0.08);
   endT = 1.6;
 }
+// random bro picks. A shuffled bag hands out every bro once before any repeats, and never the bro you are playing.
+let broBag = [];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function fromBag(ids) {
+  const cur = P && P.bro ? P.bro.id : null;
+  broBag = broBag.filter((id) => ids.includes(id) && id !== cur);
+  if (!broBag.length) broBag = shuffle(ids.filter((id) => id !== cur));
+  return broBag.length ? broBag.pop() : ids[0];
+}
+// who comes out of a cage: a bro you have not freed yet while there are any (each equally likely), then any other bro from the bag
+function pickRescueBro() {
+  const locked = BROS.map((b) => b.id).filter((id) => !unlocked.includes(id));
+  return locked.length ? locked[(Math.random() * locked.length) | 0] : fromBag(BROS.map((b) => b.id));
+}
 function respawn() {
   lives--;
-  let pool = unlocked.filter((id) => id !== P.bro.id);
-  if (!pool.length) pool = unlocked;
-  const bro = BRO[pool[(Math.random() * pool.length) | 0]];
+  const bro = BRO[fromBag(unlocked)];
   P = newPlayer(checkpoint.x, checkpoint.y, bro);
   // the next bro parachutes in over the checkpoint, from as high as the open sky allows
   const c = Math.floor((P.x + 5) / T);
@@ -2240,7 +2325,7 @@ function playerSees(e, rangeX, rangeY) {
   return Math.abs(px - ex) < rangeX && Math.abs(py - ey) < rangeY && los(ex, ey - 2, px, py - 2);
 }
 function updateEnt(e, dt) {
-  e.flash -= dt; if (e.flinch > 0) e.flinch -= dt;
+  e.flash -= dt; if (e.flinch > 0) e.flinch -= dt; if (e.bug > 0) e.bug -= dt;
   if (!BOSS[e.type]) e.t += dt; // bosses use t as their own countdown
   const ground = !BOSS[e.type] && e.type !== 'flag' && e.type !== 'drone' && e.type !== 'icicle' && e.type !== 'camdrone';
   if (ground) {
@@ -2703,12 +2788,14 @@ function updateDrone(e, dt) {
 }
 function rescue(cage) {
   cage.dead = true; lives++; stats.rescued++; career.rescues++; addScore(1000, false); sfx('rescue'); objHit('cage');
-  if (!unlocked.includes(cage.bro)) unlocked.push(cage.bro);
+  if (!cage.bro || !BRO[cage.bro]) cage.bro = pickRescueBro();
+  const fresh = !unlocked.includes(cage.bro);
+  if (fresh) unlocked.push(cage.bro);
   const bro = BRO[cage.bro];
   P.bro = bro; P.spec = 3; P.inv = 1; if (!P.mech) { P.x = cage.x + 3; P.y = cage.y; P.vy = -260; P.flip = 0.45; }
   floatText(cage.x + 8, cage.y - 6, 'BRO!', '#a6d854');
   for (let i = 0; i < 16; i++) part(cage.x + 8, cage.y + 8, rand(-120, 120), rand(-200, -40), i % 2 ? '#8b93ad' : '#a6d854', rand(0.5, 1), 2, G);
-  showBanner('RESCUED: ' + bro.name.toUpperCase(), '+1 bro in reserve · ' + bro.weapon, 2.2);
+  showBanner((fresh ? 'NEW BRO: ' : 'RESCUED: ') + bro.name.toUpperCase(), '+1 bro in reserve · ' + bro.weapon, 2.2);
 }
 
 // ---------------------------------------------------------------- bro-mech
@@ -3677,6 +3764,17 @@ function updateFx(dt, edt) {
       }
       if (Math.random() < 0.8) { const a = rand(0, 6.3), r = rand(30, 70); part(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, -Math.cos(a) * r * 2, -Math.sin(a) * r * 2, '#b3a6ff', 0.45, 2); }
       if (f.t <= 0) explode(f.x, f.y, 56, 12, 'p', 4);
+    } else if (f.kind === 'hole') { // Hawking's black hole: pulls quacks in, eats them and the blocks around it, then evaporates in a blast
+      for (const e of ents) {
+        if (!live(e) || BOSS[e.type] || e.type === 'turret') continue;
+        const [cx, cy] = center(e), dx = f.x - cx, dy = f.y - cy, d = Math.hypot(dx, dy);
+        if (d < 150) { e.kx = clamp(e.kx + Math.sign(dx) * 1100 * dt, -260, 260); e.vy = Math.min(e.vy, -60 + dy * 2.5); }
+        if (d < 20) hitEnemy(e, 20 * dt, 0, 'blast');
+      }
+      f.eat -= dt;
+      if (f.eat <= 0) { f.eat = 0.12; const a = rand(0, 6.3), rr = rand(0, 26), c = Math.floor((f.x + Math.cos(a) * rr) / T), r = Math.floor((f.y + Math.sin(a) * rr) / T); if (isSolidT(tileAt(c, r)) && tileAt(c, r) !== STEEL) damageTile(c, r, 99); }
+      if (Math.random() < 0.9) { const a = rand(0, 6.3), r = rand(24, 60); part(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, -Math.cos(a) * r * 2.5 - Math.sin(a) * 60, -Math.sin(a) * r * 2.5 + Math.cos(a) * 60, '#e78ac3', 0.4, 2); }
+      if (f.t <= 0) explode(f.x, f.y, 64, 14, 'p', 4);
     } else if (f.kind === 'fire') {
       if (!isSolidT(tileAt(f.c, f.r))) { f.t = 0; continue; }
       if (Math.random() < 0.75) part(f.x + rand(-5, 5), f.y - 1, rand(-8, 8), rand(-60, -25), '', rand(0.25, 0.55), 2, 0, 'fire');
@@ -3816,6 +3914,7 @@ function updateChopper(dt) {
 const STARS = Array.from({ length: 90 }, () => [Math.random() * VW * 1.6, Math.random() * VH * 0.7, Math.random()]);
 const LABS = Array.from({ length: 22 }, (_, i) => ({ x: i * 120 + rand(0, 50), w: rand(30, 60), h: rand(40, 110), dome: Math.random() < 0.35, ant: Math.random() < 0.5 }));
 let skyGrad = null;
+const CLOUDS = Array.from({ length: 9 }, (_, k) => [Math.random() * (VW + 200), 30 + Math.random() * 80, 50 + Math.random() * 60, k % 2]);
 function drawBackground(t) {
   const th = theme;
   if (!skyGrad) { skyGrad = ctx.createLinearGradient(0, 0, 0, VH); skyGrad.addColorStop(0, th.sky[0]); skyGrad.addColorStop(0.7, th.sky[1]); skyGrad.addColorStop(1, th.sky[2]); }
@@ -3854,11 +3953,28 @@ function drawBackground(t) {
     }
     ctx.globalAlpha = 1;
   }
+  // drifting clouds in two layers (none underground)
+  if (th.look.cloud) for (const [cx0, cy0, cw, layer] of CLOUDS) {
+    const par = layer ? 0.12 : 0.05, span = VW + 200;
+    const x = ((cx0 - cam.x * par + t * (layer ? 6 : 3)) % span + span) % span - 100, y = cy0 - cam.y * par;
+    ctx.globalAlpha = layer ? 0.32 : 0.18; ctx.fillStyle = th.look.cloud;
+    ctx.beginPath(); for (let k = 0; k < 5; k++) { const kx = x + (k - 2) * cw * 0.22, kr = cw * (0.16 + ((k * 7) % 3) * 0.05); ctx.moveTo(kx + kr, y); ctx.arc(kx, y - (k % 2) * 4, kr, 0, 7); } ctx.fill();
+    ctx.fillRect(x - cw * 0.45, y, cw * 0.9, cw * 0.12);
+  }
+  ctx.globalAlpha = 1;
   // far hills
   ctx.fillStyle = th.hill;
   ctx.beginPath(); ctx.moveTo(0, VH);
   for (let x = 0; x <= VW; x += 8) { const wx = x + cam.x * 0.2; ctx.lineTo(x, 170 - cam.y * 0.15 + Math.sin(wx * 0.013) * 22 + Math.sin(wx * 0.031) * 9); }
   ctx.lineTo(VW, VH); ctx.fill();
+  if (th.orb !== 'none') { // nearer, darker hills with a lit ridge
+    const near = mixHex(th.hill, th.dark, 0.35);
+    ctx.fillStyle = near; ctx.beginPath(); ctx.moveTo(0, VH);
+    const ridge = (x) => { const wx = x + cam.x * 0.32; return 205 - cam.y * 0.22 + Math.sin(wx * 0.009 + 1) * 18 + Math.sin(wx * 0.027) * 7; };
+    for (let x = 0; x <= VW; x += 6) ctx.lineTo(x, ridge(x));
+    ctx.lineTo(VW, VH); ctx.fill();
+    ctx.fillStyle = mixHex(th.hill, th.sky[2], 0.25); for (let x = 0; x <= VW; x += 2) ctx.fillRect(x, Math.round(ridge(x)), 2, 1);
+  }
   // searchlights sweeping the sky
   ctx.fillStyle = th.beam;
   for (let k = 0; k < 3; k++) {
@@ -3958,10 +4074,22 @@ function drawTiles(t) {
     if (open(1, 0)) { ctx.fillStyle = 'rgba(0,0,10,0.25)'; ctx.fillRect(x + T - 1, y, 1, T); }
     let depth = 0; for (let k = 1; k <= 4 && isSolidT(tileAt(c, r - k)); k++) depth++;
     if (depth > 1 && v !== STEEL) { ctx.fillStyle = DEPTH_SHADE[depth]; ctx.fillRect(x, y, T, T); }
-    if (v === DIRT && tileAt(c, r - 1) === EMPTY) {
+    if (v === DIRT && !isSolidT(tileAt(c, r - 1)) && tileAt(c, r - 1) !== ACID) {
       ctx.fillStyle = theme.top[0]; ctx.fillRect(x, y, T, 4);
+      for (let k = 0; k < T; k += 2) { const d = ((c * 13 + k * 7) % 5); if (d < 3) ctx.fillRect(x + k, y + 4, 2, d); } // ragged lower edge
       ctx.fillStyle = theme.top[1]; ctx.fillRect(x, y, T, 2);
-      ctx.fillRect(x + ((c * 5) % 12) + 1, y - 2, 1, 2); ctx.fillRect(x + ((c * 11) % 12) + 2, y - 1, 1, 1);
+      if (open(-1, 0)) { ctx.fillStyle = theme.top[0]; ctx.fillRect(x - 1, y, 1, 5); ctx.fillRect(x - 2, y + 1, 1, 2); } // grass hangs over the edge
+      if (open(1, 0)) { ctx.fillStyle = theme.top[0]; ctx.fillRect(x + T, y, 1, 5); ctx.fillRect(x + T + 1, y + 1, 1, 2); }
+      ctx.fillStyle = theme.top[1];
+      if (theme.look.grass) for (let k = 0; k < 5; k++) { // swaying blades, and a flower now and then
+        const bx = x + ((c * 7 + k * 5) % 15), h = 1 + ((c + k * 3) % 3), sw = Math.sin(t * 2 + c * 0.7 + k) > 0.6 ? 1 : 0;
+        ctx.fillRect(bx, y - h, 1, h); if (h > 1) ctx.fillRect(bx + sw, y - h - 1, 1, 1);
+        if ((c * 31 + k * 17) % 23 === 0) { ctx.fillStyle = theme.win[(c + k) & 1]; ctx.fillRect(bx + sw, y - h - 2, 2, 2); ctx.fillStyle = theme.top[1]; }
+      } else { ctx.fillRect(x + ((c * 5) % 12) + 1, y - 2, 1, 2); ctx.fillRect(x + ((c * 11) % 12) + 2, y - 1, 1, 1); }
+    }
+    if (v === BRICK && open(0, -1) && tileAt(c, r - 1) !== LADDER) { // moss, sand or snow settles on top of brick walls
+      ctx.fillStyle = theme.top[0]; for (let k = 0; k < T; k += 2) { const d = 1 + ((c * 5 + k * 3) % 3); ctx.fillRect(x + k, y, 2, d); }
+      ctx.fillStyle = theme.top[1]; for (let k = 1; k < T; k += 4) ctx.fillRect(x + k, y, 2, 1);
     }
     const max = TILE_HP[v], hp = thp[r * LW + c];
     if (hp < max) {
@@ -3970,6 +4098,17 @@ function drawTiles(t) {
       ctx.fillRect(x + 4, y + 3, 1, 6 * k + 2); ctx.fillRect(x + 5, y + 8, 5 * k + 1, 1);
       if (k > 0.4) { ctx.fillRect(x + 11, y + 6, 1, 7 * k); ctx.fillRect(x + 8, y + 12, 4, 1); }
     }
+    if (LOOSE(v)) { // loose blocks are outlined, and hazard stripes mark where they rest on earth: cut there and the set comes down
+      const lo = (dc, dr) => LOOSE(tileAt(c + dc, r + dr)), ph = sh ? Math.floor(t * 24) % 4 : 0;
+      const dash = (hx, hy, horiz) => { for (let k = 0; k < T; k += 4) { ctx.fillStyle = ((k + ph * 1) >> 2) % 2 ? (sh ? '#ff5a3a' : 'rgba(242,201,76,0.8)') : (sh ? '#ffffff' : 'rgba(37,34,58,0.7)'); if (horiz) ctx.fillRect(hx + k, hy, 4, 1); else ctx.fillRect(hx, hy + k, 1, 4); } };
+      if (!lo(0, -1)) dash(x, y, true);
+      if (!lo(0, 1)) dash(x, y + T - 1, true);
+      if (!lo(-1, 0)) dash(x, y, false);
+      if (!lo(1, 0)) dash(x + T - 1, y, false);
+      const below = tileAt(c, r + 1);
+      if (isSolidT(below) && !LOOSE(below) && below !== STEEL) { for (let k = 0; k < T; k += 4) { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + k, y + T - 2, 2, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(x + k + 2, y + T - 2, 2, 2); } }
+      if (sh) { ctx.fillStyle = 'rgba(255,90,58,0.18)'; ctx.fillRect(x, y, T, T); }
+    }
     const dl = decals.get(r * LW + c);
     if (dl) drawDecals(dl, 0);
   }
@@ -3977,6 +4116,21 @@ function drawTiles(t) {
     ctx.drawImage(TILE_IMG[f.v][(f.c * 7 + f.r0 * 3) & 3], f.x, Math.round(f.y));
     if (f.dec) drawDecals(f.dec, Math.round(f.y) - f.r0 * T);
   }
+}
+// a soft dark ellipse on the ground under each character: smaller and fainter the higher it is
+function drawShadows() {
+  const one = (x, y, w, h) => {
+    const c = Math.floor((x + w / 2) / T); let r = Math.floor((y + h) / T); const r0 = r;
+    while (r < LH && r - r0 < 6 && !isSolidT(tileAt(c, r))) r++;
+    if (r >= LH || r - r0 >= 6) return;
+    const gy = r * T, d = gy - (y + h); if (d < -2) return;
+    const k = Math.max(0, 1 - d / 90);
+    ctx.globalAlpha = 0.32 * k; ctx.fillStyle = '#000000';
+    ctx.beginPath(); ctx.ellipse(x + w / 2, gy, Math.max(2, w * 0.62 * (0.5 + k * 0.5)), 2, 0, 0, 7); ctx.fill();
+  };
+  for (const e of ents) if (!e.dead && !BOSS[e.type] && e.type !== 'flag' && e.type !== 'icicle' && e.type !== 'target' && e.w < 40 && Math.abs(e.x - cam.x - VW / 2) < VW / 2 + 40) one(e.x, e.y, e.w, e.h);
+  if (P.alive) one(P.x, P.y, P.w, P.h);
+  ctx.globalAlpha = 1;
 }
 function drawBodies() {
   for (const b of bodies) {
@@ -4114,6 +4268,12 @@ function drawBroGun(bro, hx, hy, f) {
     case 'meitner': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx + 1, gy - 2, 4, 4); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 2, gy - 1, 2, 2); break;
     case 'sagan': ctx.fillStyle = '#5c6480'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : -1), gy - 1, 2, 3); break;
     case 'wegener': ctx.fillStyle = '#7a5c36'; ctx.fillRect(gx, gy, 6, 2); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : -2), gy - 2, 3, 5); break;
+    case 'hawking': ctx.fillStyle = '#25223a'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : -1), gy, 2, 1); break;
+    case 'hopper': ctx.fillStyle = '#3d4560'; ctx.fillRect(gx, gy - 1, 7, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 2, gy - 1, 2, 1); break;
+    case 'wu': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx - 2, gy - 1, 9, 2); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 6 : -2), gy - 1, 1, 2); ctx.fillRect(gx + (f > 0 ? -2 : 6), gy - 1, 1, 2); break;
+    case 'hodgkin': ctx.fillStyle = bro.gun; ctx.fillRect(gx, gy - 2, 3, 5); ctx.fillStyle = '#e8dcff'; ctx.fillRect(gx + 1, gy - 1, 1, 2); break;
+    case 'davinci': ctx.fillStyle = '#7a5c36'; ctx.fillRect(gx, gy, 7, 2); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : 0), gy - 3, 1, 7); break;
+    case 'rutherford': ctx.fillStyle = '#5c6480'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 5 : -1), gy - 1, 2, 3); break;
     case 'hubble': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx, gy - 1, 7, 3); ctx.fillStyle = bro.gun; ctx.fillRect(gx + (f > 0 ? 6 : 0), gy - 1, 1, 3); break;
     case 'mendeleev': ctx.fillStyle = '#e9eef6'; ctx.fillRect(gx, gy - 2, 6, 5); ctx.fillStyle = bro.gun; ctx.fillRect(gx + 1, gy - 1, 1, 1); ctx.fillRect(gx + 3, gy, 1, 1); break;
     case 'mendel': ctx.fillStyle = '#7bc043'; ctx.fillRect(gx, gy - 1, 6, 3); ctx.fillStyle = '#4a7a2a'; ctx.fillRect(gx + (f > 0 ? 5 : 0), gy - 1, 1, 3); break;
@@ -4246,6 +4406,7 @@ function drawQuack(e, t) {
     }
   }
   if (e.fervor > 0) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.6 + Math.sin(t * 8) * 0.3; ctx.beginPath(); ctx.ellipse(cx, sh.uy - 5, 4, 1.5, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; } // a halo while preached at
+  if (e.bug > 0) { const bx = Math.round(cx) - 2, by = sh.uy - 9 + Math.round(Math.sin(t * 9)); ctx.fillStyle = '#66c2a5'; ctx.fillRect(bx, by, 2, 2); ctx.fillRect(bx + 3, by, 2, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(bx + 2, by, 1, 3); } // a little moth: it is a bug
   if (e.hacked > 0 && Math.floor(t * 6) % 2) { ctx.fillStyle = '#66c2a5'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('01', x + 5, sh.uy - 3); }
   if (isQuack(e) && e.aware && e.react > 0 && e.burn <= 0) { ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 4, sh.uy - 10, 2, 5); ctx.fillRect(x + 4, sh.uy - 4, 2, 2); }
   if (isQuack(e) && e.huh > 0 && !e.aware) { ctx.fillStyle = '#a3abd0'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('?', x + 5, sh.uy - 3); }
@@ -4366,8 +4527,9 @@ function drawEnt(e, t) {
       break;
     }
     case 'cage': {
-      const bro = BRO[e.bro];
+      const bro = BRO[e.bro] || BROS[(Math.floor(t * 2.5) + Math.floor(e.x / T)) % BROS.length]; // unknown until it opens: a mystery bro flickers inside
       ctx.drawImage(bro.spr[Math.floor(t * 3) % 2 ? 0 : 2][1], x + 2, y); // shuffling about inside
+      if (!e.bro) { ctx.fillStyle = 'rgba(13,11,24,0.78)'; ctx.fillRect(x + 2, y, 12, 16); ctx.fillStyle = '#f2c94c'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('?', x + 8, y + 10); }
       ctx.fillStyle = '#8b93ad';
       ctx.fillRect(x, y, e.w, 2); ctx.fillRect(x, y + e.h - 2, e.w, 2);
       for (let i = 0; i < 5; i++) ctx.fillRect(x + i * 3 + 1, y, 1, e.h);
@@ -4533,6 +4695,12 @@ function drawBullets() {
       case 'dot': ctx.fillStyle = '#4f8fd0'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'star': ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 3, 2, 6); ctx.fillRect(x - 3, y - 1, 6, 2); break;
       case 'pwave': ctx.fillStyle = '#c9a27a'; ctx.fillRect(x - 3, y - 2, 6, 9); ctx.fillStyle = '#e6d2b0'; ctx.fillRect(x - 1, y - 5, 2, 3); break;
+      case 'hawk': ctx.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#b3a6ff'; ctx.fillRect(x - 1, y, 2, 1); break;
+      case 'bit': ctx.fillStyle = '#66c2a5'; ctx.fillRect(x - 2, y - 1, 4, 2); ctx.fillStyle = '#dff8ff'; ctx.fillRect(x + (b.vx > 0 ? 1 : -2), y - 1, 1, 2); break;
+      case 'parity': ctx.fillStyle = b.vx > 0 ? '#8fd3ff' : '#e78ac3'; ctx.fillRect(x - 3, y - 1, 6, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 2, 2); break;
+      case 'xtal': ctx.fillStyle = '#b3a6ff'; ctx.beginPath(); ctx.moveTo(x + Math.sign(b.vx) * 4, y); ctx.lineTo(x, y - 2); ctx.lineTo(x - Math.sign(b.vx) * 3, y); ctx.lineTo(x, y + 2); ctx.fill(); break;
+      case 'bolt2': { const d = Math.sign(b.vx); ctx.fillStyle = '#7a5c36'; ctx.fillRect(x - d * 6, y, 8, 1); ctx.fillStyle = '#c9d4e6'; ctx.fillRect(x + d * 2, y - 1, 2, 3); ctx.fillStyle = '#d9534f'; ctx.fillRect(x - d * 6, y - 1, 2, 3); break; }
+      case 'alpha': ctx.fillStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'red': { const r = 1 + Math.min(4, Math.abs(b.x - b.sx) / 60); ctx.fillStyle = r > 3 ? '#ff3a2a' : '#ff8a6a'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); break; }
       case 'elem': { const col = { Na: '#f2c94c', He: '#e78ac3', Fe: '#8b93ad', Ne: '#ff6a4a', U: '#a6d854' }[b.el]; ctx.fillStyle = col; ctx.fillRect(x - 2, y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 1, 1); break; }
       case 'pea': ctx.fillStyle = '#7bc043'; ctx.fillRect(x - 1, y - 1, 3, 3); ctx.fillStyle = '#c9f08f'; ctx.fillRect(x, y - 1, 1, 1); break;
@@ -4621,6 +4789,15 @@ function drawFx() {
       if (Math.floor(f.t * (f.t < 0.8 ? 16 : 6)) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(f.x - 6, f.y - 2, 13, 1); ctx.fillRect(f.x, f.y - 8, 1, 7); ctx.fillRect(f.x - 4, f.y - 6, 1, 1); ctx.fillRect(f.x + 4, f.y - 6, 1, 1); }
     } else if (f.kind === 'ring2') {
       ctx.globalAlpha = a; ctx.strokeStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(f.x, f.y, (1 - a) * 36 + 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    } else if (f.kind === 'hole') { // a black disc with a spinning ring of hot gas around it
+      const r = 8 + Math.sin(f.t * 30) * 1;
+      ctx.strokeStyle = '#e78ac3'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, f.y, r + 9, (r + 9) * 0.35, f.t * 3, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(f.x, f.y, r, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(f.x, f.y, r + 1, 0, 7); ctx.stroke();
+    } else if (f.kind === 'spike') { // a crystal bursting out of the ground
+      const h = 22 * Math.min(1, (f.max - f.t) * 8) * Math.min(1, f.t * 3);
+      ctx.fillStyle = '#b3a6ff'; ctx.beginPath(); ctx.moveTo(f.x - 5, f.y); ctx.lineTo(f.x, f.y - h); ctx.lineTo(f.x + 5, f.y); ctx.fill();
+      ctx.fillStyle = '#e8dcff'; ctx.beginPath(); ctx.moveTo(f.x - 1, f.y); ctx.lineTo(f.x, f.y - h); ctx.lineTo(f.x + 2, f.y); ctx.fill();
     } else if (f.kind === 'well') {
       ctx.fillStyle = '#121735'; ctx.beginPath(); ctx.arc(f.x, f.y, 10 + Math.sin(f.t * 20) * 2, 0, 7); ctx.fill();
       ctx.strokeStyle = '#b3a6ff'; ctx.beginPath(); ctx.arc(f.x, f.y, 14 + (1 - a) * 6, 0, 7); ctx.stroke();
@@ -4722,7 +4899,8 @@ function drawHud(t) {
       const y = 104 + i * 16, sel = i === menuSel;
       if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
       text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
-      if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
+      if (key === 'gore') text(['OFF', 'ON', 'EXTRA'][settings.gore | 0], VW / 2 + 100, y, 8, ['#e78ac3', '#a6d854', '#ff5a4a'][settings.gore | 0], 'right');
+      else if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
     });
     text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 214, 8, '#a3abd0', 'center');
   }
@@ -4739,7 +4917,7 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('11 MISSIONS · 3 MODES · 22 BROS · 13 BOSSES · 17 QUACK TYPES · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('11 MISSIONS · 3 MODES · 28 BROS · 13 BOSSES · 17 QUACK TYPES · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 209 + (i % 22) * 19; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 130, 12, 16); });
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
@@ -4903,6 +5081,7 @@ function render(t) {
   drawLamps(t);
   drawCrawlers(t);
   drawTiles(t);
+  drawShadows();
   drawBodies();
   for (const e of ents) if (!e.dead || e === boss) drawEnt(e, t);
   drawChopper(t);
@@ -4919,6 +5098,7 @@ function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);
+  drawMotes(t);
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawHud(t); } else drawScreen(t);
   if (settings.scanlines) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < VH; y += 2) ctx.fillRect(0, y, VW, 1); }
@@ -4961,6 +5141,8 @@ function collectLights(t) {
     else if (f.kind === 'acidpool') light(f.x, f.y, 26, '#a6d854', 0.6 * a);
     else if (f.kind === 'jet') light(f.x - f.dir * 20, f.y, 40, '#f29e4c', 1);
     else if (f.kind === 'well') light(f.x, f.y, 60, '#b3a6ff', 0.8);
+    else if (f.kind === 'hole') light(f.x, f.y, 50, '#e78ac3', 0.7);
+    else if (f.kind === 'spike') light(f.x, f.y - 8, 30, '#b3a6ff', 0.6);
   }
   for (const b of bullets) {
     if (b.kind === 'photon' || b.kind === 'card') light(b.x, b.y, 14, '#d8e2ff', 0.5);
@@ -5000,6 +5182,23 @@ function drawLighting(ox, oy) {
   for (const [x, y, r, col, a] of lights) if (col) { ctx.globalAlpha = Math.min(1, a) * 0.32; ctx.drawImage(tinted(col), x + ox - r * 0.8, y + oy - r * 0.8, r * 1.6, r * 1.6); }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(VIGNETTE, 0, 0);
+}
+// floating motes: fireflies (island, swamp, cave), dust (desert, factories), embers (citadel)
+const MOTES = Array.from({ length: 36 }, () => [Math.random() * VW * 1.4, Math.random() * VH, Math.random() * 6.3, 0.6 + Math.random() * 0.8]);
+function drawMotes(t) {
+  const kind = theme.look.motes; if (!kind || state !== 'play') return;
+  const W = VW * 1.4;
+  for (const [mx, my, ph, z] of MOTES) {
+    const x = ((mx - cam.x * z * 0.6 + Math.sin(t * 0.5 + ph) * 20 + (kind === 'dust' ? t * 14 * z : 0)) % W + W) % W - VW * 0.2;
+    const y = ((my - cam.y * z * 0.6 + Math.cos(t * 0.7 + ph) * 12 - (kind === 'ember' ? t * 18 * z : 0)) % VH + VH) % VH;
+    if (kind === 'fly') {
+      const a = Math.max(0, Math.sin(t * 2.2 + ph * 3)); if (a < 0.05) continue;
+      ctx.globalAlpha = a * 0.25; ctx.fillStyle = '#d9f27a'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
+      ctx.globalAlpha = a; ctx.fillStyle = '#f4ffb0'; ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    } else if (kind === 'ember') { ctx.globalAlpha = 0.5 + Math.sin(t * 8 + ph) * 0.4; ctx.fillStyle = Math.sin(ph * 9) > 0 ? '#ffb04a' : '#ff6a2a'; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); }
+    else { ctx.globalAlpha = 0.25 * z; ctx.fillStyle = theme.dust; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); }
+  }
+  ctx.globalAlpha = 1;
 }
 // weather: rain and lightning on the island, blowing sand in the desert
 const DROPS = Array.from({ length: 150 }, () => [Math.random() * VW, Math.random() * VH, rand(0.7, 1.3)]);
@@ -5087,7 +5286,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

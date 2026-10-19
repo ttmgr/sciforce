@@ -67,7 +67,7 @@ for (let l = 0; l < S.nLevels; l++) { S.startLevel(l); for (const e of S.ents) i
 check('the new quacks appear in the campaign', counts.preacher >= 5 && counts.mortar >= 5 && counts.camdrone >= 5, JSON.stringify(counts));
 
 // ---- title menu
-S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 7; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
+S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 check('back on the title', S.state === 'title');
 S.pressed.down = true; run(1); S.pressed.start = true; run(1);
 check('the second menu entry starts Lab Siege', S.state === 'play' && S.mode === 'siege', S.mode);
@@ -128,7 +128,7 @@ check('G goes back to normal on a normal mission', (S.startMode('campaign'), S.s
 // ---- trophies
 check('19 trophies exist', S.ACH.length === 19, S.ACH.length);
 check('trophy ids are unique', new Set(S.ACH.map((a) => a[0])).size === S.ACH.length);
-S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 7; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
+S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 8; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 S.titleSel = 4; S.pressed.start = true; run(1);
 check('the last menu entry opens the trophy screen', S.state === 'trophies', S.state);
 check('the trophy screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());
