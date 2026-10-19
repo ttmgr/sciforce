@@ -1619,7 +1619,7 @@ function drawRadio(t) {
   if (!radioCur || paused) return;
   const m = radioCur, fade = Math.min(1, m.t * 6, (m.dur - m.t) * 4);
   const who = m.who === 'bro' ? { name: P.bro.name.toUpperCase(), col: '#a6d854', bro: P.bro } : CAST[m.who] || CAST.goon;
-  const x = 6, y = VH - 66, w = 262, h = 32;
+  const x = 6, y = VH - 75, w = 262, h = 41; // three lines of text above the boss bar
   ctx.globalAlpha = fade;
   ctx.fillStyle = 'rgba(11,14,31,0.88)'; ctx.fillRect(x, y, w, h); ctx.fillStyle = who.col; ctx.fillRect(x, y, 2, h);
   ctx.fillStyle = '#171c37'; ctx.fillRect(x + 5, y + 4, 24, 24);
@@ -1627,7 +1627,7 @@ function drawRadio(t) {
   if (Math.floor(t * 8) % 2 && m.t < m.dur - 0.6) { ctx.fillStyle = who.col; ctx.fillRect(x + 25, y + 25, 2, 2); } // talking light
   text(who.name, x + 34, y + 10, 8, who.col);
   const shown = m.line.slice(0, Math.floor(m.t * 55));
-  wrap(shown, 43).slice(0, 2).forEach((ln, i) => text(ln, x + 34, y + 20 + i * 9, 8, '#e7eaf6'));
+  wrap(shown, 43).slice(0, 3).forEach((ln, i) => text(ln, x + 34, y + 20 + i * 9, 8, '#e7eaf6'));
   ctx.globalAlpha = 1;
 }
 const ENDING = 'King Citrus was a robot. Professor Quackenbush built him as the face of the League, because people trusted fruit more than him. The League has scattered, and the world goes back to evidence, vaccines and round planets.';
@@ -7377,10 +7377,10 @@ function drawBriefing(t) {
   const st = storyOf(level);
   if (st && st.intercept && mapT > 1.2) { // a League transmission HQ picked up
     const [who, line] = st.intercept, c = CAST[who];
-    ctx.fillStyle = '#171c37'; ctx.fillRect(24, 206, 222, 36); ctx.fillStyle = c.col; ctx.fillRect(24, 206, 2, 36);
-    ctx.drawImage(c.img, 29, 211, 24, 22);
-    text('INTERCEPTED · ' + c.name, 58, 216, 8, Math.floor(t * 3) % 2 ? '#ff5a4a' : c.col);
-    wrap(line, 34).slice(0, 2).forEach((ln, i) => text(ln, 58, 227 + i * 9, 8, '#a3abd0'));
+    ctx.fillStyle = '#171c37'; ctx.fillRect(24, 201, 222, 44); ctx.fillStyle = c.col; ctx.fillRect(24, 201, 2, 44);
+    ctx.drawImage(c.img, 29, 206, 24, 22);
+    text('INTERCEPTED · ' + c.name, 58, 211, 8, Math.floor(t * 3) % 2 ? '#ff5a4a' : c.col);
+    wrap(line, 34).slice(0, 3).forEach((ln, i) => text(ln, 58, 222 + i * 9, 8, '#a3abd0'));
   }
   if (Math.floor(t * 2) % 2) text('PRESS ENTER TO DEPLOY', VW / 2, 252, 8, '#a6d854', 'center');
 }

@@ -22,14 +22,16 @@ let missing = [], badWho = [], long = [];
 for (let l = 0; l < N; l++) {
   const name = S.levelDef(l).name, st = S.STORY[name];
   if (!st || !st.intercept || !st.start.length || !st.mid.length || !st.boss.length || !st.win.length) { missing.push(name); continue; }
+  const wrapN = (str, n) => { const out = []; let ln = ''; for (const w of str.split(' ')) { if ((ln + ' ' + w).trim().length > n) { out.push(ln.trim()); ln = w; } else ln += ' ' + w; } if (ln.trim()) out.push(ln.trim()); return out.length; };
+  if (wrapN(st.intercept[1], 34) > 3) long.push(name + ' intercept');
   for (const [who, line] of [st.intercept, ...st.start, ...st.mid, ...st.boss, ...st.win, ...(st.midboss || [])]) {
     if (!S.CAST[who] && who !== 'bro') badWho.push(who);
-    if (line.length > 90) long.push(name + ': ' + line.length);
+    if (wrapN(line, 43) > 3) long.push(name + ': ' + line.slice(0, 30));
   }
 }
 check('every mission has a story script', missing.length === 0, missing.join(', '));
 check('every line is spoken by a known character', badWho.length === 0, badWho.join(','));
-check('every line fits the radio box (90 characters)', long.length === 0, long.join(' | '));
+check('every line fits its box in three lines', long.length === 0, long.join(' | '));
 // acts
 const acts = []; for (let l = 0; l < N; l++) { const a = S.actOf(l); acts.push(a && a.num); }
 check('the campaign has four acts in order', JSON.stringify([...new Set(acts)]) === JSON.stringify(['ACT I', 'ACT II', 'ACT III', 'FINALE']), [...new Set(acts)].join(','));
