@@ -28,7 +28,7 @@ for (const b of S.BROS) {
   check(b.name + ' hurts a quack 6 tiles away (or just past it, for lobbed shots)', hurtsAt(6) || hurtsAt(8));
   if (hurtsAt(12)) at12++;
 }
-check('at least 20 of the 28 bros reach 12 tiles', at12 >= 20, at12 + ' do');
+check('at least 20 of the ' + S.BROS.length + ' bros reach 12 tiles', at12 >= 20, at12 + ' do');
 // common quacks cannot hurt you from 13 tiles; nothing attacks from off the screen
 const reaches = (type, d, secs = 8) => {
   flat(); const e = Object.assign(S.makeEnt({ type, c: 30 + d, from: 0 }), { face: -1 }); S.ents.push(e);

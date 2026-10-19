@@ -49,19 +49,20 @@ for (let l = 0; l < S.nLevels; l++) { S.startLevel(l); if (S.checkCollapse() !==
 S.reset(); run(1);
 check('cages do not know their bro before you open them', S.ents.filter((e) => e.type === 'cage').every((e) => !e.bro));
 const firsts = {};
-for (let k = 0; k < 2700; k++) { S.unlocked.length = 0; S.unlocked.push('einstein'); const id = S.pickRescueBro(); firsts[id] = (firsts[id] || 0) + 1; }
+const NB = S.BROS.length, NL = NB - 1; // every bro, and every bro but the first
+for (let k = 0; k < 100 * NL; k++) { S.unlocked.length = 0; S.unlocked.push('einstein'); const id = S.pickRescueBro(); firsts[id] = (firsts[id] || 0) + 1; }
 const counts = Object.values(firsts), lo = Math.min(...counts), hi = Math.max(...counts);
-check('the first freed bro can be any of the 27 locked ones, about equally often', Object.keys(firsts).length === 27 && !firsts.einstein && lo > 50 && hi < 160, 'min ' + lo + ' max ' + hi);
+check('the first freed bro can be any of the ' + NL + ' locked ones, about equally often', Object.keys(firsts).length === NL && !firsts.einstein && lo > 50 && hi < 160, 'min ' + lo + ' max ' + hi);
 // free cages one after another: new bros first, never a repeat while bros are still locked
 arena(); S.unlocked.length = 0; S.unlocked.push('einstein'); S.P.bro = S.BRO.einstein;
 let dup = false, got = [];
-for (let k = 0; k < 27; k++) { const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); got.push(S.P.bro.id); if (got.indexOf(S.P.bro.id) !== got.length - 1) dup = true; }
-check('27 cages free all 27 locked bros, no repeats', !dup && new Set(got).size === 27 && S.unlocked.length === 28, S.unlocked.length + ' unlocked');
+for (let k = 0; k < NL; k++) { const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); got.push(S.P.bro.id); if (got.indexOf(S.P.bro.id) !== got.length - 1) dup = true; }
+check(NL + ' cages free all ' + NL + ' locked bros, no repeats', !dup && new Set(got).size === NL && S.unlocked.length === NB, S.unlocked.length + ' unlocked');
 // with everyone free: never the bro you are playing, and everyone comes up before repeats
 const seq = []; let same = 0;
 for (let k = 0; k < 54; k++) { const before = S.P.bro.id; const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); if (S.P.bro.id === before) same++; seq.push(S.P.bro.id); }
 check('freeing a cage never gives you the bro you already are', same === 0, same + ' repeats');
-check('every bro comes up within 28 rescues', new Set(seq.slice(0, 28)).size >= 26, new Set(seq.slice(0, 28)).size + ' different');
+check('every bro comes up within ' + NB + ' rescues', new Set(seq.slice(0, NB)).size >= NB - 2, new Set(seq.slice(0, NB)).size + ' different');
 // respawns pick from the bros you have, never the one that just died
 let rsame = 0; for (let k = 0; k < 30; k++) { const before = S.P.bro.id; S.P.inv = 0; S.killPlayer && S.killPlayer('shot'); for (let i = 0; i < 180 && S.P.bro.id === before && S.P.alive === false; i++) run(1); if (S.P.bro.id === before) rsame++; S.P.inv = 1e9; }
 check('a respawn never sends the bro that just died', rsame === 0, rsame + ' of 30');

@@ -20,7 +20,7 @@ const setup = (id) => {
 };
 const quack = (c, extra = {}) => { const e = Object.assign(S.makeEnt({ type: 'grunt', c, from: 0 }), { face: -1, react: 99, cool: 99 }, extra); S.ents.push(e); return e; };
 
-check('there are 28 bros', S.BROS.length === 28, S.BROS.length + ' bros');
+check('there are 34 bros', S.BROS.length === 34, S.BROS.length + ' bros');
 for (const b of S.BROS) {
   setup(b.id);
   const q = quack(12); // 8 tiles ahead; the bro walks toward it firing
@@ -70,6 +70,60 @@ setup('hubble'); const hb = quack(9); S.pressed.special = true; run(1);
 check('Hubble flings quacks away', hb.dead || hb.kx > 300);
 setup('wegener'); const wg = quack(12); S.pressed.special = true; run(2);
 check('Wegener opens the ground under a quack', !(S.tileAt(12, 16) !== 0) || wg.dead);
+// the six newest bros: each special (and each main weapon's trick) does what it says
+setup('nobel'); let nq = quack(12); S.pressed.special = true; run(1);
+const tnts = S.bullets.filter((b) => b.kind === 'tnt'); let stuckMax = 0, k = 0;
+for (; k < 240 && S.bullets.some((b) => b.kind === 'tnt'); k++) { nq.react = 99; nq.cool = 99; run(1); stuckMax = Math.max(stuckMax, S.bullets.filter((b) => b.kind === 'tnt' && b.stuck).length); }
+check('Nobel: blasting gelatin throws five charges that stick, then all go off', tnts.length === 5 && stuckMax >= 3 && !S.bullets.some((b) => b.kind === 'tnt'), tnts.length + ' thrown, ' + stuckMax + ' stuck at once, ' + k + ' frames');
+check('Nobel: and they kill a quack ahead', nq.dead);
+setup('nobel'); nq = quack(11, { hp: 50, max: 50 }); let onQuack = false;
+for (k = 0; k < 60 && !onQuack; k++) { nq.react = 99; nq.cool = 99; run(1, { fire: k === 0 }); onQuack = S.bullets.some((b) => b.kind === 'tnt' && b.on === nq); }
+check('Nobel: his dynamite sticks to a quack', onQuack);
+setup('bohr'); const bq = quack(12); const bx0 = S.P.x; S.pressed.special = true; run(1);
+check('Bohr: the quantum jump puts him several tiles ahead at once', S.P.x - bx0 >= 6 * T, ((S.P.x - bx0) / T).toFixed(1) + ' tiles');
+check('Bohr: the burst where he lands kills a quack', bq.dead);
+setup('bohr'); S.setTile(8, 15, 2); S.setTile(8, 14, 2);
+const sq = Object.assign(S.makeEnt({ type: 'shield', c: 11, from: 0 }), { face: -1, react: 99, cool: 99 }); S.ents.push(sq);
+for (k = 0; k < 120 && sq.hp === sq.max; k++) { sq.react = 99; sq.cool = 99; run(1, { fire: true }); }
+check('Bohr: his shots tunnel through a wall and past a riot shield', sq.hp < sq.max && solid(8, 15) && sq.shield === 7, k + ' frames');
+setup('lamarr'); S.endCeasefire(); let lq = quack(10, { aware: true }); lq.react = 0; lq.cool = 0; let shots = 0;
+for (k = 0; k < 120; k++) { S.P.inv = 1e9; run(1); shots += S.bullets.filter((b) => b.owner === 'e').length; }
+check('(control) an unjammed quack shoots', shots > 0, shots + ' bullet-frames');
+setup('lamarr'); S.endCeasefire(); lq = quack(10, { aware: true }); lq.react = 0; lq.cool = 0;
+S.bullets.push({ x: S.P.x + 40, y: S.P.y + 8, vx: -20, vy: 0, owner: 'e', dmg: 1, tdmg: 0, life: 2, kind: 'pill' });
+S.pressed.special = true; run(1);
+check('Lamarr: frequency hopping jams the quacks on screen and fizzles shots in the air', lq.jam > 0 && !S.bullets.some((b) => b.owner === 'e'));
+for (shots = 0, k = 0; k < 120; k++) { S.P.inv = 1e9; run(1); shots += S.bullets.filter((b) => b.owner === 'e').length; }
+check('Lamarr: a jammed quack cannot shoot', shots === 0 && !lq.dead, shots + ' bullet-frames');
+setup('lamarr'); const lh = quack(12, { hp: 50, max: 50 }); lh.y -= 0; S.P.y -= 0; let dive = false;
+for (k = 0; k < 40; k++) { lh.react = 99; lh.cool = 99; run(1, { fire: k === 0 }); const tp = S.bullets.find((b) => b.kind === 'torp'); if (tp && tp.vx > 300) dive = true; }
+check('Lamarr: the torpedo speeds up and hits', dive && lh.hp < 50);
+setup('lavoisier'); const dq = quack(9); S.hitEnemy(dq, 99, 60, 'shot'); run(60);
+const lv = quack(14), body0 = S.bodies.find((b) => b.kind === 'corpse'); S.pressed.special = true; run(1);
+check('Lavoisier: combustion sets the quacks on screen alight', lv.burn > 0 || lv.dead);
+run(60);
+check('Lavoisier: and the bodies go up', !!body0 && !S.bodies.includes(body0));
+setup('lavoisier'); const fq = quack(9, { hp: 50, max: 50 }); for (k = 0; k < 40 && !(fq.burn > 0); k++) { fq.react = 99; fq.cool = 99; run(1, { fire: true }); }
+check('Lavoisier: the torch sets a quack on fire', fq.burn > 0 || fq.dead);
+setup('goodall'); const gq = quack(13); S.pressed.special = true; run(1);
+check('Goodall: three chimps charge out', S.ents.filter((e) => e.type === 'chimp').length === 3);
+for (k = 0; k < 300 && !gq.dead; k++) { gq.react = 99; gq.cool = 99; run(1); }
+check('Goodall: the chimps maul a quack to death', gq.dead, k + ' frames');
+run(520);
+check('Goodall: the chimps leave after 8 s', !S.ents.some((e) => e.type === 'chimp'));
+setup('goodall'); const hq = quack(8, { hp: 50, max: 50 }); let stunned = false;
+for (k = 0; k < 30 && !stunned; k++) { hq.react = 99; hq.cool = 99; run(1, { fire: k === 0 }); stunned = hq.stun > 0; }
+check('Goodall: the pant-hoot stuns a quack', stunned);
+setup('jemison'); const jq = quack(12); const jy = jq.y; S.pressed.special = true; run(90);
+check('Jemison: zero-G lifts quacks off the ground', jq.y < jy - 16 && !jq.dead, (jy - jq.y).toFixed(0) + ' px up');
+check('Jemison: and she floats too', S.P.zeroG > 0);
+for (k = 0; k < 400 && !jq.dead; k++) { jq.react = 99; jq.cool = 99; run(1); }
+check('Jemison: when gravity comes back they crash down', jq.dead, k + ' frames');
+setup('jemison'); run(1, { fire: true }); run(1);
+check('Jemison: a tap fires a quick bolt', S.bullets.some((b) => b.kind === 'plasma') && !S.bullets.some((b) => b.kind === 'plasma2'));
+setup('jemison'); for (k = 0; k < 40 && !S.bullets.some((b) => b.kind === 'plasma2'); k++) run(1, { fire: true });
+check('Jemison: holding charges a plasma ball', S.bullets.some((b) => b.kind === 'plasma2' && b.pierce === 3), k + ' frames');
+
 // pickup guns
 for (const g of ['shotgun', 'rocket', 'minigun', 'railgun']) {
   setup('einstein'); const pk = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'gun' }); pk.gun = g; pk.x = S.P.x; S.ents.push(pk); run(3);
