@@ -380,9 +380,9 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Beach and hills
   ground(0, 20, 16); ground(21, 26, 14); ground(27, 33, 15); ground(34, 43, 13);
   fill(38, 11, 40, 12, DIRT);
-  sp('grunt', 17); sp('propane', 22); sp('grunt', 24); sp('ammo', 26); sp('barrel', 29); sp('grunt', 31); sp('dog', 33); sp('cage', 36, 0, { bro: 'curie' }); sp('grunt', 42);
+  sp('propane', 22); sp('grunt', 24); sp('grunt', 25.5); sp('ammo', 26); sp('barrel', 29); sp('grunt', 31); sp('dog', 33); sp('cage', 36, 0, { bro: 'curie' }); sp('grunt', 42);
   sp('pickup', 35, 0, { item: 'intel' }); sp('spring', 32); sp('guncrate', 40);
-  dc('palm', 2); dc('palm', 9, { lean: -1 }); dc('sign', 12, { text: '100% NATURAL' }); dc('palm', 19); dc('palm', 30, { lean: -1 }); dc('sandbags', 41);
+  dc('palm', 2); dc('palm', 9, { lean: -1 }); dc('sign', 12, { text: '100% NATURAL' }); dc('sandbags', 6); dc('palm', 19); dc('palm', 30, { lean: -1 }); dc('sandbags', 41);
 
   // 2. Bunker
   ground(44, 70, 16);
@@ -436,7 +436,7 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
 function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Dunes
   ground(0, 14, 15); ground(15, 20, 14); ground(21, 27, 13); ground(28, 36, 15);
-  sp('guncrate', 8); sp('grunt', 12); sp('dog', 18); sp('cage', 22, 0, { bro: 'ada' }); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
+  sp('guncrate', 8); sp('cage', 22, 0, { bro: 'ada' }); sp('grunt', 21); sp('dog', 24); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
   dc('cactus', 3); dc('sign', 7, { text: 'DETOX 4 LIFE' }); dc('cactus', 11); dc('crystal', 16); dc('cactus', 25); dc('palm', 35, { lean: -1 });
 
   // 2. The Wellness Retreat: two floors, crate doors, a hole in the middle floor to climb through
@@ -487,7 +487,7 @@ function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Loading yard: container stacks, fuel tanks, mines
   ground(0, 40, 16);
   fill(14, 13, 17, 15, BRICK); fill(26, 12, 31, 15, BRICK); fill(28, 10, 30, 11, CRATE);
-  sp('guncrate', 6); sp('grunt', 9); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
+  sp('guncrate', 6); sp('grunt', 23); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
   dc('sign', 4, { text: 'DILUTION PLANT' }); dc('sandbags', 21);
 
   // 2. Factory hall: catwalk with a ladder, two dilution vats on the floor
@@ -532,7 +532,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Snowy slopes with a frozen pond (ice is slippery)
   ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
   fill(12, 14, 17, 14, ICE);
-  sp('guncrate', 5); sp('cage', 28); sp('grunt', 8); sp('dog', 15); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
+  sp('guncrate', 5); sp('cage', 28); sp('grunt', 21); sp('dog', 23); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
   dc('pine', 3); dc('sign', 6, { text: 'COLD CURES ALL' }); dc('pine', 9); dc('snowman', 20); dc('pine', 29); dc('pine', 35);
 
   // 2. The Cryo Spa: brick, crate doors, an ice floor, a mech parked outside
@@ -925,6 +925,7 @@ function pauseMenu() {
 // ---------------------------------------------------------------- game state
 let state = 'title', paused = false;
 let ents, bullets, parts, fx, P, boss, chopper, unlocked, lives, stats, checkpoint, slowT, shake, banner, endT;
+let ceasefire = 0; // seconds left of the quiet start of a mission
 let bodies = [], decals = new Map(), hitStop = 0, combo = { n: 0, t: 0, pop: 0 };
 // kills inside 1.6 s of each other chain into a combo that multiplies the points
 function addScore(pts, kill = true) {
@@ -1101,9 +1102,9 @@ function startLevel(n) {
   const pool = BROS.map((b) => b.id).filter((id) => !unlocked.includes(id)).sort(() => Math.random() - 0.5);
   for (const c of ents) if (c.type === 'cage') c.bro = pool.length ? pool.pop() : BROS[(Math.random() * BROS.length) | 0].id;
   stats = { kills: 0, rescued: 0, deaths: 0, time: 0, score: 0, best: 0 }; combo = { n: 0, t: 0, pop: 0 };
-  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9;
+  objectives = (LEVELS[n].objectives || []).map((o) => Object.assign({ n: 0, need: 1 }, o)); extractPending = false; objShowT = 9; ceasefire = 10;
   checkpoint = { x: 3 * T, y: surf(3, 0) * T - 16 };
-  P = newPlayer(checkpoint.x, checkpoint.y, BRO[n === 0 ? 'einstein' : unlocked[(Math.random() * unlocked.length) | 0]]);
+  P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
   slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
   cam.x = 0; cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
   showBanner('LEVEL ' + (n + 1) + ' · ' + LEVELS[n].name, LEVELS[n].sub, 3);
@@ -1129,7 +1130,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
     if (e.shield <= 0) dropShield(e, -e.face);
     return;
   }
-  e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12;
+  e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; // shoot one during the ceasefire and that one fights back
   if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
@@ -1600,7 +1601,13 @@ function respawn() {
 
 // ---------------------------------------------------------------- update
 // title screen: the camera drifts along the level while things blow up in the background
-let attractT = 1, mapT = 0;
+let attractT = 1, mapT = 0, reached = 0;
+try { reached = Math.min(LEVELS.length - 1, +localStorage.getItem('sciencebros.reached') || 0); } catch (e) { /* storage blocked */ }
+function mapInput() {
+  const d = (pressed.right ? 1 : 0) - (pressed.left ? 1 : 0);
+  if (d) { level = clamp(level + d, 0, reached); mapT = 0; sfx('flag'); }
+}
+function markReached(n) { if (n > reached) { reached = Math.min(LEVELS.length - 1, n); try { localStorage.setItem('sciencebros.reached', String(reached)); } catch (e) { /* storage blocked */ } } }
 function attract(dt) {
   if (state === 'title') {
     cam.x += 26 * dt; if (cam.x > LW * T - VW) cam.x = 0;
@@ -1623,12 +1630,14 @@ function step(dt) {
     if (pressed.start || pressed.fire) {
       if (state === 'title' || state === 'done') { newGame(); level = 0; state = 'map'; mapT = 0; }
       else if (state === 'map') { state = 'brief'; }
-      else if (state === 'brief') { startLevel(level); state = 'play'; }
-      else if (state === 'win') { level++; state = 'map'; mapT = 0; } // bros and reserve carry over
+      else if (state === 'brief') { startLevel(level); applyGear(); state = 'play'; }
+      else if (state === 'win') { level++; markReached(level); state = 'map'; mapT = 0; } // bros and reserve carry over
       else if (state === 'over') { lives = 3; startLevel(level); state = 'play'; } // retry this level
       sfx('flag');
     }
     mapT += dt;
+    if (state === 'brief') briefInput();
+    if (state === 'map') mapInput();
     attract(dt);
     return;
   }
@@ -1643,6 +1652,7 @@ function step(dt) {
     return;
   }
   stats.time += dt; objShowT = Math.max(0, objShowT - dt);
+  if (ceasefire > 0) { ceasefire -= dt; if (ceasefire <= 0) { showBanner('GO LOUD', 'the quacks are awake now', 1.2); sfx('alert'); } }
   combo.t -= dt; combo.pop = Math.max(0, combo.pop - dt);
   const edt = slowT > 0 ? dt * 0.3 : dt;
   if (slowT > 0) slowT -= dt;
@@ -1809,6 +1819,7 @@ function groundPound() {
 
 function playerSees(e, rangeX, rangeY) {
   if (!P.alive) return false;
+  if (ceasefire > 0 && !e.provoked) return false; // the first 10 s of a mission: they don't notice you
   const [ex, ey] = center(e), [px, py] = center(P);
   return Math.abs(px - ex) < rangeX && Math.abs(py - ey) < rangeY && los(ex, ey - 2, px, py - 2);
 }
@@ -2116,7 +2127,7 @@ function flyJetpack(e, dt) {
   const c = Math.floor((e.x + e.w / 2) / T); let r = Math.floor((e.y + e.h) / T); while (r < LH - 1 && !isSolidT(tileAt(c, r))) r++;
   const ty = r * T - e.h - 60 + Math.sin(e.t * 2) * 6;
   e.vy = clamp(e.vy + ((ty - e.y) * 3 - e.vy * 2) * dt * 4, -120, 120);
-  const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && Math.abs(px - ex) < 260 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
+  const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && (ceasefire <= 0 || e.provoked) && Math.abs(px - ex) < 260 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
   let want = 0;
   if (sees) {
     if (!e.aware) { e.aware = true; e.react = 0.5; sfx('alert'); alertNearby(e); }
@@ -3929,6 +3940,10 @@ function drawHud(t) {
     });
     ctx.globalAlpha = 1;
   }
+  if (ceasefire > 0) { // the quiet start: a countdown and a bar
+    text('SAFE START ' + Math.ceil(ceasefire), VW / 2, 50, 8, '#a6d854', 'center');
+    ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 40, 54, 80, 2); ctx.fillStyle = '#a6d854'; ctx.fillRect(VW / 2 - 40, 54, 80 * ceasefire / 10, 2);
+  }
   if (combo.n >= 2 && combo.t > 0) { // combo counter pops on each kill
     const sc = 1 + combo.pop * 2;
     ctx.save(); ctx.translate(VW / 2, 30); ctx.scale(sc, sc);
@@ -4059,17 +4074,34 @@ function drawWorldMap(t) {
   const stops = LEVELS.map((L) => L.map);
   ctx.fillStyle = '#5c6480'; for (let i = 0; i < stops.length - 1; i++) { const [x0, y0] = stops[i], [x1, y1] = stops[i + 1]; for (let k = 0; k <= 20; k += 2) ctx.fillRect(Math.round(x0 + (x1 - x0) * k / 20), Math.round(y0 + (y1 - y0) * k / 20), 2, 2); }
   LEVELS.forEach((L, i) => {
-    const [x, y] = L.map, done = i < level, cur = i === level;
+    const [x, y] = L.map, done = i < level || (i <= reached && i !== level), cur = i === level;
     if (cur) { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 9 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     ctx.fillStyle = done ? '#a6d854' : cur ? '#f2c94c' : '#5c6480'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
     text((i + 1) + ' ' + L.name, x, y - 12, 8, done ? '#a6d854' : cur ? '#f2c94c' : '#a3abd0', 'center');
-    if (done) text('LIBERATED', x, y + 16, 8, '#a6d854', 'center');
+    if (done) text(i < level ? 'LIBERATED' : 'OPEN', x, y + 16, 8, '#a6d854', 'center');
   });
   const [px, py] = LEVELS[level].map, bob = Math.sin(t * 3) * 2; // the bros' plane
   ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 6, py - 26 + bob, 12, 3); ctx.fillRect(px - 2, py - 30 + bob, 4, 11);
   text('OPERATION INFINITE DILUTION', VW / 2, 20, 16, '#a6d854', 'center');
   text('BROS ' + unlocked.length + ' / ' + BROS.length + ' · RESERVE ' + lives + ' · INTEL ' + dossier.length + ' / ' + LEVELS.length * 3 + ' · RUN ' + runScore, VW / 2, 34, 8, '#a3abd0', 'center');
+  if (reached > 0) text('LEFT/RIGHT PICK ANY MISSION YOU HAVE REACHED', VW / 2, 244, 8, '#8da0cb', 'center');
   if (Math.floor(t * 2) % 2) text('PRESS ENTER FOR THE BRIEFING', VW / 2, 256, 8, '#e7eaf6', 'center');
+}
+// briefing choices: which freed bro to send in, and one piece of starting gear
+const GEAR = [['NONE'], ['SHIELD', 'shield'], ['JETPACK', 'jetpack'], ['OVERCLOCK', 'overclock'], ['SHOTGUN', 'gun', 'shotgun'], ['MINIGUN', 'gun', 'minigun'], ['ROCKETS', 'gun', 'rocket'], ['RAILGUN', 'gun', 'railgun']];
+let briefRow = 0, briefBro = 0, briefGear = 0;
+function briefInput() {
+  if (pressed.jump || pressed.down) briefRow = 1 - briefRow;
+  const d = (pressed.right ? 1 : 0) - (pressed.left ? 1 : 0);
+  if (!d) return;
+  if (briefRow === 0) briefBro = (briefBro + d + unlocked.length) % unlocked.length;
+  else briefGear = (briefGear + d + GEAR.length) % GEAR.length;
+  sfx('flag');
+}
+function applyGear() {
+  const g = GEAR[briefGear];
+  if (g[1] === 'gun') P.alt = { kind: g[2], ammo: GUNS[g[2]].ammo };
+  else if (g[1] === 'shield') P.shield = 30; else if (g[1] === 'jetpack') P.jet = 12; else if (g[1] === 'overclock') P.over = 15;
 }
 // briefing from HQ: the mission, the objectives, then deploy
 function drawBriefing(t) {
@@ -4078,10 +4110,17 @@ function drawBriefing(t) {
   text('MISSION ' + (level + 1) + ' · ' + L.name, VW / 2, 30, 16, '#a6d854', 'center');
   ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
   text('PROF. PEER REVIEW, HQ', 72, 54, 8, '#8da0cb');
-  const lines = wrap(L.brief, 62), shown = Math.min(lines.length, Math.floor(mapT * 2.2) + 1); // typed out line by line
+  const lines = wrap(L.brief, 62).slice(0, 6), shown = Math.min(lines.length, Math.floor(mapT * 2.2) + 1); // typed out line by line
   lines.slice(0, shown).forEach((ln, i) => text(ln, 72, 68 + i * 11, 8, '#e7eaf6'));
   text('OBJECTIVES', 24, 150, 8, '#f2c94c');
-  (L.objectives || []).forEach((o, i) => text((o.req ? '> ' : '  BONUS: ') + o.text.toUpperCase() + ((o.need || 1) > 1 ? ' (' + o.need + ')' : ''), 32, 164 + i * 11, 8, o.req ? '#e7eaf6' : '#a3abd0'));
+  (L.objectives || []).forEach((o, i) => text((o.req ? '> ' : '  BONUS: ') + o.text.toUpperCase() + ((o.need || 1) > 1 ? ' (' + o.need + ')' : ''), 24, 164 + i * 11, 8, o.req ? '#e7eaf6' : '#a3abd0'));
+  // choices
+  const bro = BRO[unlocked[briefBro % unlocked.length]], g = GEAR[briefGear];
+  const row = (i, label, val, y) => { const sel = briefRow === i; if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(250, y - 10, 210, 14); } text(label, 258, y, 8, '#a3abd0'); text('< ' + val + ' >', 450, y, 8, sel ? '#a6d854' : '#e7eaf6', 'right'); };
+  ctx.drawImage(bro.spr[Math.floor(t * 4) % 2 ? 1 : 2][0], 432, 140, 15, 20);
+  row(0, 'DEPLOY AS', bro.name.toUpperCase(), 172); text(bro.weapon.toUpperCase() + ' · ' + bro.special.toUpperCase(), 258, 184, 8, '#8da0cb');
+  row(1, 'GEAR', g[0], 202);
+  text('UP/DOWN: ROW · LEFT/RIGHT: CHANGE', 258, 218, 8, '#5c6480');
   if (Math.floor(t * 2) % 2) text('PRESS ENTER TO DEPLOY', VW / 2, 252, 8, '#a6d854', 'center');
 }
 function render(t) {
@@ -4270,7 +4309,7 @@ for (const b of BROS) {
 
 init();
 state = 'title';
-if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
+if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();

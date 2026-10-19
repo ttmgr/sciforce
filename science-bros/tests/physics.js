@@ -35,7 +35,7 @@ check('quack on the tower fell or died', !top || top.dead || top.y > 5 * T, top 
 
 // 3. shooting a quack leaves a ragdoll that comes to rest on the floor
 fresh();
-let g = grunts().find((e) => Math.abs(e.x / T - 17) < 1);
+let g = (() => { const q = S.makeEnt({ type: 'grunt', c: 17, from: 0 }); S.ents.push(q); return q; })();
 S.P.x = 9 * T;
 S.hitEnemy(g, 99, 160, 'shot');
 const corpse = S.bodies.find((b) => b.kind === 'corpse');
@@ -74,7 +74,7 @@ check('steel piles still stand in the acid', solid(80, 17) && solid(96, 17));
 
 // 7. punch sends a quack flying
 fresh();
-g = grunts().find((e) => Math.abs(e.x / T - 17) < 1);
+g = (() => { const q = S.makeEnt({ type: 'grunt', c: 17, from: 0 }); S.ents.push(q); return q; })();
 S.P.x = g.x - 11; S.P.y = g.y; S.P.face = 1; S.P.mcool = 0;
 S.pressed.melee = true; run(1);
 const flung = S.bodies.find((b) => b.kind === 'corpse');
