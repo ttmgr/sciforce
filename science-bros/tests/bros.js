@@ -20,7 +20,7 @@ const setup = (id) => {
 };
 const quack = (c, extra = {}) => { const e = Object.assign(S.makeEnt({ type: 'grunt', c, from: 0 }), { face: -1, react: 99, cool: 99 }, extra); S.ents.push(e); return e; };
 
-check('there are 34 bros', S.BROS.length === 34, S.BROS.length + ' bros');
+check('there are 35 bros', S.BROS.length === 35, S.BROS.length + ' bros');
 for (const b of S.BROS) {
   setup(b.id);
   const q = quack(12); // 8 tiles ahead; the bro walks toward it firing
@@ -123,6 +123,38 @@ setup('jemison'); run(1, { fire: true }); run(1);
 check('Jemison: a tap fires a quick bolt', S.bullets.some((b) => b.kind === 'plasma') && !S.bullets.some((b) => b.kind === 'plasma2'));
 setup('jemison'); for (k = 0; k < 40 && !S.bullets.some((b) => b.kind === 'plasma2'); k++) run(1, { fire: true });
 check('Jemison: holding charges a plasma ball', S.bullets.some((b) => b.kind === 'plasma2' && b.pierce === 3), k + ' frames');
+
+// Robert Oppenbro: Trinity, one nuke per life
+setup('oppenheimer'); S.P.spec = S.specMax(S.P.bro); S.P.inv = 0;
+check('Oppenbro: one nuke per life', S.P.spec === 1 && S.specMax(S.BRO.einstein) === 3);
+const snap = []; for (let r = 0; r < 22; r++) for (let c = 0; c < 236; c++) snap.push(S.tileAt(c, r));
+const oq = [quack(14), quack(20), quack(27)];
+S.pressed.special = true; run(1); const nuke = S.nukes()[0];
+check('Oppenbro: Trinity lobs a device that counts down', !!nuke && !nuke.boom && nuke.t > 2.5 && S.P.spec === 0);
+S.pressed.special = true; run(1);
+check('Oppenbro: no second nuke in the same life', S.nukes().length === 1 && S.P.spec === 0);
+let pd = 0, steeled = false; for (k = 0; k < 400 && !nuke.boom; k++) { oq.forEach((q) => { q.react = 99; q.cool = 99; }); run(1); pd = Math.hypot(S.P.x + 5 - nuke.x, S.P.y + 8 - (nuke.y - 6));
+  if (nuke.landed && !steeled) { steeled = true; const c = Math.floor(nuke.x / 16), r = Math.floor(nuke.y / 16); S.setTile(c, r, 3); S.setTile(c + 2, r - 2, 3); S.setTile(c - 1, r + 2, 3); for (let rr = 0; rr < 22; rr++) for (let cc = 0; cc < 236; cc++) snap[rr * 236 + cc] = S.tileAt(cc, rr); } } // steel inside the blast
+check('Oppenbro: the device lands ahead, the bro standing still is outside the red ring', nuke.landed && nuke.x > S.P.x + 5 && pd > S.NUKE_R, (pd / 16).toFixed(1) + ' tiles away, ring ' + (S.NUKE_R / 16) + ' tiles');
+check('Oppenbro: it goes off with a white flash, a mushroom cloud and shockwaves', nuke.boom && S.flash() > 0 && S.fx.some((f) => f.kind === 'mushroom') && S.fx.filter((f) => f.kind === 'shock').length >= 3);
+run(120);
+check('Oppenbro: every quack on screen dies', oq.every((q) => q.dead));
+check('Oppenbro: the bro outside the ring survives', S.P.alive);
+let holes = 0, steelLost = 0, bottomHit = 0; const nc = Math.floor(nuke.x / 16);
+for (let r = 0; r < 22; r++) for (let c = 0; c < 236; c++) { const was = snap[r * 236 + c], now = S.tileAt(c, r);
+  if (was === 3 && now !== 3) steelLost++; if (r >= 20 && now !== was) bottomHit++; if (Math.abs(c - nc) <= 7 && was !== 0 && was !== 5 && was !== 7 && (now === 0)) holes++; }
+check('Oppenbro: it blows a crater', holes >= 20, holes + ' blocks gone');
+check('Oppenbro: steel and the bottom two rows are untouched', steelLost === 0 && bottomHit === 0, steelLost + ' steel, ' + bottomHit + ' bottom');
+check('Oppenbro: the mushroom cloud lingers for seconds', S.fx.some((f) => f.kind === 'mushroom'));
+setup('oppenheimer'); S.P.inv = 0; S.plantNuke(S.P.x + 5 + 30, S.P.y + 15, 'p', 0.4); run(60);
+check('Oppenbro: inside the red ring the bro dies', !S.P.alive);
+setup('oppenheimer'); { const B = Object.assign(S.makeEnt({ type: 'boss', c: 16, from: 0 }), { active: true }); S.ents.push(B);
+  S.plantNuke(14 * 16, 16 * 16, 'p', 0.3); let last = B.hp, maxHit = 0, hits = 0;
+  for (k = 0; k < 150; k++) { S.P.inv = 1e9; run(1); const d = last - B.hp; if (d > 0.01) { hits++; maxHit = Math.max(maxHit, d); } last = B.hp; }
+  const lost = (B.max - B.hp) / B.max;
+  check('Oppenbro: a boss takes a big but capped hit, spread over many frames', maxHit <= 40 && hits >= 5 && lost > 0.15 && lost < 0.32, Math.round(lost * 100) + '% in ' + hits + ' hits, at most ' + maxHit.toFixed(1)); }
+setup('oppenheimer'); S.P.spec = 1; { const pk = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4 }); pk.x = S.P.x; S.ents.push(pk); run(3); }
+check('Oppenbro: a special pickup cannot give him a second nuke', S.P.spec === 1);
 
 // pickup guns
 for (const g of ['shotgun', 'rocket', 'minigun', 'railgun']) {
