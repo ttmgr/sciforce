@@ -1490,6 +1490,7 @@ function init() { newGame(); startLevel(0); }
 const HITTABLE = { preacher: 1, mortar: 1, camdrone: 1, guncrate: 1, mine: 1, alarm: 1, fueltank: 1, itemcrate: 1, target: 1, grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, bomber: 1, dog: 1, turret: 1, barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1, director: 1 };
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
 const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, guncrate: 1, mine: 1, alarm: 1, target: 1 };
+Object.assign(HITTABLE, QUACK, BOSS); // every quack and boss type can be hit, so a new one can't be left out
 const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
 const foe = (e) => live(e) && !OBJ[e.type];
 // how: 'shot' and 'blast' leave a ragdoll, 'gib' and 'crush' tear the body apart, 'burn' leaves a charred body, 'punch' sends it flying
