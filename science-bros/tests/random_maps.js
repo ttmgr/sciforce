@@ -11,7 +11,9 @@ const doc = { getElementById: () => mkEl(), createElement: () => mkEl(), querySe
 const pad = { buttons: Array.from({ length: 18 }, () => ({ pressed: false })), axes: [0, 0, 0, 0] };
 const navigator = { getGamepads: () => [pad] };
 const win = { __SB_TEST__: true };
-const sb = { window: win, document: doc, navigator, addEventListener: noop, performance: { now: () => Date.now() }, requestAnimationFrame: noop, console, Math, setTimeout, Set, Map, Array, Object, String, Float32Array, Uint8Array, Promise };
+// a seeded Math.random, so the game plays out the same way on every run of this test (the bot check is not left to luck)
+const M = Object.create(Math); { let a = 20261020; M.random = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const sb = { window: win, document: doc, navigator, addEventListener: noop, performance: { now: () => Date.now() }, requestAnimationFrame: noop, console, Math: M, setTimeout, Set, Map, Array, Object, String, Float32Array, Uint8Array, Promise };
 vm.createContext(sb); vm.runInContext(src, sb);
 const S = win.__SB__, T = S.T;
 const step = (keys = {}) => { for (const k in S.keys) S.keys[k] = false; Object.assign(S.keys, keys); S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; };
