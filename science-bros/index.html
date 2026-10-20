@@ -2741,7 +2741,7 @@ function explode(x, y, r, dmg, owner, tp) {
   shake = Math.min(12, shake + r / 7);
   hitStop = Math.max(hitStop, r >= 40 ? 0.05 : 0.025);
   fx.push({ kind: 'flash', x, y, r, t: 0.32, max: 0.32, lobes: Array.from({ length: 6 }, () => [rand(0, 6.3), rand(0.35, 0.75), rand(0.35, 0.6)]) });
-  fx.push({ kind: 'ring', x, y, r, t: 0.25, max: 0.25 });
+  fx.push({ kind: 'ring', x, y, r, t: 0.25, max: 0.25 }); blastExtras(x, y, r);
   if (r >= 24) fx.push({ kind: 'shock', x, y, r: r * 2.4, t: 0.18, max: 0.18 }); // a thin, fast shockwave ahead of the fireball
   if (r >= 50) fx.push({ kind: 'screen', t: 0.07, max: 0.07, col: '#fff6c2' });
   for (let i = 0; i < r / 2; i++) { const a = rand(0, Math.PI * 2), s = rand(40, 260); part(x, y, Math.cos(a) * s, Math.sin(a) * s - 40, ['#fff6c2', '#f2c94c', '#f29e4c'][i % 3], rand(0.2, 0.6), 2, 200, i % 2 ? 'spark' : 'p'); }
@@ -4079,7 +4079,8 @@ function updateEnt(e, dt) {
     }
     case 'mechsuit':
       e.vx = 0; moveBody(e, dt);
-      if (P.alive && !P.mech && (P.boardCool || 0) <= 0 && overlap(P, e)) boardMech(e);
+      if (e.hold && P.onGround && !overlap(P, e)) e.hold = false; // an ejected suit stays shut until you step clear of it, so you cannot fall straight back in
+      if (P.alive && !P.mech && !e.hold && (P.boardCool || 0) <= 0 && overlap(P, e)) boardMech(e);
       break;
     case 'propane': {
       if (e.lit && e.fuse > 0) { e.fuse -= dt; e.spin = rand(-0.12, 0.12); if (Math.random() < 0.7) part(e.x + 4, e.y + 1, rand(-40, 40), rand(-60, -10), '#fff6c2', 0.2, 1); }
@@ -4487,12 +4488,12 @@ function rescue(cage) {
 
 // ---------------------------------------------------------------- bro-mech
 // Walk into an empty mech to climb in. It bulldozes soft walls, fires a heavy gun (fire) and rockets (special),
-// punches through blocks, stomps on landing and soaks up 24 hits. Dash (Shift) jumps out; at 0 it blows up and throws you clear.
+// punches through blocks, stomps on landing and soaks up 24 hits. Dash (Shift) or Down + Jump gets out; at 0 it blows up and throws you clear.
 function boardMech(suit) {
   suit.dead = true; sfx('mech');
   P.mech = { hp: suit.mhp || 24, max: 24, gcool: 0, rcool: 0, wp: 0, hurt: 0 };
   P.w = 20; P.h = 26; P.x = suit.x; P.y = suit.y; P.vx = 0; P.vy = 0; P.dash = 0; P.pound = 0;
-  showBanner('BRO-MECH', 'Z gun · X rockets · C smash · Shift jump out', 2);
+  showBanner('BRO-MECH', 'Z gun · X rockets · C smash · SHIFT or Down+Jump: get out', 3);
 }
 function ejectMech(destroyed) {
   const M = P.mech, feet = P.y + P.h, cx = P.x + P.w / 2;
@@ -4502,7 +4503,8 @@ function ejectMech(destroyed) {
     for (let i = 0; i < 14; i++) chunk(cx + rand(-8, 8), feet - rand(4, 24), rand(-220, 220), rand(-320, -80), ['#5c6480', '#f2c94c', '#25223a'][i % 3]);
     showBanner('MECH LOST', 'back on foot', 1.2);
   } else {
-    const s = makeEnt({ type: 'mechsuit', c: 0, y: feet - 26 }); s.x = cx - 10; s.mhp = M.hp; s.face = P.face; ents.push(s); sfx('mech');
+    const s = makeEnt({ type: 'mechsuit', c: 0, y: feet - 26 }); s.x = cx - 10; s.mhp = M.hp; s.face = P.face; s.hold = true; ents.push(s); sfx('mech');
+    for (let i = 0; i < 9; i++) part(cx + rand(-9, 9), feet - rand(2, 8), rand(-80, 80), rand(-70, -10), i % 3 ? theme.dust : '#f2c94c', rand(0.3, 0.6), i % 3 ? rand(3, 5) : 1, i % 3 ? 0 : G, i % 3 ? 'smoke' : 'spark'); // hatch puff and sparks
   }
 }
 function updateMechSuit(dt) {
@@ -4512,6 +4514,7 @@ function updateMechSuit(dt) {
   if (dir) P.face = dir;
   P.vx = approach(P.vx, dir * 82, (P.onGround ? 700 : 400) * dt);
   P.coy = P.onGround ? 0.09 : P.coy - dt;
+  if (pressed.jump && keys.down) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } // Down + Jump gets you out too
   P.jbuf = pressed.jump ? 0.12 : P.jbuf - dt;
   if (P.jbuf > 0 && P.coy > 0) { P.vy = -300; P.coy = 0; P.jbuf = 0; sfx('jump'); }
   if (!keys.jump && P.vy < -120) P.vy = -120;
@@ -6012,7 +6015,8 @@ function drawShadows() {
     if (r >= LH || r - r0 >= 6) return;
     const gy = r * T, d = gy - (y + h); if (d < -2) return;
     const k = Math.max(0, 1 - d / 90);
-    ctx.globalAlpha = 0.32 * k; ctx.fillStyle = '#000000';
+    ctx.globalAlpha = 0.12 * k; ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.ellipse(x + w / 2, gy, Math.max(3, w * 0.95 * (0.5 + k * 0.5)), 3, 0, 0, 7); ctx.fill(); // soft outer edge
+    ctx.globalAlpha = 0.32 * k;
     ctx.beginPath(); ctx.ellipse(x + w / 2, gy, Math.max(2, w * 0.62 * (0.5 + k * 0.5)), 2, 0, 0, 7); ctx.fill();
   };
   for (const e of ents) if (!e.dead && !BOSS[e.type] && e.type !== 'flag' && e.type !== 'icicle' && e.type !== 'target' && e.w < 40 && Math.abs(e.x - cam.x - VW / 2) < VW / 2 + 40) one(e.x, e.y, e.w, e.h);
@@ -6854,6 +6858,7 @@ function drawHud(t) {
   if (lives > 9) text('+' + (lives - 9), 162, 26, 8, '#e7eaf6');
   if (P.alt) text(GUNS[P.alt.kind].name + ' ' + P.alt.ammo, 104, 34, 8, '#c96a2a');
   if (P.mech) { ctx.fillStyle = '#2a3160'; ctx.fillRect(104, 31, 60, 2); ctx.fillStyle = P.mech.hp < 8 ? '#d9534f' : '#f2c94c'; ctx.fillRect(104, 31, 60 * Math.max(0, P.mech.hp) / P.mech.max, 2); }
+  if (P.mech) { ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 40, 142, 11); text('SHIFT / DOWN+JUMP: GET OUT', 8, 48, 8, Math.floor(clock * 2) % 2 ? '#f2c94c' : '#e7eaf6'); } // exit hint while in the mech
   ctx.fillStyle = '#2a3160'; ctx.fillRect(40, 31, 60, 2);
   ctx.fillStyle = P.dcool > 0 ? '#5c6480' : '#a6d854'; ctx.fillRect(40, 31, 60 * (1 - Math.max(0, P.dcool) / 0.6), 2);
   // right: score, kills, rescued, time
@@ -7387,14 +7392,14 @@ function drawBriefing(t) {
 function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.textBaseline = 'alphabetic';
-  drawBackground(t);
+  drawBackground(t); fxDepth(t); // extra parallax ridge, haze and fog
   const sk = settings.shake ? shake : 0, sx = (sk > 0 ? rand(-sk, sk) : 0) + (settings.shake ? kickX : 0), sy = sk > 0 ? rand(-sk, sk) : 0;
   ctx.setTransform(1, 0, 0, 1, Math.round(-cam.x + sx), Math.round(-cam.y + sy));
   drawBackWalls();
   drawDecor(t);
   drawLamps(t);
   drawCrawlers(t);
-  drawTiles(t);
+  drawTiles(t); fxWater(t);
   drawDevices(t);
   drawShadows();
   drawPlants(t);
@@ -7406,7 +7411,7 @@ function render(t) {
   drawPlayer();
   drawBullets();
   drawParticles();
-  drawFx();
+  drawFx(); fxWorld(t);
   drawEventsWorld(t);
   if (settings.hitboxes) { // debug view: what can hit what
     ctx.lineWidth = 1;
@@ -7415,13 +7420,100 @@ function render(t) {
     ctx.fillStyle = '#ffffff'; for (const b of bullets) ctx.fillRect(Math.round(b.x), Math.round(b.y), 1, 1);
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  fxShafts(t);
   if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);
-  drawMotes(t);
+  drawMotes(t); fxEdge();
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   if (slowT > 0 && state === 'play') { ctx.globalAlpha = 0.07 * Math.min(1, slowT); ctx.fillStyle = '#8fd3ff'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; } // dilated time: a cold blue cast
   if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawHud(t); } else drawScreen(t);
   if (settings.scanlines) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < VH; y += 2) ctx.fillRect(0, y, VW, 1); }
+}
+
+// ---------------------------------------------------------------- extra visuals
+// Added on top of the base look, all drawn in code: a nearer ridge with haze and fog, light shafts, glints on acid,
+// pulsing glows on things worth grabbing, heat shimmer over fire, a smoke ball and a second ring on blasts, a red/cyan
+// edge fringe on big blasts. Glows and shafts follow the LIGHTING setting; the edge fringe follows SCREEN SHAKE.
+let xvTh = null, xvHaze = null, xvRidge = '#000', xvFog = 'rgba(255,255,255,1)';
+const xvRgba = (c, a) => c.replace('rgb(', 'rgba(').replace(')', ',' + a + ')');
+function fxDepth(t) {
+  const th = theme; if (!th || th.orb === 'none') return;
+  if (xvTh !== th) { // per-theme colours and the haze gradient, made once
+    xvTh = th; xvRidge = mixHex(th.city, th.dark, 0.45); xvFog = xvRgba(mixHex(th.sky[2], '#ffffff', 0.25), 0.07); xvHaze = null;
+    try { xvHaze = ctx.createLinearGradient(0, 100, 0, 235); xvHaze.addColorStop(0, xvRgba(mixHex(th.sky[2], th.sky[2], 0), 0)); xvHaze.addColorStop(1, xvRgba(mixHex(th.sky[2], th.hill, 0.2), 0.3)); } catch (e) { /* haze is optional */ }
+  }
+  if (xvHaze) { ctx.fillStyle = xvHaze; ctx.fillRect(0, 100, VW, VH - 100); }
+  ctx.fillStyle = xvRidge; ctx.beginPath(); ctx.moveTo(0, VH);
+  const jag = th.hills === 'peaks' ? 9 : 0;
+  for (let x = 0; x <= VW; x += 8) { const wx = x + cam.x * 0.58; ctx.lineTo(x, 224 - cam.y * 0.3 + Math.sin(wx * 0.016) * 11 + Math.sin(wx * 0.05 + 2) * 4 + (jag ? Math.abs(Math.sin(wx * 0.04)) * -jag : 0)); }
+  ctx.lineTo(VW, VH); ctx.fill();
+  ctx.fillStyle = xvFog; const span = VW + 260;
+  for (let k = 0; k < 3; k++) { const x = ((t * (4 + k * 3) + k * 170 - cam.x * (0.12 + k * 0.08)) % span + span) % span - 130; ctx.fillRect(x, 150 + k * 22 - cam.y * 0.2, 260, 5 + k * 2); ctx.fillRect(x + 40, 155 + k * 22 - cam.y * 0.2, 180, 4); }
+}
+// slanting beams of light from above, drifting slowly (not underground)
+function fxShafts(t) {
+  const th = theme; if (!settings.lighting || !th || th.orb === 'none' || state !== 'play') return;
+  ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = th.beam;
+  for (let k = 0; k < 4; k++) {
+    const x = ((k * 140 + 30 - cam.x * 0.25 + Math.sin(t * 0.2 + k) * 14) % (VW + 160) + VW + 160) % (VW + 160) - 80, w = 16 + k * 5;
+    ctx.globalAlpha = 0.03 + Math.sin(t * 0.6 + k * 1.7) * 0.012 + 0.012;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + w, 0); ctx.lineTo(x + w - 90, VH * 0.85); ctx.lineTo(x - 90 - w * 0.5, VH * 0.85); ctx.fill();
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+// glints and a moving bright lip on acid surfaces
+function fxWater(t) {
+  const [c0, c1, r0, r1] = viewTiles(), A = theme.acid;
+  for (let r = Math.max(1, r0); r <= r1; r++) for (let c = c0; c <= c1; c++) {
+    if (tiles[r * LW + c] !== ACID || tiles[(r - 1) * LW + c] === ACID) continue;
+    const x = c * T, y = r * T;
+    ctx.globalAlpha = 0.4; ctx.fillStyle = A[2]; ctx.fillRect(x + ((t * 18 + c * 7) % T | 0), y + 1, 5, 1); // a bright lip sliding along the surface
+    for (let k = 0; k < 2; k++) if (Math.sin(t * 1.9 + c * 1.7 + k * 3.1) > 0.82) { ctx.globalAlpha = 0.85; ctx.fillStyle = '#ffffff'; ctx.fillRect(x + ((c * 5 + k * 9) % 13) + 1, y + 2 + k * 3, 2, 1); }
+    ctx.globalAlpha = 0.12; ctx.fillStyle = A[2]; ctx.fillRect(x + 2 + Math.sin(t * 2 + c) * 2, y + 7, 8, 1); // a faint streak below
+  }
+  ctx.globalAlpha = 1;
+}
+// world-space extras: pulsing glows, heat shimmer, blast smoke ball and second ring
+function fxWorld(t) {
+  const x0 = cam.x - 30, x1 = cam.x + VW + 30, y0 = cam.y - 30, y1 = cam.y + VH + 30;
+  if (settings.lighting) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (const e of ents) {
+      if (e.dead || e.x < x0 || e.x > x1 || e.y < y0 || e.y > y1) continue;
+      const ty = e.type, col = ty === 'pickup' ? (e.strike ? '#d9534f' : '#a6d854') : ty === 'cage' ? '#8fd3ff' : ty === 'mechsuit' ? '#f2c94c' : ty === 'flag' ? '#fff6c2' : (ty === 'itemcrate' || ty === 'guncrate' || ty === 'target') ? '#f2c94c' : null;
+      if (!col) continue;
+      const R = ty === 'flag' ? 22 : 15;
+      ctx.globalAlpha = 0.16 + 0.1 * Math.sin(t * 3 + e.x * 0.1); ctx.drawImage(tinted(col), e.x + e.w / 2 - R, e.y + e.h / 2 - R, R * 2, R * 2);
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  let n = 0; ctx.fillStyle = 'rgba(255,205,130,0.07)'; // heat shimmer: wobbling pale bands over fire
+  for (const f of fx) if (f.kind === 'fire' && f.x > x0 && f.x < x1 && n++ < 10) for (let k = 0; k < 3; k++) ctx.fillRect(Math.round(f.x - 7 + Math.sin(t * 9 + k * 2 + f.x) * 2.5), Math.round(f.y - 12 - k * 7), 14, 2);
+  for (const f of fx) {
+    const a = Math.max(0, f.t / f.max);
+    if (f.kind === 'cinder') { // the fireball cools into a dark smoke ball that rises
+      const k = 1 - a, R = f.r * (0.4 + k * 0.5);
+      ctx.globalAlpha = a * 0.5; ctx.fillStyle = '#2b2738'; ctx.beginPath(); ctx.arc(f.x, f.y - k * f.r * 0.5, R, 0, 7); ctx.fill();
+      ctx.globalAlpha = a * 0.35; ctx.fillStyle = '#4b4766'; ctx.beginPath(); ctx.arc(f.x - R * 0.25, f.y - k * f.r * 0.55 - R * 0.2, R * 0.6, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    } else if (f.kind === 'ring2') { // an orange ring, slower than the white one
+      ctx.globalAlpha = a * 0.7; ctx.strokeStyle = '#f29e4c'; ctx.lineWidth = 1 + a * 2; ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.4 + (1 - a) * 1.5), 0, 7); ctx.stroke(); ctx.lineWidth = 1; ctx.globalAlpha = 1;
+    }
+  }
+}
+function blastExtras(x, y, r) {
+  if (r >= 20) fx.push({ kind: 'cinder', x, y, r, t: 0.9, max: 0.9 });
+  if (r >= 24) fx.push({ kind: 'ring2', x, y, r, t: 0.45, max: 0.45 });
+  if (r >= 40) fx.push({ kind: 'chroma', t: 0.2, max: 0.2 });
+}
+// a thin red and cyan fringe at the screen edges after a big blast
+function fxEdge() {
+  if (!settings.shake) return;
+  for (const f of fx) if (f.kind === 'chroma') {
+    const a = f.t / f.max, w = Math.round(2 + a * 5);
+    ctx.globalAlpha = a * 0.35; ctx.fillStyle = '#ff3a4a'; ctx.fillRect(0, 0, w, VH); ctx.fillRect(VW - w, 0, w, VH);
+    ctx.fillStyle = '#3affff'; ctx.fillRect(w, 0, 1, VH); ctx.fillRect(VW - w - 1, 0, 1, VH);
+  }
+  ctx.globalAlpha = 1;
 }
 
 // ---------------------------------------------------------------- lighting and weather
@@ -7789,13 +7881,14 @@ function updateWeather(dt) {
 }
 function drawWeather(t) {
   const dt = Math.min(0.05, t - weatherT || 0); weatherT = t;
+  const wind = 40 + Math.sin(t * 0.37) * 35 + Math.max(0, Math.sin(t * 0.11)) * 50; // gusts that lean the rain and push the snow
   if (theme.rain) {
     ctx.strokeStyle = 'rgba(170,190,255,0.32)'; ctx.lineWidth = 1; ctx.beginPath();
     for (const d of DROPS) {
-      d[1] += 420 * d[2] * dt; d[0] -= 90 * d[2] * dt;
+      d[1] += 420 * d[2] * dt; d[0] -= (50 + wind) * d[2] * dt;
       if (d[1] > VH) { d[1] -= VH + 10; d[0] = Math.random() * (VW + 60); }
       if (d[0] < -10) d[0] += VW + 20;
-      ctx.moveTo(d[0], d[1]); ctx.lineTo(d[0] - 2 * d[2], d[1] + 7 * d[2]);
+      ctx.moveTo(d[0], d[1]); ctx.lineTo(d[0] - wind * 0.035 * d[2], d[1] + 7 * d[2]);
     }
     ctx.stroke();
     if (flashT > 0 && boltPts) {
@@ -7813,7 +7906,7 @@ function drawWeather(t) {
   } else if (theme.snow || theme.ash) {
     ctx.fillStyle = theme.ash ? 'rgba(150,150,140,0.55)' : 'rgba(240,246,255,0.75)';
     for (const d of DROPS) {
-      d[1] += 34 * d[2] * dt; d[0] += Math.sin(t * 1.3 + d[2] * 9) * 12 * dt - 8 * dt;
+      d[1] += 34 * d[2] * dt; d[0] += Math.sin(t * 1.3 + d[2] * 9) * 12 * dt - (wind * 0.25) * dt;
       if (d[1] > VH) { d[1] = -4; d[0] = Math.random() * VW; }
       if (d[0] < -4) d[0] += VW + 8;
       ctx.fillRect(d[0], d[1], d[2] > 1.1 ? 2 : 1, d[2] > 1.1 ? 2 : 1);
@@ -7868,5 +7961,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick:
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWater, fxWorld, fxEdge, blastExtras }); // extra visuals hooks
 })();
 </script>
