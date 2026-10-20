@@ -20,7 +20,7 @@ const arena = () => {
   S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); run(1);
   S.P.x = 30 * T; S.P.y = 15 * T - 15.01; S.P.face = 1; S.P.inv = 1e9; S.P.bro = S.BRO.einstein; // a new run starts with random bros
 };
-const FOES = ['grunt', 'shield', 'heavy', 'scout', 'grenadier', 'rocketeer', 'guru', 'para', 'jetpack', 'sniper', 'flamer', 'brute', 'medic', 'preacher', 'mortar', 'bomber', 'dog', 'turret', 'camdrone'];
+const FOES = ['grunt', 'shield', 'heavy', 'scout', 'grenadier', 'rocketeer', 'guru', 'para', 'jetpack', 'sniper', 'flamer', 'brute', 'medic', 'preacher', 'mortar', 'bomber', 'dog', 'turret', 'camdrone', ...S.NEW_FOES];
 
 for (const type of FOES) {
   // shot: Einstein fires at it from 5 tiles away; it may not move or fight back
