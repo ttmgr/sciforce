@@ -40,6 +40,8 @@ const sound = (tag, bad) => {
   let holes = 0; for (let c = 0; c < LW; c++) if (solid(S.tileAt(c, GH - 1)) && !S.deep(c) && (S.tileAt(c, LH - 1) !== 3 || S.tileAt(c, GH + 3) !== 1)) holes++;
   if (holes) bad.earth.push(tag + ':' + holes);
   const fl = floating().filter(([c, r]) => r >= GH || inZone(c)); if (fl.length) bad.float.push(tag + ':' + fl.map((p) => p.join(',')).join('/'));
+  const F = S.fancy ? S.fancy() : null; // the fancy-map decoration: on solid ground with room over it underground, and nothing standing behind the playfield down there
+  if (F) { const off = F.floor.filter((o) => o.r >= GH && (!solid(S.tileAt(o.c, o.r)) || solid(S.tileAt(o.c, o.r - 1)))).length + F.hang.filter((o) => o.r >= GH - 1 && (!solid(S.tileAt(o.c, o.r)) || solid(S.tileAt(o.c, o.r + 1)))).length + F.back.concat(F.land).filter((o) => o.r >= GH).length; if (off) bad.wall.push(tag + ':decor ' + off); }
   const w = inWall(); if (w.length) bad.wall.push(tag + ':' + w.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join('/'));
 };
 
@@ -55,7 +57,7 @@ for (let l = 0; l < NL; l++) {
 for (const n of [S.SIEGE, S.MOON]) { S.startLevel(n); run(1); sound('mode' + n, bad); }
 check('every mission and mode: earth down to a steel bedrock at row 39 under the old floor', !bad.earth.length, bad.earth.join(' '));
 check('every mission and mode: nothing floats at the start', !bad.float.length && S.checkCollapse() === 0, bad.float.join(' '));
-check('every mission and mode: nothing spawns inside a wall', !bad.wall.length, bad.wall.join(' '));
+check('every mission and mode: nothing spawns inside a wall, no decoration floats or stands behind the underground', !bad.wall.length, bad.wall.join(' '));
 check('several campaign stretches get an underground detour', stretchZones.length >= 8, stretchZones.length + ' missions: ' + stretchZones.join(','));
 check('two missions also go underground in their main part, past the middle', mainZones.join(',') === '9,12' && [8, 11].every((l) => (S.startLevel(l), S.ugZones().every((o) => o.c0 > 90))), mainZones.join(','));
 
