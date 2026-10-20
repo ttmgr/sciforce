@@ -121,7 +121,7 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   // a bot that runs right and jumps gets from the end of the old path through the stretch into the arena (invulnerable)
   S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag') e.dead = true; });
   S.P.bro = S.BRO.einstein; S.P.x = (cut - 4) * T; S.P.y = 2 * T; S.P.vy = 0; let far = 0;
-  for (let i = 0; i < 60 * 60 && far < B.trig; i++) {
+  for (let i = 0; i < 90 * 60 && far < B.trig; i++) {
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9; S.P.alive = true;
     step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3 });
@@ -156,6 +156,23 @@ check('a respawn never sends the bro who just died', same === 0, same);
 S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); step(); const cage = S.makeEnt({ type: 'cage', c: 36, from: 0 }); S.ents.push(cage); const n0 = S.unlocked.length;
 S.P.inv = 1e9; for (let i = 0; i < 120 && S.unlocked.length === n0; i++) { S.P.x = 36 * T; step({ fire: true }); if (i === 30) S.pressed.melee = true; }
 check('freeing a cage unlocks one more bro', S.unlocked.length === n0 + 1, n0 + ' -> ' + S.unlocked.length);
+
+// ---- everything takes damage: sleeping bosses, mines, and spores on objects
+S.startLevel(0); S.endCeasefire(); step();
+const sleeper = S.ents.find((e) => e.final); const hp0 = sleeper.hp;
+check('the boss sleeps while you are far away', !sleeper.active);
+S.P.inv = 1e9; S.P.x = (sleeper.trig - 30) * T; step();
+S.bullets.push({ x: sleeper.x - 6, y: sleeper.y + sleeper.h / 2, vx: 500, vy: 0, owner: 'p', dmg: 1, tdmg: 0.5, life: 0.5, kind: 'photon' }); run(3);
+check('a shot hurts a sleeping boss', sleeper.hp < hp0, (hp0 - sleeper.hp).toFixed(1) + ' damage');
+run(30); check('and wakes it up, even from outside its arena', sleeper.active);
+flat(); const mine = Object.assign(S.makeEnt({ type: 'mine', c: 34, from: 0 }), {}); S.ents.push(mine);
+for (let i = 0; i < 60 && !mine.dead; i++) { S.P.x = 30 * T; S.P.face = 1; step({ fire: true }); }
+check('a level shot sets off a mine on the floor', mine.dead);
+for (const type of ['barrel', 'dog', 'turret', 'itemcrate']) {
+  flat('fleming'); const o = Object.assign(S.makeEnt({ type, c: 33, from: 0 }), { face: -1, react: 99, cool: 99 }); S.ents.push(o); const h0 = o.hp;
+  for (let i = 0; i < 90 && !o.dead; i++) { S.P.x = 30 * T; S.P.face = 1; o.x = 33 * T + 2; o.react = 99; o.cool = 99; step({ fire: true }); }
+  check('Fleming\'s spores hurt a ' + type, o.dead || o.hp < h0);
+}
 S.render(1);
 
 console.log(fails ? fails + ' check(s) failed' : 'all aim, melee and map checks passed');

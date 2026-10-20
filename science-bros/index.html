@@ -2550,7 +2550,7 @@ const DIMS = {
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
   bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
   cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], peaplant: [8, 10, 1], chimp: [10, 10, 1], guncrate: [12, 12, 1],
-  spring: [12, 6, 1], mine: [8, 3, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], director: [30, 22, 110], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
+  spring: [12, 6, 1], mine: [8, 10, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], director: [30, 22, 110], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -2650,11 +2650,12 @@ const HITTABLE = { preacher: 1, mortar: 1, camdrone: 1, guncrate: 1, mine: 1, al
 const center = (e) => [e.x + e.w / 2, e.y + e.h / 2];
 const OBJ = { barrel: 1, propane: 1, ammo: 1, strike: 1, icicle: 1, fueltank: 1, itemcrate: 1, guncrate: 1, mine: 1, alarm: 1, target: 1 };
 Object.assign(HITTABLE, QUACK, BOSS); // every quack and boss type can be hit, so a new one can't be left out
-const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || (e.active && !e.doomed));
+const live = (e) => !e.dead && HITTABLE[e.type] === 1 && (!BOSS[e.type] || !e.doomed); // a sleeping boss can be hit too (the hit wakes it)
 const foe = (e) => live(e) && !OBJ[e.type];
 // how: 'shot' and 'blast' leave a ragdoll, 'gib' and 'crush' tear the body apart, 'burn' leaves a charred body, 'punch' sends it flying
 function hitEnemy(e, dmg, kx = 0, how = 'shot') {
-  if (e.dead || (BOSS[e.type] && (e.doomed || !e.active))) return;
+  if (e.dead || (BOSS[e.type] && e.doomed)) return;
+  if (BOSS[e.type] && !e.active) e.poked = true; // a shot wakes a sleeping boss, even from outside its arena
   if (e.type === 'propane') { if (how === 'crush') killEnemy(e); else lightPropane(e, kx, 0.3); return; }
   if (e.type === 'icicle') { if (!e.falling) { e.falling = true; sfx('glass'); } return; }
   if (e.vats && e.vats.some((v) => !v.dead)) { if (PART_WORDS[e.type] && !(e.hintT > lifeT)) { e.hintT = lifeT + 1.6; floatText(e.x + e.w / 2, e.y - 10, PART_WORDS[e.type][2], '#f2c94c'); } sfx('ting'); for (let i = 0; i < 3; i++) part(e.x + e.w / 2, e.y + e.h / 2, rand(-120, 120), rand(-100, 20), '#8fd3ff', 0.25, 1, G); return; } // shielded until the vats are gone
@@ -3206,6 +3207,7 @@ function spores(gx, gy, f, dx = f, dy = 0) {
   const ex = gx + dx * 90, ey = gy + dy * 90, px = 10 * Math.abs(dy), py = 10 * Math.abs(dx); // the cloud's box along the aim
   const box = { x: Math.min(gx, ex) - px, y: Math.min(gy, ey) - py, w: Math.abs(ex - gx) + 2 * px, h: Math.abs(ey - gy) + 2 * py };
   for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) e.sick = Math.max(e.sick || 0, 4);
+  for (const e of ents) if (live(e) && !isQuack(e) && !BOSS[e.type] && overlap(e, box)) hitEnemy(e, 0.3, 0); // dogs, turrets, crates and barrels rot instead
   for (const e of ents) if (BOSS[e.type] && live(e) && overlap(e, box)) hitEnemy(e, 0.4, 0); // bosses don't get sick: the mould eats into them instead
   hitPartsIn(box, 0.4);
   if (Math.random() < 0.15) sfx('hiss');
@@ -4118,7 +4120,7 @@ function bossCalm(e, dt) {
   const away = !P.alive || (P.x + P.w < edge * T && Math.abs(P.x - (e.x + e.w / 2)) > 10 * T);
   e.calmT = away ? (e.calmT || 0) + dt : 0;
   if (e.calmT < (P.alive ? 2.5 : 0.6)) return;
-  e.active = false; e.calmT = 0; e.vx = 0;
+  e.active = false; e.calmT = 0; e.vx = 0; e.poked = false;
   for (const b of bullets) if (b.owner === 'e' && (b.kind === 'missile' || b.kind === 'bomb')) b.dead = true; // its homing missiles and bombs fizzle
   floatText(e.x + e.w / 2, e.y - 8, 'HMPH', '#a3abd0');
 }
@@ -4196,7 +4198,7 @@ function updateEnt(e, dt) {
     case 'mine': // beeps when something steps near, then goes off
       e.vx = 0; moveBody(e, dt);
       if (!e.armed) {
-        const near = (o) => Math.abs(o.x + o.w / 2 - (e.x + 4)) < 11 && Math.abs(o.y + o.h - e.y - 3) < 8;
+        const near = (o) => Math.abs(o.x + o.w / 2 - (e.x + 4)) < 11 && Math.abs(o.y + o.h - e.y - e.h) < 8;
         if ((P.alive && near(P)) || ents.some((o) => (isQuack(o) || o.type === 'dog') && !o.dead && near(o))) { e.armed = 0.35; sfx('alert'); }
       } else { e.armed -= dt; if (e.armed <= 0) killEnemy(e); }
       break;
@@ -4770,7 +4772,7 @@ function drawPartHints(b, t) {
 function updateMech(b, dt) {
   b.anim += dt;
   if (!b.active) {
-    if (P.alive && P.x > b.trig * T) { activateBoss(b, '30C potency. No active ingredient. Very angry.'); b.state = 'walk'; b.t = 2; }
+    if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, '30C potency. No active ingredient. Very angry.'); b.state = 'walk'; b.t = 2; }
     return;
   }
   b.vy += G * dt;
@@ -4867,7 +4869,7 @@ function updateKopter(b, dt) {
   b.anim += dt;
   const floor = b.fy, cx = () => b.x + b.w / 2, A = b.ax0 * T + 40, B = b.ax1 * T - 40;
   if (!b.active) {
-    if (P.alive && P.x > b.trig * T) { activateBoss(b, 'Flushes out toxins. And scientists.'); b.x = B + 140; b.y = floor - 180; b.vx = 0; b.vy = 0; b.state = 'enter'; b.t = 1.8; }
+    if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, 'Flushes out toxins. And scientists.'); b.x = B + 140; b.y = floor - 180; b.vx = 0; b.vy = 0; b.state = 'enter'; b.t = 1.8; }
     return;
   }
   if (b.dying > 0) { // spin out and crash
@@ -4933,7 +4935,7 @@ function updateCrawler(b, dt) {
   const surfY = b.surfY, deep = surfY + 56;
   if (!b.segs.length) for (let i = 0; i < 14; i++) b.segs.push({ x: b.hx + i * 9, y: deep });
   if (!b.active) {
-    if (P.alive && P.x > b.trig * T) { activateBoss(b, 'Raised on good vibes. Eats scientists.'); b.state = 'under'; b.t = 1.2; }
+    if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, 'Raised on good vibes. Eats scientists.'); b.state = 'under'; b.t = 1.2; }
     else { b.x = b.hx - 10; b.y = b.hy - 10; return; }
   }
   if (b.dying > 0) {
@@ -5007,7 +5009,7 @@ function spit(b, n) {
 function updateTank(b, dt) {
   b.anim += dt;
   if (!b.active) {
-    if (P.alive && P.x > b.trig * T) { activateBoss(b, 'Dr. Placebo drives it himself. Cures everything.'); b.state = 'drive'; b.t = 2; }
+    if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, 'Dr. Placebo drives it himself. Cures everything.'); b.state = 'drive'; b.t = 2; }
     return;
   }
   b.vy += G * dt; b.y += b.vy * dt;
@@ -5123,7 +5125,7 @@ function drawTank(b, t) {
 // its bomb bay drops on you, and it drops paratroopers. Once the gondolas are gone it sinks lower and the gas bag can be hit.
 function updateBlimp(b, dt) {
   b.anim += dt;
-  if (!b.active) { if (P.alive && P.x > b.trig * T) { activateBoss(b, 'Proof the Earth is flat, kept up by hot air.'); b.x = b.ax1 * T; } else { b.x = b.ax1 * T + 400; return; } }
+  if (!b.active) { if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, 'Proof the Earth is flat, kept up by hot air.'); b.x = b.ax1 * T; } else { b.x = b.ax1 * T + 400; return; } }
   const exposed = b.vats.every((v) => v.dead);
   for (const v of b.vats) { v.x = b.x + v.dx; v.y = b.y + b.h - 2; v.flash -= dt; }
   if (b.dying > 0) { // nose down, burning, into the ground
@@ -5174,7 +5176,7 @@ function drawBlimp(b, t) {
 // double damage), spits seeds, squirts juice that leaves puddles, calls in quacks, and when angry rains vitamin pills
 function updateCitrus(b, dt) {
   b.anim += dt; b.dizzy = Math.max(0, b.dizzy - dt);
-  if (!b.active) { if (P.alive && P.x > b.trig * T) { activateBoss(b, 'The Big Bad Orange. Tremendous vitamins.'); b.state = 'hop'; b.t = 1; b.hops = 2; } return; }
+  if (!b.active) { if (P.alive && (P.x > b.trig * T || b.poked)) { activateBoss(b, 'The Big Bad Orange. Tremendous vitamins.'); b.state = 'hop'; b.t = 1; b.hops = 2; } return; }
   b.vy += G * dt; b.y += b.vy * dt;
   let landed = false;
   if (b.y + b.h >= b.fy) { if (b.vy > 250) landed = true; b.y = b.fy - b.h; b.vy = 0; b.onGround = true; } else b.onGround = false;
@@ -5281,7 +5283,7 @@ function drawCitrus(b, t) {
 // It drops sandbags, calls in extras, and hides behind three studio lights. With the lights gone it swoops low.
 function updateDirector(b, dt) {
   b.anim += dt; for (const v of b.vats) v.flash -= dt;
-  if (!b.active) { if (P.alive && P.x > b.trig * T) activateBoss(b, 'Quiet on set! We are faking a moon landing.'); return; }
+  if (!b.active) { if (P.alive && (P.x > b.trig * T || b.poked)) activateBoss(b, 'Quiet on set! We are faking a moon landing.'); return; }
   if (b.dying > 0) {
     b.dying -= dt; b.vy = (b.vy || 0) + 300 * dt; b.y = Math.min(b.y + b.vy * dt, 15 * T - b.h);
     b.boomT -= dt; if (b.boomT <= 0) { b.boomT = 0.15; explode(b.x + rand(0, b.w), b.y + rand(0, b.h), 22, 0, 'p', 0); }
@@ -5345,7 +5347,7 @@ function hitVat(e, v, dmg) {
 }
 function updateEngine(b, dt) {
   b.anim += dt; for (const v of b.vats) v.flash -= dt;
-  if (!b.active) { if (P.alive && P.x > b.trig * T) activateBoss(b, 'Dr. Placebo at the controls. Shake well before use.'); return; }
+  if (!b.active) { if (P.alive && (P.x > b.trig * T || b.poked)) activateBoss(b, 'Dr. Placebo at the controls. Shake well before use.'); return; }
   const floorY = (r) => { let rr = 1; while (rr < LH - 1 && !isSolidT(tileAt(Math.floor(r / T), rr))) rr++; return rr * T; };
   if (b.dying > 0) {
     b.dying -= dt; b.boomT -= dt;
@@ -6554,7 +6556,8 @@ function drawEnt(e, t) {
       ctx.fillStyle = '#d9534f'; ctx.fillRect(x - 1, y - 1 + sq, 14, 2);
       break;
     }
-    case 'mine': {
+    case 'mine': { // the hit box is 10 tall so shots can set it off; the plate sits at its foot
+      const y = Math.round(e.y + e.h - 3);
       ctx.fillStyle = '#3d3d3d'; ctx.fillRect(x, y, 8, 3); ctx.fillStyle = '#25223a'; ctx.fillRect(x + 1, y - 1, 6, 1);
       if (Math.floor(t * (e.armed ? 16 : 2)) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(x + 3, y - 2, 2, 1); }
       break;
