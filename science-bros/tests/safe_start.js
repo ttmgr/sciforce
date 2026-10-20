@@ -54,10 +54,11 @@ check('quit to title from the pause menu', S.state === 'title');
 S.pressed.start = true; run(1); check('on the world map', S.state === 'map');
 S.unlocked.push('curie', 'tesla');
 S.pressed.start = true; run(1); check('on the briefing', S.state === 'brief');
+const want = S.unlocked[(S.briefBro + 1) % S.unlocked.length]; // the briefing opens on a random bro
 S.pressed.right = true; run(1); // next bro
 S.pressed.down = true; run(1); for (let k = 0; k < 4; k++) { S.pressed.right = true; run(1); } // gear: shotgun
 S.pressed.start = true; run(1);
-check('deployed as the chosen bro', S.state === 'play' && S.P.bro.id === 'curie', S.P.bro.id);
+check('deployed as the chosen bro', S.state === 'play' && S.P.bro.id === want, S.P.bro.id + ' (wanted ' + want + ')');
 check('with the chosen gear', S.P.alt && S.P.alt.kind === 'shotgun', S.P.alt && S.P.alt.kind);
 
 // world map: pick any mission reached before

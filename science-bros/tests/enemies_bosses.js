@@ -128,7 +128,7 @@ check('Darwin natural selection kills the weak on screen', weak.every((w) => w.d
 
 // Homeopathitron overdose mode fires homing missiles
 lone(); S.reset(); run(1); S.ents.forEach((o) => { if (o.type !== 'boss' && o.type !== 'flag') o.dead = true; }); run(1);
-const mech = S.boss; S.P.inv = 1e9; S.P.x = 184 * T; S.P.y = 15 * T - 16; run(5);
+const mech = S.boss; S.P.inv = 1e9; S.P.x = S.arenaCol(184) * T; S.P.y = 15 * T - 16; run(5);
 mech.hp = 55; let missile = false; for (let i = 0; i < 600 && !missile; i++) { run(1); missile = S.bullets.some((b) => b.kind === 'missile'); }
 check('Homeopathitron enters overdose mode and fires missiles', mech.p2 && missile);
 
@@ -142,7 +142,7 @@ S.hitEnemy(kop, 999, 0); let k = 0; for (; k < 600 && !kop.dead; k++) run(1);
 check('Detoxkopter crashes and dies', kop.dead, k + ' frames'); check('kopter gate opens', !solid(124, 10) && !solid(125, 14));
 
 // Crystal Crawler: tunnels, surfaces, dies segment by segment, chopper comes, level 2 ends the game
-const crawl = S.ents.find((o) => o.type === 'crawler'); S.P.x = 185 * T; S.P.y = 12 * T - 16; S.P.vy = 0; run(5);
+const crawl = S.ents.find((o) => o.type === 'crawler'); S.P.x = S.arenaCol(185) * T; S.P.y = 12 * T - 16; S.P.vy = 0; run(5);
 check('Crystal Crawler activates', crawl.active && crawl.segs.length === 14);
 let surfaced = false; for (let i = 0; i < 900 && !surfaced; i++) { S.P.inv = 1e9; run(1); surfaced = crawl.hy < crawl.surfY - 10; }
 check('Crystal Crawler surfaces', surfaced);
@@ -168,7 +168,7 @@ S.P.inv = 1e9; S.P.x = 13 * T; S.P.y = 14 * T - 16; S.P.vx = 0; run(3);
 for (let i = 0; i < 30; i++) run(1, { right: true }); run(1);
 const v0 = S.P.vx; run(8);
 check('ice is slippery: you keep sliding after letting go', v0 > 60 && S.P.vx > 20, 'vx ' + v0.toFixed(0) + ' -> ' + S.P.vx.toFixed(0));
-const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = 186 * T; S.P.y = 16 * T - 16; S.P.vy = 0; run(5);
+const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = S.arenaCol(186) * T; S.P.y = 16 * T - 16; S.P.vy = 0; run(5);
 check('Snake Oil Tank activates', tank.active);
 let shot = false; for (let i = 0; i < 900 && !shot; i++) { S.P.inv = 1e9; run(1); shot = S.bullets.some((b) => b.owner === 'e' && b.kind === 'bomb') || tank.state === 'flame'; }
 check('Snake Oil Tank attacks', shot, tank.state);
@@ -181,7 +181,7 @@ check('extraction on level 3 leads on to level 4', S.state === 'win', S.state);
 S.startLevel(3); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
 check('level 4 has 4 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 4 && S.ents.some((o) => o.type === 'engine'));
 run(1); S.ents.forEach((o) => { if (!['engine', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = 192 * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
+const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = S.arenaCol(192) * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
 check('Succussion Engine activates', eng.active);
 const hp0 = eng.hp; S.hitEnemy(eng, 50, 0); check('its core is shielded while the vats stand', eng.hp === hp0);
 let slammed = false; for (let i = 0; i < 400 && !slammed; i++) { S.P.inv = 1e9; run(1); slammed = eng.hammers.some((h) => h.state === 'rise'); }
@@ -197,7 +197,7 @@ check('extraction on level 4 leads on to level 5', S.state === 'win', S.state);
 // level 5: the Flat Earth Zeppelin
 S.startLevel(4); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['blimp', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = 180 * T; S.P.y = 16 * T - 16; run(5);
+const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = S.arenaCol(180) * T; S.P.y = 16 * T - 16; run(5);
 check('Flat Earth Zeppelin activates', zep.active);
 let zshot = false; for (let i = 0; i < 400 && !zshot; i++) { S.P.inv = 1e9; run(1); zshot = S.bullets.some((b) => b.owner === 'e'); }
 check('its gondolas shoot', zshot);
@@ -210,7 +210,7 @@ check('then the zeppelin goes down', zep.dead && !!S.chopper, k3 + ' frames');
 // the last mission: King Citrus
 S.startLevel(S.nLevels - 1); check('the Citadel builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['citrus', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = 186 * T; S.P.y = 15 * T - 16; run(5);
+const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = S.arenaCol(186) * T; S.P.y = 15 * T - 16; run(5);
 check('King Citrus activates', kc.active);
 let hopped = false; for (let i = 0; i < 300 && !hopped; i++) { S.P.inv = 1e9; run(1); if (!kc.onGround) hopped = true; }
 check('King Citrus hops', hopped);

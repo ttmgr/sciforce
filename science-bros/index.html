@@ -79,7 +79,8 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
       <li><kbd>X</kbd> / <kbd>K</kbd> special (3 per bro)</li>
       <li><kbd>C</kbd> / <kbd>L</kbd> punch; <kbd>↓</kbd> + punch in the air slams down</li>
       <li><kbd>Shift</kbd> / <kbd>V</kbd> dash-roll (dodges bullets)</li>
-      <li>Jump off a wall to wall-jump · PS5 controller (Broforce layout): ✕ jump, □ fire, ○ special, △ melee, R1 roll, R2 fire, touchpad map</li>
+      <li>hold <kbd>B</kbd> / <kbd>U</kbd> to aim: you keep facing the same way (walk backwards and keep shooting), and <kbd>↑</kbd> / <kbd>W</kbd> tilts the gun up (45° while moving, straight up when standing); <kbd>Space</kbd> still jumps</li>
+      <li>Jump off a wall to wall-jump · PS5 controller (Broforce layout): ✕ jump, □ fire, ○ special, △ melee, L1/R1 roll, R2 fire, L2 hold to aim (d-pad up tilts the gun), right stick aims freely, touchpad map</li>
       <li><kbd>Tab</kbd> hold for the map · <kbd>P</kbd> pause menu · <kbd>M</kbd> sound</li>
     </ul>
     <button class="ui" id="fs" type="button">Fullscreen</button>
@@ -97,7 +98,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const T = 16, VW = 480, VH = 270, LW = 236, LH = 22;
+const T = 16, VW = 480, VH = 270, LW = 376, LH = 22; // a level is built 236 columns wide, then gets a 140-column stretch before its boss arena (see slideArena)
 let G = 900; // gravity; lower on the Moon
 const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
 const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
@@ -146,6 +147,9 @@ const HEADS = {
   goodall:  ['...hhhhh....', '..hhhhhhh...', 'hhhssssss...', 'h.hsssses...', 'h..ssssss...', '...sssss....'],
   jemison:  ['...hhhh.....', '..hhhhhhh...', '..hhsssss...', '..hsssses...', '...ssssss...', '...sssss....'],
   oppenheimer: ['...hhhhh....', '..hwwwwwh...', 'hhhhhhhhhh..', '...sssses.m.', '...ssssgggm.', '....ssss....'],
+  anning: ['..gggggg....', '.gggggggg...', 'ghhssssss...', 'ghhsssses...', 'g.hssssss...', '...sssss....'],
+  vesalius: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hsssses...', '..mmssssm...', '...mmmm.....'],
+  hooke: ['..wwwwww....', '.wwwwwwww...', 'wwwssssss...', 'wwwsssses...', 'ww.ssssss...', 'w...ssss....'],
   helmet:   ['....hhhh....', '..hhhhhhhh..', '.hhhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
   cap:      ['............', '...hhhhh....', '..hhhhhhhhh.', '..ookkekkyy.', '..ookkkkkyy.', '...oooooo...'],
   turban:   ['...hhhhhh...', '..hhhhhhhh..', '..hhkkkkkh..', '...kkekkyy..', '...kkkkkyy..', '...wwwwww...'],
@@ -254,6 +258,13 @@ const BROS = [
     pal: { h: '#1f1715', s: '#8a5a3c', e: '#1b1d2e', c: '#e8873a', t: '#e6e2f0', p: '#5a3a26', b: '#25211a' } },
   { id: 'oppenheimer', name: 'Robert Oppenbro', weapon: 'Neutron pistol', wdesc: 'fast neutron bolts that leave a short blue radiation glow where they hit', special: 'Trinity', sdesc: 'lobs an atomic device ahead: get out of the red ring before it goes off. One per life', formula: 'Trinity test, 16 July 1945', gun: '#8fd3ff',
     pal: { h: '#8a7a62', w: '#3a2e24', s: '#f0d0b0', e: '#1b1d2e', g: '#6a4a2a', m: '#3a2618', c: '#8a7a5a', t: '#e9eef6', p: '#4a4232', b: '#25211a' } },
+  // melee bros: the fire button swings at what is in reach (see swing)
+  { id: 'anning', name: 'Mary Anbro', weapon: 'Fossil hammer', wdesc: 'slow, heavy swings that crush quacks and smash blocks', special: 'Mass extinction', sdesc: 'a meteor slams down a few tiles ahead', formula: 'Ichthyosaurus, Lyme Regis, 1811', gun: '#b4bed0', melee: true,
+    pal: { h: '#5a3a26', g: '#3a2a4a', s: '#f2d2b8', e: '#1b1d2e', c: '#6a4a3a', t: '#e6e2d0', p: '#3a3326', b: '#25211a' } },
+  { id: 'vesalius', name: 'Andreas Vesalbro', weapon: 'Scalpels', wdesc: 'quick slashes that also cut enemy shots out of the air', special: 'Fabrica', sdesc: 'a dash 7 tiles ahead that cuts every quack in the way', formula: 'De humani corporis fabrica, 1543', gun: '#e9eef6', melee: true,
+    pal: { h: '#1f1715', m: '#1f1715', s: '#efc9a6', e: '#1b1d2e', c: '#2a2a3a', t: '#8e2b3c', p: '#25283a', b: '#15161f' } },
+  { id: 'hooke', name: 'Robert Hookbro', weapon: 'Spring glove', wdesc: 'a boxing glove on a spring that shoots out 3 tiles and throws quacks far', special: "Hooke's law", sdesc: 'a huge spring punch that flings everything ahead', formula: 'F = -k x', gun: '#d9534f', melee: true,
+    pal: { w: '#8a7a6a', s: '#f0c9a4', e: '#1b1d2e', c: '#4a5a3a', t: '#e9eef6', p: '#2a2e42', b: '#15161f' } },
 ];
 const BRO = {};
 for (const b of BROS) { b.spr = buildSprites(HEADS[b.id], b.pal); b.white = buildSprites(HEADS[b.id], WHITE); BRO[b.id] = b; }
@@ -346,7 +357,7 @@ const CHIMP = [
 function poseOf(b) {
   if (b.climb) return { leg: 'climb', fr: Math.floor((b.anim || 0) * 8) % 2, bob: 0 };
   if (!b.onGround && !b.ride) return { leg: b.vy < 0 ? 'jump' : 'fall', fr: 0, bob: 0 };
-  if (Math.abs(b.vx) > 12) { const fr = Math.floor(b.rp || 0) % 6; return { leg: 'run', fr, bob: RUN_BOB[fr] }; }
+  if (Math.abs(b.vx) > 12) { const fr = ((Math.floor(b.rp || 0) % 6) + 6) % 6; return { leg: 'run', fr, bob: RUN_BOB[fr] }; }
   if (b.kneel) return { leg: 'kneel', fr: 0, bob: 2 };
   return { leg: 'stand', fr: 0, bob: Math.sin((b.anim || b.t || 0) * 3) > 0.7 ? 1 : 0 }; // breathing
 }
@@ -468,7 +479,7 @@ function buildLevel() {
   tiles = new Uint8Array(LW * LH); thp = new Float32Array(LW * LH); bg = new Uint8Array(LW * LH); spawns = []; decor = []; lamps = []; devs.length = 0; crumbly.fill(0);
   const set = (c, r, v) => { if (c < 0 || r < 0 || c >= LW || r >= LH) return; tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; if (v === DIRT && r > 0 && tiles[(r - 1) * LW + c] === DIRT) bg[r * LW + c] = BG_EARTH; };
   const fill = (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) set(c, r, v); };
-  LV().build({
+  const H = {
     fill,
     ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, LH - 2, v); fill(c0, LH - 1, c1, LH - 1, STEEL); },
     sp: (type, c, from = 0, extra = {}) => spawns.push(Object.assign({ type, c, from }, extra)),
@@ -485,7 +496,52 @@ function buildLevel() {
     flood: (c0, c1, bot, top, trig, gx = c0) => devs.push({ kind: 'flood', c0, c1, bot, top, trig, gx, lv: bot, row: bot, spd: 0.7, state: 'idle', t: 0, wet: [], x0: c0 * T, x1: (c1 + 1) * T }),
     grav: (c0, r0, c1, r1, k = 0.58) => devs.push({ kind: 'grav', k, x0: c0 * T, y0: r0 * T, x1: (c1 + 1) * T, y1: (r1 + 1) * T }),
     crumble: (c0, r0, c1, r1) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) crumbly[r * LW + c] = 1; },
-  });
+  };
+  LV().build(H);
+  stretched = level < LEVELS.length || level === MOON;
+  const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
+  if (stretched) { slideArena(); buildStretch(H, level); }
+  else for (let r = 0; r < LH; r++) for (let c = 236; c < LW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
+}
+// ---- longer maps: every campaign mission and the Moon get a stretch of extra level pieces between the main path
+// and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
+// in it slides STRETCH columns right, and the gap is filled.
+const ARENA_AT = 176, STRETCH = 140;
+let stretched = false, cutAt = ARENA_AT; // whether the level being played has the stretch, and where it starts
+const arenaCol = (c) => (stretched && c >= cutAt ? c + STRETCH : c); // where a column of the built level ended up
+const padOf = () => [arenaCol(LV().pad[0]), LV().pad[1]];
+function slideArena() {
+  for (let r = 0; r < LH; r++) for (let c = 235; c >= cutAt; c--) {
+    const i = r * LW + c, j = i + STRETCH;
+    tiles[j] = tiles[i]; thp[j] = thp[i]; bg[j] = bg[i]; crumbly[j] = crumbly[i]; tiles[i] = thp[i] = bg[i] = crumbly[i] = 0;
+  }
+  const mv = (o, k) => { if (o[k] !== undefined) o[k] = arenaCol(o[k]); };
+  for (const o of spawns) { for (const k of ['c', 'ax0', 'ax1', 'trig']) mv(o, k); if (o.gate) o.gate = [arenaCol(o.gate[0]), arenaCol(o.gate[1]), o.gate[2], o.gate[3]]; }
+  for (const o of decor) mv(o, 'c');
+  for (const o of lamps) mv(o, 'c');
+  for (const d of devs) {
+    if (d.x0 >= cutAt * T) { for (const k of ['x0', 'x1', 'x', 'ax', 'bx']) if (d[k] !== undefined) d[k] += STRETCH * T; for (const k of ['c', 'c0', 'c1', 'gx']) mv(d, k); }
+    else if (d.x1 > cutAt * T) { d.x1 += STRETCH * T; mv(d, 'c1'); } // a device across the cut stretches
+    if (d.socks) d.socks = d.socks.map(arenaCol);
+  }
+}
+// the stretch: a few plain pieces, one piece of the mission's own kind, quacks every 7 columns, an ammo crate and two flags
+const STRETCH_KINDS = ['yard', 'trench', 'hall', 'fort', 'pit', 'cliff'];
+const STRETCH_FOES = ['grunt', 'grunt', 'shield', 'dog', 'grenadier', 'heavy', 'rocketeer', 'grunt', 'sniper', 'flamer', 'medic', 'bomber'];
+function buildStretch(H, n) {
+  const hash = (k) => { const v = Math.sin(k * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); }; // the same layout every time
+  const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[n % segs.length] : null;
+  const rest = STRETCH - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [];
+  for (let k = 0; k < cnt; k++) plan.push([STRETCH_KINDS[(n + k) % STRETCH_KINDS.length], k < cnt - 1 ? Math.floor(rest / cnt) : rest - Math.floor(rest / cnt) * (cnt - 1), {}]);
+  if (own) plan.splice(1, 0, [own[0], own[1], Object.assign({}, own[2], { put: [] })]);
+  let c = cutAt;
+  for (const [kind, w, o] of plan) {
+    SEG[kind](H, c, w, o);
+    for (let k = 4; k < w - 3; k += 7) H.sp(STRETCH_FOES[Math.floor(hash(c + k) * STRETCH_FOES.length)], c + k, openRow(c + k));
+    c += w;
+  }
+  H.sp('ammo', cutAt + 2, openRow(cutAt + 2));
+  for (const k of [cutAt + (STRETCH >> 1), cutAt + STRETCH - 3]) H.sp('flag', k, openRow(k));
 }
 function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Beach and hills
@@ -2134,15 +2190,24 @@ function updateMusic() {
 const keys = {}, pressed = {};
 const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump', ArrowDown: 'down', KeyS: 'down',
   Tab: 'map', KeyZ: 'fire', KeyJ: 'fire', KeyX: 'special', KeyK: 'special', KeyC: 'melee', KeyL: 'melee', ShiftLeft: 'dash', ShiftRight: 'dash', KeyV: 'dash', KeyI: 'dash',
-  Enter: 'start', KeyP: 'pause', Escape: 'pause', KeyM: 'mute' };
+  KeyB: 'aim', KeyU: 'aim', Enter: 'start', KeyP: 'pause', Escape: 'pause', KeyM: 'mute' };
+// hold aim (B or U): you keep facing the same way while you walk, and Up or W tilts the gun up instead of jumping (Space still jumps)
+const UPKEYS = ['ArrowUp', 'KeyW'], heldUp = new Set();
 addEventListener('keydown', (e) => {
-  const a = KEYMAP[e.code]; if (!a) return;
+  let a = KEYMAP[e.code]; if (!a) return;
   e.preventDefault(); audioInit();
+  if (UPKEYS.includes(e.code)) { heldUp.add(e.code); if (keys.aim) a = 'up'; }
+  if (a === 'aim' && heldUp.size) { keys.jump = false; keys.up = true; }
   if (!keys[a]) pressed[a] = true;
   keys[a] = true;
 });
-addEventListener('keyup', (e) => { const a = KEYMAP[e.code]; if (a) keys[a] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+addEventListener('keyup', (e) => {
+  const a = KEYMAP[e.code]; if (!a) return;
+  if (UPKEYS.includes(e.code)) { heldUp.delete(e.code); if (!heldUp.size) keys.up = false; }
+  if (a === 'aim') keys.up = false;
+  keys[a] = false;
+});
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; heldUp.clear(); });
 cv.addEventListener('pointerdown', () => { audioInit(); cv.focus(); if (state !== 'play') pressed.start = true; });
 document.querySelectorAll('.touch button').forEach((b) => {
   const k = b.dataset.k;
@@ -2150,11 +2215,11 @@ document.querySelectorAll('.touch button').forEach((b) => {
   const off = (e) => { e.preventDefault(); keys[k] = false; };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
 });
-// gamepad (standard mapping): stick or d-pad moves, A jump, X or RT fire, B punch, Y special, LB/RB dash, Start pause,
+// gamepad (standard mapping): stick or d-pad moves, A jump, X or RT fire, B punch, Y special, LB/RB dash, LT or the right stick aims, Start pause,
 // Select/Create or the PS5 touchpad click hold the full map
 const padHeld = {};
 let padFull = 0, clock = 0; // stick pushed all the way; a clock that runs in every state (for double taps)
-let padSeen = false;
+let padSeen = false, padAim = null; // padAim: the right stick's direction while it is pushed
 // pad buttons follow Broforce's pad defaults: Cross jump, Square fire, Circle special, Triangle melee
 function pollPad() {
   if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
@@ -2164,7 +2229,9 @@ function pollPad() {
   if (!padSeen) { padSeen = true; audioInit(); }
   const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
   padFull = ax < -0.92 ? -1 : ax > 0.92 ? 1 : 0;
-  const now = { left: ax < -0.4 || b(14), right: ax > 0.4 || b(15), down: ay > 0.55 || b(13), jump: b(0) || b(12), fire: b(2) || b(7), melee: b(3), special: b(1), dash: b(4) || b(5) || b(6), pause: b(9), start: b(9) || (state !== 'play' && b(0)), map: b(8) || b(17) };
+  const rx = gp.axes[2] || 0, ry = gp.axes[3] || 0; padAim = Math.hypot(rx, ry) > 0.5 ? [rx, ry] : null; // the right stick aims
+  const aim = b(6) || !!padAim; // L2 held (or the right stick pushed): keep facing; d-pad up tilts the gun up
+  const now = { left: ax < -0.4 || b(14), right: ax > 0.4 || b(15), down: ay > 0.55 || b(13), jump: b(0) || (b(12) && !aim), up: b(12) && aim, aim, fire: b(2) || b(7), melee: b(3), special: b(1), dash: b(4) || b(5), pause: b(9), start: b(9) || (state !== 'play' && b(0)), map: b(8) || b(17) };
   for (const k in now) {
     if (now[k] && !padHeld[k]) { pressed[k] = true; keys[k] = true; }
     if (!now[k] && padHeld[k]) keys[k] = false;
@@ -2244,7 +2311,7 @@ function applyDifficulty(n) {
     }
     foes.push(e);
   }
-  const target = missionTarget(diff.p);
+  const target = missionTarget(diff.p) * (stretched ? (ARENA_AT + STRETCH) / ARENA_AT : 1); // a longer map holds more quacks
   let total = foes.reduce((a, e) => a + THREAT[e.type], 0);
   if (total > target) { // too crowded for this point in the campaign: remove quacks in a fixed order until it fits
     for (const e of foes.slice().sort((a, b) => roll(a) - roll(b))) { if (total - THREAT[e.type] < target - 0.5) continue; e.dead = true; total -= THREAT[e.type]; if (total <= target + 0.5) break; }
@@ -2335,7 +2402,7 @@ function loadRush(i) {
   const [lvl, col, type] = RUSH[i];
   startLevel(lvl); objectives = []; ceasefire = 0;
   ents = ents.filter((e) => e.type === type || e.type === 'flag'); boss = ents.find((e) => e.type === type);
-  P.x = col * T + 3; P.y = surf(col, openRow(col)) * T - 16; P.inv = 2; checkpoint = { x: P.x, y: P.y };
+  const c = arenaCol(col); P.x = c * T + 3; P.y = surf(c, openRow(c)) * T - 16; P.inv = 2; checkpoint = { x: P.x, y: P.y };
   showBanner('BOSS ' + (i + 1) + ' / ' + RUSH.length, bname(boss), 1.6);
 }
 function updateRush(dt) {
@@ -2519,13 +2586,13 @@ function makeEnt(s) {
       e.dir = -1; e.bombT = 2; e.paraT = 7; e.rot = 0;
     }
     if (s.type === 'director') { // a camera head on a crane; three studio lights on stands guard it
-      e.y = 3 * T; e.vats = [192, 202, 218].map((c) => ({ x: c * T - 2, y: 16 * T - 28, w: 20, h: 28, hp: 18, max: 18, dead: false, flash: 0 }));
+      e.y = 3 * T; e.vats = [192, 202, 218].map((c) => ({ x: arenaCol(c) * T - 2, y: 16 * T - 28, w: 20, h: 28, hp: 18, max: 18, dead: false, flash: 0 }));
       e.beamX = e.x; e.lock = 0; e.cueT = 6; e.bagT = 3; e.dir = -1;
     }
     if (s.type === 'citrus') { e.state = 'idle'; e.spin = 0; e.dizzy = 0; e.face = -1; }
     if (s.type === 'engine') { // the core sits up on the gantry; its three stabiliser vats stand on the floor, spread out
-      e.x = 219 * T; e.y = 9 * T - 34; e.vats = [[196, 15], [208, 15], [222, 15]].map(([c, r]) => ({ x: c * T - 2, y: r * T - 28, w: 20, h: 28, hp: 30, max: 30, dead: false, flash: 0 }));
-      e.hammers = [{ x: 195 * T, y: 0, state: 'up', t: 2 }, { x: 210 * T, y: 0, state: 'up', t: 3, late: true }]; e.sprayT = 3; e.spawnT = 8; e.quakeT = 7;
+      e.x = arenaCol(219) * T; e.y = 9 * T - 34; e.vats = [[196, 15], [208, 15], [222, 15]].map(([c, r]) => ({ x: arenaCol(c) * T - 2, y: r * T - 28, w: 20, h: 28, hp: 30, max: 30, dead: false, flash: 0 }));
+      e.hammers = [{ x: arenaCol(195) * T, y: 0, state: 'up', t: 2 }, { x: arenaCol(210) * T, y: 0, state: 'up', t: 3, late: true }]; e.sprayT = 3; e.spawnT = 8; e.quakeT = 7;
     }
     if (s.type === 'kopter') { e.rot = 0; e.tx = e.x; e.ty = e.y; }
     if (s.type === 'crawler') { e.segs = []; e.hx = e.x + 10; e.hy = e.fy + 56; e.surfY = e.fy; }
@@ -2547,12 +2614,13 @@ function objHit(id, n = 1) {
   if (extractPending && reqDone()) { extractPending = false; callChopper(); }
 }
 function callChopper() {
-  const [pc, pr] = LV().pad;
+  const [pc, pr] = padOf();
   chopper = { x: LW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
   showBanner('GET TO THE CHOPPER', 'Extraction pad, east side', 4);
 }
-// a new run: only Einstein, three bros in reserve
-function newGame() { unlocked = ['einstein']; lives = 3; runScore = 0; dossier = []; }
+// a new run: 10 random bros unlocked, three lives in reserve
+const START_BROS = 10;
+function newGame() { unlocked = shuffle(BROS.map((b) => b.id)).slice(0, START_BROS); lives = 3; runScore = 0; dossier = []; } // a new campaign starts with 10 random bros; free the rest from cages
 function startLevel(n) {
   level = n;
   buildTiles(levelDef(n).look ? Object.assign({}, THEMES[levelDef(n).theme], levelDef(n).look) : THEMES[levelDef(n).theme]); // a level can twist its theme's look
@@ -2810,6 +2878,7 @@ const GUNS = {
 // heat: how much one shot heats the barrel. kick: how far the gun jumps back. shake: a small camera kick.
 // idle: what the gun does between shots. charge: a slow gun shows a glow at the muzzle as it gets ready again.
 const GUNFX = {
+  anning: { kick: 2 }, vesalius: { idle: 'glint', c: ['#ffffff', '#e9eef6'] }, hooke: { kick: 2 },
   einstein: { flash: 'ring', c: ['#ffffff', '#8da0cb'], eject: 'brass', heat: 0.05, idle: 'flicker' },
   curie: { flash: 'puff', c: ['#c9f08f', '#a6d854'], idle: 'drip', charge: 1 },
   tesla: { flash: 'spark', c: ['#ffffff', '#bfe9ff'], eject: 'vent', heat: 0.15, idle: 'spark' },
@@ -2865,7 +2934,7 @@ function gunFeel(g, f, gx, gy) {
   else if (g.eject) body({ kind: 'shell', x: bx, y: by, vx: -f * rand(40, 90), vy: rand(-170, -110), col: EJECT[g.eject], s: g.eject === 'cell' ? 3 : 2, r: 1, bounce: 0.5, fric: 0.6, vr: rand(-30, 30), life: 2 });
 }
 // a picked-up gun replaces the bro's weapon until its ammo runs out
-function fireAlt(f, gx, gy) {
+function fireAlt(f, gx, gy, dx = f, dy = 0) {
   const A = P.alt;
   switch (A.kind) {
     case 'shotgun':
@@ -2883,24 +2952,40 @@ function fireAlt(f, gx, gy) {
       P.cool = 0.045 + 0.16 * (1 - (P.spin || 0)); P.recoil = 1; P.vx -= f * 6; sfx('mg'); break;
     }
     case 'railgun': { // one line through everything that is not steel
-      let ex = gx;
+      let ex = gx, ey = gy;
       for (let d = 0; d < 420; d += 4) {
-        ex = gx + f * d; const c = Math.floor(ex / T), r = Math.floor(gy / T), v = tileAt(c, r);
+        ex = gx + dx * d; ey = gy + dy * d; const c = Math.floor(ex / T), r = Math.floor(ey / T), v = tileAt(c, r);
         if (v === STEEL) break;
         if (isSolidT(v)) damageTile(c, r, 3);
       }
-      for (const e of ents) if (live(e) && segHit(gx, gy, ex, gy, e, 1)) hitEnemy(e, 7, f * 300, 'gib');
-      fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.25, max: 0.25, col: '#8fd3ff' });
+      for (const e of ents) if (live(e) && segHit(gx, gy, ex, ey, e, 1)) hitEnemy(e, 7, f * 300, 'gib');
+      fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, y1: ey, t: 0.25, max: 0.25, col: '#8fd3ff' });
       P.cool = 1; P.vx -= f * 140; P.recoil = 4; shake = Math.min(12, shake + 4); sfx('sniper'); break;
     }
   }
   gunFeel(GUNFX['alt_' + A.kind], f, gx, gy);
   A.ammo--; if (A.ammo <= 0) { P.alt = null; floatText(P.x + 5, P.y - 8, 'OUT OF AMMO', '#e78ac3'); }
 }
+// aiming up: turn the shots just fired by the aim angle. Shots that find their own way (trajectory shells,
+// the boomerang disc, the torpedo, the ground ripple, drill chips) are left alone; a lob never turns backwards.
+const NO_AIM = { calc: 1, disc: 1, torp: 1, pwave: 1, chip: 1 };
+function aimShots(n0, f) {
+  const a = P.aim || 0; if (!a) return;
+  for (let i = n0; i < bullets.length; i++) {
+    const b = bullets[i]; if (b.owner !== 'p' || NO_AIM[b.kind]) continue;
+    const sp = Math.hypot(b.vx, b.vy); let t = Math.atan2(b.vy, b.vx * f) - a; // the angle from straight ahead; up is negative
+    if (b.grav > 0) t = Math.max(t, -Math.PI / 2);
+    b.vx = f * sp * Math.cos(t); b.vy = sp * Math.sin(t); b.aimed = true;
+    if (b.ang !== undefined) b.ang = Math.atan2(b.vy, b.vx);
+    if (b.kind === 'qwave') { b.bvx = b.vx; b.bvy = b.vy; } // the wave wobbles across its own path
+    if (b.sx !== undefined) b.sy = b.y;
+  }
+}
 function fireWeapon() {
-  const f = P.face, gx = P.x + (f > 0 ? P.w + 2 : -2), gy = P.y + 8;
+  const f = P.face, a = P.aim || 0, gx = P.x + P.w / 2 + f * (P.w / 2 + 2) * Math.cos(a), gy = P.y + 8 - 10 * Math.sin(a);
+  const dx = f * Math.cos(a), dy = -Math.sin(a), n0 = bullets.length; // the aim as a unit vector
   lifeNoise(gx, gy, 150);
-  if (P.alt) { fireAlt(f, gx, gy); return; }
+  if (P.alt) { fireAlt(f, gx, gy, dx, dy); aimShots(n0, f); return; }
   switch (P.bro.id) {
     case 'einstein':
       bullets.push({ x: gx, y: gy, vx: f * 500, vy: rand(-10, 10), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.55, kind: 'photon', pierce: 1 });
@@ -2911,15 +2996,15 @@ function fireWeapon() {
     case 'newton':
       bullets.push({ x: gx, y: gy - 2, vx: f * 320, vy: -110, grav: 600, owner: 'p', dmg: 5, life: 2.5, kind: 'apple', explode: 16, tp: 2.8, knock: 260, bounce: 1 });
       P.cool = 0.36; P.vx -= f * 70; P.recoil = 2; sfx('throw'); break;
-    case 'tesla': zap(gx, gy, f); P.cool = 0.26; break;
-    case 'franklin': beam(gx, gy, f); P.cool = 0.11; P.recoil = 1; break;
+    case 'tesla': zap(gx, gy, f, dx, dy); P.cool = 0.26; break;
+    case 'franklin': beam(gx, gy, f, dx, dy); P.cool = 0.11; P.recoil = 1; break;
     case 'ada':
       for (const a of [-0.24, -0.12, 0, 0.12, 0.24]) bullets.push({ x: gx, y: gy, vx: f * 400 * Math.cos(a), vy: 400 * Math.sin(a), owner: 'p', dmg: 1, tdmg: 0.5, life: 0.5, kind: 'card' });
       P.cool = 0.24; P.recoil = 1.5; sfx('shot'); break;
     case 'darwin':
       for (const k of [-1, 0, 1]) bullets.push({ x: gx, y: gy - 2, vx: f * 210, vy: k * 70 - 20, ang: Math.atan2(k * 70 - 20, f * 210), owner: 'p', dmg: 2, tdmg: 0.3, life: 1.8, kind: 'finch' });
       P.cool = 0.38; sfx('chirp'); break;
-    case 'galileo': sunbeam(gx, gy, f); P.cool = 0.12; break;
+    case 'galileo': sunbeam(gx, gy, f, dx, dy); P.cool = 0.12; break;
     case 'turing':
       bullets.push({ x: gx, y: gy, vx: f * 430, vy: rand(-8, 8), owner: 'p', dmg: 1, tdmg: 0.3, life: 1.2, kind: 'enigma', bounces: 3 });
       P.cool = 0.13; P.recoil = 1; sfx('shot'); break;
@@ -2936,15 +3021,15 @@ function fireWeapon() {
     case 'archimedes': drill(f); P.cool = 0.05; break;
     case 'mendel': { const a = rand(-0.09, 0.09); bullets.push({ x: gx, y: gy, vx: f * 380 * Math.cos(a), vy: 380 * Math.sin(a), owner: 'p', dmg: 0.6, tdmg: 0.25, life: 0.5, kind: 'pea' }); P.cool = 0.07; sfx('shot'); break; }
     case 'pasteur': bullets.push({ x: gx, y: gy, vx: f * 520, vy: 0, owner: 'p', dmg: 1, tdmg: 0.2, life: 0.6, kind: 'dart', poison: 2.5 }); P.cool = 0.3; sfx('shot'); break;
-    case 'faraday': arcWeld(gx, gy, f); P.cool = 0.05; break;
+    case 'faraday': arcWeld(gx, gy, f, dx, dy); P.cool = 0.05; break;
     case 'hypatia': if (bullets.filter((b) => b.kind === 'disc').length < 2) { bullets.push({ x: gx, y: gy, vx: f * 470, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0.4, life: 2.2, kind: 'disc', pierce: 99, dir: f, spin: 0 }); sfx('throw'); } P.cool = 0.3; break;
     case 'feynman': bullets.push({ x: gx, y: gy, by: gy, vx: f * 300, vy: 0, owner: 'p', dmg: 1, tdmg: 0.4, life: 0.8, kind: 'qwave', phase: 0, pierce: 2 }); P.cool = 0.14; sfx('beam'); break;
-    case 'fleming': spores(gx, gy, f); P.cool = 0.1; break;
+    case 'fleming': spores(gx, gy, f, dx, dy); P.cool = 0.1; break;
     case 'sagan': bullets.push({ x: gx, y: gy, vx: f * 220, vy: 0, owner: 'p', dmg: 1.2, tdmg: 0, life: 1.5, kind: 'dot', pierce: 99 }); P.cool = 0.22; sfx('beam'); break;
     case 'wegener': bullets.push({ x: gx, y: P.y + P.h - 7, vx: f * 240, vy: 0, owner: 'p', dmg: 2, tdmg: 0, life: 0.8, kind: 'pwave', pierce: 99, lift: 260 }); P.cool = 0.4; sfx('thud'); break;
     case 'hubble': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 380, vy: 0, owner: 'p', dmg: 0.6, tdmg: 0.5, life: 0.9, kind: 'red' }); P.cool = 0.16; sfx('shot'); break;
     case 'hawking': for (let k = 0; k < 3; k++) { const a = rand(-0.09, 0.09); bullets.push({ x: gx, y: gy, vx: f * 520 * Math.cos(a), vy: 520 * Math.sin(a), owner: 'p', dmg: 0.6, tdmg: 0.3, life: 0.45, kind: 'hawk' }); } P.cool = 0.12; sfx('beam'); break;
-    case 'hopper': for (let k = 0; k < 3; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face; bullets.push({ x: P.x + (ff > 0 ? P.w + 2 : -2), y: P.y + 8, vx: ff * 470, vy: rand(-8, 8), owner: 'p', dmg: 1.1, tdmg: 0.5, life: 0.6, kind: 'bit' }); sfx('shot'); const c = P.coolMax; gunFeel(GUNFX.hopper, ff, P.x + (ff > 0 ? P.w + 2 : -2), P.y + 8); P.coolMax = Math.max(c || 0, P.coolMax); }, k * 0.05); P.cool = 0.36; break;
+    case 'hopper': for (let k = 0; k < 3; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face, n = bullets.length; bullets.push({ x: P.x + (ff > 0 ? P.w + 2 : -2), y: P.y + 8, vx: ff * 470, vy: rand(-8, 8), owner: 'p', dmg: 1.1, tdmg: 0.5, life: 0.6, kind: 'bit' }); aimShots(n, ff); sfx('shot'); const c = P.coolMax; gunFeel(GUNFX.hopper, ff, P.x + (ff > 0 ? P.w + 2 : -2), P.y + 8); P.coolMax = Math.max(c || 0, P.coolMax); }, k * 0.05); P.cool = 0.36; break;
     case 'wu': for (const d of [f, -f]) bullets.push({ x: d === f ? gx : P.x + (f > 0 ? -2 : P.w + 2), y: gy, vx: d * 420, vy: 0, owner: 'p', dmg: 1.2, tdmg: 0.5, life: 0.6, kind: 'parity' }); P.cool = 0.17; sfx('shot'); break;
     case 'hodgkin': for (const a of [-0.13, 0, 0.13]) bullets.push({ x: gx, y: gy, vx: f * 430 * Math.cos(a), vy: 430 * Math.sin(a), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.5, kind: 'xtal', pierce: 1 }); P.cool = 0.22; sfx('glass'); break;
     case 'davinci': bullets.push({ x: gx, y: gy, vx: f * 560, vy: -10, grav: 120, owner: 'p', dmg: 3, tdmg: 0.8, life: 1, kind: 'bolt2', pierce: 2, knock: 220 }); P.cool = 0.42; P.recoil = 2; sfx('throw'); break;
@@ -2966,6 +3051,9 @@ function fireWeapon() {
       for (let k = 0; k < 2; k++) { const l = rand(0.42, 0.5); bullets.push({ x: gx, y: gy, vx: f * rand(230, 260) + P.vx * 0.3, vy: rand(-20, 10), grav: -40, owner: 'p', dmg: 0.22, tdmg: 0.15, life: l, max: l, kind: 'flame', pierce: 99, burn: 1, hitR: 2, lit: Math.random() < 0.3 }); }
       P.cool = 0.06; if (Math.random() < 0.35) sfx('flame'); break;
     case 'goodall': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 250, vy: 0, owner: 'p', dmg: 0.9, tdmg: 0, life: 0.55, kind: 'hoot', pierce: 99, stun: 0.2, knock: 140, hitR: 3 }); P.cool = 0.26; sfx('hoot'); break;
+    case 'anning': swing(26, 5, 300, 3, '#e6e2d0'); P.cool = 0.45; shake = Math.min(10, shake + 1.5); break;
+    case 'vesalius': swing(20, 1.4, 90, 0.4, '#ffffff'); P.cool = 0.13; break;
+    case 'hooke': swing(44, 2.6, 520, 0.8, '#d9534f', true); P.cool = 0.32; break;
     case 'oppenheimer': bullets.push({ x: gx, y: gy, vx: f * 470, vy: rand(-6, 6), owner: 'p', dmg: 1.6, tdmg: 0.5, life: 0.55, kind: 'neutron', glow: 12 }); P.cool = 0.17; P.recoil = 1; sfx('neutron'); break;
     case 'jemison': { // the charge decides: a quick bolt, or a plasma ball that grows with it
       const k = Math.min(1, (P.charge || 0) / 0.5); P.charge = 0;
@@ -2974,8 +3062,39 @@ function fireWeapon() {
       break;
     }
   }
+  aimShots(n0, f);
   if (slowT > 0) P.cool *= 0.6; // dilated time: you shoot faster
-  if (P.bro.id !== 'hopper') gunFeel(GUNFX[P.bro.id], f, gx, gy); // Hopper's three rounds each flash on their own
+  if (P.bro.id !== 'hopper' && !P.bro.melee) gunFeel(GUNFX[P.bro.id], f, gx, gy); // Hopper's three rounds each flash on their own
+}
+// a melee swing: hits everything in reach ahead (or above, when you aim up), knocks riot shields away, cuts enemy
+// shots out of the air (grenades and rockets get batted back) and chips the blocks it hits; a glove shows a spring
+function swing(reach, dmg, knock, tdmg, col, glove = false) {
+  const f = P.face, a = P.aim || 0, dx = f * Math.cos(a), dy = -Math.sin(a), d = reach / 2 + 4;
+  const cx = P.x + P.w / 2 + dx * d, cy = P.y + 7 + dy * d, hw = 8 + reach / 2 * Math.abs(dx), hh = 10 + reach / 2 * Math.abs(dy);
+  const box = { x: cx - hw, y: cy - hh, w: 2 * hw, h: 2 * hh };
+  let hit = false;
+  for (const e of ents) {
+    if (!live(e) || !overlap(e, box)) continue;
+    hit = true;
+    if (e.type === 'shield' && e.shield > 0 && f === -e.face) dropShield(e, f);
+    const q = isQuack(e) || e.type === 'dog';
+    hitEnemy(e, dmg, dx * knock, q ? 'punch' : 'shot');
+    if (q && !e.dead) e.vy = Math.min(e.vy, -knock * 0.25 + dy * knock * 0.6);
+  }
+  hitPartsIn(box, dmg);
+  for (const b of bullets) {
+    if (b.owner !== 'e' || b.dead || b.x < box.x - 4 || b.x > box.x + box.w + 4 || b.y < box.y - 4 || b.y > box.y + box.h + 4) continue;
+    hit = true; sfx('ting');
+    if (b.kind === 'grenade' || b.kind === 'rocket' || b.kind === 'missile' || b.kind === 'bomb' || b.kind === 'glob') { b.owner = 'p'; b.home = false; b.vx = dx * 300; b.vy = dy * 300 - 80; b.ang = Math.atan2(b.vy, b.vx); }
+    else { b.dead = true; part(b.x, b.y, rand(-40, 40), rand(-60, 0), '#fff6c2', 0.2, 1, G); }
+  }
+  for (let r = Math.floor(box.y / T); r <= Math.floor(Math.min(box.y + box.h, P.y + P.h - 2) / T); r++) for (let c = Math.floor(box.x / T); c <= Math.floor((box.x + box.w) / T); c++) { // not the floor you stand on
+    const v = tileAt(c, r);
+    if (isSolidT(v) && v !== STEEL) { damageTile(c, r, tdmg); hit = true; }
+  }
+  fx.push({ kind: 'slash', x: P.x + P.w / 2, y: P.y + 7, a: Math.atan2(dy, dx), r: reach + 6, col, glove, t: 0.12, max: 0.12 });
+  P.punch = 0.12;
+  if (hit) { hitStop = Math.max(hitStop, 0.03); shake = Math.min(10, shake + 1); sfx('punch'); } else sfx('dash');
 }
 // melee: a short punch that launches quacks, bodies, barrels and tanks, cracks wooden crates,
 // knocks riot shields away and bats grenades and rockets back where they came from
@@ -3015,7 +3134,7 @@ function enemiesNear(x, y, range, filter) {
 function partAt(x, y) { for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && x >= v.x && x <= v.x + v.w && y >= v.y && y <= v.y + v.h) return [e, v]; return null; }
 function hitPartsIn(box, dmg) { for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && overlap(v, box)) hitVat(e, v, dmg); }
 function partsNear(x, y, range) { const out = []; for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && Math.hypot(v.x + v.w / 2 - x, v.y + v.h / 2 - y) < range) out.push([e, v]); return out; }
-function zap(gx, gy, f) {
+function zap(gx, gy, f, dx = f, dy = 0) {
   sfx('zap');
   const pts = [[gx, gy]];
   let cx = gx, cy = gy;
@@ -3036,26 +3155,27 @@ function zap(gx, gy, f) {
   }
   if (pts.length === 1) {
     let ex = gx, ey = gy;
-    for (let d = 0; d < 80; d += 3) { ex = gx + f * d; if (solidPx(ex, ey)) { damageTile(Math.floor(ex / T), Math.floor(ey / T), 1.2); break; } }
+    for (let d = 0; d < 80; d += 3) { ex = gx + dx * d; ey = gy + dy * d; if (solidPx(ex, ey)) { damageTile(Math.floor(ex / T), Math.floor(ey / T), 1.2); break; } }
     pts.push([ex, ey + rand(-6, 6)]);
   }
   fx.push({ kind: 'bolt', pts, t: 0.12, max: 0.12, col: '#bfe9ff' });
 }
 // Galileo's lens: a short hot beam that sets quacks on fire and lights crates
-function sunbeam(gx, gy, f) {
-  let ex = gx;
+function sunbeam(gx, gy, f, dx = f, dy = 0) {
+  let ex = gx, ey = gy;
   for (let d = 0; d < 170; d += 3) {
-    ex = gx + f * d;
-    if (solidPx(ex, gy)) { const c = Math.floor(ex / T), r = Math.floor(gy / T); damageTile(c, r, 0.25); if (tileAt(c, r) === CRATE && Math.random() < 0.08) ignite(ex, gy - 8, 1, 2); break; }
-    for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && gy >= e.y && gy <= e.y + e.h) { hitEnemy(e, 0.35, f * 10); setBurn(e); }
-    const pa = partAt(ex, gy); if (pa) { hitVat(pa[0], pa[1], 0.35); break; }
+    ex = gx + dx * d; ey = gy + dy * d;
+    if (solidPx(ex, ey)) { const c = Math.floor(ex / T), r = Math.floor(ey / T); damageTile(c, r, 0.25); if (tileAt(c, r) === CRATE && Math.random() < 0.08) ignite(ex, ey - 8, 1, 2); break; }
+    for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && ey >= e.y && ey <= e.y + e.h) { hitEnemy(e, 0.35, f * 10); setBurn(e); }
+    const pa = partAt(ex, ey); if (pa) { hitVat(pa[0], pa[1], 0.35); break; }
   }
-  fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.07, max: 0.07, col: '#f2c94c' });
+  fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, y1: ey, t: 0.07, max: 0.07, col: '#f2c94c' });
   if (Math.random() < 0.3) sfx('beam');
 }
 // Archimedes' screw: chews the blocks and quacks right in front of you
 function drill(f) {
-  const x0 = f > 0 ? P.x + P.w + 1 : P.x - 27, box = { x: x0, y: P.y - 2, w: 26, h: 16 };
+  const a = P.aim || 0, x0 = f > 0 ? P.x + P.w + 1 : P.x - 27;
+  const box = a ? { x: P.x + 5 + f * Math.cos(a) * 18 - 12, y: P.y + 7 - Math.sin(a) * 22 - 12, w: 24, h: 24 } : { x: x0, y: P.y - 2, w: 26, h: 16 }; // aimed up: it chews above you
   for (let yy = box.y; yy < box.y + box.h; yy += 8) for (let xx = box.x; xx < box.x + box.w; xx += 8) {
     const c = Math.floor(xx / T), r = Math.floor(yy / T), v = tileAt(c, r);
     if (v && v !== STEEL && v !== ACID) { damageTile(c, r, 0.55); if (Math.random() < 0.2) part(xx, yy, -f * rand(20, 120), rand(-100, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
@@ -3063,49 +3183,50 @@ function drill(f) {
   for (const e of ents) if (live(e) && overlap(e, box)) { hitEnemy(e, 0.35, f * 30); if (Math.random() < 0.3) bleed(e.x + e.w / 2, e.y + 8, 2, f * 60); }
   hitPartsIn(box, 0.35);
   P.chipT = (P.chipT || 0) - 0.05; // the screw throws out the rubble it chews: a short spray of rock chips
-  if (P.chipT <= 0) { P.chipT = 0.15; bullets.push({ x: x0 + (f > 0 ? 24 : 2), y: P.y + 7 + rand(-3, 3), vx: f * rand(280, 340), vy: rand(-40, 10), grav: 300, owner: 'p', dmg: 0.6, tdmg: 0.2, life: 0.5, kind: 'chip' }); }
+  if (P.chipT <= 0 && !a) { P.chipT = 0.15; bullets.push({ x: x0 + (f > 0 ? 24 : 2), y: P.y + 7 + rand(-3, 3), vx: f * rand(280, 340), vy: rand(-40, 10), grav: 300, owner: 'p', dmg: 0.6, tdmg: 0.2, life: 0.5, kind: 'chip' }); }
   if (Math.random() < 0.5) part(P.x + 5 + f * 18, P.y + 8, f * rand(10, 60), rand(-60, 20), '#fff6c2', 0.15, 1, G);
   if (Math.random() < 0.25) sfx('drill');
 }
 // Faraday's arc welder: a crackling arc about four tiles long that burns through quacks and cuts stone
-function arcWeld(gx, gy, f) {
-  let ex = gx; const pts = [[gx, gy]];
+function arcWeld(gx, gy, f, dx = f, dy = 0) {
+  let ex = gx, ey = gy; const pts = [[gx, gy]];
   for (let d = 0; d < 100; d += 4) {
-    ex = gx + f * d;
-    if (solidPx(ex, gy)) { damageTile(Math.floor(ex / T), Math.floor(gy / T), 0.35); break; }
-    for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && gy >= e.y - 2 && gy <= e.y + e.h + 2) { hitEnemy(e, 0.3, f * 15); if (isQuack(e)) e.stun = Math.max(e.stun || 0, 0.15); }
-    const pa = partAt(ex, gy); if (pa) { hitVat(pa[0], pa[1], 0.3); break; }
+    ex = gx + dx * d; ey = gy + dy * d;
+    if (solidPx(ex, ey)) { damageTile(Math.floor(ex / T), Math.floor(ey / T), 0.35); break; }
+    for (const e of ents) if (live(e) && ex >= e.x - 2 && ex <= e.x + e.w + 2 && ey >= e.y - 2 && ey <= e.y + e.h + 2) { hitEnemy(e, 0.3, f * 15); if (isQuack(e)) e.stun = Math.max(e.stun || 0, 0.15); }
+    const pa = partAt(ex, ey); if (pa) { hitVat(pa[0], pa[1], 0.3); break; }
   }
-  for (let k = 1; k <= 4; k++) pts.push([gx + (ex - gx) * k / 4, gy + (k < 4 ? rand(-4, 4) : 0)]);
+  for (let k = 1; k <= 4; k++) pts.push([gx + (ex - gx) * k / 4 + (k < 4 ? rand(-4, 4) * -dy : 0), gy + (ey - gy) * k / 4 + (k < 4 ? rand(-4, 4) * Math.abs(dx) : 0)]);
   fx.push({ kind: 'bolt', pts, t: 0.06, max: 0.06, col: '#8fd3ff' });
   if (Math.random() < 0.3) sfx('zap');
 }
 // Fleming's spores: a short green cloud; quacks it touches fall sick, and sickness spreads between them
-function spores(gx, gy, f) {
-  for (let i = 0; i < 4; i++) part(gx, gy + rand(-3, 3), f * rand(90, 220), rand(-30, 20), i % 2 ? '#a6d854' : '#7bc043', rand(0.35, 0.6), 2, 0, 'smoke');
-  const box = { x: f > 0 ? gx : gx - 90, y: gy - 10, w: 90, h: 20 };
+function spores(gx, gy, f, dx = f, dy = 0) {
+  for (let i = 0; i < 4; i++) { const sp = rand(90, 220); part(gx, gy + rand(-3, 3), dx * sp, dy * sp + rand(-30, 20), i % 2 ? '#a6d854' : '#7bc043', rand(0.35, 0.6), 2, 0, 'smoke'); }
+  const ex = gx + dx * 90, ey = gy + dy * 90, px = 10 * Math.abs(dy), py = 10 * Math.abs(dx); // the cloud's box along the aim
+  const box = { x: Math.min(gx, ex) - px, y: Math.min(gy, ey) - py, w: Math.abs(ex - gx) + 2 * px, h: Math.abs(ey - gy) + 2 * py };
   for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) e.sick = Math.max(e.sick || 0, 4);
   for (const e of ents) if (BOSS[e.type] && live(e) && overlap(e, box)) hitEnemy(e, 0.4, 0); // bosses don't get sick: the mould eats into them instead
   hitPartsIn(box, 0.4);
   if (Math.random() < 0.15) sfx('hiss');
 }
-function beam(gx, gy, f) {
+function beam(gx, gy, f, dx = f, dy = 0) {
   sfx('beam');
-  let ex = gx, pen;
+  let ex = gx, ey = gy, pen;
   const hitSet = new Set();
   for (let d = 0; d < 200; d += 3) {
-    ex = gx + f * d;
-    if (solidPx(ex, gy)) { // X-rays pass through one block, cutting it
-      const c = Math.floor(ex / T); damageTile(c, Math.floor(gy / T), 0.9); part(ex, gy, -f * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G);
-      if (pen === undefined) { pen = c; } else if (c !== pen) break;
+    ex = gx + dx * d; ey = gy + dy * d;
+    if (solidPx(ex, ey)) { // X-rays pass through one block, cutting it
+      const c = Math.floor(ex / T), r = Math.floor(ey / T); damageTile(c, r, 0.9); part(ex, ey, -dx * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G);
+      if (pen === undefined) { pen = r * LW + c; } else if (r * LW + c !== pen) break;
     }
     for (const e of ents) {
       if (e.dead || !HITTABLE[e.type] || hitSet.has(e)) continue;
-      if (ex >= e.x && ex <= e.x + e.w && gy >= e.y && gy <= e.y + e.h) { hitSet.add(e); hitEnemy(e, 0.8, f * 20); }
+      if (ex >= e.x && ex <= e.x + e.w && ey >= e.y && ey <= e.y + e.h) { hitSet.add(e); hitEnemy(e, 0.8, f * 20); }
     }
-    const pa = partAt(ex, gy); if (pa && !hitSet.has(pa[1])) { hitSet.add(pa[1]); hitVat(pa[0], pa[1], 0.8); }
+    const pa = partAt(ex, ey); if (pa && !hitSet.has(pa[1])) { hitSet.add(pa[1]); hitVat(pa[0], pa[1], 0.8); }
   }
-  fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, t: 0.07, max: 0.07, col: '#b3a6ff' });
+  fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, y1: ey, t: 0.07, max: 0.07, col: '#b3a6ff' });
 }
 function useSpecial() {
   P.spec--; sfx('special'); shake += 3;
@@ -3215,6 +3336,26 @@ function useSpecial() {
       for (const e of ents) if (isQuack(e) && !e.dead && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.zeroG = 5; e.stun = Math.max(e.stun || 0, 5); e.vy = -rand(70, 120); e.kx += rand(-40, 40); }
       P.zeroG = 5; fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#e78ac3' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 260, t: 0.5, max: 0.5 }); sfx('zerog'); break;
     case 'oppenheimer': throwNuke(f); break;
+    case 'anning': { // mass extinction: a meteor comes down a few tiles ahead; a red mark shows where
+      const tx = clamp(P.x + 5 + f * 90, 8, LW * T - 8);
+      fx.push({ kind: 'marker', x: tx, y: P.y + P.h, t: 1, max: 1 });
+      bullets.push({ x: tx - f * 40, y: cam.y - 12, vx: f * 40, vy: 260, grav: 500, owner: 'p', kind: 'bomb', explode: 60, tp: 5, dmg: 20, life: 4 });
+      sfx('throw'); break;
+    }
+    case 'vesalius': { // fabrica: a dash that cuts every quack in the 7 tiles ahead
+      const box = { x: f > 0 ? P.x : P.x + P.w - 7 * T, y: P.y - 6, w: 7 * T, h: 26 };
+      for (const e of ents) if (live(e) && overlap(e, box)) hitEnemy(e, 10, f * 200, isQuack(e) ? 'gib' : 'shot');
+      hitPartsIn(box, 10);
+      P.dash = 0.4; P.dashDir = f; P.dcool = 0.6; P.inv = Math.max(P.inv, 0.5);
+      fx.push({ kind: 'beam', x0: P.x + 5, x1: P.x + 5 + f * 7 * T, y: P.y + 8, t: 0.2, max: 0.2, col: '#ffffff' }); sfx('dash'); break;
+    }
+    case 'hooke': { // Hooke's law: one huge spring punch that flings everything in the 6 tiles ahead
+      const box = { x: f > 0 ? P.x : P.x + P.w - 6 * T, y: P.y - 10, w: 6 * T, h: 30 };
+      for (const e of ents) if (live(e) && overlap(e, box)) { hitEnemy(e, 8, f * 700, isQuack(e) ? 'punch' : 'shot'); if (isQuack(e) && !e.dead) e.vy = -350; }
+      hitPartsIn(box, 8);
+      for (const b of bodies) if (b.x > box.x && b.x < box.x + box.w && b.y > box.y && b.y < box.y + box.h) { b.vx = f * rand(400, 600); b.vy = -rand(200, 320); b.rest = false; }
+      fx.push({ kind: 'slash', x: P.x + P.w / 2, y: P.y + 7, a: f > 0 ? 0 : Math.PI, r: 6 * T, col: '#d9534f', glove: true, t: 0.25, max: 0.25 }); shake += 4; sfx('punch'); break;
+    }
     case 'archimedes': // give me a lever: everything on screen goes up, and comes down hard
       for (const e of ents) if (live(e) && !BOSS[e.type] && e.type !== 'icicle' && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.vy = -520; e.kx += rand(-120, 120); e.lever = true; for (let i = 0; i < 3; i++) part(e.x + e.w / 2, e.y + e.h, rand(-60, 60), rand(-40, -10), theme.dust, 0.5, 3, 0, 'smoke'); }
       for (const b of bodies) if (Math.abs(b.x - (cam.x + VW / 2)) < VW / 2) { b.vy = -rand(400, 600); b.rest = false; }
@@ -3320,7 +3461,8 @@ function pickRescueBro() {
 function respawn() {
   lives--;
   if (mode === 'campaign' && Math.random() < 0.35) say('hq', HQ_DEATH[(Math.random() * HQ_DEATH.length) | 0], 1.4);
-  const bro = BRO[fromBag(unlocked)];
+  const pool = unlocked.length > 1 ? unlocked.filter((id) => id !== P.bro.id) : unlocked; // any unlocked bro but the one who just died
+  const bro = BRO[pool[(Math.random() * pool.length) | 0]];
   P = newPlayer(checkpoint.x, checkpoint.y, bro);
   // the next bro parachutes in over the checkpoint, from as high as the open sky allows
   const c = Math.floor((P.x + 5) / T);
@@ -3420,7 +3562,7 @@ function nukeBosses(n) {
 }
 // a bowl of rubble; never steel, ladders, the bottom two rows or the extraction pad, so the way on stays open
 function crater(x, gy) {
-  const pad = LV() && LV().pad, c0 = Math.floor(x / T), [hw, dn, up] = NUKE_HOLE;
+  const pad = LV() && padOf(), c0 = Math.floor(x / T), [hw, dn, up] = NUKE_HOLE;
   blastAt = { x, y: gy - 8 };
   for (let r = Math.floor(gy / T) - up; r <= Math.floor(gy / T) + dn; r++) for (let c = c0 - Math.ceil(hw); c <= c0 + Math.ceil(hw); c++) {
     if (r < 0 || r >= LH - 2 || c < 0 || c >= LW || (pad && Math.abs(c - pad[0]) <= 4)) continue;
@@ -3759,7 +3901,7 @@ function step(dt) {
     if (pressed.start || pressed.fire) {
       if (state === 'title') { const m = TITLE_MENU[titleSel][1]; if (m === 'trophies') state = 'trophies'; else startMode(m); }
       else if (state === 'done' || state === 'modedone' || state === 'trophies' || (state === 'over' && (mode === 'siege' || mode === 'rush'))) { state = 'title'; mode = 'campaign'; init(); state = 'title'; }
-      else if (state === 'map') { state = 'brief'; }
+      else if (state === 'map') { state = 'brief'; briefBro = (Math.random() * unlocked.length) | 0; } // the briefing offers a random bro first
       else if (state === 'brief') { startLevel(level); applyGear(); state = 'play'; }
       else if (state === 'win') { level++; markReached(level); state = 'map'; mapT = 0; } // bros and reserve carry over
       else if (state === 'over') { lives = 3; startLevel(level); state = 'play'; } // retry this level
@@ -3845,7 +3987,10 @@ function updatePlayer(dt) {
   }
   P.squash = approach(P.squash, 0, dt * 1.2); P.recoil = approach(P.recoil, 0, dt * 30);
   const dir = P.wlock > 0 ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  if (dir && P.dash <= 0) P.face = dir;
+  // aiming: hold aim to keep facing while you walk (backwards too); Up tilts the gun 45 degrees while you move, straight up when you stand
+  if (dir && P.dash <= 0 && !keys.aim && !padAim) P.face = dir;
+  if (padAim && Math.abs(padAim[0]) > 0.25 && P.dash <= 0) P.face = Math.sign(padAim[0]);
+  P.aim = padAim ? clamp(Math.atan2(-padAim[1], Math.abs(padAim[0])), 0, Math.PI / 2) : keys.aim && keys.up ? (dir ? Math.PI / 4 : Math.PI / 2) : 0;
   const onIce = P.onGround && tileAt(Math.floor((P.x + P.w / 2) / T), Math.floor((P.y + P.h + 1) / T)) === ICE;
   // run: tap a direction twice quickly (or push the stick all the way); letting go of the direction stops running
   for (const [k, d] of [['left', -1], ['right', 1]]) if (pressed[k]) { if (P.tapDir === d && clock - P.tapAt < 0.28) P.run = true; P.tapDir = d; P.tapAt = clock; }
@@ -3911,7 +4056,7 @@ function updatePlayer(dt) {
   }
   const vy0 = P.vy, wasGround = P.onGround;
   moveBody(P, dt);
-  P.rp += Math.abs(P.vx) * dt * 0.09;
+  P.rp += P.vx * P.face * dt * 0.09; // walking backwards plays the stride backwards
   P.x = clamp(P.x, 0, LW * T - P.w);
   if (P.onGround && P.pound > 0) groundPound();
   else if (P.onGround && !wasGround && vy0 > 200) { // landing: dust and a squash
@@ -5423,8 +5568,8 @@ function updateBullets(dt, edt) {
     if (b.kind === 'orbit') { // spiral out around where you stand
       b.ang += d * 6; b.rad += d * 70; b.vx = 0; b.vy = 0; b.x = P.x + 5 + Math.cos(b.ang) * b.rad; b.y = P.y + 8 + Math.sin(b.ang) * b.rad * 0.7;
     }
-    if (b.kind === 'qwave') { b.phase += d * 18; b.vy = Math.cos(b.phase) * 150; }
-    if (b.kind === 'red') b.dmg = 0.6 + Math.abs(b.x - b.sx) / 80; // redshift: the further it flies, the harder it hits
+    if (b.kind === 'qwave') { b.phase += d * 18; const w = Math.cos(b.phase) * 150; if (b.bvx === undefined) b.vy = w; else { const L = Math.hypot(b.bvx, b.bvy) || 1; b.vx = b.bvx - b.bvy / L * w; b.vy = b.bvy + b.bvx / L * w; } }
+    if (b.kind === 'red') b.dmg = 0.6 + Math.hypot(b.x - b.sx, b.y - (b.sy === undefined ? b.y : b.sy)) / 80; // redshift: the further it flies, the harder it hits
     if (b.kind === 'torp') { // speeds up, and climbs or dives to the height of the quack (or boss part) ahead
       const s = Math.sign(b.vx); let ty = null, best = 230;
       b.vx = clamp(b.vx + s * 600 * d, -380, 380);
@@ -5433,7 +5578,7 @@ function updateBullets(dt, edt) {
       b.vy = ty === null ? b.vy * 0.9 : clamp((ty - b.y) * 6, -170, 170);
       if (Math.random() < 0.6) part(b.x - s * 6, b.y, -s * rand(10, 40), rand(-10, 10), '#bfe9ff', rand(0.2, 0.4), 1);
     }
-    if (b.kind === 'hoot') b.hitR = 3 + Math.abs(b.x - b.sx) * 0.07; // the call widens as it rolls out
+    if (b.kind === 'hoot') b.hitR = 3 + Math.hypot(b.x - b.sx, b.y - (b.sy === undefined ? b.y : b.sy)) * 0.07; // the call widens as it rolls out
     if (b.kind === 'flame') { b.hitR = 2 + (1 - b.life / b.max) * 4; b.vx *= 1 - 0.3 * d; if (Math.random() < 0.25) part(b.x, b.y, rand(-15, 15), rand(-50, -20), '', rand(0.15, 0.3), 2, 0, 'fire'); }
     if (b.kind === 'pwave') { // a ripple that runs along the ground
       if (solidPx(b.x + Math.sign(b.vx) * 5, b.y) || !solidPx(b.x, b.y + 9)) { b.dead = true; continue; }
@@ -5451,7 +5596,7 @@ function updateBullets(dt, edt) {
       continue;
     }
     if (b.kind === 'missile' || b.kind === 'finch') steer(b, d);
-    if (b.kind === 'rocket') { b.vx = clamp(b.vx + Math.sign(b.vx) * 320 * d, -300, 300); if (Math.random() < 0.7) part(b.x - Math.sign(b.vx) * 6, b.y, rand(-10, 10), rand(-20, 0), '#4b4766', rand(0.4, 0.8), rand(2, 4), 0, 'smoke'); }
+    if (b.kind === 'rocket') { if (b.aimed) { const sp = Math.hypot(b.vx, b.vy) || 1, k = Math.min(300, sp + 320 * d) / sp; b.vx *= k; b.vy *= k; } else b.vx = clamp(b.vx + Math.sign(b.vx) * 320 * d, -300, 300); if (Math.random() < 0.7) part(b.x - Math.sign(b.vx) * 6, b.y, rand(-10, 10), rand(-20, 0), '#4b4766', rand(0.4, 0.8), rand(2, 4), 0, 'smoke'); } // an aimed rocket speeds up along its path
     if (b.kind === 'missile' && Math.random() < 0.6) part(b.x - Math.cos(b.ang) * 5, b.y - Math.sin(b.ang) * 5, rand(-10, 10), rand(-10, 10), theme.dust, rand(0.3, 0.6), rand(2, 3), 0, 'smoke');
     if (b.kind === 'glob' && Math.random() < 0.4) part(b.x, b.y, 0, 20, '#a6d854', 0.3, 1, G);
     if (b.grav) b.vy += b.grav * d;
@@ -6147,9 +6292,19 @@ function drawPlayer() {
   if (P.pound > 0) { const h = drawArm(sh, P.face, 'down', c, s); ctx.fillStyle = s; ctx.fillRect(h.x - 1, h.y + 1, 4, 3); }
   else if (P.ride || P.climb) drawArm(sh, P.face, 'up', c, s);
   else if (P.punch > 0) drawArm(sh, P.face, 'punch', c, s);
-  else if (pose.leg === 'run' && P.aimT <= 0 && !keys.fire) { const h = drawArm(sh, P.face, 'down', c, s, [0, 1, 1, 0, -1, -1][pose.fr]); drawBroGun(P.bro, h.x - 2, h.y, P.face); } // gun swings with the stride
-  else { const h = drawArm({ x: sh.x - P.face * Math.round(P.recoil * 0.4), y: sh.y }, P.face, 'aim', c, s); drawBroGun(P.bro, h.x - P.face * P.recoil, h.y - (P.recoil > 1.6 ? 1 : 0), P.face); } // the shot kicks the arm back and the muzzle up
+  else if (pose.leg === 'run' && P.aimT <= 0 && !keys.fire && !P.aim) { const h = drawArm(sh, P.face, 'down', c, s, [0, 1, 1, 0, -1, -1][pose.fr]); drawBroGun(P.bro, h.x - 2, h.y, P.face); } // gun swings with the stride
+  else { // the shot kicks the arm back and the muzzle up; aiming up turns arm and gun about the shoulder
+    if (P.aim) { ctx.save(); ctx.translate(sh.x, sh.y + 1); ctx.rotate(-P.aim * P.face); ctx.translate(-sh.x, -sh.y - 1); }
+    const h = drawArm({ x: sh.x - P.face * Math.round(P.recoil * 0.4), y: sh.y }, P.face, 'aim', c, s); drawBroGun(P.bro, h.x - P.face * P.recoil, h.y - (P.recoil > 1.6 ? 1 : 0), P.face);
+    if (P.aim) ctx.restore();
+  }
   ctx.restore();
+  if ((keys.aim || padAim) && !P.ride && !P.climb) { // holding aim: a faint dotted sight along the aim
+    const dx = P.face * Math.cos(P.aim || 0), dy = -Math.sin(P.aim || 0), x0 = P.x + P.w / 2 + dx * 9, y0 = P.y + 8 + dy * 10;
+    ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff6c2';
+    for (let k = 1; k <= 5; k++) ctx.fillRect(Math.round(x0 + dx * k * 9), Math.round(y0 + dy * k * 9), 1, 1);
+    ctx.globalAlpha = 1;
+  }
 }
 const anim0 = () => performance.now() / 1000;
 function drawBroGun(bro, hx, hy, f) {
@@ -6205,6 +6360,9 @@ function drawBroGun(bro, hx, hy, f) {
     case 'lamarr': ctx.fillStyle = '#3d4560'; M(0, -1, 8, 3); ctx.fillStyle = bro.gun; M(5, -1, 1, 3); ctx.fillStyle = '#8b93ad'; M(1, -4, 1, 3); if (Math.floor(anim0() * 3) % 2) { ctx.fillStyle = '#d9534f'; M(1, -5, 1, 1); } break; // a tube with a blinking radio mast
     case 'lavoisier': ctx.fillStyle = '#c96a2a'; M(0, -1, 4, 3); ctx.fillStyle = '#8b93ad'; M(4, 0, 3, 1); ctx.fillStyle = Math.floor(anim0() * 20) % 2 ? '#8fd3ff' : '#f2c94c'; M(7, 0, 1, 1); break; // brass tank, nozzle, pilot flame
     case 'goodall': ctx.fillStyle = bro.gun; M(0, -1, 3, 2); M(3, -2, 2, 4); ctx.fillStyle = '#e6d2b0'; M(5, -3, 1, 6); break; // a field horn
+    case 'anning': ctx.fillStyle = '#7a5c36'; M(0, 0, 6, 1); ctx.fillStyle = bro.gun; M(5, -2, 3, 5); ctx.fillStyle = '#5c6480'; M(7, -2, 1, 5); break; // a rock hammer
+    case 'vesalius': ctx.fillStyle = '#5c6480'; M(0, 0, 3, 1); ctx.fillStyle = bro.gun; M(3, -1, 4, 2); M(7, 0, 1, 1); break; // a scalpel
+    case 'hooke': ctx.fillStyle = '#b4bed0'; M(0, 0, 2, 1); ctx.fillStyle = bro.gun; M(2, -2, 4, 4); ctx.fillStyle = '#ffffff'; M(3, -2, 1, 1); break; // a boxing glove on a spring
     case 'oppenheimer': ctx.fillStyle = '#5c6480'; M(0, -1, 6, 3); M(0, 2, 2, 2); ctx.fillStyle = Math.floor(anim0() * 6) % 2 ? '#8fd3ff' : '#bfe9ff'; M(2, 0, 3, 1); ctx.fillStyle = '#3d4560'; M(6, -1, 1, 2); break; // a pistol with a glowing core
     case 'jemison': {
       ctx.fillStyle = '#e6e2f0'; M(0, -1, 6, 3); ctx.fillStyle = bro.gun; M(6, -1, 1, 3); ctx.fillStyle = '#5c6480'; M(1, 0, 3, 1);
@@ -6737,10 +6895,25 @@ function drawFx() {
         ctx.lineTo(x, y);
       });
       ctx.stroke(); ctx.lineWidth = 1; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ctx.globalAlpha = 1;
+    } else if (f.kind === 'beam' && f.y1 !== undefined && Math.abs(f.y1 - f.y) > 0.5) { // an aimed beam: a line at its angle
+      ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(f.x0, f.y); ctx.lineTo(f.x1, f.y1);
+      ctx.strokeStyle = f.col || '#b3a6ff'; ctx.lineWidth = 3; ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1;
     } else if (f.kind === 'beam') {
       ctx.globalAlpha = a; ctx.fillStyle = f.col || '#b3a6ff'; ctx.fillRect(Math.min(f.x0, f.x1), f.y - 1, Math.abs(f.x1 - f.x0), 3);
       ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.min(f.x0, f.x1), f.y, Math.abs(f.x1 - f.x0), 1); ctx.globalAlpha = 1;
     } else if (f.kind === 'muzzle') { drawMuzzle(f, a);
+    } else if (f.kind === 'slash') { // a melee swing: a bright arc, or a spring glove punching out
+      ctx.globalAlpha = f.glove ? Math.min(1, a * 3) : a; const ca = Math.cos(f.a), sa = Math.sin(f.a);
+      if (f.glove) {
+        const L = f.r * Math.min(1, (1 - a) * 3 + 0.3), ex = f.x + ca * L, ey = f.y + sa * L;
+        ctx.strokeStyle = '#b4bed0'; ctx.beginPath(); ctx.moveTo(f.x, f.y);
+        for (let k = 1; k <= 8; k++) { const q = k / 8, z = k % 2 ? 2 : -2; ctx.lineTo(f.x + ca * L * q - sa * z, f.y + sa * L * q + ca * z); }
+        ctx.stroke(); ctx.fillStyle = f.col; ctx.fillRect(Math.round(ex) - 3, Math.round(ey) - 3, 6, 6); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(ex) - 2, Math.round(ey) - 3, 2, 1);
+      } else {
+        ctx.strokeStyle = f.col; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, f.a - 1.1, f.a + 1.1); ctx.stroke();
+        ctx.lineWidth = 1; ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.arc(f.x, f.y, f.r - 2, f.a - 0.8, f.a + 0.8); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
     } else if (f.kind === 'pop') { // a little star where something was hit
       const s = 1 + Math.round((1 - a) * f.r), x = Math.round(f.x), y = Math.round(f.y);
       ctx.globalAlpha = Math.min(1, a * 2); ctx.fillStyle = f.col; ctx.fillRect(x - s, y, 2 * s + 1, 1); ctx.fillRect(x, y - s, 1, 2 * s + 1);
@@ -7020,10 +7193,10 @@ function drawMinimap(t) {
 }
 function drawFullMap(t) {
   if (miniDirty) updateMini();
-  const k = 2, w = LW * k, h = LH * k, ox = Math.round((VW - w) / 2), oy = 120;
+  const k = 2, half = Math.ceil(LW / 2), w = half * k, ox = Math.round((VW - w) / 2), oy = 112, h = LH * k * 2 + 6; // the level in two strips, the first half above the second
   ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
-  ctx.imageSmoothingEnabled = false; ctx.drawImage(MINI, ox, oy, w, h);
-  mapMarks(ctx, ox, oy, k, 0, LW, Math.floor(t * 4) % 2);
+  ctx.imageSmoothingEnabled = false;
+  for (const [i, c0] of [[0, 0], [1, half]]) { const y = oy + i * (LH * k + 6); ctx.drawImage(MINI, c0, 0, half, LH, ox, y, w, LH * k); mapMarks(ctx, ox, y, k, c0, c0 + half, Math.floor(t * 4) % 2); }
   text('MAP · ' + LV().name, VW / 2, oy - 14, 8, '#a6d854', 'center');
   const leg = [['#ffffff', 'YOU'], ['#ff5a4a', 'QUACKS'], ['#a6d854', 'CAGES'], ['#f2c94c', 'TARGETS'], ['#d9b36a', 'INTEL'], ['#e78ac3', 'BOSS']];
   leg.forEach(([col, lab], i) => { const lx = 40 + i * 70; ctx.fillStyle = col; ctx.fillRect(lx, oy + h + 14, 4, 4); text(lab, lx + 8, oy + h + 19, 8, '#a3abd0'); });
@@ -7458,7 +7631,7 @@ function collectLights(t) {
     else if (f.kind === 'muzzle') light(f.x, f.y, 44, f.c1 || '#fff6c2', 1);
     else if (f.kind === 'kill') light(f.x, f.y, 60, '#fff6c2', a);
     else if (f.kind === 'bolt') { const p = f.pts[f.pts.length - 1]; light(p[0], p[1], 50, '#bfe9ff', a); light(f.pts[0][0], f.pts[0][1], 30, '#bfe9ff', a); }
-    else if (f.kind === 'beam') light(f.x1, f.y, 30, '#b3a6ff', a);
+    else if (f.kind === 'beam') light(f.x1, f.y1 === undefined ? f.y : f.y1, 30, '#b3a6ff', a);
     else if (f.kind === 'acidpool') light(f.x, f.y, 26, '#a6d854', 0.6 * a);
     else if (f.kind === 'jet') light(f.x - f.dir * 20, f.y, 40, '#f29e4c', 1);
     else if (f.kind === 'well') light(f.x, f.y, 60, '#b3a6ff', 0.8);
@@ -7865,6 +8038,7 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt }); // longer maps hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks

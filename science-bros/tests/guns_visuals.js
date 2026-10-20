@@ -32,7 +32,7 @@ const fireOnce = () => {
 
 // ---- every bro: a muzzle flash in its own shape and colours, a kick, heat on guns that heat up
 let noFlash = [], wrongShape = [], noKick = [], noHeat = [];
-for (const b of S.BROS) {
+for (const b of S.BROS.filter((o) => !o.melee)) { // melee bros swing instead (see aim_melee_maps.js)
   yard(); S.P.bro = S.BRO[b.id]; S.P.face = 1; S.P.spec = 0; S.P.heat = 0;
   const g = S.GUNFX[b.id], m = fireOnce();
   if (!m) { noFlash.push(b.id); continue; }
@@ -40,7 +40,7 @@ for (const b of S.BROS) {
   if (!(S.P.recoil > 0)) noKick.push(b.id);
   if (g && g.heat && !(S.P.heat > 0)) noHeat.push(b.id);
 }
-check('every bro has a gun style', S.BROS.every((b) => S.GUNFX[b.id] && S.GUNFX[b.id].flash && S.GUNFX[b.id].c.length === 2));
+check('every bro has a gun style', S.BROS.filter((o) => !o.melee).every((b) => S.GUNFX[b.id] && S.GUNFX[b.id].flash && S.GUNFX[b.id].c.length === 2));
 check('every bro fires and makes a muzzle flash', noFlash.length === 0, noFlash.join(' '));
 check('each flash has its gun\'s own shape and colour', wrongShape.length === 0, wrongShape.join(' '));
 check('every shot kicks the gun back', noKick.length === 0, noKick.join(' '));
@@ -90,7 +90,7 @@ check('a heavy shot kicks the camera', S.kick() < 0, 'kick ' + S.kick().toFixed(
 const impactOn = (tile) => {
   yard(); S.P.bro = S.BRO.einstein; S.P.face = 1; S.setTile(36, 15, tile);
   let pops = 0, sparks = 0, smoke2 = 0, holes = 0; // marks are counted as they appear: a broken block takes its marks with it
-  for (let i = 0; i < 40; i++) { S.P.inv = 1e9; S.P.x = 30 * T; step({ fire: i < 20 }); pops += S.fx.filter((f) => f.kind === 'pop').length; sparks += S.parts().filter((p) => p.kind === 'spark').length; smoke2 += S.parts().filter((p) => p.kind === 'smoke').length; holes = Math.max(holes, (S.decals.get(15 * 236 + 36) || []).length); }
+  for (let i = 0; i < 40; i++) { S.P.inv = 1e9; S.P.x = 30 * T; step({ fire: i < 20 }); pops += S.fx.filter((f) => f.kind === 'pop').length; sparks += S.parts().filter((p) => p.kind === 'spark').length; smoke2 += S.parts().filter((p) => p.kind === 'smoke').length; holes = Math.max(holes, (S.decals.get(15 * S.LW + 36) || []).length); }
   return { pops, sparks, smoke: smoke2, holes };
 };
 const st = impactOn(3), di = impactOn(1);

@@ -51,7 +51,7 @@ for (let l = 5; l < N - 1; l++) {
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
   check(tag + ': the boss has its own name', !!B.bossName && B.bossName !== 'THE DIRECTOR', B.bossName);
   // a bot that runs right and jumps gets a fair way in without dying (invulnerable, we only test the path)
-  S.P.inv = 1e9; let far = 0;
+  S.P.inv = 1e9; S.P.bro = S.BRO.einstein; let far = 0; // a new run starts with random bros; this checks the path
   for (let i = 0; i < 60 * 60; i++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;

@@ -25,7 +25,7 @@ const kinds = new Set();
 for (const l of STRONG) {
   S.startLevel(l); const L = S.levelDef(l), tag = (l + 1) + ' ' + L.name;
   check(tag + ': builds with nothing loose and unsupported', S.checkCollapse() === 0);
-  let cracks = 0; for (let c = 0; c < 236; c++) for (let r = 0; r < 22; r++) if (S.crumbly(c, r)) cracks++;
+  let cracks = 0; for (let c = 0; c < S.LW; c++) for (let r = 0; r < 22; r++) if (S.crumbly(c, r)) cracks++;
   const here = new Set(S.devs.map((d) => d.kind)); if (cracks) here.add('crumble');
   here.forEach((k) => kinds.add(k));
   check(tag + ': has at least one level mechanic', here.size > 0, [...here].join(','));

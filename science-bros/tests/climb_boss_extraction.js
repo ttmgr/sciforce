@@ -18,9 +18,10 @@ S.pressed.jump=true; run(1,{right:true,jump:true});
 for(let i=0;i<300;i++){ if(i%30==0)S.pressed.jump=true; run(1,{right:true,jump:true}); if(i%30==0)console.log(i,(P.x/16).toFixed(2),((P.y+P.h)/16).toFixed(2),P.onGround,P.vy|0); }
 console.log('after climb col',(P.x/16).toFixed(1),'row',((P.y+P.h)/16).toFixed(2),'alive',P.alive);
 // boss fight: teleport to arena with tesla-free einstein, fire constantly
-P.x=184*16; P.y=15*16-16; P.inv=1e9; S.finishObjectives(); // the vats etc. are not what this test is about
+S.P.bro = S.BRO.einstein; // a new run starts with a random bro
+P.x=S.arenaCol(184)*16; P.y=15*16-16; P.inv=1e9; S.finishObjectives(); // the vats etc. are not what this test is about
 let i=0;
-for(;i<60*120 && !S.boss.dead;i++){ P.inv=1e9; P.x=Math.min(P.x,190*16); run(1,{fire:true,right:(i%120)<10}); P.face=1;}
+for(;i<60*120 && !S.boss.dead;i++){ P.inv=1e9; P.x=Math.min(P.x,S.arenaCol(190)*16); run(1,{fire:true,right:(i%120)<10}); P.face=1;}
 console.log('boss dead',S.boss.dead,'after s',(i/60).toFixed(1),'hp',S.boss.hp, 'chopper',!!S.chopper);
 for(i=0;i<60*20 && S.state==='play';i++){ P.inv=1e9; run(1,{right:true}); }
 console.log('final',S.state,'P col',(P.x/16).toFixed(1), S.chopper&&S.chopper.state);
