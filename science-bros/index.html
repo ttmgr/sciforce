@@ -506,10 +506,10 @@ function buildLevel() {
     crumble: (c0, r0, c1, r1) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) crumbly[r * LW + c] = 1; },
   };
   LV().build(H);
-  stretched = level < LEVELS.length || level === MOON;
+  stretched = level < LEVELS.length || level === MOON || !!LV().gen; // a random map is built full width (genLevel)
   const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
-  if (stretched) { slideArena(); buildStretch(H, level); }
-  else for (let r = 0; r < LH; r++) for (let c = 236; c < LW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
+  if (stretched && !LV().gen) { slideArena(); buildStretch(H, level); }
+  else if (!stretched) for (let r = 0; r < LH; r++) for (let c = 236; c < LW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
 }
 // ---- longer maps: every campaign mission and the Moon get a stretch of extra level pieces between the main path
 // and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
@@ -1727,6 +1727,292 @@ function buildSiege({ fill, ground, sp, bgFill, dc, lamp }) {
   dc('sign', 4, { text: 'LAB SIEGE' }); dc('sandbags', 26); dc('palm', 56, { lean: -1 });
 }
 
+// ---------------------------------------------------------------- random maps
+// A map randomizer: genLevel(seed) makes a whole mission from scratch: a camp, 296 columns of terrain (level pieces
+// from SEG and pieces of its own), objectives, quacks, a boss arena and a theme. The same seed always makes the same
+// map. The arena is built at ARENA_AT like a campaign one, then slid to the far end (so arenaCol works for its boss).
+function rngOf(seed) { // a small seeded random number generator (mulberry32)
+  let a = (seed >>> 0) || 1;
+  const f = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  f.int = (lo, hi) => lo + Math.floor(f() * (hi - lo + 1)); f.pick = (arr) => arr[Math.floor(f() * arr.length)]; f.chance = (p) => f() < p;
+  f.wpick = (items, wt) => { const ws = items.map(wt), sum = ws.reduce((s, v) => s + v, 0); let x = f() * sum; for (let i = 0; i < items.length; i++) { x -= ws[i]; if (x < 0) return items[i]; } return items[items.length - 1]; };
+  return f;
+}
+// what a random map knows about each level piece: w = [narrowest, widest] it is built for, th = themes it suits (picked
+// more often there), wt = how often it comes up, skip = never picked. A piece with no entry gets GEN_SEG_DEFAULT.
+// The pieces in GEN_SEG (below) are the randomizer's own; they live in this table too. wt 0.2 marks a piece with a wall
+// under an overhang (a lintel, a catwalk, a cab): a bro who climbs it there can wedge himself in, so it comes up rarely.
+const SEG_META = {
+  camp: { skip: true }, cistern: { skip: true }, // the camp is placed by hand; the cistern floods and wants its exit high up
+  yard: { w: [20, 32] }, hall: { w: [32, 40] }, pit: { w: [24, 34] }, cliff: { w: [32, 40], opts: (R) => ({ icicles: R.chance(0.3) }) }, fort: { w: [32, 40], wt: 0.2 }, chimneys: { w: [32, 36], wt: 0.2 },
+  runway: { w: [44, 44], th: ['sky', 'desert'], opts: (R) => ({ dir: R.pick([-1, 1]) }) }, wreck: { w: [36, 36], th: ['sky', 'desert'] }, hangar: { w: [36, 36], th: ['sky', 'rust'], wt: 0.2 }, ctower: { w: [40, 40], th: ['sky', 'city'], skip: true }, // the tower shaft under the cab wedges a climbing bro nearly every time
+  tunnels: { w: [40, 40], th: ['cave', 'sewer'], ceil: true, wt: 0.2, opts: (R) => { const fl = [16]; let f = 16; for (let i = 0; i < 8; i++) fl.push(f = clamp(f + R.int(-1, 1), 14, 18)); while (f !== 16) fl.push(f += Math.sign(16 - f)); fl.push(16); return { floors: fl, drips: [6, 15, 24, 33], lamps: [10, 28] }; } },
+  shaft: { w: [40, 40], th: ['cave'], ceil: true }, chasm: { w: [36, 36], th: ['cave', 'plant'], opts: (R) => ({ ceil: R.pick([0, 5]) }) }, geode: { w: [40, 40], th: ['cave'], ceil: true },
+  boardwalk: { w: [44, 44], th: ['swamp', 'edge'], opts: () => ({ rot: [[9, 14], [25, 29]], huts: [18, 34] }) }, geysers: { w: [36, 36], th: ['swamp', 'snow'] }, mill: { w: [40, 40], th: ['swamp', 'grove'] }, trench: { w: [32, 40], th: ['swamp', 'island'] },
+  switchback: { w: [40, 40], th: ['astro', 'snow'] }, dome: { w: [40, 40], th: ['astro', 'moon'], wt: 0.2 }, dishes: { w: [36, 36], th: ['astro', 'moon'] }, ridge: { w: [40, 40], th: ['astro', 'moon'] },
+  assembly: { w: [36, 40], th: ['rust', 'plant'], opts: (R) => ({ roof: R.chance(0.6) }) }, foundry: { w: [36, 36], th: ['rust', 'plant'] }, crane: { w: [40, 40], th: ['rust', 'city'] }, warehouse: { w: [40, 40], th: ['rust', 'plant'] },
+  field: { w: [40, 40], th: ['sky', 'grove'] }, silos: { w: [40, 40], th: ['sky'], wt: 0.2 }, barn: { w: [36, 36], th: ['sky'], wt: 0.2 }, maze: { w: [40, 40], th: ['sky', 'grove'] },
+  dunes: { w: [40, 40], th: ['desert'], opts: (R) => ({ waves: R.int(2, 4), dir: R.pick([-1, 1]) }) }, pyramid: { w: [48, 48], th: ['desert'] }, ruins: { w: [32, 32], th: ['desert', 'edge'], wt: 0.2 },
+  slope: { w: [36, 36], th: ['snow'], opts: (R) => ({ peak: R.int(10, 12) }) }, pools: { w: [44, 44], th: ['snow', 'swamp'] }, hotel: { w: [40, 40], th: ['snow', 'city'] },
+  piers: { w: [40, 40], th: ['edge', 'island'], wt: 0.2 }, cliffs: { w: [36, 36], th: ['edge'] }, lighthouse: { w: [40, 40], th: ['edge', 'island'], wt: 0.2 }, stones: { w: [40, 40], th: ['edge'], wt: 0.2 },
+  sluice: { w: [40, 40], th: ['sewer'], ceil: true, wt: 0.2 }, pumphall: { w: [36, 36], th: ['sewer', 'plant'], ceil: true, wt: 0.2 },
+  facade: { w: [36, 36], th: ['city'] }, rooftops: { w: [44, 44], th: ['city'] }, gondola: { w: [36, 36], th: ['city'] }, billboard: { w: [40, 40], th: ['city'], opts: (R) => ({ text: R.pick(GEN_WORDS.neon) }) },
+  grove: { w: [40, 40], th: ['grove', 'citrus'] }, pipeline: { w: [40, 40], th: ['grove', 'citrus'] }, depot: { w: [40, 40], th: ['grove', 'citrus', 'rust'] },
+  // the randomizer's own pieces
+  hills: { w: [16, 40], wt: 3, gen: true }, gap: { w: [14, 24], wt: 2, gen: true }, cave: { w: [24, 44], wt: 2, gen: true, th: ['cave', 'sewer', 'rust', 'plant', 'astro', 'moon'], ceil: true },
+  towers: { w: [18, 34], wt: 2, gen: true }, bunker: { w: [22, 32], wt: 2, gen: true }, floaters: { w: [18, 32], wt: 2, gen: true }, barricade: { w: [10, 14], wt: 1, gen: true },
+  flat: { w: [1, 60], wt: 0, gen: true },
+};
+for (const k in NEW_PIECES) SEG_META[k] = SEG_META[k] || { w: NEW_PIECES[k].w, th: NEW_PIECES[k].themes, wt: ['canopy', 'market', 'watertower'].includes(k) ? 0.2 : 1 }; // the variety pack's pieces (canopy, market and the water tower have overhangs)
+const GEN_SEG_DEFAULT = { w: [36, 40], wt: 1 }; // a new piece nobody has described yet
+// which boss suits which arena (a boss only goes in an arena listed for it); an arena with no entry gets ARENA_DEFAULT
+const ARENA_META = {
+  flat: { bosses: ['boss', 'tank'] }, towers: { bosses: ['blimp', 'kopter'] }, sand: { bosses: ['crawler'] }, stage: { bosses: ['director', 'citrus'] },
+  airstrip: { bosses: ['kopter'] }, cavern: { bosses: ['crawler'] }, bridge: { bosses: ['tank', 'boss'] }, dome: { bosses: ['boss'] }, crane: { bosses: ['director'] },
+  vents: { bosses: ['tank'] }, headland: { bosses: ['kopter'] }, rooftop: { bosses: ['director'] }, gantry: { bosses: ['engine'] }, throne: { bosses: ['citrus'] },
+};
+for (const k in NEW_ARENAS) ARENA_META[k] = ARENA_META[k] || NEW_ARENAS[k]; // the variety pack's arenas
+const ARENA_DEFAULT = { bosses: ['boss', 'tank'] }; // a new arena: a boss that walks on a floor
+// two arenas only the randomizer uses: the Engine needs its gantry, King Citrus his throne room (copied from their missions)
+const GEN_ARENA = {
+  gantry(H, o) {
+    H.ground(176, 180, 16); H.fill(181, 15, 230, 17, DIRT); H.fill(181, 18, 235, 21, STEEL);
+    H.fill(205, 11, 209, 11, STEEL); H.fill(213, 9, 228, 9, STEEL); H.fill(212, 9, 212, 14, LADDER);
+    H.fill(229, 0, 230, 17, STEEL); H.fill(231, 15, 235, 17, STEEL);
+    bossAt(H, o, 220, { ax0: 182, ax1: 228, trig: 186, final: true, gate: [229, 230, 0, 14] }); H.dc('sign', 183, { text: 'SHAKE WELL' });
+  },
+  throne(H, o) {
+    H.ground(176, 178, 16); H.fill(179, 15, 224, 17, DIRT); H.fill(179, 18, 235, 21, STEEL);
+    H.fill(190, 12, 191, 14, BRICK); H.fill(212, 12, 213, 14, BRICK);
+    H.fill(225, 0, 226, 17, STEEL); H.fill(227, 15, 235, 17, STEEL);
+    bossAt(H, o, 205, { ax0: 180, ax1: 224, trig: 183, final: true, gate: [225, 226, 0, 14] }); H.dc('sign', 181, { text: 'THRONE ROOM' });
+  },
+};
+// every quack a random map can field, in one place: [type, difficulty from which it turns up (0 easy, 1 hard), how often,
+// { high: likes a roof or ledge, room: open rows it needs over its feet, blast: blows up or burns holes, so never next to acid }]. Add a new enemy type here.
+const RANDOM_FOES = [
+  ['grunt', 0, 8], ['dog', 0, 3], ['shield', 0, 3], ['scout', 0.1, 1], ['bomber', 0.1, 2, { blast: 1 }], ['grenadier', 0.1, 2, { blast: 1 }], ['medic', 0.1, 1], ['flamer', 0.15, 2, { blast: 1 }], ['turret', 0.2, 1, { high: 1 }],
+  ['guru', 0.2, 1], ['rocketeer', 0.2, 2, { blast: 1 }], ['jetpack', 0.25, 1, { room: 5 }], ['camdrone', 0.3, 1, { room: 6, blast: 1 }], ['heavy', 0.3, 2], ['sniper', 0.3, 2, { high: 1 }], ['brute', 0.35, 1, { room: 3 }],
+  ['mortar', 0.4, 1, { blast: 1 }], ['preacher', 0.4, 1],
+];
+for (const k of NEW_FOES) if (!RANDOM_FOES.some((f) => f[0] === k)) RANDOM_FOES.push([k, -1, 1, ['minelayer', 'pilldoc', 'sapper'].includes(k) ? { blast: 1 } : {}]); // the newer quacks; -1: turn up from RAMP_FROM
+// easy / normal / hard: p is how far into the campaign it feels (0 first mission, 1 finale), hp scales the boss
+const GEN_DIFF = { easy: { p: 0.2, hp: 1 }, normal: { p: 0.55, hp: 1.2 }, hard: { p: 1, hp: 1.5 } };
+// small word lists for names, briefings and intel
+const GEN_WORDS = {
+  quack: ['HOMEOPATHIC', 'QUANTUM', 'DETOX', 'CRYSTAL', 'ALKALINE', 'AURA', 'CHAKRA', 'MAGNET', 'ASTRAL', 'IONIC', 'MIRACLE', 'MOONLIGHT', 'COLLOIDAL', 'PYRAMID', 'LEY LINE', 'ORGONE', 'VIBE', 'COPPER BRACELET'],
+  place: { island: ['ISLAND', 'LAGOON', 'ATOLL'], desert: ['DESERT', 'OASIS', 'DUNES'], edge: ['COAST', 'CLIFFS', 'HEADLAND'], citrus: ['CITADEL', 'ORCHARD'], sky: ['AIRFIELD', 'FARM', 'PRAIRIE'],
+    cave: ['CAVERNS', 'MINES', 'GROTTO'], swamp: ['MARSH', 'BAYOU', 'BOG'], astro: ['OBSERVATORY', 'PEAKS'], rust: ['WORKS', 'FOUNDRY', 'YARD'], moon: ['CRATER', 'MOON BASE'], plant: ['PLANT', 'REFINERY'],
+    snow: ['SUMMIT', 'GLACIER', 'SPRINGS'], sewer: ['SEWERS', 'DRAINS'], city: ['DISTRICT', 'PLAZA', 'TOWERS'], grove: ['GROVES', 'VALLEY'] },
+  anyPlace: ['OUTPOST', 'COMPOUND', 'RETREAT'],
+  tree: { island: 'palm', desert: 'cactus', cave: 'crystal', snow: 'pine', astro: 'pine', grove: 'orange', sky: 'scarecrow', swamp: 'pine', edge: 'pine', citrus: 'orange' },
+  who: ['Dr. Placebo is out on parole and', 'Professor Quackenbush has a new podcast and', 'King Citrus sent his nephew, who', 'A wellness influencer with nine million followers', 'The Anti-Science League', 'A man who did his own research'],
+  scheme: ['sells bottled moonlight at 90 dollars a sip.', 'charges crystals with a hair dryer and calls it quantum.', 'says the wifi is giving everyone opinions.', 'has a study with one participant: his cousin.',
+    'is diluting the reservoir until it cures everything.', 'sells a cleanse that removes toxins, money and common sense.', 'says gravity is only a theory and ignores it.',
+    'has a machine that reads your aura. It is a toaster.', 'sells magnet bracelets to the local hospital.', 'says the moon is a hologram and sells tickets to it.'],
+  close: ['Bring evidence. Bring bros.', 'Peer review is watching.', 'Remember: the plural of anecdote is not data.', 'Correlation is not causation, but explosions are.', 'Do not drink anything you find.'],
+  debrief: ['The samples are on their way to a real lab.', 'The nonsense is off the air. For now.', 'Another stronghold of make-believe falls to the scientific method.',
+    'HQ ran the numbers: the effect size of the League is zero.', 'The quacks are in custody, asking for a second opinion.'],
+  intel: ['Receipt: 400 healing crystals, 1 actual doctor (cancelled).', 'Memo: if anyone asks for data, change the subject.', 'Lab note: the control group escaped.', 'Sticky note: the more you dilute it, the stronger it gets.',
+    'Email: please stop putting magnets in the coffee machine.', 'Order form: tin-foil hats, 500, extra shiny.', 'Script: say "big pharma" every 30 seconds.', 'Graph: sales go up, evidence goes down. Perfect.',
+    'Diary: today I aligned my chakras. Tomorrow: my tyres.', 'Brochure: our water remembers. It remembers being water.', 'Review: five stars, cured my gout and my landlord.',
+    'Note: the placebo works better if it costs more.', 'Invoice: 1 essential oil, 1 essential lawyer.', 'Minutes: motion to ignore the data passes unanimously.'],
+  target: { vat: [['placebo', 'detox', 'megadose', 'colloidal silver', 'structured water'], (x) => 'Smash the ' + x + ' vats'], radio: [['propaganda', '5G panic', 'chemtrail', 'horoscope'], (x) => 'Topple the ' + x + ' masts'],
+    server: [['testimonial', 'mailing list', 'fake review', 'horoscope'], (x) => 'Wipe the ' + x + ' servers'] },
+  boss: { boss: ['MECH', 'WALKER', 'PILLBOT'], kopter: ['KOPTER', 'GYROCOPTER'], crawler: ['WORM', 'SERPENT', 'SCARAB'], tank: ['TANK', 'STEAMROLLER'], blimp: ['ZEPPELIN', 'BALLOON'],
+    director: ['DIRECTOR', 'INFLUENCER', 'PITCHMAN'], citrus: ['GRAPEFRUIT', 'LEMON LORD', 'TANGERINE'], engine: ['ENGINE', 'SHAKER'] },
+  bossSub: ['Peer reviewed by its mum.', 'Powered by vibes.', 'It read one article.', 'Ninety-nine percent water, one percent rage.', 'Its only data point is itself.', 'Backed by testimonials.'],
+  neon: ['DETOX YOUR WIFI', 'ALIGN YOUR AURA', 'LIKE + SUBSCRIBE', 'TRUST ME BRO'], sign: ['BASE CAMP', 'SCIENCE HQ', 'NO QUACKS', 'EVIDENCE ONLY', 'CITE YOUR SOURCES'],
+};
+// the randomizer's own pieces: each fills columns c..c+w-1 and meets the next with ground at row 16.
+// x collects spots for later: x.ledges (loot ledges), x.high (lookouts for snipers and turrets), x.tree (the theme's tree)
+const GEN_SEG = {
+  hills(H, c, w, R, x) { // hills and dips a row at a time, sometimes a mesa with a ladder up its face
+    let top = 16; const lo = 16 - R.int(3, 5);
+    for (let k = 0; k < w; k++) {
+      if (k && k % 2 === 0) top += R.pick([-1, -1, 0, 1, 1]);
+      const back = Math.floor((w - 1 - k) / 2); top = clamp(top, Math.max(lo, 16 - back, 16 - Math.floor(k / 2)), Math.min(18, 16 + back, 16 + Math.floor(k / 2)));
+      H.ground(c + k, c + k, top);
+    }
+    if (w >= 22 && R.chance(0.5)) { // a mesa: a block 3 rows over the hill, a ladder up the near face
+      const k0 = R.int(5, w - 12), L = R.int(4, 6); let m = 99; for (let k = k0; k < k0 + L; k++) m = Math.min(m, surf(c + k, 0));
+      for (let k = k0; k < k0 + L; k++) H.ground(c + k, c + k, m - 3);
+      H.fill(c + k0 - 1, m - 3, c + k0 - 1, surf(c + k0 - 1, 0) - 1, LADDER); x.high.push([c + k0 + 1, m - 3]);
+    }
+    for (let k = 3; k < w - 2; k += R.int(6, 11)) if (x.tree) H.dc(x.tree, c + k);
+  },
+  gap(H, c, w, R) { // a gap in the ground: acid under crate planks or a brick span, or a dry gully with stepping stones
+    const a = c + 3, b = c + w - 4, kind = R.pick(['planks', 'span', 'span', 'stones', 'gully']);
+    H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16);
+    if (kind === 'planks' || kind === 'span') {
+      pool(H, a, b); H.fill(a, 16, b, 16, kind === 'span' ? BRICK : CRATE);
+      for (let k = a + 2; k <= b; k += 4) H.fill(k, 17, k, 20, STEEL); // piles hold the bridge up
+      if (kind === 'planks' && b - a >= 10 && R.chance(0.5)) { const m = (a + b) >> 1; H.crumble(m - 2, 16, m + 2, 16); catchUnder(H, m - 2, m + 2); } // a rotten middle
+    } else { // dry: down to row 19 and up a ladder at the far side
+      H.ground(a, b, 19); H.fill(b, 16, b, 18, LADDER);
+      if (kind === 'stones') for (let k = a + 1; k + 1 < b - 1; k += 4) H.fill(k, 16, k + 1, 16, DIRT);
+    }
+  },
+  cave(H, c, w, R, x) { // a flat rock roof (no step to wedge under), a floor that rises and dips, stalactites, lamps, a ledge with loot
+    H.ground(c, c + w - 1, 0);
+    const fl = []; let f = 16;
+    for (let k = 0; k < w; k++) {
+      if (k > 2 && k % 3 === 0) f += R.pick([-1, 0, 1]);
+      const back = Math.floor((w - 1 - k) / 3); f = clamp(f, Math.max(13, 16 - back), Math.min(18, 16 + back)); fl.push(f);
+    }
+    const top = Math.min(...fl) - R.int(6, 7); for (let k = 0; k < w; k++) H.fill(c + k, top, c + k, fl[k] - 1, EMPTY);
+    const k0 = R.int(6, w - 10); let lo = 99; for (let k = k0; k < k0 + 3; k++) lo = Math.min(lo, fl[k]);
+    H.fill(c + k0, lo - 3, c + k0 + 2, lo - 3, DIRT); x.ledges.push([c + k0 + 1, lo - 3]); // a ledge one hop up, under the roof
+    for (let k = 4; k < w - 3; k += R.int(5, 9)) if (k < k0 - 1 || k > k0 + 3) H.sp('icicle', c + k, 0, { hang: roofOf(c + k, fl[k] - 1), rock: true });
+    for (let k = 2; k < w; k += 12) H.lamp(c + k, roofOf(c + k, fl[k] - 1));
+  },
+  towers(H, c, w, R, x) { // brick watchtowers: walk through the ground floor, or climb the ladder inside up through the roof
+    H.ground(c, c + w - 1, 16);
+    const n = w >= 28 ? 2 : 1;
+    for (let i = 0; i < n; i++) {
+      const tw = R.int(5, 6), x0 = c + Math.round((i + 0.5) * w / n - tw / 2), x1 = x0 + tw - 1, top = R.int(5, 9);
+      H.fill(x0, top, x1, 15, BRICK); H.fill(x0 + 1, top + 1, x1 - 1, 15, EMPTY);
+      H.fill(x0, 13, x0, 15, R.chance(0.5) ? CRATE : EMPTY); H.fill(x1, top + 1, x1, 15, EMPTY); // a door in, sometimes a crate; open all the way up on the far side (no wall to get stuck on inside)
+      H.fill(x1 - 1, top, x1 - 1, top, STEEL); H.fill(x0 + 1, top, x0 + 1, 15, LADDER); // a steel beam holds it; the ladder goes up through a hatch
+      H.bgFill(x0 + 1, top + 1, x1 - 1, 15, BG_BRICK); H.lamp(x0 + 3, top);
+      x.high.push([x0 + 3, top]);
+    }
+  },
+  bunker(H, c, w, R, x) { // a squat bunker with crate doors, a thick roof on steel beams and a lookout on top
+    H.ground(c, c + w - 1, 16);
+    const a = c + 2, b = c + w - 3, top = R.int(9, 11);
+    H.fill(a, top, b, 15, BRICK); H.fill(a + 1, top + 2, b - 1, 15, EMPTY);
+    H.fill(a, 13, a, 15, CRATE); H.fill(b, top + 2, b, 15, EMPTY); if (R.chance(0.5)) H.fill(b, 13, b, 15, CRATE); // the way out is as tall as the room
+    for (let k = a + 3; k < b - 1; k += 6) H.fill(k, top, k, top, STEEL);
+    H.bgFill(a + 1, top + 2, b - 1, 15, BG_BRICK); for (let k = a + 4; k < b - 2; k += 8) H.lamp(k, top + 1);
+    H.dc('sandbags', a + 2, { from: top - 2 }); x.high.push([a + 4, top], [b - 3, top]);
+  },
+  floaters(H, c, w, R, x) { // ledges floating over open ground: hop up for the loot, a spring under the high ones
+    H.ground(c, c + w - 1, 16);
+    for (let k = 3; k < w - 6;) {
+      const L = R.int(3, 5), r = R.int(11, 13); H.fill(c + k, r, c + k + L - 1, r, R.chance(0.3) ? STEEL : DIRT);
+      x.ledges.push([c + k + (L >> 1), r]); if (r < 13) H.sp('spring', c + k - 1);
+      k += L + R.int(3, 6);
+    }
+    if (x.tree) H.dc(x.tree, c + w - 2);
+  },
+  barricade(H, c, w, R) { // a wall across the way: shoot through the crates or climb the bricks; sandbags behind it
+    H.ground(c, c + w - 1, 16);
+    const k = c + (w >> 1) - 1, h = R.int(3, 5);
+    H.fill(k, 16 - h, k + 1, 15, R.pick([CRATE, BRICK])); if (h >= 4) H.fill(k - 1, 16 - h, k - 1, 15, LADDER);
+    H.dc('sandbags', k + 3); H.dc('sandbags', k - 3);
+  },
+  flat(H, c, w, R, x) { H.ground(c, c + w - 1, 16); if (w >= 8) H.fill(c + 3, 15, c + 3, 15, CRATE); if (w >= 12 && x.tree) H.dc(x.tree, c + w - 4); }, // plain ground
+};
+// the rows a thing could stand on in a column, and how much open room is over them
+const genRoom = (c, r) => { let k = 0; while (k < 8 && r - 1 - k >= 0 && !isSolidT(tileAt(c, r - 1 - k)) && tileAt(c, r - 1 - k) !== ACID) k++; return k; };
+const genFloors = (c) => { const out = []; for (let r = 3; r < LH - 1; r++) if (isSolidT(tileAt(c, r)) && !crumbly[r * LW + c] && genRoom(c, r) >= 2) out.push(r); return out; };
+function genLevel(seed, dk = 'normal') {
+  seed = (seed >>> 0) || 1;
+  const R = rngOf(seed), W = GEN_WORDS, th = R.pick(Object.keys(THEMES));
+  // the boss and its arena
+  const kinds = Object.keys(ARENA).concat(Object.keys(GEN_ARENA)), arena = R.pick(kinds), boss = R.pick((ARENA_META[arena] || ARENA_DEFAULT).bosses);
+  const bossName = R.pick(W.quack) + ' ' + (W.boss[boss] ? R.pick(W.boss[boss]) : boss.toUpperCase());
+  // the objective: smash some vats, topple masts or wipe servers
+  const tk = R.pick(['vat', 'radio', 'server']), need = R.int(2, 4), thing = R.pick(W.target[tk][0]), cages = R.int(2, 4);
+  let name = ''; for (let i = 0; i < 9 && (!name || name.length > 22); i++) name = R.pick(W.quack) + ' ' + R.pick(W.place[th] || W.anyPlace);
+  const intel = []; while (intel.length < 3) { const l = R.pick(W.intel); if (!intel.includes(l)) intel.push(l); }
+  const D = GEN_DIFF[dk] || GEN_DIFF.normal, p = D.p;
+  const objectives = [{ id: tk, text: W.target[tk][1](thing), need, req: true }, { id: 'boss', text: 'Take down the ' + bossName.toLowerCase().replace(/(^|\s)\w/g, (m) => m.toUpperCase()), req: true },
+    { id: 'cage', text: 'Free the scientists', need: cages }, { id: 'intel', text: 'Find the intel files', need: 3 }];
+  const def = { name, theme: th, cages, pad: [230, 16], intel, objectives,
+    sub: W.target[tk][1](thing) + ', beat the ' + bossName + ' · SEED ' + seed,
+    brief: R.pick(W.who) + ' ' + R.pick(W.scheme) + ' ' + W.target[tk][1](thing) + ' (' + need + '), free our ' + cages + ' scientists and take down the ' + bossName + '. ' + R.pick(W.close),
+    debrief: R.pick(W.debrief) + ' Seed ' + seed + ' is yours to replay.',
+    gen: { seed, dk, arena, boss, theme: th, diff: { p, keep: 1, fire: 0.65 + 0.35 * p, react: (1 - p) * 0.5, bossHp: 0.65 + 0.35 * p } } };
+  if (th === 'moon') def.grav = 380;
+  const camp = { sign: R.pick(W.sign), decor: W.tree[th] === 'crystal' ? 'crystal' : 'sandbags', ceil: th === 'cave' || th === 'sewer' ? 6 : 0 };
+  const bossX = { name: bossName, sub: R.pick(W.bossSub), hpMul: D.hp }, neon = R.pick(W.neon), tseed = R.int(1, 1e9), fseed = R.int(1, 1e9);
+  def.build = (H) => {
+    const R = rngOf(tseed), Q = rngOf(fseed + Math.round(p * 1000)); // tiles from one stream, quacks from another: the difficulty never changes the map
+    // 1. the arena at ARENA_AT, then slid to the end of the map like a campaign mission's
+    stretched = true; cutAt = ARENA_AT;
+    (ARENA[arena] || GEN_ARENA[arena])(H, { kind: arena, boss, extra: bossX, text: neon });
+    slideArena();
+    const fin = spawns.find((o) => o.final), end = ARENA_AT + STRETCH; // the path runs up to the arena
+    { const pc = Math.min(235, fin.gate[1] - STRETCH + 4), cc = pc + STRETCH; def.pad = [pc, surf(cc, openRow(cc))]; } // the pad sits behind the gate
+    // 2. the camp, then pieces until the arena: about half from SEG, half the randomizer's own; no piece twice in a row
+    SEG.camp(H, 0, 20, camp);
+    const x = { tree: W.tree[th], ledges: [], high: [] }, meta = (k) => SEG_META[k] || GEN_SEG_DEFAULT;
+    const segKinds = Object.keys(SEG).filter((k) => !meta(k).skip), genKinds = Object.keys(GEN_SEG).filter((k) => meta(k).wt > 0), used = {};
+    let c = 20, last = ''; const plan = def.gen.plan = []; // the pieces, kept for the tests and the curious
+    while (c < end) {
+      const rest = end - c; let kind = 'flat', w = rest;
+      if (rest >= 14) {
+        const cands = (R() < 0.45 ? segKinds : genKinds).filter((k) => meta(k).w[0] <= rest && k !== last);
+        if (cands.length) {
+          kind = R.wpick(cands, (k) => { const m = meta(k); return (m.wt || 1) * (!m.th ? 1 : m.th.includes(th) ? 3 : 0.5) / (1 + 3 * (used[k] || 0)); });
+          const m = meta(kind); w = R.int(m.w[0], Math.min(m.w[1], rest));
+          if (rest - w < 10 && m.w[1] >= rest) w = rest; // no sliver left over if this piece can stretch
+        }
+      }
+      const fn = SEG[kind] && !meta(kind).gen ? (H2, c2, w2) => SEG[kind](H2, c2, w2, meta(kind).opts ? meta(kind).opts(R, w2) : {}) : (H2, c2, w2) => GEN_SEG[kind](H2, c2, w2, R, x);
+      fn(H, c, w); used[kind] = (used[kind] || 0) + 1; last = kind; plan.push([kind, c, w]); c += w;
+    }
+    // a deck over acid becomes steel (cracked boards stay cracked): one blown away would leave a gap nobody gets across
+    for (let k = 20; k < end; k++) for (let r = 1; r < LH - 1; r++) { const v = tileAt(k, r); if ((v === CRATE || v === BRICK || v === ICE) && tileAt(k, r + 1) === ACID && !crumbly[r * LW + k]) H.fill(k, r, k, r, STEEL); }
+    // 3. where things can stand: the path row in each column follows the floor nearest the one before it
+    const path = new Int16Array(LW).fill(-1); let prev = 16;
+    for (let k = 0; k < end; k++) { const f = genFloors(k); if (!f.length) continue; let best = f[0]; for (const r of f) if (Math.abs(r - prev) < Math.abs(best - prev) || (Math.abs(r - prev) === Math.abs(best - prev) && r > best)) best = r; path[k] = prev = best; }
+    const wet = (a, b) => { for (let j = a; j <= b; j++) for (let r = 8; r < LH; r++) if (tileAt(j, r) === ACID) return true; return false; }; // acid in these columns: nothing that blows a hole near it
+    const taken = new Set(), good = (k, room) => k > 22 && k < end - 2 && path[k] >= 0 && path[k - 1] >= 0 && path[k + 1] >= 0 && Math.abs(path[k - 1] - path[k]) <= 1 && Math.abs(path[k + 1] - path[k]) <= 1 && genRoom(k, path[k]) >= room && tileAt(k, path[k]) !== CRATE && !taken.has(k);
+    const near = (k0, room = 2) => { for (let d = 0; d < 30; d++) for (const k of [k0 + d, k0 - d]) if (good(k, room)) { for (let j = -1; j <= 1; j++) taken.add(k + j); return k; } return -1; };
+    const put = (type, k0, room, extra) => { const k = near(k0, room); if (k >= 0) H.sp(type, k, path[k], extra || {}); return k; };
+    // checkpoint flags about every 40 columns, the objective targets spread along the way, cages near flags, intel, gear
+    const flags = []; for (let k = 40; k < end - 10; k += 40) flags.push(put('flag', k + R.int(-3, 3), 2));
+    for (let i = 0; i < need; i++) put('target', 34 + Math.round((i + 0.5) * (end - 50) / need) + R.int(-8, 8), tk === 'radio' ? 4 : 2, { skin: tk });
+    for (let i = 0; i < cages; i++) put('cage', (flags[Math.floor((i + 0.5) * flags.length / cages)] || 60 + i * 80) + R.int(3, 6), 2); // a cage just past a checkpoint
+    const ledges = x.ledges.filter(([k]) => k > 24 && k < end - 2).sort(() => R() - 0.5);
+    for (let i = 0; i < 3; i++) {
+      const L = i === 1 && ledges.length ? ledges.pop() : null;
+      if (L && genRoom(L[0], L[1]) >= 2) H.sp('pickup', L[0], L[1], { item: 'intel' }); else put('pickup', 30 + Math.round((i + 0.5) * (end - 40) / 3) + R.int(-10, 10), 2, { item: 'intel' });
+    }
+    for (const L of ledges.slice(0, 3)) if (genRoom(L[0], L[1]) >= 2) H.sp(R.pick(['itemcrate', 'ammo', 'guncrate']), L[0], L[1]);
+    for (let k = 70; k < end - 10; k += R.int(60, 80)) put('ammo', k, 2);
+    put('guncrate', R.int(40, 120), 2); if (R.chance(0.6)) put('guncrate', R.int(150, end - 20), 2); put('itemcrate', R.int(60, end - 20), 2);
+    if (R.chance(0.35)) for (let i = 0; i < 6; i++) { const k = R.int(80, end - 40); if (!wet(k - 4, k + 34)) { put('strike', k, 2); break; } } // its bombs fall just ahead: never over a bridge
+    if (R.chance(0.4)) for (let k = fin.trig + 3; k < fin.trig + 15; k++) { const f = genFloors(k).filter((r) => r >= 9 && genRoom(k, r) >= 3); if (f.length) { H.sp('mechsuit', k, f[f.length - 1]); break; } } // sometimes a mech waits just inside the arena, for the boss
+    // 4. quacks: posts of one to three along the way until the difficulty's threat budget is spent; no quack in the first 24 columns
+    const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p), budget = missionTarget(p) * (end / ARENA_AT);
+    let spent = 0;
+    for (let pass = 0; pass < 3 && spent < budget; pass++) for (let k = 26 + pass * 3; k < end - 3 && spent < budget; k += Q.int(7, 13)) {
+      const n = Q.int(1, 3);
+      for (let i = 0; i < n && spent < budget; i++) {
+        let [type, , , o = {}] = Q.wpick(foes, (f) => f[2]); if (o.blast && wet(k - 8, k + 12)) [type, , , o = {}] = foes[0];
+        const room = o.room || 2, spots = [];
+        for (let j = k; j < k + 4 && j < end - 1; j++) for (const r of genFloors(j)) if (genRoom(j, r) >= room && tileAt(j, r + 1) !== ACID) spots.push([j, r, r === path[j] ? (o.high ? 1 : 4) : r < path[j] - 2 && o.high ? 6 : 1]); // never on a bridge over acid
+        for (const [j, r] of x.high) if (o.high && j >= k - 6 && j < k + 10 && genRoom(j, r) >= room) spots.push([j, r, 8]);
+        if (!spots.length) continue;
+        const [j, r] = Q.wpick(spots, (s) => s[2]); H.sp(type, j, r); spent += THREAT[type] || 2;
+      }
+      // a post: sandbags, a barrel or propane tank next to it, now and then an alarm or a mine on the path
+      const j = k - 2; if (j > 24 && path[j] >= 0 && genRoom(j, path[j]) >= 2 && !wet(j - 4, j + 4)) {
+        if (Q.chance(0.35)) H.dc('sandbags', j, { from: path[j] - 2 });
+        if (Q.chance(0.3)) H.sp(Q.pick(['barrel', 'barrel', 'propane']), j, path[j]);
+        if (Q.chance(0.08)) H.sp('alarm', j, path[j]);
+        if (p >= 0.5 && Q.chance(0.06)) H.sp('mine', j, path[j]);
+      }
+    }
+  };
+  return def;
+}
+// the random mission: a fresh seed from the title menu, the pause menu or after extraction; ?seed=12345 in the URL replays one
+const RANDOM = LEVELS.length + EXTRA.length;
+EXTRA.push(genLevel(1)); // replaced by each new random map
+const URL_ARGS = (() => { try { return typeof location !== 'undefined' ? location.search || '' : ''; } catch (e) { return ''; } })();
+let genSeed = 1, genDiffKey = (/[?&]diff=(easy|normal|hard)/.exec(URL_ARGS) || [])[1] || 'normal', urlSeed = +((/[?&]seed=(\d+)/.exec(URL_ARGS) || [])[1] || 0);
+const newSeed = () => 1 + Math.floor(Math.random() * 999999);
+function startRandom(seed, deploy = false) { // deploy: straight into the map (the reroll); otherwise the briefing first
+  genSeed = seed; EXTRA[RANDOM - LEVELS.length] = genLevel(seed, genDiffKey); level = RANDOM; mode = 'random';
+  if (deploy) { startLevel(RANDOM); applyGear(); state = 'play'; } else { state = 'brief'; mapT = 0; briefBro = (Math.random() * unlocked.length) | 0; }
+}
+const pauseItems = () => (mode === 'random' ? MENU.slice(0, -2).concat([['NEW RANDOM MAP']], MENU.slice(-2)) : MENU); // the pause menu, with the reroll on a random map
+
 // ---------------------------------------------------------------- story
 // The war is told in four acts. Prof. Peer Review runs HQ; Dr. Placebo is the League's general; Professor
 // Quackenbush is its voice on the radio (Peer Review rejected his paper years ago); King Citrus is its face.
@@ -2532,6 +2818,7 @@ const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', 
 const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['BLOOD AND GORE', 'gore'], ['AMBIENCE', 'ambience'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
+  const MENU = pauseItems();
   if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
   if (pressed.down) menuSel = (menuSel + 1) % MENU.length;
   if (pressed.fire || pressed.start || pressed.melee) {
@@ -2539,6 +2826,7 @@ function pauseMenu() {
     if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('flag'); }
     else if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
     else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); }
+    else if (MENU[menuSel][0] === 'NEW RANDOM MAP') { paused = false; startRandom(newSeed(), true); }
     else { paused = false; state = 'title'; init(); }
   }
 }
@@ -2563,6 +2851,7 @@ Object.assign(THREAT, { minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sa
 const missionTarget = (p) => 14 + 40 * p; // threat on screen over the whole mission: 14 on the first, 54 on the finale
 function applyDifficulty(n) {
   diff = campaignDiff(n);
+  if (levelDef(n).gen) { diff = levelDef(n).gen.diff; if (boss) boss.hp = boss.max = Math.round(boss.max * diff.bossHp); return; } // a random map placed its quacks for its difficulty
   if (!rampOn || mode !== 'campaign' || n >= LEVELS.length) return;
   const roll = (e, k = 0) => { const v = Math.sin(e.x * 12.9898 + n * 78.233 + k * 37.719) * 43758.5453; return v - Math.floor(v); }; // the same quacks every time you play it
   const foes = [];
@@ -2684,15 +2973,17 @@ function updateRush(dt) {
 // start one of the title menu's modes; the bonus modes give you every bro
 function startMode(m) {
   mode = m; newGame();
-  if (m !== 'campaign') unlocked = BROS.map((b) => b.id);
+  if (m !== 'campaign' && m !== 'random') unlocked = BROS.map((b) => b.id);
   if (m === 'campaign') { level = 0; state = 'map'; mapT = 0; return; }
+  if (m === 'random') { startRandom(urlSeed || newSeed()); urlSeed = 0; return; } // 10 random bros, like a new campaign
   if (m === 'siege') { startLevel(SIEGE); siege.wave = 0; siege.queue = []; siege.breakT = 4; P.bro = BRO[unlocked[(Math.random() * unlocked.length) | 0]]; }
   if (m === 'rush') { lives = 5; rush.t = 0; loadRush(0); }
   if (m === 'moon') { startLevel(MOON); applyGear(); }
   state = 'play';
 }
-const TITLE_MENU = [['CAMPAIGN', 'campaign'], ['LAB SIEGE', 'siege'], ['BOSS RUSH', 'rush'], ['MOON BASE', 'moon'], ['TROPHIES', 'trophies']];
+const TITLE_MENU = [['CAMPAIGN', 'campaign'], ['LAB SIEGE', 'siege'], ['BOSS RUSH', 'rush'], ['MOON BASE', 'moon'], ['RANDOM MISSION', 'random'], ['TROPHIES', 'trophies']];
 let titleSel = 0;
+if (urlSeed) titleSel = TITLE_MENU.findIndex((m) => m[1] === 'random'); // ?seed=12345: the title points at the random mission
 let bodies = [], decals = new Map(), hitStop = 0, combo = { n: 0, t: 0, pop: 0 };
 // kills inside 1.6 s of each other chain into a combo that multiplies the points
 function addScore(pts, kill = true) {
@@ -4186,12 +4477,14 @@ function step(dt) {
       else if (state === 'done' || state === 'modedone' || state === 'trophies' || (state === 'over' && (mode === 'siege' || mode === 'rush'))) { state = 'title'; mode = 'campaign'; init(); state = 'title'; }
       else if (state === 'map') { state = 'brief'; briefBro = (Math.random() * unlocked.length) | 0; } // the briefing offers a random bro first
       else if (state === 'brief') { startLevel(level); applyGear(); state = 'play'; }
+      else if (state === 'win' && mode === 'random') startRandom(newSeed());
       else if (state === 'win') { level++; markReached(level); state = 'map'; mapT = 0; } // bros and reserve carry over
       else if (state === 'over') { lives = 3; startLevel(level); state = 'play'; } // retry this level
       sfx('flag');
     }
     mapT += dt;
     if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) sfx('flag'); }
+    if (state === 'title' && TITLE_MENU[titleSel][1] === 'random' && (pressed.left || pressed.right)) { const ks = Object.keys(GEN_DIFF); genDiffKey = ks[(ks.indexOf(genDiffKey) + (pressed.right ? 1 : ks.length - 1)) % ks.length]; sfx('flag'); } // random map difficulty
     if (state === 'brief') briefInput();
     if (state === 'map') mapInput();
     attract(dt);
@@ -6221,6 +6514,7 @@ function updateChopper(dt) {
       if (stats.time < 180) unlock('speed');
       if (unlocked.length === BROS.length && mode === 'campaign') unlock('allbros');
       if (mode === 'moon') { state = 'modedone'; unlock('moon'); }
+      else if (mode === 'random') { state = 'win'; runScore += stats.score; } // the debrief offers the next random map
       else { state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); }
     }
   }
@@ -7462,7 +7756,8 @@ function drawHud(t) {
   if (paused) { // pause menu: up/down to choose, fire or Enter to switch
     ctx.fillStyle = 'rgba(11,14,31,0.75)'; ctx.fillRect(0, 0, VW, VH);
     text('PAUSED', VW / 2, 62, 16, '#e7eaf6', 'center');
-    MENU.forEach(([label, key], i) => {
+    if (mode === 'random') text('RANDOM MAP · SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase(), VW / 2, 75, 8, '#f2c94c', 'center');
+    pauseItems().forEach(([label, key], i) => {
       const y = 88 + i * 13, sel = i === menuSel;
       if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
       text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
@@ -7490,7 +7785,7 @@ function drawScreen(t) {
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
       const sel = i === titleSel, y = 166 + i * 12;
       if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 12); }
-      const extra = m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
+      const extra = m === 'random' ? '  < ' + genDiffKey.toUpperCase() + ' >' + (urlSeed ? ' SEED ' + urlSeed : '') : m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
       text((sel ? '> ' : '  ') + label + extra, VW / 2 - 82, y, 8, sel ? '#a6d854' : '#e7eaf6');
     });
     text('UP/DOWN CHOOSE · ENTER START · DOUBLE-TAP RUN · SHIFT ROLL', VW / 2, 236, 8, '#a3abd0', 'center');
@@ -7512,13 +7807,14 @@ function drawScreen(t) {
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
     text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LV().cages, VW / 2, 126, 8, '#a3abd0', 'center');
-    if (blink) text('PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
+    if (blink) text(mode === 'random' ? 'PRESS ENTER TO RETRY SEED ' + genSeed : 'PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
   } else if (state === 'win') { // debrief: what happened, what got done, the numbers
     text(LV().name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
     wrap(LV().debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
     objectives.forEach((o, i) => { const done = o.n >= o.need; text((done ? '+ ' : '- ') + o.text.toUpperCase() + (o.req ? '' : '  BONUS'), VW / 2 - 100, 82 + i * 10, 8, done ? '#a6d854' : '#5c6480'); });
     statRows(140);
-    if (blink) text('PRESS ENTER TO CONTINUE', VW / 2, 252, 8, '#e7eaf6', 'center');
+    if (mode === 'random') text('SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase() + ' · REPLAY IT WITH ?seed=' + genSeed, VW / 2, 238, 8, '#f2c94c', 'center');
+    if (blink) text(mode === 'random' ? 'PRESS ENTER FOR A NEW RANDOM MAP' : 'PRESS ENTER TO CONTINUE', VW / 2, 252, 8, '#e7eaf6', 'center');
   } else if (state === 'done') {
     text('SCIENCE WINS', VW / 2, 34, 28, '#a6d854', 'center');
     wrap(ENDING, 74).forEach((ln, i) => text(ln, VW / 2, 52 + i * 10, 8, '#8da0cb', 'center'));
@@ -7910,7 +8206,8 @@ function drawBriefing(t) {
   ctx.fillStyle = '#0b0e1f'; ctx.fillRect(0, 0, VW, VH);
   const act = mode === 'campaign' ? actOf(level) : null;
   if (act) text((act.first ? 'A NEW ACT BEGINS · ' : '') + act.num + ': ' + act.title, VW / 2, 13, 8, act.first ? '#f2c94c' : '#8da0cb', 'center');
-  text('MISSION ' + (level + 1) + ' · ' + L.name, VW / 2, 30, 16, '#a6d854', 'center');
+  if (mode === 'random') text('RANDOM MAP · SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase() + ' · REPLAY: ?seed=' + genSeed, VW / 2, 13, 8, '#f2c94c', 'center');
+  text((mode === 'random' ? '' : 'MISSION ' + (level + 1) + ' · ') + L.name, VW / 2, 30, 16, '#a6d854', 'center');
   ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
   text('PROF. PEER REVIEW, HQ', 72, 54, 8, '#8da0cb');
   const lines = wrap(L.brief, 62).slice(0, 7), shown = Math.min(lines.length, Math.floor(mapT * 2.2) + 1); // typed out line by line
@@ -8504,6 +8801,7 @@ startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt }); // longer maps hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { genLevel, startRandom, newSeed, SEG_META, ARENA_META, ARENA_DEFAULT, GEN_ARENA, GEN_SEG, RANDOM_FOES, GEN_DIFF, RANDOM, TITLE_MENU, pauseItems, genSeed: () => genSeed, setGenDiff(k) { genDiffKey = k; }, genDiffKey: () => genDiffKey, setUrlSeed(v) { urlSeed = v; } }); // random map hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks

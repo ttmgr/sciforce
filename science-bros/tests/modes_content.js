@@ -130,7 +130,7 @@ check('G goes back to normal on a normal mission', (S.startMode('campaign'), S.s
 check('19 trophies exist', S.ACH.length === 19, S.ACH.length);
 check('trophy ids are unique', new Set(S.ACH.map((a) => a[0])).size === S.ACH.length);
 S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
-S.titleSel = 4; S.pressed.start = true; run(1);
+S.titleSel = S.TITLE_MENU.length - 1; S.pressed.start = true; run(1);
 check('the last menu entry opens the trophy screen', S.state === 'trophies', S.state);
 check('the trophy screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());
 S.pressed.start = true; run(1); check('enter goes back to the title', S.state === 'title');
