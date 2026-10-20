@@ -6722,7 +6722,7 @@ function drawBackWalls() {
   const [c0, c1, r0, r1] = viewTiles();
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     const i = r * LW + c;
-    if (bg[i] && !isSolidT(tiles[i]) && tiles[i] !== ACID) ctx.drawImage(BG_IMG[bg[i]][(c * 7 + r * 3) & 3], c * T, r * T);
+    if (bg[i] && !isSolidT(tiles[i]) && tiles[i] !== ACID) ctx.drawImage(BG_IMG[bg[i]][vIdx(c, r)], c * T, r * T);
   }
 }
 function drawDecals(arr, dy = 0) {
@@ -6752,7 +6752,7 @@ function drawTiles(t) {
       }
       continue;
     }
-    ctx.drawImage(TILE_IMG[v][(c * 7 + r * 3) & 3], x, y);
+    ctx.drawImage(TILE_IMG[v][vIdx(c, r)], x, y);
     // edge shading: lit top and left edges, shadowed underside and right edges, darker the deeper it sits
     const open = (dc, dr) => !isSolidT(tileAt(c + dc, r + dr));
     if (open(0, -1) && v !== DIRT) { ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(x, y, T, 1); }
@@ -6805,7 +6805,7 @@ function drawTiles(t) {
     if (dl) drawDecals(dl, 0);
   }
   for (const f of falling) {
-    ctx.drawImage(TILE_IMG[f.v][(f.c * 7 + f.r0 * 3) & 3], f.x, Math.round(f.y));
+    ctx.drawImage(TILE_IMG[f.v][vIdx(f.c, f.r0)], f.x, Math.round(f.y));
     if (f.dec) drawDecals(f.dec, Math.round(f.y) - f.r0 * T);
   }
 }
@@ -8792,6 +8792,406 @@ for (const b of BROS) {
   roster.appendChild(card);
 }
 
+// ---------------------------------------------------------------- fancier maps
+// More to look at, all drawn in code: 12 looks for each kind of block (cracks, moss, bones, rivets...), details where solid
+// meets air, theme-fitting decor that decorate() scatters over every level once it is built (the same every time),
+// dark buildings behind the playfield, a few things in front of the player, and now and then a landmark on a random map.
+// Nothing here changes the tiles or the spawns, and nothing here can be hit.
+const FV = 12; // looks per block kind
+const fhash = (a, b = 0, c = 0) => { let h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) + Math.imul(c | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; h = Math.imul(h, 2246822519); h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+function vIdx(c, r) { const h = fhash(c, r, 7); return h < 0.45 ? ((h * 8.9) | 0) & 3 : 4 + (((h - 0.45) * 14.5) | 0); } // a stable look for each block: half plain, half with a detail
+const hm = (a, b, k) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), ch = (s) => Math.round(((pa >> s) & 255) * (1 - k) + ((pb >> s) & 255) * k); return '#' + ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1); };
+const SPC = new Map(); // drawn sprites of the current theme
+const spr = (key, w, h, fn) => { let s = SPC.get(key); if (!s) { s = mk(w, h); const g = s.getContext('2d'); fn(g, (col, x, y, ww, hh) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(ww), Math.round(hh)); }); SPC.set(key, s); } return s; };
+const FPAL = { // leaf, stone and wood colours that fit each theme
+  island: { leaf: ['#2f6a2a', '#4f8f2f'], stone: ['#5c6480', '#8da0cb'] }, desert: { leaf: ['#3f7f4a', '#5fa36a'], stone: ['#a8643c', '#d9915a'], wood: ['#7a4a2a', '#9a6a3a'] },
+  edge: { leaf: ['#3a5a6a', '#5f8a9a'], stone: ['#4a4a6a', '#7a7aa0'] }, citrus: { leaf: ['#2f6a2a', '#4f8f2f'], stone: ['#7a3a1a', '#c05a2a'] },
+  sky: { leaf: ['#3f8f3a', '#6fbf4a'], stone: ['#7a8aa0', '#aabbd0'] }, cave: { leaf: ['#3a2a6a', '#6a4aa0'], stone: ['#3a2a52', '#6a5a8a'] },
+  swamp: { leaf: ['#2a4a2a', '#4a7a3a'], stone: ['#3a4a3a', '#5a6a4a'] }, astro: { leaf: ['#2a4a6a', '#4a7aa0'], stone: ['#2a3a6a', '#4a5a9a'] },
+  rust: { leaf: ['#5a4a2a', '#8a6a3a'], stone: ['#5a3a2a', '#9a5a3a'] }, moon: { leaf: ['#4a4a5a', '#7a7a8a'], stone: ['#4a4a58', '#8a8a9a'] },
+  plant: { leaf: ['#3a5a3a', '#5a8a4a'], stone: ['#4a4a44', '#7a7a6a'] }, snow: { leaf: ['#1f4a3a', '#2f6a4a'], stone: ['#6a7a9a', '#a0b4d0'] },
+  sewer: { leaf: ['#2a5a3a', '#4a8a4a'], stone: ['#3a4a44', '#5a6a60'] }, city: { leaf: ['#2a5a3a', '#4a8a4a'], stone: ['#4a4a6a', '#7a7aa0'] },
+  grove: { leaf: ['#3f7f2a', '#6faf3a'], stone: ['#7a6a4a', '#a89a6a'] },
+};
+const fpal = (th) => Object.assign({ wood: ['#5a4226', '#7a5c36'], metal: ['#6f7c96', '#93a0b8'], dk: '#25223a', acc: th.win, th }, FPAL[th.name] || FPAL.island);
+// ---- block looks: variants 4..11 of every block get a detail drawn over the plain base
+function tileDetail(g, v, i, th) {
+  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); }, hv = (k) => (fhash(i, v, k + 11) * 8) | 0, x = 2 + hv(1), y = 2 + hv(2), d = th.dirt, tp = th.top;
+  if (v === DIRT) {
+    if (i === 0) { R(d[2], x, y, 1, 3); R(d[2], x + 1, y + 3, 2, 1); R(d[2], x + 3, y + 4, 1, 3); R(d[2], x + 2, y + 7, 2, 1); } // a crack
+    else if (i === 1) { R('#d9cdb0', x, y, 6, 1); R('#d9cdb0', x - 1, y - 1, 2, 3); R('#d9cdb0', x + 5, y - 1, 2, 3); R('#a89c80', x, y + 1, 6, 1); } // a bone
+    else if (i === 2) { for (let k = 0; k < 3; k++) { const ox = (x + k * 4) % 13, oy = (y + k * 5) % 12; R(th.win[k & 1], ox, oy, 2, 2); R('#ffffff', ox, oy, 1, 1); } } // ore specks
+    else if (i === 3) { R(d[3], x, y, 6, 5); R('#ffffff30', x, y, 5, 1); R(d[2], x, y + 4, 6, 1); R(d[2], x + 5, y + 1, 1, 3); } // a buried boulder
+    else if (i === 4) { R('#5a3a22', x, y, 1, 4); R('#5a3a22', x + 1, y + 3, 3, 1); R('#5a3a22', x + 4, y + 3, 1, 4); R('#7a5232', x + 4, y + 6, 3, 1); } // a root
+    else if (i === 5) { R(tp[0], x, y, 5, 2); R(tp[0], x + 1, y - 1, 3, 1); R(tp[1], x + 1, y, 1, 1); R(tp[0], x + 4, y + 2, 1, 2); } // moss, sand drift or snow patch
+    else if (i === 6) { R(d[3], x, y + 1, 1, 3); R(d[3], x + 1, y, 3, 1); R(d[3], x + 4, y + 1, 1, 3); R(d[3], x + 1, y + 4, 3, 1); R(d[2], x + 2, y + 2, 1, 1); } // a fossil shell
+    else { R('#ffffff12', 0, y, T, 2); R('#00000022', 0, y + 2, T, 1); R(d[3], x, y + 5, 3, 1); } // a seam of lighter earth
+  } else if (v === BRICK) {
+    const by = (hv(3) & 3) * 4, bx = hv(4);
+    if (i === 0) { R('#5f6c90', bx, by, 6, 3); R('#74819f', bx, by, 6, 1); } // one bright brick
+    else if (i === 1) { R('#38425e', bx, by, 6, 3); R('#2c3550', bx, by + 2, 6, 1); } // one dark brick
+    else if (i === 2) { for (let k = 0; k < 8; k++) R('#25304a', 3 + k, 2 + k + ((k >> 1) & 1), 1, 1); R('#25304a', 7, 6, 2, 1); } // a long crack
+    else if (i === 3) { for (let k = 0; k < T; k += 3) R(tp[0], k, T - 1 - (k % 2), 2, 2 + ((k * 5 + hv(5)) & 1)); R(tp[1], 4, T - 2, 1, 1); } // moss growing from below
+    else if (i === 4) { R('#1d2640', bx, by, 4, 3); R('#5f6c90', bx + 4, by, 1, 1); R('#4a5677', bx + 1, by + 3, 3, 1); } // a chipped hole
+    else if (i === 5) { R('#00000026', x, 0, 2, 8 + hv(6)); R('#00000014', x + 2, 0, 1, 5); } // a rain stain
+    else if (i === 6) { R(th.win[1], x, y, 1, 4); R(th.win[1], x + 1, y + 2, 3, 1); R(th.win[1], x + 4, y, 1, 4); R(th.win[1], x + 6, y + 3, 2, 1); } // a scrap of graffiti
+    else { R('#5f6c90', 2, 2, 12, 12); R('#7a86a6', 2, 2, 12, 1); R('#3a4562', 2, 13, 12, 1); for (const [rx, ry] of [[3, 3], [11, 3], [3, 11], [11, 11]]) R('#b4bed0', rx, ry, 1, 1); } // a riveted patch
+  } else if (v === STEEL) {
+    if (i === 0) { R('#4f5a70', 0, 8, T, 1); R('#93a0b8', 0, 9, T, 1); for (const rx of [2, 6, 10, 13]) R('#b4bed0', rx, 5, 1, 1); } // a seam with rivets
+    else if (i === 1) { R('#4f5a70', 8, 0, 1, T); R('#93a0b8', 9, 0, 1, T); R('#b4bed0', 5, 3, 1, 1); R('#b4bed0', 5, 12, 1, 1); R('#b4bed0', 12, 3, 1, 1); R('#b4bed0', 12, 12, 1, 1); }
+    else if (i === 2) { for (let yy = 10; yy < 14; yy++) for (let xx = 1; xx < 15; xx++) R(((xx + yy) >> 2) & 1 ? '#f2c94c' : '#25223a', xx, yy, 1, 1); } // hazard stripes
+    else if (i === 3) { R('#4f5a70', 3, 2, 10, 12); for (let k = 0; k < 4; k++) R('#2c3448', 4, 3 + k * 3, 8, 1); } // a vent grille
+    else if (i === 4) { R('#8a4a2a', x, 1, 2, 6 + hv(5)); R('#a8643c', x, 1, 1, 3); R('#8a4a2a', x + 4, 4, 1, 4); } // rust streaks
+    else if (i === 5) { for (let k = 0; k < 6; k++) R('#b4bed0', 3 + k * 2, 3 + k, 1, 1); R('#b4bed0', 4, 9, 4, 1); } // scratches
+    else if (i === 6) { R('#7f8ca6', 2, 2, 12, 12); R('#4f5a70', 2, 13, 12, 1); R('#4f5a70', 13, 2, 1, 12); R('#b4bed0', 4, 4, 1, 1); R('#b4bed0', 11, 11, 1, 1); } // a bolted plate
+    else { R('#5a6580', x, y, 5, 4); R('#aab4ca', x, y, 4, 1); R('#3a4256', x + 1, y + 3, 4, 1); } // a dent
+  } else if (v === CRATE) {
+    if (i === 0) { R('#c9b07a', 4, 5, 8, 1); R('#c9b07a', 6, 7, 4, 1); R('#c9b07a', 5, 9, 6, 1); } // stencilled marks
+    else if (i === 1) { R('#4a4f66', 6, 0, 4, T); R('#6a7090', 6, 0, 1, T); R('#b4bed0', 7, 3, 1, 1); R('#b4bed0', 7, 12, 1, 1); } // a strap
+    else if (i === 2) { R('#00000030', 2, 2, 12, 5); R('#ffffff18', 2, 8, 12, 1); } // a dark plank
+    else if (i === 3) { R('#f2c94c', 9, 3, 5, 5); R('#25223a', 11, 4, 1, 2); R('#25223a', 11, 7, 1, 1); } // a warning label
+    else if (i === 4) { R('#3a2a16', 3, 10, 4, 1); R('#3a2a16', 6, 11, 1, 2); R('#a8885a', 9, 4, 3, 1); } // splinters
+    else if (i === 5) { for (const [nx, ny] of [[3, 3], [12, 3], [3, 12], [12, 12]]) R('#c8d0e0', nx, ny, 1, 1); }
+    else if (i === 6) { R('#8a6a42', 2, 6, 12, 2); R('#5a4226', 2, 8, 12, 1); }
+    else { R('#c0392b', 3, 3, 4, 4); R('#e6e2f0', 4, 4, 2, 2); } // a red label
+  } else if (v === ICE) {
+    if (i === 0) { R('#ffffffcc', x, y, 1, 4); R('#ffffffcc', x + 1, y + 3, 3, 1); R('#ffffffcc', x + 4, y + 3, 1, 4); } // a white crack
+    else if (i === 1) { for (let k = 0; k < 3; k++) { R('#dff4ff', (x + k * 4) % 13, (y + k * 3) % 11, 2, 2); R('#6fa6cf', (x + k * 4) % 13, (y + k * 3) % 11 + 2, 2, 1); } } // bubbles
+    else if (i === 2) { R('#ffffff', x, 1, 5, 1); R('#ffffffaa', x + 1, 2, 3, 1); } // frost
+    else if (i === 3) { R('#5a96c0', x, y, 6, 4); R('#8fc7e8', x + 1, y, 4, 1); } // a deep patch
+    else if (i === 4) { for (let k = 0; k < 4; k++) R('#ffffff', 2 + k * 3 + (k & 1), 3 + k * 2, 1, 1); } // glints
+    else if (i === 5) { R('#6fa6cf', 3, 9, 10, 1); R('#dff4ff', 3, 10, 6, 1); }
+    else if (i === 6) { R('#c8e8fa', 5, 3, 6, 2); R('#6fa6cf', 4, 5, 1, 4); }
+    else { R('#ffffffaa', 2, 12, 2, 1); R('#ffffffaa', 11, 7, 2, 1); R('#6fa6cf', 7, 4, 1, 5); }
+  }
+}
+const _buildTiles = buildTiles;
+buildTiles = function (th) { // the base blocks, then 8 more looks of each (details drawn over copies of the base)
+  _buildTiles(th); SPC.clear();
+  for (const v of [DIRT, BRICK, STEEL, CRATE, ICE]) {
+    const base = TILE_IMG[v], out = base.slice(0, 4);
+    for (let i = 4; i < FV; i++) { const c = mk(T, T), g = c.getContext('2d'); g.drawImage(base[i & 3], 0, 0); tileDetail(g, v, i - 4, th); out.push(c); }
+    TILE_IMG[v] = out;
+  }
+  for (const [k, v] of [[BG_EARTH, DIRT], [BG_BRICK, BRICK]]) BG_IMG[k] = TILE_IMG[v].map((src) => { const c = mk(T, T), g = c.getContext('2d'); g.drawImage(src, 0, 0); g.fillStyle = 'rgba(9,8,22,0.66)'; g.fillRect(0, 0, T, T); return c; });
+};
+// ---- edges and corners: caps, drips, streaks and corner light where solid meets air (drawn over the tiles)
+const _drawTiles = drawTiles;
+drawTiles = function (t) { _drawTiles(t); fancyEdges(); };
+function fancyEdges() {
+  const [c0, c1, r0, r1] = viewTiles(), nm = theme.name, tp = theme.top, dd = theme.dirt, iceish = nm === 'snow' || nm === 'edge', mech = nm === 'sewer' || nm === 'plant' || nm === 'city' || nm === 'rust', stony = nm === 'cave' || nm === 'moon' || nm === 'astro' || nm === 'desert';
+  const R = (col, x, y, w, h) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+    const v = tiles[r * LW + c];
+    if (v !== DIRT && v !== BRICK && v !== STEEL && v !== ICE) continue;
+    const up = tileAt(c, r - 1), dn = tileAt(c, r + 1), lf = tileAt(c - 1, r), rt = tileAt(c + 1, r), oU = !isSolidT(up) && up !== ACID, oD = !isSolidT(dn), oL = !isSolidT(lf), oR = !isSolidT(rt);
+    if (!oU && !oD && !oL && !oR) { if (isSolidT(up) && isSolidT(lf) && !isSolidT(tileAt(c - 1, r - 1))) R('rgba(0,0,10,0.22)', c * T, r * T, 2, 2); continue; } // inside corner: a little shade
+    const h = fhash(c, r, 5), x = c * T, y = r * T, a = ((h * 977) | 0) % 9;
+    if (oU) {
+      if (iceish || v === ICE) { if (h < 0.4) { R('#e8f0fa', x + a, y - 2, 5, 2); R('#ffffff', x + a + 1, y - 3, 2, 1); } } // snow lumps
+      else if (v === STEEL) { if (h < 0.3) R('#b4bed0', x + 2, y, 6, 1); }
+      else if (v === DIRT && mech) { if (h < 0.2) R('rgba(143,211,255,0.5)', x + 3, y, 8, 1); } // a wet shine
+      else if (v === DIRT && (stony || !theme.look.grass)) { if (h < 0.3) { R(dd[3], x + a, y - 2, 3, 2); R(dd[2], x + a, y, 3, 1); } } // pebbles
+      else if (v === DIRT && h < 0.1) { R(tp[1], x + a, y - 3, 1, 3); R(theme.win[h < 0.05 ? 0 : 1], x + a - 1, y - 5, 3, 2); } // a wild flower
+      if (oL && v !== ICE) { R('rgba(255,255,255,0.22)', x, y, 2, 1); R('rgba(255,255,255,0.22)', x, y + 1, 1, 1); } // lit corner
+      if (oR && v !== ICE) { R('rgba(0,0,10,0.2)', x + T - 2, y, 2, 1); R('rgba(0,0,10,0.2)', x + T - 1, y + 1, 1, 1); }
+    }
+    if (oD && h > 0.55 && h < 0.9) { // what hangs from an underside
+      const L = 2 + (a >> 1), px = x + 2 + a;
+      if (iceish || v === ICE) { for (let k = 0; k < L + 2; k++) R(k < 3 ? '#dff4ff' : '#9fd0ee', px + (k > 2 ? 1 : 0), y + T + k, k > 2 ? 1 : 2, 1); } // icicles
+      else if (stony) { for (let k = 0; k < L; k++) R(dd[2], px + (k > 1 ? 1 : 0), y + T + k, k > 1 ? 1 : 3, 1); } // stalactite points
+      else if (mech || v === STEEL) { R(v === STEEL ? '#8a4a2a' : theme.acid[1], px, y + T, 1, L + 1); R(theme.acid[2], px, y + T + L + 1, 1, 1); } // drips
+      else { R(v === DIRT ? '#5a3a22' : tp[0], px, y + T, 1, L + 1); R(v === DIRT ? '#5a3a22' : tp[0], px + 1, y + T + L, 1, 1); } // hanging roots
+    }
+    if ((oL || oR) && h > 0.2 && h < 0.4) { // streaks down a wall face
+      const sx = oL ? x : x + T - 2, sh = 4 + a;
+      if (v === STEEL || mech) { R('#8a4a2a', sx, y + 1, 1, sh); R('#a8643c', sx, y + 1, 1, 2); }
+      else if (iceish) { R('rgba(223,244,255,0.55)', sx, y + 2, 2, sh); }
+      else { R(tp[0], sx, y + 1, 2, sh); R(tp[1], sx, y + 1, 1, 2); }
+    }
+  }
+}
+// ---- floor decor: [W, H] in pixels, which themes, how often, and a painter (the baseline is the bottom of the sprite)
+const fdisc = (g, col, x, y, r) => { g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
+const GLYPH = { A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111', H: '101101111101101', I: '111010010010111', K: '101101110101101', L: '100100100100111', N: '101111111111101', O: '010101101101010', P: '110101110100100', Q: '010101101111011', R: '110101110101101', S: '011100010001110', T: '111010010010010', U: '101101101101111', X: '101101010101101' };
+const fglyph = (R, s, x, y, col) => { for (let i = 0; i < s.length; i++) { const gl = GLYPH[s[i]]; for (let k = 0; k < 15; k++) if (gl[k] === '1') R(col, x + i * 4 + (k % 3), y + ((k / 3) | 0), 1, 1); } }; // tiny 3x5 letters for signs and graffiti
+const WORDS = ['QUACK', 'DUCK', 'NO', 'REPENT', 'SCI', 'BROS', 'EXIT', 'HELP', 'RUN', 'KILL', 'TRUTH'];
+const FK = {
+  crates: { W: 26, H: 24, th: '*', wt: 3, f(g, v, P, R) { const box = (x, y, s) => { R(P.wood[0], x, y, s, s); R(P.wood[1], x + 1, y + 1, s - 2, s - 2); R(P.wood[0], x + 1, y + 1, s - 2, 1); for (let i = 2; i < s - 2; i++) { R(P.wood[0], x + i, y + i, 1, 1); R(P.wood[0], x + s - 1 - i, y + i, 1, 1); } }; if (v & 1) { box(1, 12, 12); box(13, 12, 12); box(7, 0, 12); } else { box(6, 8, 16); box(4, 0, 8); } } },
+  barrel: { W: 20, H: 16, th: '*', wt: 2, f(g, v, P, R) { const body = ['#8a3b2a', '#3a6a8a', '#5c6480'][v % 3], b = (x, h) => { R(body, x, 16 - h, 9, h); R('#ffffff22', x + 1, 16 - h, 2, h); R('#00000044', x + 7, 16 - h, 2, h); R('#25223a', x, 19 - h, 9, 1); R('#25223a', x, 13, 9, 1); R('#ffffff33', x, 16 - h, 9, 1); }; b(1, 14); if (v & 1) b(10, 11); } },
+  rubble: { W: 24, H: 8, th: '*', wt: 2, f(g, v, P, R) { for (let k = 0; k < 6; k++) { const w = 4 + ((fhash(v, k, 1) * 5) | 0), h = 2 + ((fhash(v, k, 2) * 4) | 0), x = 1 + k * 3 + ((fhash(v, k, 3) * 3) | 0); R(P.stone[k & 1], x, 8 - h - (k > 1 && k < 4 ? 2 : 0), Math.min(w, 24 - x), h); R('#ffffff22', x, 8 - h - (k > 1 && k < 4 ? 2 : 0), 2, 1); } } },
+  hazard: { W: 22, H: 12, th: 'island rust plant city sewer astro moon', wt: 2, f(g, v, P, R) { R(P.metal[0], 2, 4, 2, 8); R(P.metal[0], 18, 4, 2, 8); for (let k = 0; k < 22; k += 4) { R('#f2c94c', k, 1, 2, 5); R('#25223a', k + 2, 1, 2, 5); } R('#ffffff30', 0, 1, 22, 1); } },
+  flag: { W: 14, H: 30, th: '*', wt: 1.5, dyn: 1, f(g, v, P, R) { R('#8a8a9a', 2, 2, 1, 28); R('#c8d0e0', 1, 0, 3, 3); R('#5a4226', 0, 28, 5, 2); } },
+  banner: { W: 26, H: 30, th: 'island citrus grove sky desert edge city', wt: 1, f(g, v, P, R) { R(P.wood[0], 2, 0, 2, 30); R(P.wood[0], 22, 0, 2, 30); R(P.wood[0], 1, 1, 24, 2); const col = P.acc[v & 1]; R(col, 4, 3, 18, 14); R('#00000033', 4, 15, 18, 2); R(col, 4, 17, 4, 3); R(col, 18, 17, 4, 3); R('#ffffff', 11, 6, 4, 4); R('#ffffff', 10, 8, 6, 3); R('#f29e4c', 15, 8, 3, 1); R('#25223a', 12, 7, 1, 1); } },
+  bush: { W: 22, H: 13, th: 'island sky swamp grove citrus edge sewer plant', wt: 2.5, f(g, v, P, R) { fdisc(g, P.leaf[0], 6, 8, 5); fdisc(g, P.leaf[0], 14, 8, 6); fdisc(g, P.leaf[0], 10, 6, 6); fdisc(g, P.leaf[1], 8, 5, 3); fdisc(g, P.leaf[1], 15, 6, 2); if (v & 1) { R(P.acc[0], 5, 6, 2, 2); R(P.acc[1], 13, 4, 2, 2); R(P.acc[0], 16, 9, 2, 2); } R('#00000030', 2, 12, 18, 1); } },
+  tree: { W: 30, H: 46, th: 'island sky swamp grove citrus edge snow', wt: 1.5, f(g, v, P, R) {
+    const nm = P.th.name, tr = nm === 'swamp' ? '#3a3226' : '#5a3a22';
+    if (nm === 'snow') { R('#4a3a2a', 14, 38, 3, 8); for (let k = 0; k < 4; k++) { const ty = 38 - k * 9, hw = 13 - k * 3; g.fillStyle = P.leaf[0]; g.beginPath(); g.moveTo(15 - hw, ty); g.lineTo(15, ty - 13); g.lineTo(15 + hw, ty); g.fill(); R('#e8f0fa', 15 - hw + 3, ty - 3, hw * 2 - 6, 2); } }
+    else if (nm === 'swamp') { R(tr, 13, 14, 4, 32); R(tr, 11, 22, 3, 2); R(tr, 8, 20, 4, 2); R(tr, 6, 15, 2, 6); R(tr, 17, 18, 5, 2); R(tr, 21, 12, 2, 7); R(tr, 12, 8, 2, 7); R(tr, 15, 4, 2, 5); for (const mx of [7, 22, 13]) { R('#4a6a3a', mx, 20, 1, 8); R('#4a6a3a', mx + 1, 22, 1, 5); } }
+    else { const h = 16 + (v & 3) * 3; R(tr, 13, 46 - h, 4, h); R('#7a5232', 13, 46 - h, 1, h); fdisc(g, P.leaf[0], 15, 46 - h - 8, 12); fdisc(g, P.leaf[1], 11, 46 - h - 11, 6); fdisc(g, P.leaf[0], 22, 46 - h - 4, 7); if (nm === 'citrus' || nm === 'grove') for (let k = 0; k < 6; k++) R('#ff9a2a', 6 + ((fhash(v, k, 4) * 20) | 0), 46 - h - 14 + ((fhash(v, k, 5) * 14) | 0), 3, 3); } } },
+  fern: { W: 14, H: 9, th: 'island swamp grove sky citrus cave sewer plant', wt: 2, f(g, v, P, R) { g.strokeStyle = P.leaf[1]; for (let k = -3; k <= 3; k++) { g.beginPath(); g.moveTo(7, 9); g.quadraticCurveTo(7 + k * 2, 3, 7 + k * 2.4, 9 - 7 + Math.abs(k)); g.stroke(); } R(P.leaf[0], 6, 7, 2, 2); } },
+  shroom: { W: 14, H: 12, th: 'cave swamp sewer grove plant', wt: 2, f(g, v, P, R) { const cap = ['#e78ac3', '#b3a6ff', '#f2c94c', '#d9534f'][v & 3]; R('#e6e2d0', 6, 6, 3, 6); fdisc(g, cap, 7, 6, 5); R('#00000000', 0, 0, 0, 0); R('#ffffff', 5, 4, 1, 1); R('#ffffff', 8, 3, 1, 1); R(cap, 1, 9, 5, 3); R('#e6e2d0', 3, 11, 1, 1); } },
+  bones: { W: 24, H: 8, th: 'desert cave swamp sewer island rust moon', wt: 1.5, f(g, v, P, R) { const b = '#d9cdb0'; fdisc(g, b, 6, 5, 3); R('#25223a', 5, 4, 1, 1); R('#25223a', 7, 4, 1, 1); R(b, 4, 6, 5, 2); for (let k = 0; k < 4; k++) { R(b, 12 + k * 3, 3, 1, 5); R('#a89c80', 12 + k * 3, 7, 1, 1); } R(b, 11, 6, 12, 1); R(b, 18, 1, 5, 1); R(b, 22, 0, 1, 3); } },
+  ribs: { W: 34, H: 16, th: 'desert cave snow moon', wt: 0.8, f(g, v, P, R) { const b = '#d9cdb0'; R(b, 2, 12, 30, 2); for (let k = 0; k < 5; k++) { g.strokeStyle = b; g.beginPath(); g.moveTo(6 + k * 5, 12); g.quadraticCurveTo(6 + k * 5 + 2, 1, 9 + k * 5, 14); g.stroke(); } fdisc(g, b, 30, 10, 4); R('#25223a', 31, 9, 2, 2); R(b, 28, 12, 6, 3); } },
+  rock: { W: 18, H: 11, th: '*', wt: 2, f(g, v, P, R) { g.fillStyle = P.stone[0]; g.beginPath(); g.moveTo(1, 11); g.lineTo(3, 5); g.lineTo(8, 1); g.lineTo(14, 3); g.lineTo(17, 11); g.fill(); g.fillStyle = P.stone[1]; g.beginPath(); g.moveTo(3, 5); g.lineTo(8, 1); g.lineTo(12, 2); g.lineTo(7, 6); g.fill(); R('#00000030', 1, 10, 16, 1); } },
+  cact: { W: 14, H: 24, th: 'desert', wt: 3, f(g, v, P, R) { const h = 16 + (v & 3) * 2; R(P.leaf[0], 5, 24 - h, 4, h); R(P.leaf[1], 6, 24 - h, 1, h); R(P.leaf[0], 1, 24 - h + 5, 3, 6); R(P.leaf[0], 1, 24 - h + 9, 5, 2); R(P.leaf[0], 10, 24 - h + 3, 3, 5); R(P.leaf[0], 8, 24 - h + 6, 4, 2); if (v & 1) R('#e78ac3', 6, 24 - h - 2, 2, 2); } },
+  vending: { W: 14, H: 24, th: 'city plant rust astro moon island sewer edge', wt: 1, glow: [12, 26, '#8fd3ff', 0.45], f(g, v, P, R) { const body = ['#c0392b', '#2c6fb0', '#3a8a5a'][v % 3]; R(body, 0, 0, 14, 24); R('#ffffff22', 0, 0, 14, 1); R('#00000040', 12, 0, 2, 24); R('#bfe9ff', 2, 2, 8, 12); for (let k = 0; k < 3; k++) for (let j = 0; j < 3; j++) R(['#f2c94c', '#e78ac3', '#a6d854'][(j + k + v) % 3], 3 + j * 2 + (j > 0 ? 0 : 0), 3 + k * 4, 1, 3); R('#25223a', 2, 17, 8, 4); R('#8a8a9a', 11, 3, 2, 2); R('#8a8a9a', 11, 7, 2, 2); R('#25223a', 11, 12, 2, 4); R('#00000050', 0, 22, 14, 2); } },
+  lab: { W: 26, H: 22, th: 'plant astro moon city rust island sewer edge', wt: 1.5, glow: [12, 22, '#a6d854', 0.35], f(g, v, P, R) { if (v % 3 === 0) { R(P.metal[0], 1, 12, 24, 3); R(P.metal[0], 2, 15, 2, 7); R(P.metal[0], 22, 15, 2, 7); R(P.metal[1], 1, 12, 24, 1); for (const [fx, col] of [[4, '#a6d854'], [11, '#e78ac3'], [17, '#8fd3ff']]) { R('#ffffff44', fx, 5, 5, 7); R(col, fx + 1, 8, 3, 4); R('#ffffff88', fx + 1, 5, 1, 7); } } else if (v % 3 === 1) { R('#3a4256', 2, 4, 22, 18); R('#5c6480', 2, 4, 22, 1); R('#0c1a14', 4, 6, 18, 9); for (let k = 0; k < 4; k++) R('#a6d854', 5, 7 + k * 2, 3 + ((fhash(v, k, 8) * 11) | 0), 1); for (let k = 0; k < 5; k++) R(['#d9534f', '#f2c94c', '#a6d854'][k % 3], 5 + k * 3, 18, 2, 2); } else { R(P.metal[0], 6, 12, 14, 10); R(P.metal[1], 6, 12, 14, 1); fdisc(g, P.metal[1], 13, 12, 7); R('#25223a', 10, 7, 6, 2); R('#d9534f', 12, 5, 2, 3); R('#00000040', 6, 20, 14, 2); R('#a6d854', 9, 16, 2, 2); } } },
+  antenna: { W: 10, H: 44, th: 'city astro moon rust plant island edge sky', wt: 1, dyn: 1, f(g, v, P, R) { g.strokeStyle = P.metal[0]; g.beginPath(); g.moveTo(1, 44); g.lineTo(5, 4); g.lineTo(9, 44); g.stroke(); for (let k = 0; k < 6; k++) { const y = 40 - k * 6, hw = 3.6 - k * 0.5; g.beginPath(); g.moveTo(5 - hw, y); g.lineTo(5 + hw, y - 4); g.stroke(); } R(P.metal[1], 5, 0, 1, 6); R(P.metal[1], 2, 14, 7, 1); R(P.metal[1], 3, 20, 5, 1); } },
+  dish: { W: 18, H: 22, th: 'astro moon edge island plant sky', wt: 1, f(g, v, P, R) { R(P.metal[0], 8, 12, 2, 10); R(P.metal[0], 5, 20, 8, 2); g.fillStyle = P.metal[1]; g.beginPath(); g.ellipse(9, 8, 8, 5, -0.5, 0, 7); g.fill(); g.fillStyle = P.metal[0]; g.beginPath(); g.ellipse(9, 9, 7, 3, -0.5, 0, 7); g.fill(); R(P.metal[1], 12, 1, 1, 6); R('#d9534f', 12, 0, 2, 2); } },
+  tires: { W: 18, H: 12, th: 'rust city desert sewer plant island', wt: 1.5, f(g, v, P, R) { const t = (x, y) => { fdisc(g, '#25223a', x, y, 5); fdisc(g, '#3a3a4a', x, y, 3.2); fdisc(g, '#25223a', x, y, 1.6); }; t(5, 7); t(13, 7); if (v & 1) t(9, 3); } },
+  dump: { W: 26, H: 15, th: 'city sewer plant rust', wt: 1, f(g, v, P, R) { R('#2f6a4a', 1, 4, 24, 11); R('#3f8a62', 1, 4, 24, 1); R('#1f4a35', 1, 12, 24, 3); R('#25223a', 0, 1, 26, 3); R('#3a3a4a', 0, 1, 26, 1); R('#1f4a35', 8, 6, 1, 6); R('#1f4a35', 17, 6, 1, 6); R('#25223a', 3, 14, 3, 1); R('#25223a', 20, 14, 3, 1); if (v & 1) { R('#e6e2f0', 4, 0, 5, 2); R('#a89c80', 15, 0, 4, 2); } } },
+  cone: { W: 8, H: 9, th: 'city plant rust sewer island sky', wt: 1.5, f(g, v, P, R) { R('#25223a', 0, 8, 8, 1); R('#ff7a2a', 3, 1, 2, 7); R('#ff7a2a', 2, 4, 4, 4); R('#ffffff', 2, 4, 4, 1); R('#ffffff', 3, 2, 2, 1); R('#ff7a2a', 1, 7, 6, 1); } },
+  snowpile: { W: 24, H: 9, th: 'snow edge moon', wt: 3, f(g, v, P, R) { g.fillStyle = '#e8f0fa'; g.beginPath(); g.moveTo(0, 9); g.quadraticCurveTo(6, -3, 12, 3); g.quadraticCurveTo(18, -1, 24, 9); g.fill(); R('#ffffff', 7, 2, 4, 1); R('#bcd2ea', 2, 8, 20, 1); } },
+  pinelet: { W: 18, H: 28, th: 'snow', wt: 2, f(g, v, P, R) { R('#4a3a2a', 8, 24, 2, 4); for (let k = 0; k < 3; k++) { const ty = 24 - k * 8, hw = 8 - k * 2; g.fillStyle = P.leaf[0]; g.beginPath(); g.moveTo(9 - hw, ty); g.lineTo(9, ty - 10); g.lineTo(9 + hw, ty); g.fill(); R('#e8f0fa', 9 - hw + 2, ty - 3, hw * 2 - 4, 2); } } },
+  fence: { W: 32, H: 12, th: 'sky grove citrus island swamp snow desert', wt: 1.5, f(g, v, P, R) { for (const x of [2, 12, 22, 29]) R(P.wood[1], x, 1 + (fhash(v, x, 1) < 0.2 ? 3 : 0), 2, 11); R(P.wood[0], 0, 4, 32, 2); R(P.wood[0], 0, 8, 32, 2); R('#ffffff22', 0, 4, 32, 1); } },
+  hay: { W: 18, H: 14, th: 'sky grove citrus desert', wt: 1.5, f(g, v, P, R) { R('#d9b45a', 1, 2, 16, 12); R('#c99a3a', 1, 5, 16, 1); R('#c99a3a', 1, 9, 16, 1); R('#f0d27a', 1, 2, 16, 1); R('#a8782a', 1, 13, 16, 1); for (let k = 0; k < 5; k++) R('#f0d27a', 2 + k * 3, 0 + (k & 1), 1, 3); } },
+  valve: { W: 14, H: 20, th: 'sewer plant rust city', wt: 2, f(g, v, P, R) { R(P.metal[0], 5, 4, 5, 16); R(P.metal[1], 5, 4, 1, 16); R(P.metal[0], 3, 3, 9, 2); R(P.metal[0], 3, 15, 9, 2); R('#b8473a', 6, 9, 3, 2); R('#b8473a', 3, 8, 9, 1); R('#b8473a', 3, 11, 9, 1); R('#00000040', 9, 4, 1, 16); } },
+  cog: { W: 22, H: 12, th: 'rust plant', wt: 2, f(g, v, P, R) { for (let k = 0; k < 9; k++) { const a = Math.PI + k * Math.PI / 8, x = 11 + Math.cos(a) * 9, y = 12 + Math.sin(a) * 9; R('#7a5232', Math.round(x) - 1, Math.round(y) - 1, 3, 3); } fdisc(g, '#5a3a2a', 11, 12, 8); fdisc(g, '#7a5232', 11, 12, 6); fdisc(g, '#25223a', 11, 12, 2); R('#25223a', 0, 11, 22, 1); } },
+  crystalc: { W: 14, H: 14, th: 'cave moon astro edge', wt: 2.5, glow: [8, 30, '#b3a6ff', 0.45], f(g, v, P, R) { const col = P.acc[v & 1]; for (const [ox, h] of [[3, 9], [7, 14], [11, 7]]) { g.fillStyle = col; g.beginPath(); g.moveTo(ox - 3, 14); g.lineTo(ox, 14 - h); g.lineTo(ox + 3, 14); g.fill(); R('#ffffff66', ox - 1, 14 - h + 3, 1, 3); } } },
+  stump: { W: 14, H: 12, th: 'swamp grove sky citrus island snow', wt: 1.5, f(g, v, P, R) { R('#5a3a22', 3, 3, 8, 9); R('#7a5232', 3, 3, 3, 9); R('#a8885a', 3, 2, 8, 2); R('#3a2414', 8, 5, 1, 6); R('#3a2414', 1, 11, 12, 1); if (P.th.name === 'snow') R('#e8f0fa', 3, 1, 8, 2); else R(P.leaf[1], 9, 1, 3, 2); } },
+  reeds: { W: 14, H: 20, th: 'swamp sewer island', wt: 2, f(g, v, P, R) { for (let k = 0; k < 5; k++) { const x = 2 + k * 2.4, h = 10 + ((fhash(v, k, 6) * 9) | 0); g.strokeStyle = P.leaf[k & 1]; g.beginPath(); g.moveTo(x, 20); g.quadraticCurveTo(x + (k - 2) * 0.8, 20 - h * 0.6, x + (k - 2) * 1.4, 20 - h); g.stroke(); if (k & 1) R('#5a3a22', Math.round(x + (k - 2) * 1.4) - 1, 20 - h - 2, 2, 4); } } },
+  lamppost: { W: 8, H: 38, th: 'city island sky rust plant grove', wt: 1, glow: [4, 54, '#f2c94c', 0.8], f(g, v, P, R) { R('#3a4256', 3, 4, 2, 34); R('#3a4256', 1, 36, 6, 2); R('#3a4256', 3, 3, 5, 2); R('#fff6c2', 5, 5, 3, 2); R('#f2c94c', 4, 4, 5, 1); R('#5c6480', 3, 4, 1, 34); } },
+  bench: { W: 22, H: 11, th: 'city grove sky island snow', wt: 1, f(g, v, P, R) { R(P.wood[1], 1, 4, 20, 2); R(P.wood[0], 1, 6, 20, 1); R(P.wood[1], 1, 0, 20, 2); R('#3a4256', 3, 6, 2, 5); R('#3a4256', 17, 6, 2, 5); R('#3a4256', 1, 0, 1, 7); R('#3a4256', 20, 0, 1, 7); if (P.th.name === 'snow') R('#e8f0fa', 1, 3, 20, 1); } },
+  trash: { W: 10, H: 12, th: 'city sewer plant rust', wt: 1.5, f(g, v, P, R) { R('#5c6480', 1, 3, 8, 9); R('#8da0cb', 1, 3, 8, 1); R('#3a4256', 0, 1, 10, 2); R('#3a4256', 4, 0, 2, 1); R('#3a4256', 3, 5, 1, 6); R('#3a4256', 6, 5, 1, 6); if (v & 1) { R('#e6e2f0', 2, 0, 3, 2); } } },
+};
+// ---- wall decor: pasted on back walls (ty 1 earth, 2 brick) or on solid brick/steel faces (ty 3)
+const WK = {
+  poster: { W: 10, H: 13, n: 1, ty: '23', th: '*', wt: 2, f(g, v, P, R) { R('#e6d6a0', 0, 0, 10, 13); R('#00000030', 0, 12, 10, 1); R('#b8a070', 0, 0, 10, 1); if (v % 3 === 0) { R('#d9534f', 1, 1, 8, 2); fdisc(g, '#f2c94c', 5, 7, 3); R('#f29e4c', 6, 7, 3, 1); R('#25223a', 4, 6, 1, 1); R('#25223a', 1, 10, 8, 1); } else if (v % 3 === 1) { fdisc(g, '#2c6fb0', 5, 6, 3); R('#e6d6a0', 4, 5, 2, 2); R('#2c6fb0', 1, 10, 8, 2); } else { for (let k = 0; k < 4; k++) R(k & 1 ? '#25223a' : '#d9534f', 1, 2 + k * 3, 8, 2); } } },
+  graffiti: { W: 28, H: 12, n: 2, ty: '23', th: '*', wt: 1.5, f(g, v, P, R) { const w = WORDS[(v * 3 + 1) % WORDS.length], col = P.acc[v & 1]; fglyph(R, w, 1, 3, '#00000066'); fglyph(R, w, 0, 2, col); if (v & 2) R(col, 0, 9, 4 * w.length, 1); } },
+  hazp: { W: 16, H: 6, n: 1, ty: '23', th: '*', wt: 1.5, f(g, v, P, R) { for (let y = 0; y < 6; y++) for (let x = 0; x < 16; x++) R(((x + y) >> 2) & 1 ? '#f2c94c' : '#25223a', x, y, 1, 1); } },
+  window: { W: 10, H: 12, n: 1, ty: '2', th: '*', wt: 2, glow: [6, 22, null, 0.5], f(g, v, P, R) { R('#25223a', 0, 0, 10, 12); R(hm(P.acc[v & 1], '#ffffff', 0.15), 1, 1, 8, 9); R('#25223a', 4, 1, 2, 9); R('#25223a', 1, 5, 8, 1); R('#5c6480', 0, 11, 10, 1); R('#ffffff55', 1, 1, 3, 1); if (v & 1) R('#25223a', 6, 6, 3, 4); } },
+  shelf: { W: 14, H: 10, n: 1, ty: '2', th: '*', wt: 1, f(g, v, P, R) { R(P.wood[0], 0, 9, 14, 1); R(P.wood[0], 0, 4, 14, 1); for (const [x, col] of [[1, '#a6d854'], [4, '#e78ac3'], [7, '#8fd3ff'], [10, '#f2c94c']]) { R(col, x, 0, 2, 4); R('#ffffff66', x, 0, 1, 2); } R('#c9ccd6', 2, 5, 4, 4); R('#8a5a32', 8, 6, 5, 3); } },
+  vent: { W: 12, H: 10, n: 1, ty: '23', th: '*', wt: 1.5, f(g, v, P, R) { R('#2c3448', 0, 0, 12, 10); R('#5c6480', 0, 0, 12, 1); for (let k = 0; k < 4; k++) R('#0c0e18', 1, 2 + k * 2, 10, 1); R('#8a8a9a', 0, 0, 1, 10); } },
+  plaque: { W: 18, H: 9, n: 1, ty: '23', th: '*', wt: 1, f(g, v, P, R) { R('#1f6a3a', 0, 0, 18, 9); R('#ffffff', 0, 0, 18, 1); R('#ffffff', 0, 8, 18, 1); fglyph(R, 'EXIT', 1, 2, '#ffffff'); } },
+  pipe: { W: 48, H: 6, n: 3, ty: '12', th: '*', wt: 1.5, f(g, v, P, R) { R(P.metal[0], 0, 1, 48, 4); R(P.metal[1], 0, 1, 48, 1); R('#00000040', 0, 4, 48, 1); for (const x of [0, 15, 32, 46]) { R(P.metal[1], x, 0, 2, 6); R('#25223a', x + 2, 0, 1, 6); } if (v & 1) { R('#b8473a', 22, 0, 3, 6); } } },
+  cable: { W: 48, H: 14, n: 3, ty: '12', th: '*', wt: 1.2, f(g, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = ['#25223a', '#8e2b3c', '#2c6fb0'][k]; g.beginPath(); g.moveTo(0, 1 + k); g.quadraticCurveTo(24, 12 - k * 2, 47, 1 + k); g.stroke(); } R('#5c6480', 0, 0, 2, 4); R('#5c6480', 46, 0, 2, 4); } },
+  roots: { W: 10, H: 14, n: 1, ty: '1', th: '*', wt: 2, f(g, v, P, R) { for (let k = 0; k < 4; k++) { g.strokeStyle = k & 1 ? '#7a5232' : '#5a3a22'; g.beginPath(); g.moveTo(2 + k * 2, 0); g.quadraticCurveTo(k * 3 - 1 + (v & 3), 6, 3 + k * 1.5, 13 - (k & 1) * 4); g.stroke(); } } },
+  fossilw: { W: 14, H: 10, n: 1, ty: '1', th: '*', wt: 1.5, f(g, v, P, R) { const b = '#d9cdb0'; if (v & 1) { fdisc(g, b, 7, 5, 4.5); fdisc(g, '#a89c80', 7, 5, 3); fdisc(g, b, 7, 5, 1.5); R(b, 11, 6, 3, 3); } else { R(b, 1, 4, 12, 1); for (let k = 0; k < 4; k++) R(b, 2 + k * 3, 1, 1, 7); R(b, 12, 2, 2, 5); } } },
+  crystalw: { W: 12, H: 12, n: 1, ty: '1', th: 'cave moon astro snow edge', wt: 1.5, glow: [6, 22, null, 0.4], f(g, v, P, R) { const col = P.acc[v & 1]; for (const [ox, h] of [[3, 7], [6, 11], [9, 6]]) { g.fillStyle = col; g.beginPath(); g.moveTo(ox - 2, 12); g.lineTo(ox, 12 - h); g.lineTo(ox + 2, 12); g.fill(); R('#ffffff77', ox - 1, 12 - h + 3, 1, 2); } } },
+};
+// ---- hanging decor: grows down from a ceiling tile (len px tall)
+const HK = {
+  vine: { th: 'island swamp grove sky citrus edge sewer plant', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { const x = 2 + k * 3, l = len - 3 - ((fhash(v, k, 2) * 8) | 0); R(P.leaf[0], x, 0, 1, l); for (let y = 3; y < l; y += 4) R(P.leaf[(y >> 2) & 1], x + ((y >> 2) & 1 ? -1 : 1), y, 2, 2); R(P.leaf[1], x, l, 1, 2); } } },
+  icicle: { th: 'snow edge', f(g, len, v, P, R) { for (const [x, l] of [[1, 0.6], [4, 1], [7, 0.45]]) for (let y = 0; y < len * l; y++) R(y < 3 ? '#e8f8ff' : '#9fd0ee', x + (y > len * l * 0.55 ? 1 : 0), y, y > len * l * 0.55 ? 1 : 3 - (y > len * l * 0.3 ? 1 : 0), 1); } },
+  stalac: { th: 'cave moon astro desert', f(g, len, v, P, R) { for (const [x, l] of [[0, 0.55], [3, 1], [7, 0.7]]) for (let y = 0; y < len * l; y++) R(y % 5 ? P.stone[0] : P.stone[1], x + (y > len * l * 0.5 ? 1 : 0), y, Math.max(1, 4 - ((y * 5 / (len * l)) | 0)), 1); } },
+  chain: { th: 'rust plant city astro sewer', f(g, len, v, P, R) { for (let y = 0; y < len; y += 3) { R(y % 6 ? '#5c6480' : '#8a8a9a', 4, y, 2, 2); R('#3a4256', 5, y + 1, 1, 2); } R('#8a8a9a', 3, len - 3, 4, 3); } },
+  cables: { th: 'city plant astro rust sewer', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = ['#25223a', '#8e2b3c', '#2c6fb0'][(k + v) % 3]; g.beginPath(); g.moveTo(2 + k * 2, 0); g.quadraticCurveTo(k * 3 + (v & 1) * 3, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } R('#5c6480', 1, 0, 7, 2); } },
+  roots: { th: 'island citrus grove sky desert swamp', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = k & 1 ? '#7a5232' : '#5a3a22'; g.beginPath(); g.moveTo(2 + k * 3, 0); g.quadraticCurveTo(k * 3 + (v & 3) - 1, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } } },
+};
+// ---- dark buildings behind the playfield. B: a body tone, a lit edge, a shadow tone and a window tone drawn from the theme
+const BK = {
+  blocks: { sizes: [[28, 56], [36, 72], [44, 92], [32, 64]], f(g, w, h, v, B, R) { R(B.a, 0, 0, w, h); R(B.b, 0, 0, w, 1); R(B.c, w - 3, 0, 3, h); for (let y = 6; y < h - 12; y += 8) for (let x = 4; x < w - 8; x += 7) R(fhash(x, y, v) < 0.45 ? B.w : B.c, x, y, 3, 4); if (v & 1) { R(B.a, w / 2 - 1, -5, 2, 5); R(B.b, w / 2 - 1, -5, 1, 5); } R(B.c, 2, 0, w - 6, 2); } },
+  ruin: { sizes: [[44, 48], [56, 58]], f(g, w, h, v, B, R) { R(B.a, 0, h * 0.4, w, h * 0.6); R(B.a, 2, h * 0.15, 14, h * 0.5); R(B.a, w - 18, h * 0.25, 14, h * 0.5); for (let x = 0; x < w; x += 4) R(B.a, x, h * 0.4 - ((fhash(x, v, 1) * 8) | 0), 4, 8); g.fillStyle = B.c; g.beginPath(); g.moveTo(w * 0.32, h); g.lineTo(w * 0.32, h * 0.62); g.arc(w * 0.5, h * 0.62, w * 0.18, Math.PI, 0); g.lineTo(w * 0.68, h); g.fill(); R(B.b, 2, h * 0.15, 14, 1); R(B.b, 0, h * 0.4, w, 1); } },
+  tower: { sizes: [[18, 84], [22, 100]], f(g, w, h, v, B, R) { R(B.a, 3, 10, w - 6, h - 10); R(B.c, w - 6, 10, 3, h - 10); R(B.b, 3, 10, 1, h - 10); R(B.a, 1, 6, w - 2, 5); R(B.b, 1, 6, w - 2, 1); g.fillStyle = B.a; g.beginPath(); g.moveTo(2, 6); g.lineTo(w / 2, -2); g.lineTo(w - 2, 6); g.fill(); for (let y = 16; y < h - 14; y += 14) R(fhash(y, v, 3) < 0.5 ? B.w : B.c, w / 2 - 1, y, 2, 6); R(B.b, 0, 40, w, 2); } },
+  stack: { sizes: [[26, 76], [34, 88]], f(g, w, h, v, B, R) { for (const [x, ww, hh] of [[2, 10, h], [w - 14, 11, h - 14]]) { R(B.a, x, h - hh, ww, hh); R(B.c, x + ww - 3, h - hh, 3, hh); R(B.b, x, h - hh, 1, hh); R(B.b, x - 1, h - hh, ww + 2, 2); R(B.c, x, h - hh + 8, ww, 2); R(B.c, x, h - hh + 16, ww, 2); } R(B.a, 0, h - 14, w, 14); } },
+  mast: { sizes: [[22, 96], [26, 112]], f(g, w, h, v, B, R) { g.strokeStyle = B.b; g.beginPath(); g.moveTo(1, h); g.lineTo(w / 2, 6); g.lineTo(w - 1, h); g.stroke(); g.strokeStyle = B.a; for (let y = h - 6; y > 20; y -= 9) { const hw = (w / 2 - 1) * (y - 6) / (h - 6); g.beginPath(); g.moveTo(w / 2 - hw, y); g.lineTo(w / 2 + hw, y - 9); g.moveTo(w / 2 + hw, y); g.lineTo(w / 2 - hw, y - 9); g.stroke(); } R(B.a, w / 2 - 1, 0, 2, 12); R(B.w, w / 2 - 1, 0, 2, 2); R(B.a, w / 2 - 5, 24, 10, 1); R(B.a, w / 2 - 4, 38, 8, 1); R(B.c, 0, h - 8, w, 8); } },
+  tank: { sizes: [[32, 56], [40, 64]], f(g, w, h, v, B, R) { g.strokeStyle = B.b; for (const x of [4, w - 5]) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + (x < w / 2 ? 3 : -3), 24); g.stroke(); } g.beginPath(); g.moveTo(5, h - 8); g.lineTo(w - 6, 28); g.moveTo(w - 6, h - 8); g.lineTo(5, 28); g.stroke(); R(B.a, 2, 6, w - 4, 20); R(B.c, w - 8, 6, 6, 20); R(B.b, 2, 6, 1, 20); g.fillStyle = B.a; g.beginPath(); g.moveTo(2, 6); g.lineTo(w / 2, -4); g.lineTo(w - 2, 6); g.fill(); R(B.c, 2, 14, w - 4, 2); R(B.c, 0, h - 8, w, 8); } },
+  dome: { sizes: [[50, 34], [64, 40]], f(g, w, h, v, B, R) { R(B.a, 2, h - 12, w - 4, 12); R(B.c, 2, h - 3, w - 4, 3); g.fillStyle = B.a; g.beginPath(); g.arc(w / 2, h - 12, w * 0.36, Math.PI, 0); g.fill(); g.strokeStyle = B.c; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(w / 2, h - 12); g.lineTo(w / 2 + k * w * 0.075, h - 12 - Math.sqrt(Math.max(0, (w * 0.36) ** 2 - (k * w * 0.075 * 2.5) ** 2)) * 0.9); g.stroke(); } R(B.w, w / 2 - 6, h - 24, 12, 2); for (let x = 6; x < w - 8; x += 9) R(fhash(x, v, 9) < 0.6 ? B.w : B.c, x, h - 9, 3, 4); R(B.a, w - 12, 0, 1, h - 20); R(B.b, w - 12, 0, 1, 1); } },
+  spire: { sizes: [[30, 70], [40, 86], [24, 46]], f(g, w, h, v, B, R) { for (const [cx, ww, hh] of [[w * 0.3, w * 0.5, h], [w * 0.7, w * 0.4, h * 0.72], [w * 0.52, w * 0.32, h * 0.5]]) { g.fillStyle = B.a; g.beginPath(); g.moveTo(cx - ww / 2, h); g.lineTo(cx - ww * 0.1, h - hh); g.lineTo(cx + ww * 0.15, h - hh * 0.85); g.lineTo(cx + ww / 2, h); g.fill(); g.fillStyle = B.b; g.beginPath(); g.moveTo(cx - ww / 2, h); g.lineTo(cx - ww * 0.1, h - hh); g.lineTo(cx, h - hh * 0.9); g.lineTo(cx - ww * 0.15, h); g.fill(); } } },
+  tree: { sizes: [[40, 56], [48, 66]], f(g, w, h, v, B, R) { R(B.c, w / 2 - 2, h * 0.45, 4, h * 0.55); if (v & 1) { g.strokeStyle = B.a; for (let k = 0; k < 5; k++) { g.beginPath(); g.moveTo(w / 2, h * 0.7 - k * 4); g.lineTo(w / 2 + (k % 2 ? 1 : -1) * (8 + k * 2), h * 0.45 - k * 5); g.stroke(); } } else { fdisc(g, B.a, w / 2, h * 0.34, w * 0.34); fdisc(g, B.a, w * 0.26, h * 0.46, w * 0.2); fdisc(g, B.a, w * 0.76, h * 0.44, w * 0.2); fdisc(g, B.b, w * 0.4, h * 0.22, w * 0.12); } } },
+  hut: { sizes: [[40, 44]], f(g, w, h, v, B, R) { for (const x of [5, 12, w - 14, w - 7]) R(B.c, x, h * 0.55, 2, h * 0.45); R(B.a, 3, h * 0.28, w - 6, h * 0.3); g.fillStyle = B.c; g.beginPath(); g.moveTo(0, h * 0.3); g.lineTo(w / 2, 2); g.lineTo(w, h * 0.3); g.fill(); R(B.w, w / 2 - 3, h * 0.36, 6, 5); R(B.b, 3, h * 0.28, w - 6, 1); R(B.c, 3, h * 0.58, w - 6, 2); } },
+  pylon: { sizes: [[30, 84], [36, 96]], f(g, w, h, v, B, R) { g.strokeStyle = B.b; g.beginPath(); g.moveTo(2, h); g.lineTo(w / 2 - 2, 14); g.moveTo(w - 2, h); g.lineTo(w / 2 + 2, 14); g.moveTo(w / 2, 14); g.lineTo(w / 2, 4); g.stroke(); g.strokeStyle = B.a; for (let y = h - 6; y > 20; y -= 10) { g.beginPath(); g.moveTo(w / 2 - (y / h) * (w / 2 - 2), y); g.lineTo(w / 2 + (y / h) * (w / 2 - 2), y - 10); g.stroke(); } R(B.a, 0, 14, w, 2); R(B.a, 4, 24, w - 8, 2); for (const x of [1, w - 3, 5, w - 7]) R(B.b, x, 16, 2, 3); } },
+  wall: { sizes: [[64, 38], [80, 44]], f(g, w, h, v, B, R) { R(B.a, 0, h * 0.35, w, h * 0.65); for (let x = 0; x < w; x += 8) R(B.a, x, h * 0.35 - 5, 5, 5); for (const x of [2, w - 18]) { R(B.a, x, 0, 16, h); for (let k = 0; k < 4; k++) R(B.a, x + k * 5, -4, 3, 4); R(B.c, x + 7, 8, 2, 8); } R(B.b, 0, h * 0.35, w, 1); R(B.c, 0, h - 5, w, 5); for (let x = 20; x < w - 20; x += 12) R(B.c, x, h * 0.5, 2, 6); } },
+  silo: { sizes: [[26, 72]], f(g, w, h, v, B, R) { for (const [x, ww, hh] of [[1, 11, h], [w - 12, 11, h - 12]]) { R(B.a, x, h - hh, ww, hh); R(B.c, x + ww - 3, h - hh, 3, hh); R(B.b, x, h - hh, 1, hh); fdisc(g, B.a, x + ww / 2, h - hh, ww / 2); R(B.c, x, h - hh + 14, ww, 2); R(B.c, x, h - hh + 30, ww, 2); } R(B.a, 6, 14, 14, 3); } },
+  bpipe: { sizes: [[16, 8]], f(g, w, h, v, B, R) { R(B.a, 0, 1, w, 6); R(B.b, 0, 1, w, 1); R(B.c, 0, 6, w, 1); } },
+};
+const BKT = { island: ['ruin', 'tower', 'hut', 'tank', 'tree'], desert: ['ruin', 'spire', 'tower', 'wall'], edge: ['tower', 'mast', 'tank', 'dome'], citrus: ['wall', 'tower', 'tree', 'ruin'], sky: ['silo', 'tank', 'mast', 'hut', 'tree'], cave: ['spire', 'spire', 'ruin'], swamp: ['tree', 'hut', 'ruin', 'tree'], astro: ['mast', 'dome', 'tower', 'pylon'], rust: ['stack', 'tank', 'mast', 'blocks', 'pylon'], moon: ['dome', 'mast', 'tank'], plant: ['stack', 'tank', 'pylon', 'blocks'], snow: ['spire', 'tree', 'tower', 'hut'], sewer: ['tank', 'stack', 'blocks'], city: ['blocks', 'blocks', 'tower', 'mast', 'blocks'], grove: ['tree', 'hut', 'wall', 'tower', 'tree'] };
+// ---- landmarks: big set dressings the random generator places now and then (layer 0 behind the playfield, 1 on the ground)
+const LK = {
+  statue: { W: 44, H: 104, n: 3, rows: 7, layer: 0, f(g, w, h, v, B, R) { R(B.a, 4, h - 14, w - 8, 14); R(B.b, 4, h - 14, w - 8, 2); R(B.c, 8, h - 8, w - 16, 2); R(B.a, 12, h - 40, 8, 26); R(B.a, w - 20, h - 40, 8, 26); R(B.a, 10, h - 70, w - 20, 34); R(B.b, 10, h - 70, 2, 34); R(B.c, w - 16, h - 70, 6, 34); R(B.a, w - 14, h - 90, 6, 24); R(B.a, w - 18, h - 96, 3, 10); fdisc(g, B.a, w / 2, h - 78, 8); R(B.b, w / 2 - 8, h - 82, 2, 6); R(B.w, w - 20, h - 104, 7, 8); R(B.b, w - 19, h - 108, 5, 5); R(B.a, 4, h - 66, 8, 22); R(B.c, 14, h - 50, 2, 8); } },
+  billboard: { W: 72, H: 80, n: 5, rows: 5, layer: 0, f(g, w, h, v, B, R) { R(B.c, 14, 30, 4, h - 30); R(B.c, w - 18, 30, 4, h - 30); R(B.a, 2, 0, w - 4, 38); R(B.b, 2, 0, w - 4, 2); R(B.c, 2, 36, w - 4, 2); R('#141026', 5, 3, w - 10, 31); const word = WORDS[v % WORDS.length]; fdisc(g, '#f2c94c', 20, 19, 9); R('#f29e4c', 27, 19, 7, 3); R('#25223a', 22, 16, 2, 2); fglyph(R, word, 40, 14, B.w); R(B.w, 38, 24, word.length * 4 - 1, 1); R(B.c, 6, 30, w - 12, 1); for (let x = 8; x < w - 8; x += 12) R(B.b, x, 38, 4, 3); } },
+  ufo: { W: 56, H: 30, n: 4, rows: 3, layer: 1, glow: [14, 70, '#8fd3ff', 0.6], f(g, w, h, v, B, R) { g.fillStyle = '#4a3a2a'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(14, h - 12, 30, h - 6); g.lineTo(w, h); g.fill(); g.save(); g.translate(w / 2, h - 12); g.rotate(-0.22); g.fillStyle = '#8a8a9a'; g.beginPath(); g.ellipse(0, 0, 25, 7, 0, 0, 7); g.fill(); g.fillStyle = '#b4bed0'; g.beginPath(); g.ellipse(0, -2, 22, 4, 0, Math.PI, 0); g.fill(); g.fillStyle = '#5c6480'; g.beginPath(); g.ellipse(0, 4, 20, 3, 0, 0, Math.PI); g.fill(); g.fillStyle = 'rgba(143,211,255,0.75)'; g.beginPath(); g.arc(-3, -5, 9, Math.PI, 0); g.fill(); R('#ffffff99', -8, -11, 3, 2); R('#25223a', 6, -3, 7, 1); R('#25223a', 11, 0, 1, 4); g.restore(); R('#25223a', 3, h - 3, 6, 2); R('#25223a', 44, h - 3, 7, 2); } },
+  crane: { W: 96, H: 150, n: 6, rows: 10, layer: 0, f(g, w, h, v, B, R) { g.strokeStyle = B.b; R(B.c, 14, h - 8, 18, 8); for (const x of [16, 28]) R(B.a, x, 14, 3, h - 14); for (let y = h - 8; y > 24; y -= 8) { g.beginPath(); g.moveTo(17, y); g.lineTo(29, y - 8); g.moveTo(29, y); g.lineTo(17, y - 8); g.stroke(); } R(B.a, 10, 8, 78, 5); R(B.b, 10, 8, 78, 1); g.strokeStyle = B.a; for (let x = 14; x < 86; x += 8) { g.beginPath(); g.moveTo(x, 13); g.lineTo(x + 4, 4); g.lineTo(x + 8, 13); g.stroke(); } R(B.a, 2, 6, 14, 8); R(B.c, 2, 8, 8, 6); R(B.a, 14, 14, 14, 10); R(B.w, 16, 17, 5, 4); R(B.a, 21, 0, 3, 8); g.strokeStyle = B.c; g.beginPath(); g.moveTo(22, 0); g.lineTo(88, 10); g.moveTo(22, 0); g.lineTo(4, 8); g.stroke(); } },
+};
+// ---- decorate(): scatter all of it over the level that was just built. Pure hashes of the seed and the place, so a rebuild looks the same.
+let fancy = { floor: [], wall: [], hang: [], back: [], fore: [], land: [], glow: [] }, FP = fpal(THEMES.island), FB = null;
+const backPal = (th) => { const a = hm(th.hill, th.dark, 0.55); return { a, b: hm(a, th.sky[2], 0.3), c: hm(a, '#000000', 0.35), w: hm(a, th.win[0], 0.8) }; };
+const fthem = (K, nm) => K.th === '*' || K.th.split(' ').includes(nm);
+function decorate() {
+  const th = theme, nm = th.name, gen = LV().gen, seed = gen ? gen.seed : level * 7919 + 13, F = { floor: [], wall: [], hang: [], back: [], fore: [], land: [], glow: [] };
+  FP = fpal(th); FB = backPal(th);
+  const rnd = (a, b = 0) => fhash(a, b, seed), E = (c, r) => c >= 0 && c < LW && r >= 0 && r < LH && tiles[r * LW + c] === EMPTY;
+  const used = new Uint8Array(LW * LH), busy = new Uint8Array(LW), mark = (c0, c1) => { for (let c = Math.max(0, c0); c <= Math.min(LW - 1, c1); c++) busy[c] = 1; };
+  for (const s of spawns) if (typeof s.c === 'number') mark(s.c - 1, s.c + 1);
+  for (const d of decor) mark(d.c - 2, d.c + 2);
+  for (const L of lamps) mark(L.c - 1, L.c + 1);
+  for (const d of devs) if (d.kind !== 'wind' && d.kind !== 'grav' && d.x0 !== undefined) mark(Math.floor(d.x0 / T) - 1, Math.floor(d.x1 / T) + 1);
+  const pad = padOf(); mark(pad[0] - 2, pad[0] + 2);
+  const isFloor = (c, r) => { if (c < 2 || c > LW - 3 || r < 3 || r >= LH - 1) return false; const i = r * LW + c, v = tiles[i]; return isSolidT(v) && v !== CRATE && !crumbly[i] && tiles[i - LW] === EMPTY; };
+  const thick = (c, r) => isSolidT(tileAt(c, r + 1)) && isSolidT(tileAt(c, r + 2)); // ground with some depth under it
+  const take = (c, r, n, rows) => { for (let cc = c; cc < c + n; cc++) for (let rr = r - rows; rr < r; rr++) used[rr * LW + cc] = 1; };
+  // landmarks (random maps only): one or two, well apart, on open flat ground
+  if (gen) {
+    const names = Object.keys(LK), first = (rnd(1, 40) * names.length) | 0, picks = [names[first]]; if (rnd(2, 40) < 0.5) picks.push(names[(first + 1 + ((rnd(3, 40) * (names.length - 1)) | 0)) % names.length]);
+    picks.forEach((k, j) => {
+      const K = LK[k], s0 = (rnd(k.length + j, 41) * (LW - 90)) | 0;
+      for (let t = 0; t < LW - 90; t++) {
+        const c = 14 + ((s0 + t) % (LW - 90)); let r = -1;
+        for (let rr = 5; rr < LH - 3 && r < 0; rr++) if (isFloor(c, rr) && thick(c, rr)) r = rr;
+        if (r < 0 || r - K.rows < 0) continue;
+        let ok = F.land.every((o) => Math.abs(o.c - c) > 60);
+        for (let cc = c; cc < c + K.n && ok; cc++) { if (!isFloor(cc, r) || !thick(cc, r) || (K.layer && busy[cc])) ok = false; for (let rr = r - K.rows; rr < r && ok; rr++) if (!E(cc, rr)) ok = false; }
+        if (!ok) continue;
+        F.land.push({ k, c, r, n: K.n, v: (rnd(c, j + 60) * 8) | 0, x: c * T, y: r * T });
+        if (K.layer) { take(c, r, K.n, K.rows); mark(c, c + K.n); }
+        if (K.glow) F.glow.push({ c, x: (c + K.n / 2) * T, y: r * T - K.glow[0], r: K.glow[1], col: K.glow[2], a: K.glow[3] });
+        break;
+      }
+    });
+  }
+  // things that stand on the floor
+  const fk = Object.keys(FK).filter((k) => fthem(FK[k], nm)), skip = new Int16Array(LH);
+  for (let c = 3; c < LW - 3; c++) {
+    if (busy[c]) continue;
+    for (let r = 3; r < LH - 1; r++) {
+      if (c < skip[r] || !isFloor(c, r) || rnd(c * 29 + r, 1) > 0.34) continue;
+      let room = 0; while (room < 9 && r - 1 - room >= 0 && E(c, r - 1 - room)) room++;
+      let flat = 1; while (flat < 5 && isFloor(c + flat, r) && !busy[c + flat]) flat++;
+      let tot = 0; const el = [];
+      for (const k of fk) { const K = FK[k]; if (Math.ceil(K.W / T) <= flat && Math.ceil(K.H / T) + (K.H > 20 ? 1 : 0) <= room) { el.push(k); tot += K.wt; } }
+      if (!el.length) continue;
+      let pick = rnd(c, r) * tot, k = el[0]; for (const e of el) { pick -= FK[e].wt; if (pick <= 0) { k = e; break; } }
+      const K = FK[k], n = Math.ceil(K.W / T), rows = Math.ceil(K.H / T); let ok = true;
+      for (let cc = c; cc < c + n && ok; cc++) for (let rr = r - rows; rr < r; rr++) if (used[rr * LW + cc] || !E(cc, rr)) { ok = false; break; }
+      if (!ok) continue;
+      take(c, r, n, rows);
+      F.floor.push({ k, c, r, n, v: (rnd(c, r + 50) * 4) | 0, x: (c + n / 2) * T, y: r * T });
+      if (K.glow) F.glow.push({ c, x: (c + n / 2) * T, y: r * T - K.glow[0], r: K.glow[1], col: K.glow[2] || th.win[0], a: K.glow[3] });
+      skip[r] = c + n + 1 + ((rnd(c, r + 9) * 4) | 0);
+    }
+  }
+  // small tufts that grow in front of the player's feet
+  const style = nm === 'snow' || nm === 'edge' ? 2 : th.look.grass || nm === 'sewer' || nm === 'plant' ? 0 : 1;
+  for (let c = 3; c < LW - 3; c++) if (!busy[c]) for (let r = 3; r < LH - 1; r++) if (isFloor(c, r) && rnd(c * 13 + r, 4) < 0.16) F.fore.push({ c, r, v: (rnd(c, r + 7) * 4) | 0, st: style, x: c * T + 2 + ((rnd(c, r + 3) * 10) | 0), y: r * T });
+  // hanging things under ceilings
+  const hk = Object.keys(HK).filter((k) => fthem(HK[k], nm)), hskip = new Int16Array(LH);
+  if (hk.length) for (let c = 3; c < LW - 3; c++) if (!busy[c]) for (let r = 0; r < LH - 2; r++) {
+    const i = r * LW + c, v = tiles[i];
+    if (c < hskip[r] || !isSolidT(v) || v === CRATE || crumbly[i] || tiles[i + LW] !== EMPTY || rnd(c * 31 + r, 6) > 0.16) continue;
+    let open = 0; while (open < 4 && r + 1 + open < LH && tiles[(r + 1 + open) * LW + c] === EMPTY) open++;
+    const len = Math.min(1 + ((rnd(c, r + 2) * 3) | 0), open - 1); if (len < 1) continue;
+    F.hang.push({ k: hk[(rnd(c, r + 5) * hk.length) | 0], c, r, len, v: (rnd(c, r + 6) * 4) | 0, front: rnd(c, r + 8) < 0.3 });
+    hskip[r] = c + 2 + ((rnd(c, r + 12) * 3) | 0);
+  }
+  // pasted on walls
+  const wty = (c, r) => { if (c < 2 || c > LW - 3 || r < 2 || r > LH - 2) return 0; const i = r * LW + c; if (bg[i] && tiles[i] === EMPTY) return bg[i] === BG_BRICK ? 2 : 1; const v = tiles[i]; return (v === BRICK || v === STEEL) && !crumbly[i] && (tiles[i - 1] === EMPTY || tiles[i + 1] === EMPTY) ? 3 : 0; };
+  const wk = Object.keys(WK).filter((k) => fthem(WK[k], nm));
+  for (let r = 2; r < LH - 1; r++) for (let c = 2; c < LW - 2; c++) {
+    const ty = wty(c, r); if (!ty || used[r * LW + c] || rnd(c * 37 + r, 10) > (ty === 3 ? 0.07 : 0.06)) continue;
+    const el = wk.filter((k) => WK[k].ty.includes(ty)); if (!el.length) continue;
+    let tot = 0; for (const e of el) tot += WK[e].wt;
+    let pick = rnd(c, r + 20) * tot, k = el[0]; for (const e of el) { pick -= WK[e].wt; if (pick <= 0) { k = e; break; } }
+    const K = WK[k]; let ok = true; for (let cc = c; cc < c + K.n; cc++) if (wty(cc, r) !== ty || used[r * LW + cc]) ok = false;
+    if (!ok) continue;
+    for (let cc = c; cc < c + K.n; cc++) used[r * LW + cc] = 1;
+    F.wall.push({ k, c, r, ty, v: (rnd(c, r + 30) * 4) | 0, ox: (K.n * T - K.W) >> 1, oy: (T - K.H) >> 1 });
+    if (K.glow) F.glow.push({ c, x: c * T + 8, y: r * T + 8, r: K.glow[1], col: K.glow[2] || th.win[0], a: K.glow[3] });
+  }
+  // dark buildings and ruins behind the playfield, on thick flat ground with open sky above
+  const bks = BKT[nm] || ['ruin', 'tower'];
+  for (let c = 5; c < LW - 12;) {
+    const k = bks[(rnd(c, 11) * bks.length) | 0], K = BK[k], sizes = K.sizes.slice().sort((a, b) => rnd(a[1], c) - rnd(b[1], c));
+    let done = false;
+    for (const [w, h] of sizes) {
+      const n = Math.ceil(w / T) + 1, hr = Math.ceil((h - 8) / T) + 1; let r = -1;
+      for (let rr = 5; rr < LH - 3 && r < 0; rr++) if (isFloor(c, rr) && thick(c, rr)) r = rr;
+      if (r < 0 || r - hr < 0) continue;
+      let ok = true; for (let cc = c; cc < c + n && ok; cc++) { const fr = isFloor(cc, r) ? r : isFloor(cc, r + 1) ? r + 1 : -1; if (fr < 0 || !thick(cc, fr)) ok = false; for (let rr = r - hr; rr < r && ok; rr++) if (!E(cc, rr)) ok = false; }
+      if (!ok) continue;
+      F.back.push({ k, c, r, w, h, v: (rnd(c, 13) * 4) | 0, x: c * T + ((n * T - w) >> 1), n }); c += n + 3 + ((rnd(c, 14) * 9) | 0); done = true; break;
+    }
+    if (!done) c += 3;
+  }
+  if (['sewer', 'plant', 'rust', 'city', 'astro'].includes(nm)) for (let c = 8; c < LW - 16;) { // pipes that run between two walls
+    const r = 4 + ((rnd(c, 21) * 10) | 0), n = 4 + ((rnd(c, 22) * 7) | 0); let ok = rnd(c, 23) < 0.5 && !E(c - 1, r) && !E(c + n, r) && tiles[r * LW + c - 1] !== 0 && tiles[r * LW + c + n] !== 0;
+    for (let cc = c; cc < c + n && ok; cc++) if (!E(cc, r) || !E(cc, r - 1)) ok = false;
+    if (ok) { F.back.push({ k: 'bpipe', c, r, w: 16, h: 8, v: (rnd(c, 24) * 4) | 0, x: c * T, n }); c += n + 6 + ((rnd(c, 25) * 8) | 0); } else c += 2;
+  }
+  for (const k of ['floor', 'wall', 'hang', 'back', 'fore', 'land', 'glow']) F[k].sort((a, b) => a.c - b.c || (a.r || 0) - (b.r || 0));
+  fancy = F;
+}
+const _buildLevel = buildLevel;
+buildLevel = function () { _buildLevel(); decorate(); }; // every level, campaign, stretch or random, is dressed once it is built
+// ---- drawing. Only what is on screen is touched; sprites are drawn once per theme and reused.
+const fspan = (arr, lo, hi, fn) => { let a = 0, b = arr.length; while (a < b) { const m = (a + b) >> 1; if (arr[m].c < lo) a = m + 1; else b = m; } for (; a < arr.length && arr[a].c <= hi; a++) fn(arr[a]); };
+const fview = () => [Math.floor(cam.x / T) - 14, Math.floor((cam.x + VW) / T) + 3];
+const fR = (col, x, y, w, h) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+const fbits = (it, n) => { for (let k = 0; k < n; k++) chunk(it.x + rand(-6, 6), it.y - rand(2, 10), rand(-90, 90), rand(-180, -40), FP.stone[k & 1]); it.gone = true; }; // a decoration whose ground is blown away falls apart
+function drawFancyBack() {
+  const [lo, hi] = fview(), mid = cam.x + VW / 2, nm = theme.name;
+  fspan(fancy.back, lo, hi, (it) => {
+    const x = Math.round(it.x + (mid - it.x - it.w / 2) * 0.06), y = it.r * T + 8;
+    if (it.k === 'bpipe') { const img = it.img || (it.img = spr(nm + ':bp', 16, 8, (g, R) => BK.bpipe.f(g, 16, 8, 0, FB, R))); for (let k = 0; k < it.n * 2; k++) ctx.drawImage(img, it.c * T + k * 16, it.r * T + 4); fR(FB.c, it.c * T, it.r * T + 2, 3, 12); fR(FB.c, (it.c + it.n) * T - 3, it.r * T + 2, 3, 12); return; }
+    const img = it.img || (it.img = spr(nm + ':b' + it.k + it.w + it.v, it.w, it.h + 10, (g, R) => { g.translate(0, 10); BK[it.k].f(g, it.w, it.h, it.v, FB, R); }));
+    ctx.drawImage(img, x, y - it.h - 10);
+  });
+  const t = anim0();
+  fspan(fancy.land, lo - 6, hi, (it) => {
+    const K = LK[it.k]; if (K.layer) return;
+    const img = it.img || (it.img = spr(nm + ':l' + it.k + it.v, K.W, K.H + 10, (g, R) => { g.translate(0, 10); K.f(g, K.W, K.H, it.v, it.k === 'billboard' ? Object.assign({}, FB, { a: hm(FB.a, theme.sky[2], 0.12) }) : Object.assign({}, FB, { a: hm(FB.a, theme.sky[2], 0.18), b: hm(FB.b, theme.sky[2], 0.2) }), R); }));
+    const sx = it.x + ((K.n * T - K.W) >> 1), sy = it.y + 8 - K.H - 10;
+    ctx.drawImage(img, sx, sy);
+    if (it.k === 'crane') { const jx = sx + 62, hy = sy + 10 + 12, sw = Math.sin(t * 0.9) * 3; ctx.strokeStyle = FB.b; ctx.beginPath(); ctx.moveTo(jx, hy); ctx.lineTo(jx + sw, hy + 52); ctx.stroke(); fR(FB.a, Math.round(jx + sw) - 5, hy + 52, 10, 8); fR(FB.b, Math.round(jx + sw) - 5, hy + 52, 10, 1); fR(FB.w, sx + 5, sy + 10 + 7, 2, 2); }
+    else if (it.k === 'billboard' && Math.sin(t * 9 + it.c) > 0.96) fR(FB.c, sx + 5, sy + 13, K.W - 10, 31);
+    else if (it.k === 'statue' && Math.sin(t * 2 + it.c) > 0.2) fR(FB.w, sx + K.W - 17, sy + 10 + 2, 3, 3);
+  });
+}
+function drawFancyMid() {
+  const [lo, hi] = fview(), nm = theme.name, t = anim0();
+  fspan(fancy.wall, lo, hi, (it) => {
+    if (it.gone) return; const K = WK[it.k];
+    if (it.ty === 3 && !isSolidT(tileAt(it.c, it.r))) { it.gone = true; return; }
+    const img = it.img || (it.img = spr(nm + ':w' + it.k + it.v, K.W, K.H, (g, R) => K.f(g, it.v, FP, R)));
+    ctx.drawImage(img, it.c * T + it.ox, it.r * T + it.oy);
+  });
+  fspan(fancy.hang, lo, hi, (it) => {
+    if (it.gone || it.front) return;
+    if (!isSolidT(tileAt(it.c, it.r))) { it.gone = true; return; }
+    ctx.drawImage(fhang(it, nm), it.c * T + 3, (it.r + 1) * T);
+  });
+  fspan(fancy.floor, lo, hi, (it) => {
+    if (it.gone) return; const K = FK[it.k];
+    if (!isSolidT(tileAt(it.c, it.r))) { fbits({ x: it.x, y: it.y }, 4); it.gone = true; return; }
+    const img = it.img || (it.img = spr(nm + ':f' + it.k + it.v, K.W, K.H, (g, R) => K.f(g, it.v, FP, R))), sx = Math.round(it.x - K.W / 2), sy = it.y - K.H;
+    ctx.drawImage(img, sx, sy);
+    if (it.k === 'flag') { const col = FP.acc[it.v & 1]; for (let i = 0; i < 9; i++) fR(col, sx + 3 + i, sy + 2 + Math.round(Math.sin(t * 5 + i * 0.7 + it.c) * 1.5), 1, 6 - (i >> 2)); }
+    else if (it.k === 'antenna' && Math.sin(t * 3 + it.c) > 0.2) fR('#ff3a2a', sx + 4, sy, 2, 2);
+  });
+  fspan(fancy.land, lo - 6, hi, (it) => {
+    const K = LK[it.k]; if (!K.layer) return;
+    const img = it.img || (it.img = spr(nm + ':l' + it.k + it.v, K.W, K.H + 10, (g, R) => { g.translate(0, 10); K.f(g, K.W, K.H, it.v, FB, R); })), sx = it.x + ((K.n * T - K.W) >> 1), sy = it.y - K.H + 2;
+    ctx.drawImage(img, sx, sy - 10);
+    for (let k = 0; k < 3; k++) { fR(Math.sin(t * 4 + k * 2 + it.c) > 0 ? '#ff5a4a' : '#f2c94c', sx + 12 + k * 14, sy + 13 + k, 2, 2); } // blinking rim lights
+    ctx.globalAlpha = 0.22; for (let k = 0; k < 3; k++) { const u = (t * 0.7 + k * 0.33) % 1; ctx.fillStyle = '#9a9aaa'; ctx.beginPath(); ctx.arc(sx + 30 + Math.sin(u * 6 + k) * 3, sy + 6 - u * 26, 3 + u * 4, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; // smoke from the wreck
+  });
+}
+const fhang = (it, nm) => it.img || (it.img = spr(nm + ':h' + it.k + it.len + it.v, 10, it.len * T, (g, R) => HK[it.k].f(g, it.len * T, it.v, FP, R)));
+function drawFancyFore() { // small things in front of the player: tufts at the feet and ends of hanging growth, kept faint and low
+  const [lo, hi] = fview(), nm = theme.name;
+  ctx.globalAlpha = 0.9;
+  fspan(fancy.fore, lo, hi, (it) => {
+    if (!isSolidT(tileAt(it.c, it.r))) return;
+    const img = spr(nm + ':t' + it.st + it.v, 10, 6, (g, R) => {
+      if (it.st === 0) for (let k = 0; k < 5; k++) R(FP.leaf[k & 1], 1 + k * 2, 5 - (2 + ((fhash(it.v, k, 1) * 3) | 0)), 1, 6);
+      else if (it.st === 1) { R(FP.stone[0], 1 + (it.v & 1), 3, 4, 3); R(FP.stone[1], 1 + (it.v & 1), 3, 4, 1); R(FP.stone[0], 6, 4, 3, 2); }
+      else { R('#e8f0fa', 1, 3, 8, 3); R('#ffffff', 2 + (it.v & 1), 2, 4, 1); R('#bcd2ea', 1, 5, 8, 1); }
+    });
+    ctx.drawImage(img, it.x, it.y - 5);
+  });
+  ctx.globalAlpha = 0.55;
+  fspan(fancy.hang, lo, hi, (it) => { if (it.gone || !it.front) return; if (!isSolidT(tileAt(it.c, it.r))) { it.gone = true; return; } ctx.drawImage(fhang(it, nm), it.c * T + 3, (it.r + 1) * T); });
+  ctx.globalAlpha = 1;
+}
+const _drawBackWalls = drawBackWalls;
+drawBackWalls = function () { drawFancyBack(); _drawBackWalls(); };
+const _drawDecor = drawDecor;
+drawDecor = function (t) { drawFancyMid(); _drawDecor(t); };
+const _drawPlayer = drawPlayer;
+drawPlayer = function () { _drawPlayer(); drawFancyFore(); };
+const _collectLights = collectLights;
+collectLights = function (t) { _collectLights(t); const [lo, hi] = fview(); fspan(fancy.glow, lo, hi, (g) => light(g.x, g.y, g.r, g.col, g.a)); }; // vending machines, windows, street lamps and crystals shine
+
 init();
 state = 'title';
 if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, get grace() { return grace; }, endCeasefire() { ceasefire = 0; }, setReached(n) { reached = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; }, setLives(n) { lives = n; }, get plants() { return plants; }, get critters() { return critters; }, sproutAt: () => sproutAt, get lifeT() { return lifeT; }, newCritter, lifeNoise, setRamp(v) { rampOn = v; }, get diff() { return diff; }, sfx, audioInit, tone, noise, get audio() { return { AC, master, echo, amb }; }, get deathLog() { return deathLog; } }; }
@@ -8809,5 +9209,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWate
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decorate, FK, WK, HK, BK, LK, BKT, FV, vIdx, fhash, drawFancyBack, drawFancyMid, drawFancyFore, fancyEdges, tilesNow: () => tiles, spawnsNow: () => spawns, spriteCount: () => SPC.size }); // fancier maps hooks
 })();
 </script>
