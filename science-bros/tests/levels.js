@@ -91,7 +91,7 @@ check('the mission before the finale points at the Citadel', /Citrus Citadel/i.t
 
 // the campaign gets harder step by step: threat on the map climbs from the first mission to the finale
 {
-  const W = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
+  const W = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3, minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sapper: 2, knight: 3 };
   const threat = []; for (let l = 0; l < N; l++) { S.startLevel(l); threat.push(S.ents.filter((e) => W[e.type]).reduce((a, e) => a + W[e.type], 0)); }
   check('the first mission is the easiest', threat[0] === Math.min(...threat), threat.map((x) => x.toFixed(0)).join(' '));
   check('the finale is among the hardest', threat[N - 1] >= Math.max(...threat) - 6, threat[N - 1].toFixed(0));
