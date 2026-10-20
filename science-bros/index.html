@@ -98,7 +98,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const T = 16, VW = 480, VH = 270, LW = 376, LH = 22; // a level is built 236 columns wide, then gets a 140-column stretch before its boss arena (see slideArena)
+const T = 16, VW = 480, VH = 270, LW = 376, LH = 40; // a level is built 236 columns wide, then gets a 140-column stretch before its boss arena (see slideArena); 40 rows: the top 22 as before, earth below (see underground)
 let G = 900; // gravity; lower on the Moon
 const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
 const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
@@ -489,7 +489,7 @@ function buildLevel() {
   const fill = (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) set(c, r, v); };
   const H = {
     fill,
-    ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, LH - 2, v); fill(c0, LH - 1, c1, LH - 1, STEEL); },
+    ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, GH - 2, v); fill(c0, GH - 1, c1, GH - 1, STEEL); },
     sp: (type, c, from = 0, extra = {}) => spawns.push(Object.assign({ type, c, from }, extra)),
     bgFill: (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) bg[r * LW + c] = v; },
     // decor sits on the tile under it (or hangs on a wall tile) and drops when that tile goes
@@ -510,6 +510,7 @@ function buildLevel() {
   const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
   if (stretched && !LV().gen) { slideArena(); buildStretch(H, level); }
   else if (!stretched) for (let r = 0; r < LH; r++) for (let c = 236; c < LW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
+  deepen(); // earth under the level down to the bedrock (see underground)
 }
 // ---- longer maps: every campaign mission and the Moon get a stretch of extra level pieces between the main path
 // and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
@@ -554,6 +555,7 @@ function buildStretch(H, n) {
   }
   H.sp('ammo', cutAt + 2, openRow(cutAt + 2));
   for (const k of [cutAt + (STRETCH >> 1), cutAt + STRETCH - 3]) H.sp('flag', k, openRow(k));
+  underStretch(H, n); // some stretches get a detour under the ground
 }
 function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Beach and hills
@@ -2297,6 +2299,125 @@ function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
 const BOSS_MUL = { goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1 };
 let bossMul = 1;
 
+// ---------------------------------------------------------------- underground
+// A level is 40 rows tall (LH). Missions are still built in the top GH = 22 rows (row 21 is the old steel bedrock);
+// under that lies earth down to a steel bedrock at row 39. Underground zones dig into it: shafts with ladders, lifts,
+// vents and cracked ground lead down to mines, bunkers, sewers, acid caverns and buried labs, and back up again.
+// Inside a zone the camera follows you down; anywhere else, falling below row 21 is still falling off the map.
+const GH = 22, UG_KINDS = ['mine', 'bunker', 'sewer', 'cavern', 'lab'];
+const UG_BY_THEME = { cave: ['cavern', 'mine'], sewer: ['sewer', 'sewer', 'cavern'], rust: ['bunker', 'sewer', 'mine'], plant: ['lab', 'sewer'], city: ['sewer', 'bunker'], astro: ['lab', 'bunker'], moon: ['lab', 'bunker'], desert: ['cavern', 'lab', 'mine'], snow: ['cavern', 'bunker'], citrus: ['bunker', 'lab'] };
+const UG_SIGN = { mine: ['MINE 7', 'DIG SITE', 'ORE SHAFT'], bunker: ['BUNKER', 'SHELTER', 'NO ENTRY'], sewer: ['SEWER', 'DRAINS', 'OUTFLOW'], cavern: ['CAVES', 'GROTTO', 'KEEP OUT'], lab: ['SECRET LAB', 'LAB B2', 'R AND D'] };
+const deep = new Uint8Array(LW), ugDug = new Uint8Array(LW); // columns of a zone (camera and fall line); columns that have their earth already
+let ugZones = [], ugOf = null; // the zones of the level built last, and its tile array (a new array means a new level)
+const ugFresh = () => { if (ugOf !== tiles) { ugOf = tiles; ugZones = []; deep.fill(0); ugDug.fill(0); } };
+const ugFloor = (x) => (deep[clamp(Math.floor(x / T), 0, LW - 1)] ? LH : GH) * T; // below this you have fallen off the map
+const camBottom = () => ugFloor(P.x + P.w / 2) - VH; // how far down the camera may go where you are
+const ugDark = () => clamp((cam.y + VH / 2 - GH * T) / (8 * T), 0, 1) * 0.55; // the deeper the camera, the darker; lamps still light it
+const mapRows = () => (ugZones.length ? LH : GH); // the full map shows the underground only when the level has some
+const ugPlain = (c) => !deep[c] && tiles[(GH - 1) * LW + c] !== EMPTY; // a column with nothing but earth under row 21
+const ugKind = (R) => R.pick(UG_BY_THEME[LV().theme] || UG_KINDS);
+function ugEarth(c0, c1) { // earth from row 22 to 38 and steel bedrock at 39, with an earth back wall for whatever gets dug out
+  for (let c = Math.max(0, c0); c <= Math.min(LW - 1, c1); c++) { ugDug[c] = 1; for (let r = GH; r < LH; r++) { const i = r * LW + c, v = r === LH - 1 ? STEEL : DIRT; tiles[i] = v; thp[i] = TILE_HP[v]; bg[i] = BG_EARTH; } }
+}
+function deepen() { ugFresh(); for (let c = 0; c < LW; c++) if (!ugDug[c] && isSolidT(tiles[(GH - 1) * LW + c])) ugEarth(c, c); } // every column solid at row 21 gets earth under it (a pit stays bottomless)
+function ugZone(c0, c1, kind) { ugFresh(); ugEarth(c0, c1); ugZones.push({ c0, c1, kind }); for (let c = Math.max(0, c0 - 3); c <= Math.min(LW - 1, c1 + 3); c++) deep[c] = 1; }
+const ugCut = (H, c0, r0, c1, r1, b = BG_EARTH) => { H.fill(c0, r0, c1, r1, EMPTY); H.bgFill(c0, r0, c1, r1, b); };
+// a tunnel from column a to b with its floor at row F, dressed as its kind; skip: columns kept clear (the shafts). Returns the free floor columns.
+function ugTunnel(H, a, b, F, kind, R, skip) {
+  const h = kind === 'cavern' ? 7 : 6, top = F - h, lined = kind !== 'mine' && kind !== 'cavern', used = new Set(skip), free = (k) => k > a && k < b && !used.has(k);
+  ugCut(H, a, top, b, F - 1, lined ? BG_BRICK : BG_EARTH);
+  if (lined) { H.fill(a, F, b, F, STEEL); H.fill(a, top - 1, b, top - 1, STEEL); } // steel floor and roof
+  if (kind === 'mine') { H.fill(a, F, b, F, STEEL); for (let k = a + 3; k < b; k += 6) { H.fill(k, top - 1, k, top - 1, STEEL); if (free(k + 2) && R.chance(0.6)) { H.fill(k + 2, F - 1, k + 2, F - 1, CRATE); used.add(k + 2); } } } // rails, steel props in the roof, ore crates
+  if (kind === 'bunker') for (const k of [a + ((b - a) >> 2), b - ((b - a) >> 2)]) if (free(k - 1) && free(k) && free(k + 1)) { H.fill(k, F - 3, k, F - 1, CRATE); used.add(k - 1).add(k).add(k + 1); } // crate doors: shoot through or climb over
+  if (kind === 'sewer' && b - a >= 10) { const c0 = a + 3, c1 = b - 3; H.fill(c0, F + 1, c1, F + 1, EMPTY); H.fill(c0, F + 2, c1, F + 3, ACID); H.bgFill(c0, F + 1, c1, F + 3, BG_BRICK); for (let k = c0; k <= c1; k += 5) H.fill(k, F + 1, k, F + 3, STEEL); } // the outflow under a steel walkway
+  if (kind === 'cavern') {
+    for (let k = a; k <= b; k++) if (R.chance(0.35)) H.fill(k, top, k, top, DIRT); // a ragged roof
+    const L = b - a >= 16 ? R.int(4, 7) : 0, m0 = a + 4 + R.int(0, Math.max(0, b - a - 10 - L));
+    if (L) { H.fill(m0, F + 1, m0 + L - 1, F + 2, ACID); H.fill(m0, F, m0 + L - 1, F, STEEL); for (let k = m0 - 1; k <= m0 + L; k++) used.add(k); } // an acid lake under a steel bridge
+    for (let k = a + 3; k < b - 2; k += R.int(5, 8)) if (free(k)) H.sp('icicle', k, 0, { hang: roofOf(k, F - 1), rock: true });
+    if (LV().theme === 'cave') for (let k = a + 2; k < b; k += R.int(7, 11)) if (free(k)) H.dc('crystal', k, { from: F - 2 });
+  }
+  for (let k = a + 2; k < b; k += R.int(6, 8)) if (!used.has(k)) H.lamp(k, roofOf(k, F - 1));
+  if (kind === 'lab' || kind === 'bunker') H.dc('plaque', a + 2 + R.int(0, Math.max(0, b - a - 6)), { r: top - 1, text: R.pick(UG_SIGN[kind]) });
+  const out = []; for (let k = a + 1; k < b; k++) if (free(k) && !isSolidT(tileAt(k, F - 1)) && !isSolidT(tileAt(k, F - 2))) out.push(k);
+  return out;
+}
+// a shaft at columns x and x+1 from the surface row s down to the floor at F. The ladder hugs the left wall, so the
+// right one stays clear to climb; it is lined with steel, so nobody tunnels off sideways under the map. how: ladder,
+// lift (a platform beside the ladder), crumble (cracked ground over it) or vent (steam throws you up)
+function ugShaft(H, x, s, F, how, up) {
+  ugCut(H, x, s, x + 1, F - 1); H.fill(x, s, x, F - 1, LADDER);
+  for (let r = s; r < F; r++) if (isSolidT(tileAt(x + 2, r))) H.fill(x + 2, r, x + 2, r, STEEL);
+  if (how === 'lift') H.lift(x + 1, up ? F : s, 1, 0, up ? s - F : F - s, { cab: 1, spd: 70, pause: 1.4 });
+  else if (how === 'crumble') { H.fill(x, s, x + 1, s, DIRT); H.crumble(x, s, x + 1, s); }
+  else if (how === 'vent') H.vent(x + 1, F, F - s + 2, { col: '#c9d4e6' });
+}
+// quacks, loot, a cage and sometimes an objective for a zone: spots are free floor columns at row F
+// o: { R (layout stream), Q (quack stream), foes: types to pick from, n: how many quacks, cage, target: objective skin, ledges: where the randomizer may put intel }
+function ugStock(H, spots, F, o) {
+  const R = o.R, sp = spots.slice(), take = (rr) => (sp.length ? sp.splice(rr.int(0, sp.length - 1), 1)[0] : -1), wet = (k) => { for (let j = k - 6; j <= k + 6; j++) for (let r = F + 1; r <= F + 3; r++) if (tileAt(j, r) === ACID) return true; return false; };
+  let k = take(R); if (k >= 0) H.sp(R.pick(['ammo', 'guncrate', 'itemcrate']), k, F - 2);
+  if (o.cage) { k = take(R); if (k >= 0) H.sp('cage', k, F - 2); }
+  if (o.target) { k = take(R); if (k >= 0) H.sp('target', k, F - 2, { skin: o.target }); }
+  if (o.ledges) for (let i = 0; i < 2; i++) { k = take(R); if (k >= 0) o.ledges.push([k, F]); }
+  for (let i = 0; i < o.n; i++) { k = take(o.Q); if (k < 0) break; let type = o.Q.pick(o.foes); if (wet(k) && ((RANDOM_FOES.find((f) => f[0] === type) || [])[3] || {}).blast) type = 'grunt'; H.sp(type, k, F - 2); }
+}
+// the randomizer's underground pieces
+Object.assign(GEN_SEG, {
+  under(H, c, w, R, x) { // the way on stays up top; a shaft (ladder, lift or cracked ground) leads down to a tunnel with loot, and another one up again
+    const kind = ugKind(R); H.ground(c, c + w - 1, 16); ugZone(c, c + w - 1, kind);
+    const F = R.int(29, 34), a = c + R.int(9, 12), b = c + w - R.int(4, 6), down = R.pick(['ladder', 'ladder', 'lift', 'crumble']), up = R.pick(['ladder', 'lift', 'vent']), qs = R.int(1, 1e9);
+    const spots = ugTunnel(H, c + 2, b, F, kind, R, [a, a + 1, b - 1, b]);
+    ugShaft(H, a, 16, F, down, false); ugShaft(H, b - 1, 16, F, up, true);
+    H.dc('sign', a - 2, { text: R.pick(UG_SIGN[kind]), from: 14 });
+    ugGen(H, R, x, spots, F, kind, qs, R.chance(kind === 'lab' ? 0.7 : 0.3), R.chance(0.6));
+  },
+  descent(H, c, w, R, x) { // the way on runs under a ridge: down the stairs in its mouth, along the tunnel, up a shaft at the far side
+    const kind = ugKind(R); H.ground(c, c + w - 1, 16); ugZone(c, c + w - 1, kind);
+    const F = R.int(28, 32), m = c + 3, D = F - 16, e = c + w - 5, up = R.pick(['ladder', 'lift', 'vent']), qs = R.int(1, 1e9);
+    for (let k = m; k < e; k++) H.fill(k, clamp(4 + Math.round(Math.sin((k - m) * 0.3) * 1.5 + R() * 1.2), 3, 6), k, 15, DIRT); // the ridge
+    for (let k = 0; k <= D; k++) ugCut(H, m + k, Math.max(9, 6 + k), m + k, 15 + k); // stairs down under a roof 10 rows up: a jump never reaches a step of it
+    const spots = ugTunnel(H, m + D + 1, e + 1, F, kind, R, [e, e + 1]);
+    ugCut(H, m + D + 1, F - 10, m + D + 4, F - 1, kind === 'mine' || kind === 'cavern' ? BG_EARTH : BG_BRICK); H.lamp(m + D + 3, F - 11); // a tall hall at the foot of the stairs, so a jump off them lands before the roof drops
+    ugShaft(H, e, 16, F, up, true);
+    H.dc('sign', m - 2, { text: R.pick(UG_SIGN[kind]), from: 14 }); H.lamp(m + 1, roofOf(m + 1, 12));
+    x.high.push([m + 6, surf(m + 6, 0)]); if (x.tree) H.dc(x.tree, m + 9);
+    ugGen(H, R, x, spots, F, kind, qs, R.chance(kind === 'lab' ? 0.7 : 0.4), R.chance(0.5));
+  },
+});
+Object.assign(SEG_META, { under: { w: [36, 52], wt: 4, gen: true }, descent: { w: [42, 56], wt: 1.5, gen: true } });
+function ugGen(H, R, x, spots, F, kind, qs, objective, cage) { // stock a random map's zone: quacks follow the difficulty, the rest never does
+  const g = LV().gen || {}, p = g.diff ? g.diff.p : 0.5, tk = ((LV().objectives || []).find((o) => ['vat', 'radio', 'server'].includes(o.id)) || {}).id;
+  const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p && !(f[3] || {}).high && ((f[3] || {}).room || 2) <= 4).map((f) => f[0]);
+  ugStock(H, spots, F, { R, Q: rngOf(qs + Math.round(p * 1000)), foes, n: 1 + Math.round(p * 3), cage, target: objective && tk, ledges: x.ledges });
+}
+// a campaign stretch gets a detour under the ground (two missions in three): down a shaft, through a tunnel, up another.
+// A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
+const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant
+function underStretch(H, n) {
+  if (n % 3 !== 2) ugDetour(H, n, cutAt + 8, cutAt + 70, cutAt + STRETCH - 6, rngOf(4099 + n * 977));
+  if (UG_MISSIONS.includes(n)) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + n * 131));
+}
+function ugDetour(H, n, lo, aMax, hi, R) { // a = the entry shaft between lo and aMax, b = the exit shaft before hi
+  const busy = (k) => spawns.some((o) => !THREAT[o.type] && Math.abs(o.c - k - 0.5) < 2.5) || devs.some((d) => d.kind !== 'wind' && d.x1 > (k - 2) * T && d.x0 < (k + 4) * T); // a quack over a shaft just starts at its foot
+  const ok = (k) => { const s = surf(k, 0); if (s < 12 || s > 17 || busy(k)) return -1; for (let j = k - 1; j <= k + 2; j++) { if (surf(j, 0) !== s || crumbly[s * LW + j]) return -1; for (let r = s; r < GH; r++) { const v = tileAt(j, r); if (!isSolidT(v) || v === CRATE || v === ICE) return -1; } } return s; };
+  let a = -1, b = -1;
+  for (let k = lo; k < aMax && a < 0; k++) if (ok(k) >= 0) a = k;
+  if (a < 0) return;
+  for (let k = a + 18 + R.int(0, 8); k < Math.min(a + 44, hi) && b < 0; k++) if (ok(k - 1) >= 0) b = k;
+  if (b < 0) return;
+  for (let k = a - 9; k <= b + 1; k++) if (!isSolidT(tileAt(k, GH - 1))) return; // no bottomless pit over it
+  const kind = ugKind(R), F = R.int(30, 33), L = R.int(4, 8), down = R.pick(['ladder', 'lift', 'crumble']), up = R.pick(['ladder', 'lift', 'vent']), sa = ok(a), sb = ok(b - 1);
+  ugZone(a - L - 1, b + 1, kind);
+  const spots = ugTunnel(H, a - L, b, F, kind, R, [a, a + 1, b - 1, b]);
+  ugShaft(H, a, sa, F, down, false); ugShaft(H, b - 1, sb, F, up, true);
+  ugStock(H, spots, F, { R, Q: R, foes: STRETCH_FOES, n: 2 + (n % 3), cage: n >= 4 });
+}
+function drawUnder() { // dark rock behind everything under row 21; it only shows where nothing else is drawn
+  if (cam.y + VH <= GH * T) return;
+  ctx.fillStyle = '#17131d'; ctx.fillRect(cam.x - 4, GH * T, VW + 8, (LH - GH) * T);
+}
+
 // ---------------------------------------------------------------- structure collapse
 // A solid tile stays up while a chain of solid neighbours links it to bedrock (the bottom row) or to steel.
 // Anything cut loose shakes for a moment, then drops as single blocks that crush what is under them.
@@ -3991,7 +4112,7 @@ let deathLog = []; // what killed the bros this mission, for tuning
 function killPlayer(how = 'shot', dir = 0) {
   if (!P.alive || P.ride) return;
   if (P.dash > 0 && how === 'shot') return; // the roll dodges bullets and bites
-  if (P.shield > 0 && !P.mech && P.y < LH * T) { // the shield pops instead of the bro
+  if (P.shield > 0 && !P.mech && P.y < ugFloor(P.x + 5)) { // the shield pops instead of the bro
     P.shield = 0; P.inv = 1.2; sfx('glass'); fx.push({ kind: 'ring', x: P.x + 5, y: P.y + 8, r: 16, t: 0.3, max: 0.3 });
     for (let i = 0; i < 10; i++) part(P.x + 5, P.y + 8, rand(-120, 120), rand(-120, 60), '#8fd3ff', 0.4, 2);
     return;
@@ -4537,7 +4658,7 @@ function step(dt) {
   // camera
   if (P.alive || P.ride) {
     const tx = clamp(P.x + P.w / 2 - VW / 2 + P.face * 40, 0, LW * T - VW);
-    const ty = clamp(P.y - VH * 0.58, 0, LH * T - VH);
+    const ty = clamp(P.y - VH * 0.58, 0, camBottom());
     cam.x += (tx - cam.x) * Math.min(1, dt * 5);
     cam.y += (ty - cam.y) * Math.min(1, dt * 4);
   }
@@ -4650,8 +4771,8 @@ function updatePlayer(dt) {
   if ((pressed.melee || P.wantMelee) && P.mcool <= 0 && P.pound <= 0) punch();
   P.wantSpec = P.wantMelee = P.wantDash = false;
 
-  if (rectAcid(P.x, P.y, P.w, P.h) || P.y > LH * T) {
-    if (P.y < LH * T) splash(P.x + 5, P.y + 10, 14);
+  if (rectAcid(P.x, P.y, P.w, P.h) || P.y > ugFloor(P.x + 5)) {
+    if (P.y < ugFloor(P.x + 5)) splash(P.x + 5, P.y + 10, 14);
     P.inv = 0; killPlayer();
   }
 }
@@ -4850,7 +4971,7 @@ function updateEnt(e, dt) {
     case 'director': updateDirector(e, dt); break;
     case 'icicle': updateIcicle(e, dt); break;
   }
-  if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > LH * T) && !e.dead) {
+  if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > ugFloor(e.x + e.w / 2)) && !e.dead) {
     if (e.type === 'cage' || e.type === 'pickup') { e.dead = true; } else if (HITTABLE[e.type]) { e.hp = 0; killEnemy(e); }
   }
   e.rp += Math.abs(e.vx) * dt * 0.09;
@@ -6719,6 +6840,7 @@ function viewTiles() {
   return [Math.max(0, Math.floor(cam.x / T)), Math.min(LW - 1, Math.floor((cam.x + VW) / T)), Math.max(0, Math.floor(cam.y / T)), Math.min(LH - 1, Math.floor((cam.y + VH) / T))];
 }
 function drawBackWalls() {
+  drawUnder();
   const [c0, c1, r0, r1] = viewTiles();
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     const i = r * LW + c;
@@ -7837,7 +7959,9 @@ let miniDirty = true;
 const MINI_COL = [null, null, '#5a6788', '#8b93ad', '#7a5c36', null, '#8fc7e8', '#a07a46'];
 function updateMini() {
   miniDirty = false; mctx.clearRect(0, 0, LW, LH);
+  mctx.fillStyle = theme.dirt[3]; for (let c = 0; c < LW; c++) if (ugPlain(c)) { let e = c; while (e + 1 < LW && ugPlain(e + 1)) e++; mctx.fillRect(c, GH, e - c + 1, LH - GH); c = e; } // the plain earth under the level, one rect per run
   for (let r = 0; r < LH; r++) for (let c = 0; c < LW; c++) {
+    if (r >= GH && ugPlain(c)) continue;
     const v = tiles[r * LW + c]; if (!v) continue;
     mctx.fillStyle = v === DIRT ? theme.dirt[3] : v === ACID ? theme.acid[1] : MINI_COL[v]; mctx.fillRect(c, r, 1, 1);
   }
@@ -7859,17 +7983,17 @@ function mapMarks(g, ox, oy, k, c0, c1, blink) {
 }
 function drawMinimap(t) {
   if (miniDirty) updateMini();
-  const w = 104, h = LH, ox = VW - w - 6, oy = VH - h - 8, c0 = clamp(Math.floor(P.x / T) - w / 2, 0, LW - w);
+  const w = 104, h = GH, ox = VW - w - 6, oy = VH - h - 8, c0 = clamp(Math.floor(P.x / T) - w / 2, 0, LW - w), r0 = clamp(Math.floor(P.y / T) - 16, 0, LH - GH); // underground the window follows you down
   ctx.fillStyle = 'rgba(11,14,31,0.7)'; ctx.fillRect(ox - 2, oy - 2, w + 4, h + 4);
-  ctx.drawImage(MINI, c0, 0, w, LH, ox, oy, w, h);
-  mapMarks(ctx, ox, oy, 1, c0, c0 + w, Math.floor(t * 4) % 2);
+  ctx.drawImage(MINI, c0, r0, w, h, ox, oy, w, h);
+  ctx.save(); ctx.beginPath(); ctx.rect(ox - 2, oy - 2, w + 4, h + 4); ctx.clip(); mapMarks(ctx, ox, oy - r0, 1, c0, c0 + w, Math.floor(t * 4) % 2); ctx.restore();
 }
 function drawFullMap(t) {
   if (miniDirty) updateMini();
-  const k = 2, half = Math.ceil(LW / 2), w = half * k, ox = Math.round((VW - w) / 2), oy = 112, h = LH * k * 2 + 6; // the level in two strips, the first half above the second
+  const k = 2, half = Math.ceil(LW / 2), w = half * k, ox = Math.round((VW - w) / 2), mr = mapRows(), oy = 112 - (mr - GH) * k * 2, h = mr * k * 2 + 6; // the level in two strips, the first half above the second (taller and higher up when it goes underground)
   ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
   ctx.imageSmoothingEnabled = false;
-  for (const [i, c0] of [[0, 0], [1, half]]) { const y = oy + i * (LH * k + 6); ctx.drawImage(MINI, c0, 0, half, LH, ox, y, w, LH * k); mapMarks(ctx, ox, y, k, c0, c0 + half, Math.floor(t * 4) % 2); }
+  for (const [i, c0] of [[0, 0], [1, half]]) { const y = oy + i * (mr * k + 6); ctx.drawImage(MINI, c0, 0, half, mr, ox, y, w, mr * k); mapMarks(ctx, ox, y, k, c0, c0 + half, Math.floor(t * 4) % 2); }
   text('MAP · ' + LV().name, VW / 2, oy - 14, 8, '#a6d854', 'center');
   const leg = [['#ffffff', 'YOU'], ['#ff5a4a', 'QUACKS'], ['#a6d854', 'CAGES'], ['#f2c94c', 'TARGETS'], ['#d9b36a', 'INTEL'], ['#e78ac3', 'BOSS']];
   leg.forEach(([col, lab], i) => { const lx = 40 + i * 70; ctx.fillStyle = col; ctx.fillRect(lx, oy + h + 14, 4, 4); text(lab, lx + 8, oy + h + 19, 8, '#a3abd0'); });
@@ -8294,6 +8418,7 @@ function fxDepth(t) {
 }
 // slanting beams of light from above, drifting slowly (not underground)
 function fxShafts(t) {
+  if (ugDark() > 0.3) return; // no sunbeams deep underground
   const th = theme; if (!settings.lighting || !th || th.orb === 'none' || state !== 'play') return;
   ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = th.beam;
   for (let k = 0; k < 4; k++) {
@@ -8431,7 +8556,7 @@ function collectLights(t) {
   eventLights(t);
 }
 function drawLighting(ox, oy) {
-  let amb = Math.max(theme.ambient, evDark()); // a blackout darkens everything
+  let amb = Math.max(theme.ambient, evDark(), ugDark()); // a blackout darkens everything; so does going deep
   if (flashT > 0) amb *= 1 - Math.min(1, flashT * 5);
   lctx.globalCompositeOperation = 'source-over'; lctx.clearRect(0, 0, VW, VH);
   lctx.globalAlpha = amb; lctx.fillStyle = theme.dark; lctx.fillRect(0, 0, VW, VH);
@@ -8722,6 +8847,7 @@ function updateWeather(dt) {
   }
 }
 function drawWeather(t) {
+  if (ugDark() > 0.3) return; // no rain or snow deep underground
   const dt = Math.min(0.05, t - weatherT || 0); weatherT = t;
   const wind = 40 + Math.sin(t * 0.37) * 35 + Math.max(0, Math.sin(t * 0.11)) * 50; // gusts that lean the rain and push the snow
   if (theme.rain) {
@@ -8809,5 +8935,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWate
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 })();
 </script>
