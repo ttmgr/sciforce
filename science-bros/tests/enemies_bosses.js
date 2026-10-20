@@ -19,7 +19,7 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const solid = (c, r) => { const v = S.tileAt(c, r); return v !== 0 && v !== 5; };
 // clear the level of everything but what a check needs, then drop an enemy at a column
-const lone = (lvl = 0) => { if (lvl) S.startLevel(lvl); else S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); run(1); S.P.inv = 1e9; };
+const lone = (lvl = 0) => { if (lvl) S.startLevel(lvl); else S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); run(1); S.P.inv = 1e9; S.P.bro = S.BRO.einstein; }; // a new run starts with random bros
 const spawn = (type, c, extra = {}) => { const e = Object.assign(S.makeEnt({ type, c, from: 0 }), extra); S.ents.push(e); return e; };
 const stand = (c) => { S.P.x = c * T + 3; S.P.y = 16 * T - 16; S.P.vx = 0; S.P.vy = 0; };
 
