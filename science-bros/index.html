@@ -3013,9 +3013,11 @@ function spriteBody(kind, img, x, y, vx, vy, o = {}) {
 function gibs(img, cx, cy, vx0, vy0, n = 1) {
   if (!settings.gore) { for (let i = 0; i < 8; i++) part(cx + rand(-5, 5), cy + rand(-6, 6), rand(-60, 60), rand(-80, -10), '#8b84a6', rand(0.5, 1), rand(4, 7), 0, 'smoke'); return; } // gore off: a puff of dust
   if (settings.gore === 2) { // extra: red mist and meat chunks that drip as they fly
-    for (let i = 0; i < 7; i++) body({ kind: 'chunk', x: cx + rand(-4, 4), y: cy + rand(-6, 4), vx: vx0 + rand(-200, 200), vy: vy0 + rand(-320, -100), col: ['#9b2335', '#6e1423', '#e6e2da', '#c94a5a'][i % 4], s: 2 + (i % 3), r: 1.5, bounce: 0.25, fric: 0.5, vr: rand(-16, 16), life: rand(5, 8), bleed: 1 });
+    for (let i = 0; i < 7; i++) body({ kind: 'chunk', x: cx + rand(-4, 4), y: cy + rand(-6, 4), vx: vx0 + rand(-200, 200), vy: vy0 + rand(-320, -100), col: ['#9b2335', '#6e1423', '#e6e2da', '#c94a5a'][i % 4], s: 2 + (i % 3), r: 1.5, bounce: 0.25, fric: 0.5, vr: rand(-16, 16), life: rand(5, 8), bleed: 1, meat: 1 });
+    meat(cx, cy, vx0, vy0, 0, 2); dripCeil(cx, cy); if (P.alive && Math.hypot(cx - P.x - 5, cy - P.y - 8) < 48) edgeSplat(); // plus a couple of bones; extra chunks stick to walls and ceilings
     for (let i = 0; i < 14; i++) part(cx + rand(-6, 6), cy + rand(-6, 6), rand(-50, 50), rand(-50, 10), i % 2 ? 'rgba(155,35,53,0.5)' : 'rgba(110,20,35,0.5)', rand(0.4, 0.9), rand(4, 8), 0, 'smoke');
   }
+  if (settings.gore === 1) meat(cx, cy, vx0, vy0, 3, 1); // default: a few meat chunks and a bone
   const W = img.width || 12, H = img.height || 16, a = Math.round(H * 0.375), b = Math.round(H * 0.75), hw = W >> 1;
   const cuts = [[0, 0, W, a], [0, a, W, b - a], [0, b, hw, H - b], [hw, b, W - hw, H - b]];
   for (let k = 0; k < cuts.length; k++) {
@@ -3024,13 +3026,49 @@ function gibs(img, cx, cy, vx0, vy0, n = 1) {
   }
   bleed(cx, cy, 22, vx0 * 0.3);
 }
+// n meat chunks and nb bones that tumble and leave a little blood as they fly (on extra they stick, see updateBodies)
+function meat(cx, cy, vx0, vy0, n, nb) {
+  for (let i = 0; i < n + nb; i++) { const bone = i >= n; body({ kind: 'chunk', x: cx + rand(-3, 3), y: cy + rand(-5, 3), vx: vx0 + rand(-190, 190), vy: vy0 + rand(-300, -90), col: bone ? '#e6e2da' : ['#9b2335', '#6e1423', '#c94a5a'][i % 3], s: bone ? 2 : 3, r: 1.5, bounce: bone ? 0.45 : 0.25, fric: 0.5, vr: rand(-18, 18), life: rand(4, 7), bleed: bone ? 0.4 : 0.9, meat: bone ? 0 : 1 }); }
+}
+// red drips that fall from the ceiling above a gib (extra gore only)
+function dripCeil(x, y) {
+  for (let r = Math.floor(y / T) - 1, up = 0; r >= 0 && up < 6; r--, up++) if (isSolidT(tileAt(Math.floor(x / T), r))) { fx.push({ kind: 'drip', x: x + rand(-6, 6), y: (r + 1) * T, t: rand(2.5, 4), max: 4, tick: 0 }); decal(x, (r + 1) * T - 1, '#9b2335', 2); return; }
+}
 function gibBody(b) { if (b.dead) return; b.dead = true; gibs(b.img, b.x, b.y, b.vx * 0.5, -60, 0.8); }
 function bleed(x, y, n, vx0 = 0) {
   const g = settings.gore | 0;
   if (!g) { for (let i = 0; i < Math.min(n, 4); i++) part(x, y, rand(-40, 40), rand(-60, -10), '#8b84a6', 0.4, 2, 0, 'smoke'); return; } // gore off: dust, no blood
-  n *= g;
+  n = Math.ceil(n * (g === 1 ? 1.5 : g)); // bigger bursts on the default setting too
   for (let i = 0; i < n; i++) part(x, y, vx0 + rand(-140, 140), rand(-240, -20), i % 3 ? '#9b2335' : '#6e1423', rand(0.5, 1.2), 1 + (i % 2) + (g === 2 && i % 5 === 0 ? 1 : 0), G, 'blood');
-  if (vx0) for (let i = 0; i < 4 * g; i++) part(x, y, Math.sign(vx0) * rand(220, 400), rand(-90, 30), i % 2 ? '#9b2335' : '#7a1a2a', 0.6, 1 + (i % 2), G * 0.3, 'blood'); // spatter on the wall behind
+  if (vx0) for (let i = 0; i < 6 * g; i++) part(x, y, Math.sign(vx0) * rand(220, 400), rand(-90, 30), i % 2 ? '#9b2335' : '#7a1a2a', 0.6, 1 + (i % 2), G * 0.3, 'blood'); // spatter on the wall behind
+  splat(x, y, Math.round(n * 0.8), vx0); // stains on the walls and floor around it
+  if (g === 2 && n >= 20) for (let i = 0; i < 4; i++) part(x + rand(-5, 5), y + rand(-5, 5), rand(-30, 30), rand(-40, 0), 'rgba(155,35,53,0.4)', rand(0.4, 0.8), rand(4, 7), 0, 'smoke'); // red mist
+}
+// throw n stains at the nearest surfaces: a ray walks out from the spot (mostly the way the hit went) and stains what it meets
+function splat(x, y, n, vx0 = 0) {
+  const reach = settings.gore === 2 ? 56 : 40, cols = ['#9b2335', '#6e1423', '#7a1a2a'];
+  for (let i = 0; i < n; i++) {
+    const drop = i % 3 === 2, a = vx0 && Math.random() < 0.6 ? (vx0 > 0 ? 0 : Math.PI) + rand(-0.9, 0.9) : rand(0, Math.PI * 2), dx = drop ? 0 : Math.cos(a), dy = drop ? 1 : Math.sin(a), ox = drop ? rand(-30, 30) + (vx0 > 0 ? 14 : vx0 < 0 ? -14 : 0) : 0; // every third stain is a drop that lands on the floor a little way off
+    for (let d = 3; d < reach; d += 2) {
+      const px = x + ox + dx * d, py = y + dy * d;
+      if (solidPx(px, py)) { decal(px, py, cols[i % 3], 1 + (i % 3 === 0 ? 1 : 0) + (i % 7 === 0 ? 1 : 0)); break; }
+    }
+  }
+}
+// robots and bosses do not bleed red: they spark and leak their own stuff [colour, puff]. puff 1 = foam, 2 = smoke
+const LEAK = { camdrone: ['#2a2438', 0], turret: ['#2a2438', 0], boss: ['#e6eef5', 1], kopter: ['#2a2438', 2], crawler: ['#b3a6ff', 0], tank: ['#1b1830', 2], engine: ['#dfe6ec', 1], blimp: ['#8b84a6', 2], citrus: ['#ff9a2a', 0], director: ['#66c2a5', 0] };
+function leak(e, kx, n) {
+  const L = LEAK[e.type], g = settings.gore | 0; if (!L) return;
+  const [cx, cy] = center(e), d = Math.sign(kx) || -e.face || 1;
+  if (e.type !== 'citrus') for (let i = 0; i < 2 + n / 3; i++) part(cx + rand(-4, 4), cy + rand(-4, 4), d * rand(20, 140) + rand(-60, 60), rand(-160, -20), i % 2 ? '#fff6c2' : '#f2c94c', rand(0.2, 0.5), 1, 200, 'spark'); // sparks, even with gore off
+  if (!g) return; // gore off: no oil or juice either
+  for (let i = 0; i < n * (g === 2 ? 2 : 1); i++) part(cx + rand(-4, 4), cy + rand(-4, 4), d * rand(30, 150) + rand(-50, 50), rand(-200, -20), L[0], rand(0.5, 1), 1 + (i % 3 === 0 ? 1 : 0), G, 'blood'); // drops that stick to walls and floor in its own colour
+  if (L[1]) for (let i = 0; i < 1 + n / 6; i++) part(cx + rand(-6, 6), cy + rand(-6, 6), rand(-20, 20), rand(-50, -10), L[0], rand(0.6, 1.2), rand(3, 6), 0, 'smoke');
+}
+// a red splat at the edges of the screen for a moment (extra gore, very close big kills)
+function edgeSplat() {
+  const blobs = []; for (let i = 0; i < 9; i++) { const side = i % 4; blobs.push([side < 2 ? rand(0, VW) : side === 2 ? rand(0, 22) : VW - rand(0, 22), side === 0 ? rand(0, 20) : side === 1 ? VH - rand(0, 20) : rand(0, VH), rand(4, 11)]); }
+  fx.push({ kind: 'edge', t: 0.9, max: 0.9, blobs });
 }
 function decal(x, y, col, sz) {
   const c = Math.floor(x / T), r = Math.floor(y / T);
@@ -3047,34 +3085,44 @@ function updateBodies(dt) {
   for (const b of bodies) {
     b.life -= dt;
     if (b.dead) continue;
+    if (b.stuck) { // extra gore: a chunk stuck to a wall or ceiling drips until it dries or the block goes
+      if (!solidPx(b.x + b.stuck[0] * (b.r + 1), b.y + b.stuck[1] * (b.r + 1))) { b.stuck = null; b.rest = false; }
+      else { b.drip -= dt; if (b.drip > 0 && Math.random() < 0.08) part(b.x + rand(-1, 1), b.y + b.r, 0, 0, '#9b2335', 0.9, 1, G, 'blood'); continue; }
+    }
     if (b.acid > 0) { b.acid += dt; b.y += 10 * dt; b.vx *= 0.9; if (Math.random() < 0.2) part(b.x + rand(-4, 4), b.y - 4, 0, -30, '#c9f08f', 0.5, 2); continue; }
     if (solidPx(b.x, b.y)) { b.y -= 3; b.vy = Math.min(b.vy, 0); b.rest = false; continue; } // buried by a landing block: pop out
     if (b.rest) {
       if (!solidPx(b.x, b.y + b.r + 1)) b.rest = false;
       else { // a corpse slowly leaves a pool of blood under it
-        if (b.kind === 'corpse' && settings.gore && (b.pool || 0) < 4 + settings.gore * 3 && !b.acid) { b.poolT = (b.poolT || 0) - dt; if (b.poolT <= 0) { b.poolT = 0.3; b.pool = (b.pool || 0) + 1; const fy = Math.floor((b.y + b.r + 1) / T) * T; for (const d of [-1, 1]) decal(b.x + d * b.pool * 1.5, fy, b.pool % 2 ? '#6e1423' : '#9b2335', 2); } }
+        if (b.kind === 'corpse' && settings.gore && (b.pool || 0) < 4 + settings.gore * 5 && !b.acid) { b.poolT = (b.poolT || 0) - dt; if (b.poolT <= 0) { b.poolT = 0.35; b.pool = (b.pool || 0) + 1; const fy = Math.floor((b.y + b.r + 1) / T) * T; for (const d of [-1, 1]) decal(b.x + d * b.pool * 1.5, fy, b.pool % 2 ? '#6e1423' : '#9b2335', b.pool < 4 ? 3 : 2); } } // the pool spreads, wider for longer
         continue;
       }
     }
     b.vy = Math.min(b.vy + G * dt, 600);
     const nx = b.x + b.vx * dt, sxn = Math.sign(b.vx);
-    if (sxn && solidPx(nx + sxn * b.r, b.y)) { b.vx *= -b.bounce; b.vr *= -0.5; if (b.bleed > 0 && settings.gore) decal(nx + sxn * (b.r + 1), b.y, '#9b2335', 2); }
+    if (sxn && solidPx(nx + sxn * b.r, b.y)) {
+      if (b.meat && settings.gore === 2) { b.stuck = [sxn, 0]; b.drip = 4; b.vx = b.vy = b.vr = 0; decal(nx + sxn * (b.r + 1), b.y, '#9b2335', 3); continue; }
+      b.vx *= -b.bounce; b.vr *= -0.5; if (b.bleed > 0 && settings.gore) decal(nx + sxn * (b.r + 1), b.y, '#9b2335', 2);
+    }
     else b.x = nx;
     const ny = b.y + b.vy * dt;
     if (b.vy > 0 && solidPx(b.x, ny + b.r)) {
       const hard = b.vy;
       b.y = Math.floor((ny + b.r) / T) * T - b.r - 0.01;
-      if (b.bleed > 0 && hard > 120 && settings.gore) decal(b.x + rand(-2, 2), b.y + b.r + 1, '#9b2335', 2);
+      if (b.bleed > 0 && hard > 120 && settings.gore) for (let k = 0; k < 3; k++) decal(b.x - Math.sign(b.vx) * k * 3 + rand(-2, 2), b.y + b.r + 1, k % 2 ? '#6e1423' : '#9b2335', 2); // a short smear along the way it was going
       if (b.kind === 'shell' && hard > 80) sfx('clink');
       b.vy = -hard * b.bounce; b.vx *= b.fric; b.vr = b.vx / Math.max(1, b.r) * 0.6;
       if (Math.abs(b.vy) < 35 && Math.abs(b.vx) < 10) {
         b.vy = 0; b.vx = 0; b.vr = 0; b.rest = true;
         if (b.kind === 'corpse') { let k = Math.round(b.rot / (Math.PI / 2)); if (k % 2 === 0) k += b.rot >= k * Math.PI / 2 ? 1 : -1; b.rot = k * Math.PI / 2; } // lie flat
       }
-    } else if (b.vy < 0 && solidPx(b.x, ny - b.r)) { b.vy *= -b.bounce; }
+    } else if (b.vy < 0 && solidPx(b.x, ny - b.r)) {
+      if (b.meat && settings.gore === 2) { b.stuck = [0, -1]; b.drip = 4; b.vx = b.vy = b.vr = 0; decal(b.x, ny - b.r, '#9b2335', 3); continue; }
+      b.vy *= -b.bounce;
+    }
     else b.y = ny;
     b.rot += b.vr * dt;
-    if (b.bleed > 0) { b.bleed -= dt; if (settings.gore && Math.random() < 0.35) part(b.x, b.y, rand(-20, 20), rand(-30, 10), '#9b2335', 0.6, 1, G, 'blood'); }
+    if (b.bleed > 0) { b.bleed -= dt; if (settings.gore && Math.random() < (b.kind === 'corpse' ? 0.7 : 0.35)) part(b.x, b.y, rand(-20, 20) - b.vx * 0.05, rand(-30, 10), Math.random() < 0.3 ? '#6e1423' : '#9b2335', 0.6, 1 + (settings.gore === 2 && b.kind !== 'chunk' ? 1 : 0), G, 'blood'); } // a trail of drops behind a thrown body
     if (b.kind === 'block' && b.vx * b.vx + b.vy * b.vy > 220 * 220) for (const e of ents) {
       if (!live(e) || BOSS[e.type] || !(isQuack(e) || e.type === 'dog' || e.type === 'bomber') || Math.abs(e.x + e.w / 2 - b.x) > e.w / 2 + 4 || Math.abs(e.y + e.h / 2 - b.y) > e.h / 2 + 4) continue;
       hitEnemy(e, 2, Math.sign(b.vx) * 200, 'blast'); b.vx *= 0.4; b.vy *= 0.4; break;
@@ -3238,6 +3286,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
   if ((isQuack(e) || e.type === 'dog') && how === 'shot') { const [cx, cy] = center(e); bleed(cx - Math.sign(kx) * 3, cy - 2, 3, kx * 0.6); }
+  if (LEAK[e.type] && how === 'shot') leak(e, kx, 3);
   if (e.hp <= 0) killEnemy(e, how);
 }
 function dropShield(e, dir) {
@@ -3278,9 +3327,9 @@ function killEnemy(e, how = 'shot') {
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
   if (e.type === 'heavy' || e.type === 'brute') bigKill(cx, cy);
   if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, blamed(e), 3); return; }
-  if (e.type === 'camdrone') { career.drones++; explode(cx, cy, 30, 5, blamed(e), 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
+  if (e.type === 'camdrone') { career.drones++; leak(e, 0, 12); explode(cx, cy, 30, 5, blamed(e), 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
   if (e.type === 'turret') {
-    sfx('hit');
+    sfx('hit'); leak(e, 0, 10);
     for (let i = 0; i < 9; i++) chunk(cx + rand(-6, 6), cy + rand(-4, 4), rand(-150, 150), rand(-260, -60), ['#8b93ad', '#5c6480', '#e6e2f0'][i % 3]);
     part(cx, cy, 0, -20, '#4b4766', 1, 6, 0, 'smoke');
     return;
@@ -3304,7 +3353,9 @@ function killEnemy(e, how = 'shot') {
   }
   sfx(Math.random() < 0.3 ? 'scream' : 'hit');
   const vx = clamp(e.kx * 1.3 + e.vx * 0.3, -430, 430);
-  spriteBody('corpse', img, cx, cy, vx, -110 - Math.abs(vx) * 0.45, { sw: rig.w + 2, sh: rig.uh + 6, r: e.type === 'heavy' || e.type === 'brute' ? 7 : 5, vr: (Math.sign(vx) || 1) * rand(6, 14), bleed: how === 'burn' ? 0 : 1.2, quack: how === 'burn' ? null : e.type });
+  const ph = rig.uh + 6, hh = Math.round(ph * 0.3), big = settings.gore === 2 && how !== 'burn' && -e.hp >= 4; // extra gore: a big hit takes the head and an arm off
+  if (big) { const hv = vx * 0.6 + rand(-120, 120); spriteBody('gib', img, cx, cy - ph / 2 + hh / 2, hv, -rand(220, 340), { sx: 0, sy: 0, sw: rig.w + 2, sh: hh, vr: rand(-20, 20), bleed: 1.5 }); spriteBody('gib', img, cx, cy, vx + rand(-150, 150), -rand(150, 280), { sx: 0, sy: hh, sw: 4, sh: Math.round(ph * 0.35), vr: rand(-20, 20), bleed: 1.2 }); if (Math.hypot(cx - P.x - 5, cy - P.y - 8) < 48) edgeSplat(); }
+  spriteBody('corpse', img, cx, cy + (big ? hh / 2 : 0), vx, -110 - Math.abs(vx) * 0.45, { sw: rig.w + 2, sh: big ? ph - hh : ph, sy: big ? hh : 0, r: e.type === 'heavy' || e.type === 'brute' ? 7 : 5, vr: (Math.sign(vx) || 1) * rand(6, 14), bleed: how === 'burn' ? 0 : 1.2, quack: how === 'burn' ? null : e.type });
   if (how === 'burn') for (let i = 0; i < 6; i++) part(cx, cy, rand(-30, 30), rand(-60, -20), '#4b4766', rand(0.6, 1.2), rand(3, 5), 0, 'smoke');
   else bleed(cx, cy, 10, vx * 0.3);
   if (how === 'punch') hitStop = Math.max(hitStop, 0.05);
@@ -3339,6 +3390,7 @@ function dropChute(e) {
 function bossDying(e) {
   if (e.doomed) return;
   e.doomed = true; // from here on its own death blasts can't restart the sequence
+  leak(e, 0, 24); // it spills its own colour
   bigKill(e.x + e.w / 2, e.y + e.h / 2); hitStop = Math.max(hitStop, 0.12); fx.push({ kind: 'screen', t: 0.1, max: 0.1, col: '#ffffff' });
   e.dying = e.type === 'kopter' ? 9 : 3.2; e.boomT = 0;
   if (e.type !== 'kopter') e.vx = 0;
@@ -6363,6 +6415,7 @@ function updateBullets(dt, edt) {
 function updateFx(dt, edt) {
   for (const f of fx) {
     f.t -= dt; blame = f.by || (P_FX[f.kind] ? 'p' : 'e');
+    if (f.kind === 'drip') { f.tick -= dt; if (f.tick <= 0) { f.tick = rand(0.25, 0.5); part(f.x, f.y + 1, 0, 0, '#9b2335', 1.2, 1 + (Math.random() < 0.3 ? 1 : 0), G, 'blood'); } } // blood drips from the ceiling
     if (f.kind === 'well') {
       for (const e of ents) {
         if (e.dead || !HITTABLE[e.type] || e.type === 'boss' || e.type === 'turret') continue;
@@ -8266,6 +8319,7 @@ function render(t) {
   if (settings.lighting) { collectLights(t); drawLighting(Math.round(-cam.x + sx), Math.round(-cam.y + sy)); }
   drawWeather(t);
   drawMotes(t); fxEdge();
+  for (const f of fx) if (f.kind === 'edge') { ctx.globalAlpha = Math.min(1, f.t / f.max * 1.4) * 0.8; ctx.fillStyle = '#7a1a2a'; for (const [bx, by, br] of f.blobs) { ctx.beginPath(); ctx.arc(bx, by, br, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; } // extra gore: red splats at the screen edge after a very close big kill
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   if (slowT > 0 && state === 'play') { ctx.globalAlpha = 0.07 * Math.min(1, slowT); ctx.fillStyle = '#8fd3ff'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; } // dilated time: a cold blue cast
   if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawHud(t); } else drawScreen(t);
@@ -8809,5 +8863,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWate
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LEAK, meat, splat, edgeSplat }); // gore hooks
 })();
 </script>
