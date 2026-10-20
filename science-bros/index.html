@@ -1797,6 +1797,7 @@ const RANDOM_FOES = [
 ];
 for (const k of NEW_FOES) if (!RANDOM_FOES.some((f) => f[0] === k)) RANDOM_FOES.push([k, -1, 1, ['minelayer', 'pilldoc', 'sapper'].includes(k) ? { blast: 1 } : {}]); // the newer quacks; -1: turn up from RAMP_FROM
 // easy / normal / hard: p is how far into the campaign it feels (0 first mission, 1 finale), hp scales the boss
+let densMul = 1; // enemy density from the settings (1 = 100%); the map generator and the campaign read it
 const GEN_DIFF = { easy: { p: 0.2, hp: 1 }, normal: { p: 0.55, hp: 1.2 }, hard: { p: 1, hp: 1.5 } };
 // small word lists for names, briefings and intel
 const GEN_WORDS = {
@@ -1978,7 +1979,7 @@ function genLevel(seed, dk = 'normal') {
     if (R.chance(0.35)) for (let i = 0; i < 6; i++) { const k = R.int(80, end - 40); if (!wet(k - 4, k + 34)) { put('strike', k, 2); break; } } // its bombs fall just ahead: never over a bridge
     if (R.chance(0.4)) for (let k = fin.trig + 3; k < fin.trig + 15; k++) { const f = genFloors(k).filter((r) => r >= 9 && genRoom(k, r) >= 3); if (f.length) { H.sp('mechsuit', k, f[f.length - 1]); break; } } // sometimes a mech waits just inside the arena, for the boss
     // 4. quacks: posts of one to three along the way until the difficulty's threat budget is spent; no quack in the first 24 columns
-    const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p), budget = missionTarget(p) * (end / ARENA_AT);
+    const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p), budget = missionTarget(p) * (end / ARENA_AT) * densMul;
     let spent = 0;
     for (let pass = 0; pass < 3 && spent < budget; pass++) for (let k = 26 + pass * 3; k < end - 3 && spent < budget; k += Q.int(7, 13)) {
       const n = Q.int(1, 3);
@@ -2804,7 +2805,7 @@ document.getElementById('fs').addEventListener('click', () => {
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
-const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false, gore: 1, ambience: true }; // gore: 0 off, 1 on, 2 extra
+const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false, gore: 1, ambience: true, difficulty: 1, density: 3 }; // gore: 0 off, 1 on, 2 extra; difficulty: index into DIFFS; density: index into DENS
 try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
 let hiScore = 0;
 try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
@@ -2815,12 +2816,38 @@ function bankScore() {
   if (runScore > hiScore) { hiScore = runScore; stats.newHi = true; try { localStorage.setItem('sciencebros.hiscore', String(hiScore)); } catch (e) { /* storage blocked */ } }
 }
 const saveSettings = () => { try { localStorage.setItem('sciencebros.settings', JSON.stringify(settings)); } catch (e) { /* storage blocked */ } };
+// ---- difficulty and enemy density: two settings, saved. Difficulty is how hard a fight is; density is how many quacks a level holds.
+// react: seconds added to a quack's delay before it shoots; fire: its rate of fire; shot: its bullet speed (the range stays the same);
+// boss: boss health; pace: how fast a boss plays; lives: extra bros at the start; safe: cover time after a respawn;
+// drop: chance a dead quack drops a special; crates: share of the ammo crates kept; gen: the random mission's easy/normal/hard
+const DIFFS = [
+  { name: 'EASY', react: 0.25, fire: 0.8, shot: 0.85, boss: 0.75, pace: 0.85, lives: 2, safe: 1.5, drop: 0.08, crates: 1, gen: 'easy' },
+  { name: 'NORMAL', react: 0, fire: 1, shot: 1, boss: 1, pace: 1, lives: 0, safe: 1, drop: 0, crates: 1, gen: 'normal' },
+  { name: 'HARD', react: -0.12, fire: 1.2, shot: 1.1, boss: 1.25, pace: 1.1, lives: 0, safe: 0.8, drop: 0, crates: 0.75, gen: 'hard' },
+  { name: 'INSANE', react: -0.2, fire: 1.4, shot: 1.2, boss: 1.6, pace: 1.2, lives: -1, safe: 0.6, drop: 0, crates: 0.5, gen: 'hard' },
+];
+const DENS = [0.25, 0.5, 0.75, 1, 1.5, 2, 3];
+settings.difficulty = DIFFS[settings.difficulty | 0] ? settings.difficulty | 0 : 1; settings.density = DENS[settings.density | 0] ? settings.density | 0 : 3; // a bad saved value falls back to normal / 100%
+const DF = () => DIFFS[settings.difficulty];
+densMul = DENS[settings.density];
+if (!/[?&]diff=/.test(URL_ARGS)) genDiffKey = DF().gen; else settings.difficulty = Math.max(0, DIFFS.findIndex((d) => d.gen === genDiffKey && d.name !== 'INSANE')); // ?diff=hard in the URL wins (not saved)
+const startLives = (base) => Math.max(1, base + DF().lives);
+function setDifficulty(i, say = true) {
+  const was = DF().boss; settings.difficulty = (i % DIFFS.length + DIFFS.length) % DIFFS.length; saveSettings(); genDiffKey = DF().gen;
+  if (diffBase) { diff = foldDiff(diffBase); if (boss && !boss.dead && boss.final) { boss.hp = Math.round(boss.hp * DF().boss / was); boss.max = Math.round(boss.max * DF().boss / was); } } // applies at once; the boss keeps its share of health
+  if (say) { sfx('flag'); if (state === 'play') showBanner('DIFFICULTY: ' + DF().name, 'quacks ' + (DF().fire > 1 ? 'shoot faster' : DF().fire < 1 ? 'shoot slower' : 'as usual') + ' · bosses ' + Math.round(DF().boss * 100) + '% health', 1.4); }
+}
+function setDensity(i, say = true) {
+  settings.density = (i % DENS.length + DENS.length) % DENS.length; densMul = DENS[settings.density]; saveSettings();
+  if (say) { sfx('flag'); if (state === 'play') showBanner('ENEMY DENSITY: ' + Math.round(densMul * 100) + '%', mode === 'siege' ? 'from the next wave' : 'from the next mission (or restart it)', 1.4); }
+}
 const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['BLOOD AND GORE', 'gore'], ['AMBIENCE', 'ambience'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
-  const MENU = pauseItems();
-  if (pressed.jump) menuSel = (menuSel + MENU.length - 1) % MENU.length;
-  if (pressed.down) menuSel = (menuSel + 1) % MENU.length;
+  const MENU = pauseItems(), N = MENU.length + 2; // two more rows under the list: difficulty and enemy density (left/right or fire change them)
+  if (pressed.jump) menuSel = (menuSel + N - 1) % N;
+  if (pressed.down) menuSel = (menuSel + 1) % N;
+  if (menuSel >= MENU.length) { const d = (pressed.right || pressed.fire || pressed.start || pressed.melee ? 1 : 0) - (pressed.left ? 1 : 0); if (d) { if (menuSel === MENU.length) setDifficulty(settings.difficulty + d); else setDensity(settings.density + d); } return; }
   if (pressed.fire || pressed.start || pressed.melee) {
     const [, key] = MENU[menuSel];
     if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('flag'); }
@@ -2838,7 +2865,7 @@ let ceasefire = 0; // seconds left of the quiet start of a mission
 // Difficulty grows along the campaign. p runs from 0 on the first mission to 1 on the finale: early missions keep
 // only part of their quacks, the hard hitters turn up later, quacks react and shoot slower, and bosses have less
 // health. Bonus modes and the finale play at full strength.
-let diff = { p: 1, keep: 1, fire: 1, react: 0, bossHp: 1 }, rampOn = true;
+let diff = { p: 1, keep: 1, fire: 1, react: 0, bossHp: 1 }, rampOn = true, diffBase = null; // diffBase: the campaign or map numbers before the difficulty setting is added
 const RAMP_FROM = { bomber: 0.08, grenadier: 0.08, medic: 0.08, flamer: 0.15, turret: 0.15, guru: 0.2, rocketeer: 0.2, jetpack: 0.22, camdrone: 0.25, heavy: 0.28, sniper: 0.3, brute: 0.32, mortar: 0.36, preacher: 0.36 };
 Object.assign(RAMP_FROM, { minelayer: 0.12, jumper: 0.2, pilldoc: 0.3, flagbearer: 0.4, sapper: 0.5, knight: 0.6 });
 function campaignDiff(n) {
@@ -2849,10 +2876,13 @@ function campaignDiff(n) {
 const THREAT = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
 Object.assign(THREAT, { minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sapper: 2, knight: 3 });
 const missionTarget = (p) => 14 + 40 * p; // threat on screen over the whole mission: 14 on the first, 54 on the finale
+const foldDiff = (b) => Object.assign({}, b, { react: b.react + DF().react, fire: b.fire * DF().fire, bossHp: b.bossHp * DF().boss, shot: DF().shot, pace: DF().pace, drop: DF().drop }); // the setting on top of the ramp
 function applyDifficulty(n) {
-  diff = campaignDiff(n);
-  if (levelDef(n).gen) { diff = levelDef(n).gen.diff; if (boss) boss.hp = boss.max = Math.round(boss.max * diff.bossHp); return; } // a random map placed its quacks for its difficulty
-  if (!rampOn || mode !== 'campaign' || n >= LEVELS.length) return;
+  diffBase = campaignDiff(n); diff = foldDiff(diffBase);
+  if (DF().crates < 1) { for (const e of ents) if (e.type === 'ammo' && (Math.sin(e.x * 7.13 + n * 3.7) * 43758.5453 % 1 + 1) % 1 >= DF().crates) e.dead = true; ents = ents.filter((e) => !e.dead || e === boss); } // harder: fewer ammo crates
+  if (levelDef(n).gen) { diffBase = levelDef(n).gen.diff; diff = foldDiff(diffBase); if (boss) boss.hp = boss.max = Math.round(boss.max * diff.bossHp); return; } // a random map placed its quacks for its difficulty
+  if (mode !== 'campaign' || n >= LEVELS.length) { if (DF().boss !== 1) for (const e of ents) if (BOSS[e.type]) e.hp = e.max = Math.round(e.max * DF().boss); return; } // bonus modes: bosses follow the difficulty
+  if (!rampOn && densMul === 1) return;
   const roll = (e, k = 0) => { const v = Math.sin(e.x * 12.9898 + n * 78.233 + k * 37.719) * 43758.5453; return v - Math.floor(v); }; // the same quacks every time you play it
   const foes = [];
   for (const e of ents) {
@@ -2866,19 +2896,21 @@ function applyDifficulty(n) {
     }
     foes.push(e);
   }
-  const target = missionTarget(diff.p) * (stretched ? (ARENA_AT + STRETCH) / ARENA_AT : 1); // a longer map holds more quacks
+  const target = missionTarget(diff.p) * densMul * (stretched ? (ARENA_AT + STRETCH) / ARENA_AT : 1); // a longer map holds more quacks
   let total = foes.reduce((a, e) => a + THREAT[e.type], 0);
   if (total > target) { // too crowded for this point in the campaign: remove quacks in a fixed order until it fits
     for (const e of foes.slice().sort((a, b) => roll(a) - roll(b))) { if (total - THREAT[e.type] < target - 0.5) continue; e.dead = true; total -= THREAT[e.type]; if (total <= target + 0.5) break; }
   } else if (total < target) { // too sparse: reinforcements stand next to quacks already there (never in the safe start zone)
     const allowed = (t) => RAMP_FROM[t] === undefined || diff.p >= RAMP_FROM[t];
     const spots = foes.filter((e) => e.x >= 24 * T && isQuack(e) && e.type !== 'para').sort((a, b) => roll(a, 1) - roll(b, 1));
-    for (let pass = 0; pass < 3 && total < target - 0.5; pass++) for (const e of spots) {
+    const taken = new Set(foes.map((e) => Math.floor((e.x + e.w / 2) / T)));
+    for (let pass = 0; pass < (densMul > 1 ? 8 : 3) && total < target - 0.5; pass++) for (const e of spots) {
       if (total >= target - 0.5) break;
-      const c = Math.floor((e.x + e.w / 2) / T) + [2, -2, 4][pass], r0 = Math.floor((e.y + e.h - 1) / T) - 2;
+      const c = Math.floor((e.x + e.w / 2) / T) + [2, -2, 4, -4, 6, -6, 8, -8][pass]; if (densMul > 1 && taken.has(c)) continue; // a crowd: one new quack per column
+      const r0 = Math.floor((e.y + e.h - 1) / T) - 2;
       if (c < 24 || c >= LW - 1) continue;
       const r = surf(c, Math.max(0, r0)); if (r >= LH || Math.abs(r * T - (e.y + e.h)) > T * 2) continue;
-      const type = allowed(e.type) ? e.type : 'grunt', q = makeEnt({ type, c, from: Math.max(0, r0) }); q.face = e.face; ents.push(q); total += THREAT[type];
+      taken.add(c); const type = allowed(e.type) ? e.type : 'grunt', q = makeEnt({ type, c, from: Math.max(0, r0) }); q.face = e.face; ents.push(q); total += THREAT[type];
     }
   }
   ents = ents.filter((e) => !e.dead || e === boss);
@@ -2923,7 +2955,7 @@ function startWave(n) {
   const pool = ['grunt', 'grunt', 'dog'];
   if (n >= 2) pool.push('shield', 'scout'); if (n >= 3) pool.push('grenadier', 'bomber'); if (n >= 4) pool.push('jetpack', 'rocketeer');
   if (n >= 5) pool.push('camdrone'); if (n >= 6) pool.push('heavy', 'flamer', 'medic'); if (n >= 7) pool.push('sniper', 'brute', 'guru'); if (n >= 8) pool.push('preacher', 'mortar');
-  for (let k = 0; k < Math.min(30, 4 + n * 2); k++) siege.queue.push(pool[(Math.random() * pool.length) | 0]);
+  for (let k = 0; k < Math.max(1, Math.round(Math.min(30, 4 + n * 2) * densMul)); k++) siege.queue.push(pool[(Math.random() * pool.length) | 0]);
   if (n % 5 === 0) siege.queue.unshift(['tank', 'boss', 'kopter'][(n / 5) % 3]);
   showBanner('WAVE ' + n, n % 5 === 0 ? 'boss wave' : siege.queue.length + ' quacks incoming', 1.6); sfx('siren');
 }
@@ -2932,10 +2964,10 @@ function updateSiege(dt) {
   if (siege.breakT > 0) { siege.breakT -= dt; if (siege.breakT <= 0) startWave(siege.wave + 1); return; }
   if (siege.queue.length) {
     siege.spawnT -= dt;
-    if (siege.spawnT <= 0 && alive < Math.min(12, 5 + siege.wave / 2)) {
+    if (siege.spawnT <= 0 && alive < Math.min(12 * Math.max(1, densMul), (5 + siege.wave / 2) * densMul, 24)) {
       siege.spawnT = 0.55;
       const type = siege.queue.shift();
-      if (BOSS[type]) { const b = makeEnt({ type, c: 30, from: 0, ax0: 2, ax1: 58, trig: 0, final: false }); ents.push(b); return; }
+      if (BOSS[type]) { const b = makeEnt({ type, c: 30, from: 0, ax0: 2, ax1: 58, trig: 0, final: false }); b.hp = b.max = Math.round(b.max * DF().boss); ents.push(b); return; }
       const fromTop = type === 'jetpack' || Math.random() < 0.25, side = Math.random() < 0.5;
       const q = makeEnt({ type: fromTop && type === 'grunt' ? 'para' : type, c: fromTop ? rand(4, 55) : side ? 2 : 57, y: fromTop ? cam.y - 20 : 15 * T - 16 });
       q.aware = true; q.provoked = true; q.react = 0.8; q.face = P.x > q.x ? 1 : -1; ents.push(q);
@@ -2977,7 +3009,7 @@ function startMode(m) {
   if (m === 'campaign') { level = 0; state = 'map'; mapT = 0; return; }
   if (m === 'random') { startRandom(urlSeed || newSeed()); urlSeed = 0; return; } // 10 random bros, like a new campaign
   if (m === 'siege') { startLevel(SIEGE); siege.wave = 0; siege.queue = []; siege.breakT = 4; P.bro = BRO[unlocked[(Math.random() * unlocked.length) | 0]]; }
-  if (m === 'rush') { lives = 5; rush.t = 0; loadRush(0); }
+  if (m === 'rush') { lives = startLives(5); rush.t = 0; loadRush(0); }
   if (m === 'moon') { startLevel(MOON); applyGear(); }
   state = 'play';
 }
@@ -3180,7 +3212,7 @@ function callChopper() {
 }
 // a new run: 10 random bros unlocked, three lives in reserve
 const START_BROS = 10;
-function newGame() { unlocked = shuffle(BROS.map((b) => b.id)).slice(0, START_BROS); lives = 3; runScore = 0; dossier = []; } // a new campaign starts with 10 random bros; free the rest from cages
+function newGame() { unlocked = shuffle(BROS.map((b) => b.id)).slice(0, START_BROS); lives = startLives(3); runScore = 0; dossier = []; } // a new campaign starts with 10 random bros; free the rest from cages
 function startLevel(n) {
   level = n;
   buildTiles(levelDef(n).look ? Object.assign({}, THEMES[levelDef(n).theme], levelDef(n).look) : THEMES[levelDef(n).theme]); // a level can twist its theme's look
@@ -3275,6 +3307,7 @@ function killEnemy(e, how = 'shot') {
     return;
   }
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
+  if (diff.drop && isQuack(e) && Math.random() < diff.drop) spawnPickup(cx, cy); // easier: a dead quack sometimes drops a special
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
   if (e.type === 'heavy' || e.type === 'brute') bigKill(cx, cy);
   if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, blamed(e), 3); return; }
@@ -4039,10 +4072,10 @@ function respawn() {
   // the next bro parachutes in over the checkpoint, from as high as the open sky allows
   const c = Math.floor((P.x + 5) / T);
   let r = Math.floor(P.y / T); for (let k = 0; k < 9 && r > 1 && !isSolidT(tileAt(c, r - 1)); k++) r--;
-  P.y = r * T; P.chute = true; P.inv = 3;
+  P.y = r * T; P.chute = true; P.inv = 3 * DF().safe;
   showBanner(bro.name.toUpperCase(), bro.weapon + ' · ' + bro.special, 1.6);
   // everyone loses track of you: quacks forget, and a new bro gets a few quiet seconds unless he shoots first
-  grace = 3;
+  grace = 3 * DF().safe;
   for (const b of bullets) if (b.owner === 'e') { b.dead = true; part(b.x, b.y, 0, -20, '#8b84a6', 0.3, 2, 0, 'smoke'); } // shots still in the air fizzle out
   for (const o of ents) {
     if (isQuack(o) || o.type === 'dog') Object.assign(o, { aware: false, provoked: false, lost: 0, react: 0.6, aim: 0, windup: 0, chant: 0, fireT: 0, spin: 0, charge: 0, huh: 1 });
@@ -4213,9 +4246,9 @@ const EV_START = {
   },
   ambush(E) {
     E.paras = [];
-    const n = 4 + Math.round(diff.p * 3);
+    const n = Math.min(14, Math.max(1, Math.round((4 + Math.round(diff.p * 3)) * densMul)));
     for (let k = 0; k < n; k++) {
-      const side = k % 2 ? -1 : 1, x = clamp(P.x + side * (56 + (k >> 1) * 44), cam.x + 12, cam.x + VW - 12), p = makeEnt({ type: 'para', c: 0, y: skyY(x, k * 14) });
+      const side = k % 2 ? -1 : 1, x = clamp(P.x + side * (56 + (k >> 1) * 44), Math.max(cam.x + 12, 21 * T), cam.x + VW - 12), p = makeEnt({ type: 'para', c: 0, y: skyY(x, k * 14) });
       p.x = x; p.face = P.x > x ? 1 : -1; p.react = 0.8; p.cool = rand(0.8, 1.4); ents.push(p); E.paras.push(p);
     }
     showBanner('AMBUSH!', 'League paratroopers on both sides', 2.2); sfx('raid');
@@ -4479,12 +4512,13 @@ function step(dt) {
       else if (state === 'brief') { startLevel(level); applyGear(); state = 'play'; }
       else if (state === 'win' && mode === 'random') startRandom(newSeed());
       else if (state === 'win') { level++; markReached(level); state = 'map'; mapT = 0; } // bros and reserve carry over
-      else if (state === 'over') { lives = 3; startLevel(level); state = 'play'; } // retry this level
+      else if (state === 'over') { lives = startLives(3); startLevel(level); state = 'play'; } // retry this level
       sfx('flag');
     }
     mapT += dt;
     if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) sfx('flag'); }
-    if (state === 'title' && TITLE_MENU[titleSel][1] === 'random' && (pressed.left || pressed.right)) { const ks = Object.keys(GEN_DIFF); genDiffKey = ks[(ks.indexOf(genDiffKey) + (pressed.right ? 1 : ks.length - 1)) % ks.length]; sfx('flag'); } // random map difficulty
+    if (state === 'title' && (pressed.left || pressed.right)) setDifficulty(settings.difficulty + (pressed.right ? 1 : -1)); // difficulty (the random mission's easy/normal/hard follows it)
+    if (state === 'title' && (pressed.special || pressed.melee)) setDensity(settings.density + (pressed.special ? 1 : -1)); // X more quacks, C fewer
     if (state === 'brief') briefInput();
     if (state === 'map') mapInput();
     attract(dt);
@@ -4840,14 +4874,14 @@ function updateEnt(e, dt) {
         if (!storyFlag) { storyFlag = true; const st = storyOf(level); if (st) st.mid.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 0.8)); }
       }
       break;
-    case 'boss': updateMech(e, dt); break;
-    case 'kopter': updateKopter(e, dt); break;
-    case 'crawler': updateCrawler(e, dt); break;
-    case 'tank': updateTank(e, dt); break;
-    case 'engine': updateEngine(e, dt); break;
-    case 'blimp': updateBlimp(e, dt); break;
-    case 'citrus': updateCitrus(e, dt); break;
-    case 'director': updateDirector(e, dt); break;
+    case 'boss': updateMech(e, dt * (diff.pace || 1)); break;
+    case 'kopter': updateKopter(e, dt * (diff.pace || 1)); break;
+    case 'crawler': updateCrawler(e, dt * (diff.pace || 1)); break;
+    case 'tank': updateTank(e, dt * (diff.pace || 1)); break;
+    case 'engine': updateEngine(e, dt * (diff.pace || 1)); break;
+    case 'blimp': updateBlimp(e, dt * (diff.pace || 1)); break;
+    case 'citrus': updateCitrus(e, dt * (diff.pace || 1)); break;
+    case 'director': updateDirector(e, dt * (diff.pace || 1)); break;
     case 'icicle': updateIcicle(e, dt); break;
   }
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > LH * T) && !e.dead) {
@@ -4866,7 +4900,7 @@ function updateEnt(e, dt) {
   if (e.lever && e.onGround && !e.dead) { e.lever = false; if (vyp > 250) { const ob = blame; blame = 'p'; hitEnemy(e, 4, 0, 'crush'); blame = ob; shake = Math.min(10, shake + 1); } } // only the player's specials throw things
 }
 const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-function pill(x, y, vx, vy, kind = 'pill') { bullets.push({ x, y, vx, vy, owner: 'e', dmg: 1, tdmg: 0.4, life: 1.8, kind }); sfx(kind === 'mg' ? 'mg' : 'eshot', x); } // quack shots fly about 18 tiles, not across the whole screen
+function pill(x, y, vx, vy, kind = 'pill') { const sp = diff.shot || 1; bullets.push({ x, y, vx: vx * sp, vy: vy * sp, owner: 'e', dmg: 1, tdmg: 0.4, life: 1.8 / sp, kind }); sfx(kind === 'mg' ? 'mg' : 'eshot', x); } // quack shots fly about 18 tiles, not across the whole screen
 // one quack spotting you shouts, and the ones near him turn around too
 function alertNearby(e) {
   for (const o of ents) if (o !== e && isQuack(o) && !o.dead && !o.aware && Math.abs(o.x - e.x) < 150 && Math.abs(o.y - e.y) < 48) { o.aware = true; o.react = rand(0.5, 0.9); o.face = P.x > o.x ? 1 : -1; o.lost = 0; }
@@ -4933,7 +4967,7 @@ function updateQuack(e, dt) {
   let walk = 0;
   if (sees) {
     e.lost = 0;
-    if (!e.aware) { e.aware = true; e.react = (e.type === 'heavy' ? 0.4 : 0.6) + diff.react; if (e.onGround && e.type !== 'heavy') e.vy = -110; sfx('alert'); alertNearby(e); }
+    if (!e.aware) { e.aware = true; e.react = Math.max(0.2, (e.type === 'heavy' ? 0.4 : 0.6) + diff.react); if (e.onGround && e.type !== 'heavy') e.vy = -110; sfx('alert'); alertNearby(e); }
     e.face = P.x > e.x ? 1 : -1;
     e.react -= dt; e.cool -= dt * diff.fire; // early missions: slower trigger fingers
     if (e.react <= 0) walk = quackAttack(e, dt);
@@ -7765,6 +7799,11 @@ function drawHud(t) {
       else if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
     });
     text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 228, 8, '#a3abd0', 'center');
+    [['DIFFICULTY', DF().name, '#f2c94c'], ['ENEMY DENSITY', Math.round(densMul * 100) + '%', '#8fd3ff']].forEach(([label, val, col], i) => { // LEFT/RIGHT change these two
+      const y = 242 + i * 12, sel = menuSel === pauseItems().length + i;
+      if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 9, 220, 12); }
+      text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6'); text('< ' + val + ' >', VW / 2 + 100, y, 8, col, 'right');
+    });
   }
   if (muted) text('MUTED', VW / 2, 14, 8, '#a3abd0', 'center');
 }
@@ -7785,10 +7824,11 @@ function drawScreen(t) {
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
       const sel = i === titleSel, y = 166 + i * 12;
       if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 12); }
-      const extra = m === 'random' ? '  < ' + genDiffKey.toUpperCase() + ' >' + (urlSeed ? ' SEED ' + urlSeed : '') : m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
+      const extra = m === 'random' ? '  < ' + DF().name + ' >' + (urlSeed ? ' SEED ' + urlSeed : '') : m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
       text((sel ? '> ' : '  ') + label + extra, VW / 2 - 82, y, 8, sel ? '#a6d854' : '#e7eaf6');
     });
     text('UP/DOWN CHOOSE · ENTER START · DOUBLE-TAP RUN · SHIFT ROLL', VW / 2, 236, 8, '#a3abd0', 'center');
+    text('< DIFFICULTY ' + DF().name + ' >   ENEMIES ' + Math.round(densMul * 100) + '%', VW / 2, 250, 8, '#f2c94c', 'center'); text('LEFT/RIGHT DIFFICULTY · X MORE QUACKS · C FEWER', VW / 2, 262, 8, '#5c6480', 'center');
   } else if (state === 'over' && mode === 'siege') {
     text('THE LAB HAS FALLEN', VW / 2, 96, 24, '#e78ac3', 'center');
     text('YOU HELD ' + Math.max(0, siege.wave - (siege.breakT > 0 ? 0 : 1)) + ' WAVES · BEST ' + siege.best + ' · SCORE ' + stats.score, VW / 2, 122, 8, '#a3abd0', 'center');
@@ -8221,6 +8261,7 @@ function drawBriefing(t) {
   row(0, 'DEPLOY AS', bro.name.toUpperCase(), 172); text(bro.weapon.toUpperCase() + ' · ' + bro.special.toUpperCase(), 258, 184, 8, '#8da0cb');
   row(1, 'GEAR', g[0], 202);
   text('UP/DOWN: ROW · LEFT/RIGHT: CHANGE', 258, 218, 8, '#5c6480');
+  text('DIFFICULTY ' + DF().name + ' · ENEMIES ' + Math.round(densMul * 100) + '% (PAUSE MENU)', 258, 232, 8, '#f2c94c');
   const st = storyOf(level);
   if (st && st.intercept && mapT > 1.2) { // a League transmission HQ picked up
     const [who, line] = st.intercept, c = CAST[who];
@@ -8809,5 +8850,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWate
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks
 })();
 </script>
