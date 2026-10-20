@@ -346,6 +346,16 @@ Object.assign(RIG, {
   sapper: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#f29e4c', c: '#6b4a2a', t: '#b4bed0' })),
   knight: buildRig(HEADS.helmet, BODY_VEST, Object.assign({}, GOON_PAL, { h: '#b4bed0', c: '#8b93ad', t: '#5c6480' })),
 });
+Object.assign(RIG, {
+  streamer: buildRig(HEADS.cap, BODY, Object.assign({}, GOON_PAL, { h: '#e78ac3', c: '#e78ac3', t: '#fff6c2' })),
+  diffuser: buildRig(HEADS.cap, BODY, Object.assign({}, GOON_PAL, { h: '#66c2a5', c: '#e6e2f0', t: '#b3a6ff' })),
+  detox: buildRig(HEADS.goon, BODY, Object.assign({}, GOON_PAL, { o: '#6b8f2a', k: '#a6d854', c: '#d8e6a0', t: '#a6d854' })),
+  miner: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#f2c94c', c: '#25223a', t: '#f29e4c' })),
+  yogi: buildRig(HEADS.goon, BODY, Object.assign({}, GOON_PAL, { o: '#f29e4c', c: '#f29e4c', t: '#e6e2f0' })),
+  pinboard: buildRig(HEADS.goon, BODY_VEST, Object.assign({}, GOON_PAL, { o: '#5a4a3a', c: '#7a5c36', t: '#d9534f' })),
+  alpha: buildRig(HEADS.big, BODY_BIG, Object.assign({}, GOON_PAL, { o: '#2a6f9a', c: '#2a6f9a', t: '#f2c94c', p: '#25223a', s: '#d9a074' })),
+  dronecaller: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#3a3a5a', c: '#2a2f4a', t: '#66c2a5' })),
+});
 // dog: its own little 14x8 sprite set
 const DOG_ROWS = [
   ['..........kk..', '.........kkkr.', 'k.......kkkkkk', '.kkkkkkkkkkkt.', '.kkkkkkkkkk...', '.kk......kk...', 'k..k....k..k..', 'k...k..k....k.'],
@@ -538,6 +548,8 @@ const STRETCH_KINDS = ['yard', 'trench', 'hall', 'fort', 'pit', 'cliff'];
 const STRETCH_FOES = ['grunt', 'grunt', 'shield', 'dog', 'grenadier', 'heavy', 'rocketeer', 'grunt', 'sniper', 'flamer', 'medic', 'bomber'];
 const NEW_FOES = ['minelayer', 'jumper', 'pilldoc', 'flagbearer', 'sapper', 'knight']; // the six newer quacks, in the order they first appear
 STRETCH_FOES.push(...NEW_FOES);
+const MORE_FOES = ['streamer', 'diffuser', 'detox', 'miner', 'yogi', 'pinboard', 'alpha', 'dronecaller']; // the eight pseudoscience and internet-culture quacks of the second round
+STRETCH_FOES.push(...MORE_FOES);
 function buildStretch(H, n) {
   const hash = (k) => { const v = Math.sin(k * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); }; // the same layout every time
   const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[n % segs.length] : null;
@@ -1542,9 +1554,9 @@ const NEW_LEVELS = [
     intel: ['Pilot notes: the mist is water. Do not tell the customers.', 'Order form: 500 tin-foil hats, extra shiny.', 'Map: crystals shipped in from the Quartz Caverns.'],
     build: pieces([['camp', 20, { sign: 'LOOK UP. BUY HATS' }],
       ['runway', 44, { put: [['minelayer', 6], ['dog', 12], ['target', 16, 0, { skin: 'radio' }], ['shield', 20], ['grunt', 24], ['fueltank', 31], ['jetpack', 33], ['cage', 39], intelAt(41), ['flag', 43]] }],
-      ['wreck', 36, { put: [['grunt', 9, 12], ['propane', 13, 12], ['medic', 16, 12], ['cage', 20, 12], intelAt(23, 12), ['sniper', 14], ['grenadier', 22], ['heavy', 32], ['flag', 34, 6]] }],
+      ['wreck', 36, { put: [['diffuser', 9, 12], ['propane', 13, 12], ['medic', 16, 12], ['cage', 20, 12], intelAt(23, 12), ['sniper', 14], ['grenadier', 22], ['heavy', 32], ['flag', 34, 6]] }],
       ['hangar', 36, { put: [['mechsuit', 0, 6], ['itemcrate', 6, 12], ['target', 12, 6, { skin: 'radio' }], ['shield', 15, 12], ['alarm', 20, 12], ['rocketeer', 24, 6], ['grunt', 28, 6], ['cage', 30, 6], ['flag', 35]] }],
-      ['ctower', 40, { put: [['dog', 4], ['turret', 9], ['grunt', 17, 11], ['sniper', 18, 2], intelAt(22, 2), ['bomber', 27], ['target', 30, 0, { skin: 'radio' }], ['strike', 33], ['guru', 35], ['flag', 39]] }]],
+      ['ctower', 40, { put: [['dog', 4], ['turret', 9], ['miner', 17, 11], ['sniper', 18, 2], intelAt(22, 2), ['bomber', 27], ['target', 30, 0, { skin: 'radio' }], ['strike', 33], ['guru', 35], ['flag', 39]] }]],
       { kind: 'airstrip', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays tap water. Sells it as fear.', hpMul: 1.4 } }) },
   { name: 'QUARTZ CAVERNS', sub: 'Smash the charging vats, kill the Quartz Queen', theme: 'cave', cages: 3, pad: [230, 12],
     brief: 'Deep under the mountains the League charges crystals to sell as medicine. Smash the three crystal-charging vats and kill the Quartz Queen, a crawler grown in the dark. Stalactites fall when you walk under them, and the old plank bridge is rotten: the mine cart is safer.',
@@ -1552,8 +1564,8 @@ const NEW_LEVELS = [
     objectives: [{ id: 'vat', text: 'Smash the charging vats', need: 3, req: true }, { id: 'boss', text: 'Kill the Quartz Queen', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Label: crystal, charged by moonlight, 400 dollars. Moonlight extra.', 'Lab note: the crystals do nothing. Price goes up.', 'Invoice: paid by Miasma Holdings, Marsh Road.'],
     build: pieces([['camp', 20, { sign: 'CRYSTALS HEAL', decor: 'crystal', ceil: 6 }],
-      ['tunnels', 40, { rooms: [[10, 17, 9]], drips: [5, 21, 28, 35], lamps: [12, 26], put: [['grunt', 6], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['cage', 16], ['shield', 24], ['sniper', 30], intelAt(33), ['flag', 38]] }],
-      ['shaft', 40, { put: [['grunt', 3, 12], ['heavy', 9, 3], ['cage', 13, 3], intelAt(23, 3), ['rocketeer', 27, 3], ['grunt', 36, 12], ['flag', 38, 12]] }],
+      ['tunnels', 40, { rooms: [[10, 17, 9]], drips: [5, 21, 28, 35], lamps: [12, 26], put: [['detox', 6], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['cage', 16], ['shield', 24], ['sniper', 30], intelAt(33), ['flag', 38]] }],
+      ['shaft', 40, { put: [['streamer', 3, 12], ['heavy', 9, 3], ['cage', 13, 3], intelAt(23, 3), ['rocketeer', 27, 3], ['grunt', 36, 12], ['flag', 38, 12]] }],
       ['chasm', 36, { ceil: 5, put: [['jetpack', 2, 6], ['jumper', 8, 6], ['camdrone', 14, 6], ['grunt', 20, 6], ['target', 33, 6, { skin: 'vat' }], ['flag', 35, 6]] }],
       ['geode', 40, { put: [['brute', 4, 8], ['target', 9, 8, { skin: 'vat' }], ['preacher', 14, 8], ['cage', 20, 8], ['guru', 24, 8], intelAt(28, 8), ['flamer', 31, 8], ['itemcrate', 34, 8], ['flag', 39, 8]] }]],
       { kind: 'cavern', boss: 'crawler', extra: { name: 'QUARTZ QUEEN', sub: 'Grown in the dark on good vibes.', hpMul: 1.3 } },
@@ -1565,9 +1577,9 @@ const NEW_LEVELS = [
     intel: ['Brochure: germs are a myth. Breathe our premium air.', 'Newsroom memo: every headline in CAPITALS. Facts in small print, if at all.', 'Receipt: 10,000 air filters to the Zodiac Observatory.'],
     build: pieces([['camp', 20, { sign: 'BAD AIR CAUSES ALL', decor: 'pine' }],
       ['geysers', 36, { col: '#a6d854', vents: [[6, 8], [19, 8], [30, 7]], ledges: [[8, 13, 8], [21, 26, 8], [32, 35, 9]], put: [['shield', 3], ['target', 10, 0, { skin: 'server' }], ['grenadier', 14], ['flamer', 16], ['mortar', 24], ['fueltank', 27], intelAt(33), ['flag', 34, 10]] }],
-      ['mill', 40, { put: [['target', 10, 12, { skin: 'server' }], ['grunt', 14, 12], ['preacher', 16], ['medic', 18, 6], ['heavy', 20, 12], ['cage', 24, 6], ['sniper', 28, 6], ['alarm', 30, 12], ['flag', 39]] }],
+      ['mill', 40, { put: [['target', 10, 12, { skin: 'server' }], ['diffuser', 14, 12], ['preacher', 16], ['medic', 18, 6], ['heavy', 20, 12], ['cage', 24, 6], ['sniper', 28, 6], ['alarm', 30, 12], ['flag', 39]] }],
       ['boardwalk', 44, { rot: [[9, 14], [25, 29]], huts: [18, 34], put: [['minelayer', 5], ['dog', 12], ['cage', 20, 10], ['bomber', 26], ['grunt', 31], intelAt(36, 10), ['flag', 42]] }],
-      ['trench', 36, { put: [['grunt', 5], ['rocketeer', 8], ['mine', 10], ['cage', 13], ['guru', 17], ['grunt', 21], ['mortar', 25], intelAt(29), ['itemcrate', 31], ['flag', 34]] }]],
+      ['trench', 36, { put: [['miner', 5], ['rocketeer', 8], ['mine', 10], ['cage', 13], ['guru', 17], ['grunt', 21], ['mortar', 25], intelAt(29), ['itemcrate', 31], ['flag', 34]] }]],
       { kind: 'bridge', boss: 'tank', extra: { name: 'MIASMA MACHINE', sub: 'Pumps out bad air and worse headlines.', hpMul: 1.2 } }) },
   { name: 'ZODIAC OBSERVATORY', sub: 'Knock down the horoscope dishes, scrap the Zodiac Mech', theme: 'astro', cages: 3, pad: [231, 16],
     brief: 'The Zodiac Observatory points its dishes at the stars to sell horoscopes, and now an AI writes them: the same nonsense, only faster. Knock down its three dishes and scrap the Zodiac Mech under the great dome. Their astral fields cancel gravity: jump in one and you float.',
@@ -1575,10 +1587,10 @@ const NEW_LEVELS = [
     objectives: [{ id: 'radio', text: 'Knock down the horoscope dishes', need: 3, req: true }, { id: 'boss', text: 'Scrap the Zodiac Mech', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Horoscope for Leo: avoid scientists today.', 'AI log: asked for evidence. Wrote a very confident poem instead.', 'Bank note: profits sent to the Perpetual Motion Works.'],
     build: pieces([['camp', 20, { sign: 'YOUR STARS SAY RUN', decor: 'pine' }],
-      ['switchback', 40, { put: [['grunt', 6], ['sniper', 15], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 24], intelAt(29), ['jetpack', 33], ['flag', 38]] }],
+      ['switchback', 40, { put: [['detox', 6], ['sniper', 15], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 24], intelAt(29), ['jetpack', 33], ['flag', 38]] }],
       ['dishes', 36, { put: [['pilldoc', 12, 12], ['target', 14, 0, { skin: 'radio' }], ['cage', 18, 12], ['sniper', 20], intelAt(24, 12), ['mortar', 25], ['dog', 31], ['flag', 34]] }],
-      ['dome', 40, { put: [['grunt', 5, 4], ['heavy', 12, 4], ['cage', 16, 4], ['guru', 22, 4], ['target', 25, 6, { skin: 'radio' }], ['medic', 30, 4], ['flag', 39]] }],
-      ['ridge', 40, { put: [['grunt', 3], ['shield', 9], ['jetpack', 18], intelAt(20), ['camdrone', 26], ['brute', 28], ['cage', 30], ['grenadier', 34], ['strike', 36], ['flag', 39]] }]],
+      ['dome', 40, { put: [['yogi', 5, 4], ['heavy', 12, 4], ['cage', 16, 4], ['guru', 22, 4], ['target', 25, 6, { skin: 'radio' }], ['medic', 30, 4], ['flag', 39]] }],
+      ['ridge', 40, { put: [['pinboard', 3], ['shield', 9], ['jetpack', 18], intelAt(20), ['camdrone', 26], ['brute', 28], ['cage', 30], ['grenadier', 34], ['strike', 36], ['flag', 39]] }]],
       { kind: 'dome', boss: 'boss', extra: { name: 'ZODIAC MECH', sub: 'It is a Leo. It is angry.', hpMul: 1.5 } }) },
   { name: 'PERPETUAL MOTION WORKS', sub: 'Smash the demo engines, stop the Pitchman', theme: 'rust', cages: 3, pad: [231, 16],
     brief: 'The Works sell machines that run forever on nothing, to anyone who pays in advance. The pitch deck says AI, blockchain and quantum on every slide. Smash the three demo engines and stop the Pitchman before the big investor show. The belts never stop, and the foundry floor will not hold you for long.',
@@ -1587,7 +1599,7 @@ const NEW_LEVELS = [
     intel: ['Sales script: it runs forever. Do not ask about the plug.', 'Pitch deck, slide 40: we are disrupting thermodynamics.', 'Guest list: King Citrus, front row. Paid in oranges.'],
     build: pieces([['camp', 20, { sign: 'FREE ENERGY FOREVER' }],
       ['assembly', 40, { roof: true, put: [['flagbearer', 8, 12], ['barrel', 12, 12], ['target', 16, 5, { skin: 'vat' }], ['shield', 21, 12], ['heavy', 28, 5], ['cage', 31, 5], ['grunt', 33, 12], ['flag', 39, 5]] }],
-      ['foundry', 36, { put: [['flamer', 4], ['grunt', 10], ['target', 13, 0, { skin: 'vat' }], ['rocketeer', 20], intelAt(25), ['medic', 31], ['flag', 34]] }],
+      ['foundry', 36, { put: [['flamer', 4], ['streamer', 10], ['target', 13, 0, { skin: 'vat' }], ['rocketeer', 20], intelAt(25), ['medic', 31], ['flag', 34]] }],
       ['crane', 40, { put: [['jumper', 6, 6], ['cage', 14, 8], intelAt(12, 6), ['jetpack', 15, 6], ['target', 18, 6, { skin: 'vat' }], ['heavy', 22, 6], ['mortar', 30, 6], ['flag', 38, 6]] }],
       ['warehouse', 40, { put: [['mechsuit', 1, 13], ['cage', 4, 7], ['brute', 9, 13], ['preacher', 18], ['guru', 24], intelAt(28, 7), ['heavy', 34], ['flag', 39]] }]],
       { kind: 'crane', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Pre-orders only. No refunds.', hpMul: 1.3 } }) },
@@ -1601,9 +1613,9 @@ const MORE_LEVELS = [
     intel: ['Flyer: SEE REAL ALIENS. Children half price. Aliens full price.', 'Shopping list: rope, planks, 400 glow sticks, one balloon.', 'Bank transfer: profits to Pyramid Power Ltd.'],
     build: pieces([['camp', 20, { sign: 'THEY ARE HERE', decor: 'scarecrow' }],
       ['field', 40, { put: [['sapper', 4], ['dog', 9], ['target', 15, 0, { skin: 'radio' }], ['scout', 20], ['shield', 27], ['cage', 29], ['grenadier', 33], intelAt(36), ['flag', 39]] }],
-      ['silos', 40, { put: [['grunt', 9], ['cage', 13], ['target', 16, 0, { skin: 'radio' }], ['camdrone', 18], ['rocketeer', 22], intelAt(29, 6), ['heavy', 32], ['flag', 38]] }],
-      ['barn', 36, { put: [['cage', 4, 6], ['grunt', 8, 6], ['medic', 14, 11], ['preacher', 20, 11], ['itemcrate', 22, 11], ['shield', 26, 6], ['flag', 35]] }],
-      ['maze', 40, { put: [['guncrate', 2], ['grunt', 9], ['dog', 16], ['target', 23, 0, { skin: 'radio' }], ['brute', 25], intelAt(31), ['mortar', 38], ['flag', 39]] }]],
+      ['silos', 40, { put: [['yogi', 9], ['cage', 13], ['target', 16, 0, { skin: 'radio' }], ['camdrone', 18], ['rocketeer', 22], intelAt(29, 6), ['heavy', 32], ['flag', 38]] }],
+      ['barn', 36, { put: [['cage', 4, 6], ['pinboard', 8, 6], ['medic', 14, 11], ['preacher', 20, 11], ['itemcrate', 22, 11], ['shield', 26, 6], ['flag', 35]] }],
+      ['maze', 40, { put: [['guncrate', 2], ['dronecaller', 9], ['dog', 16], ['target', 23, 0, { skin: 'radio' }], ['brute', 25], intelAt(31), ['mortar', 38], ['flag', 39]] }]],
       { kind: 'towers', boss: 'blimp', extra: { name: 'UFO HOAX BALLOON', sub: 'Lit from inside. Full of hot air.', hpMul: 1.1 } }) },
   { name: 'PYRAMID POWER PLANT', sub: 'Smash the pyramid batteries, kill the Sand Scarab', theme: 'desert', cages: 3, pad: [230, 12],
     brief: 'The League says a pyramid shape gathers free energy, and that if you recruit two friends you will get rich. Both are pyramid schemes. Smash the three pyramid batteries and kill the Sand Scarab that guards the vault. A sandstorm blows across the dunes, and the tomb floors are trapped.',
@@ -1611,9 +1623,9 @@ const MORE_LEVELS = [
     objectives: [{ id: 'vat', text: 'Smash the pyramid batteries', need: 3, req: true }, { id: 'boss', text: 'Kill the Sand Scarab', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Recruiting chart: you, two friends, four friends... and a yacht at the top.', 'Engineer note: unplug the diesel before the tour comes.', 'Invoice: power bill sent to Hot Springs Wellness.'],
     build: pieces([['camp', 20, { sign: 'RECRUIT 2 FRIENDS', decor: 'cactus' }],
-      ['dunes', 40, { put: [['grunt', 5], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['flamer', 18], ['shield', 23], ['cage', 27], ['bomber', 31], intelAt(35), ['flag', 39]] }],
+      ['dunes', 40, { put: [['alpha', 5], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['flamer', 18], ['shield', 23], ['cage', 27], ['bomber', 31], intelAt(35), ['flag', 39]] }],
       ['pyramid', 48, { put: [intelAt(8, 13), ['knight', 10, 13], ['heavy', 16, 13], ['cage', 21, 8], ['target', 23, 8, { skin: 'vat' }], ['sniper', 24], ['rocketeer', 30], ['guru', 33, 13], ['flag', 46]] }],
-      ['ruins', 32, { put: [['preacher', 6], ['target', 10, 0, { skin: 'vat' }], ['grunt', 13], ['brute', 23], ['jetpack', 27], ['flag', 31]] }],
+      ['ruins', 32, { put: [['preacher', 6], ['target', 10, 0, { skin: 'vat' }], ['dronecaller', 13], ['brute', 23], ['jetpack', 27], ['flag', 31]] }],
       ['trench', 36, { put: [['pilldoc', 5], ['mortar', 9], ['cage', 13], ['grenadier', 17], ['strike', 20], ['heavy', 25], ['alarm', 26], intelAt(29), ['flag', 34]] }]],
       { kind: 'sand', boss: 'crawler', extra: { name: 'SAND SCARAB', sub: 'It rolls dung. It rolls you.', hpMul: 1.2 } }) },
   { name: 'HOMEOPATHIC HOT SPRINGS', sub: 'Wipe the booking servers, scrap the Steam Tank', theme: 'snow', cages: 3, pad: [231, 16],
@@ -1625,7 +1637,7 @@ const MORE_LEVELS = [
       ['slope', 36, { put: [['sapper', 5], ['sniper', 13], ['dog', 20], ['shield', 25], ['target', 32, 0, { skin: 'server' }], ['flag', 35]] }],
       ['hotel', 40, { put: [['knight', 8, 12], ['sniper', 8, 4], ['cage', 10, 8], ['heavy', 24, 12], ['target', 26, 4, { skin: 'server' }], ['medic', 30, 8], intelAt(32, 4), ['alarm', 34, 12], ['flag', 39]] }],
       ['pools', 44, { put: [['jumper', 7], ['target', 13, 0, { skin: 'server' }], ['medic', 14, 9], ['jetpack', 20], ['cage', 27], ['grenadier', 27, 9], ['camdrone', 30], intelAt(34), ['flag', 42]] }],
-      ['cliff', 36, { icicles: true, put: [['grunt', 8, 13], ['rocketeer', 16], ['preacher', 22, 13], ['cage', 28, 13], intelAt(31, 13), ['mortar', 33], ['flag', 35]] }]],
+      ['cliff', 36, { icicles: true, put: [['alpha', 8, 13], ['rocketeer', 16], ['preacher', 22, 13], ['cage', 28, 13], intelAt(31, 13), ['mortar', 33], ['flag', 35]] }]],
       { kind: 'vents', boss: 'tank', extra: { name: 'STEAM TANK', sub: 'Runs on hot water and bad ideas.', hpMul: 1.3 } }) },
   { name: 'LEY LINE LIGHTHOUSE', sub: 'Knock down the antennas, shoot down the Astral Kopter', theme: 'edge', cages: 3, pad: [231, 11],
     brief: 'The League says this lighthouse beams healing energy along invisible lines in the ground, and sells seats to stare into the lamp. Do not stare into the lamp. Their leaders meet here for the League Summit. Knock down the three ley-line antennas and shoot down the Astral Kopter. Its pilot knows where the money goes. Mind the rotten piers and the gusts on the cliffs.',
@@ -1649,9 +1661,9 @@ const LAST_LEVELS = [
     intel: ['Label: structured water. Ingredients: water. Structure: also water.', 'Engineer log: the vortex tank is a washing machine with no label.', 'Delivery note: 50,000 bottles to the Neon Wellness District.'],
     build: pieces([['camp', 20, { sign: 'STRUCTURED WATER', ceil: 8 }],
       ['sluice', 40, { put: [['pilldoc', 6, 12], ['dog', 11, 12], ['target', 18, 12, { skin: 'vat' }], ['shield', 24, 12], ['cage', 29, 12], ['grenadier', 33, 12], intelAt(36, 12), ['flag', 39, 12]] }],
-      ['assembly', 36, { roof: true, ceil: 3, put: [['grunt', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'vat' }], ['heavy', 22, 5], ['cage', 25, 5], ['medic', 30, 12], ['flag', 35, 12]] }],
+      ['assembly', 36, { roof: true, ceil: 3, put: [['pinboard', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'vat' }], ['heavy', 22, 5], ['cage', 25, 5], ['medic', 30, 12], ['flag', 35, 12]] }],
       ['cistern', 44, { put: [['sapper', 14, 4], ['rocketeer', 22, 4], ['target', 28, 4, { skin: 'vat' }], intelAt(31, 4), ['cage', 33, 4], ['flag', 42, 5]] }],
-      ['pumphall', 36, { put: [['grunt', 6, 13], ['target', 10, 4, { skin: 'vat' }], ['cage', 16, 4], ['flamer', 20, 13], ['sniper', 24, 4], ['guru', 28, 9], intelAt(30, 4), ['flag', 35, 4]] }]],
+      ['pumphall', 36, { put: [['yogi', 6, 13], ['target', 10, 4, { skin: 'vat' }], ['cage', 16, 4], ['flamer', 20, 13], ['sniper', 24, 4], ['guru', 28, 9], intelAt(30, 4), ['flag', 35, 4]] }]],
       { kind: 'cavern', boss: 'crawler', extra: { name: 'SLUDGE SERPENT', sub: 'Lives in the sump. Drinks the product.', hpMul: 1.4 } }) },
   { name: 'NEON WELLNESS DISTRICT', sub: 'Topple the billboard masts, cancel The Influencer', theme: 'city', cages: 3, pad: [231, 16],
     brief: 'Downtown, the League\'s best salesman films himself selling cures to millions, between ads for himself. Climb the block, cross the rooftops and topple the three masts that beam his sponsored posts onto the billboards. Then cancel The Influencer: shoot out his studio lights first. The gondolas are the quick way across.',
@@ -1661,7 +1673,7 @@ const LAST_LEVELS = [
     build: pieces([['camp', 20, { sign: 'LINK IN BIO' }],
       ['facade', 36, { put: [['flagbearer', 4], ['shield', 9], ['target', 14, 0, { skin: 'radio' }], ['sniper', 20], ['cage', 25], intelAt(30), ['flag', 33]] }],
       ['rooftops', 44, { put: [['knight', 4], ['cage', 9, 9], ['rocketeer', 14], intelAt(19, 9), ['target', 24, 0, { skin: 'radio' }], ['jetpack', 26], ['heavy', 34], ['camdrone', 38], ['flag', 41]] }],
-      ['gondola', 36, { put: [['grunt', 3], ['dog', 15, 7], ['grenadier', 20, 7], ['sniper', 32], ['flag', 34]] }],
+      ['gondola', 36, { put: [['alpha', 3], ['dog', 15, 7], ['grenadier', 20, 7], ['sniper', 32], ['flag', 34]] }],
       ['billboard', 40, { put: [intelAt(4, 10), ['medic', 9, 13], ['preacher', 12, 7], ['target', 20, 10, { skin: 'radio' }], ['guru', 22, 7], ['brute', 26, 13], ['cage', 30, 10], ['mortar', 34, 13], ['flag', 39, 13]] }]],
       { kind: 'rooftop', boss: 'director', extra: { name: 'THE INFLUENCER', sub: 'Ten million followers. Zero sources.', hpMul: 1.4 } }) },
   { name: 'JUICE PIPELINE', sub: 'Wipe the shipping servers, scrap the Zestinator', theme: 'grove', cages: 3, pad: [231, 16],
@@ -1671,7 +1683,7 @@ const LAST_LEVELS = [
     intel: ['Orchard memo: pick them, juice them, call it medicine.', 'Delivery plan: 900 tonnes of vitamin C a day. Kidneys: not consulted.', 'Guard rota: the Zestinator holds the bridge. The King holds a grudge.'],
     build: pieces([['camp', 20, { sign: 'AN ORANGE AN HOUR', decor: 'orange' }],
       ['grove', 40, { put: [['flagbearer', 5], ['dog', 8], ['shield', 15], ['target', 18, 0, { skin: 'server' }], ['grenadier', 23], ['cage', 31], ['bomber', 34], intelAt(36), ['flag', 39]] }],
-      ['assembly', 36, { roof: true, put: [['grunt', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'server' }], ['heavy', 22, 5], ['cage', 25, 5], ['flamer', 30, 12], ['flag', 35, 12]] }],
+      ['assembly', 36, { roof: true, put: [['dronecaller', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'server' }], ['heavy', 22, 5], ['cage', 25, 5], ['flamer', 30, 12], ['flag', 35, 12]] }],
       ['pipeline', 40, { put: [['sapper', 8], ['sniper', 16], ['jetpack', 22], ['rocketeer', 28], intelAt(31), ['flag', 38]] }],
       ['depot', 40, { put: [['knight', 8, 6], intelAt(10), ['heavy', 21, 6], ['target', 22, 0, { skin: 'server' }], ['brute', 27, 6], ['cage', 33, 6], ['mortar', 35, 6], ['flag', 39, 6]] }]],
       { kind: 'bridge', boss: 'boss', extra: { name: 'THE ZESTINATOR', sub: 'Peels steel. Squeezes bros.', hpMul: 1.6 } }) },
@@ -1796,6 +1808,9 @@ const RANDOM_FOES = [
   ['mortar', 0.4, 1, { blast: 1 }], ['preacher', 0.4, 1],
 ];
 for (const k of NEW_FOES) if (!RANDOM_FOES.some((f) => f[0] === k)) RANDOM_FOES.push([k, -1, 1, ['minelayer', 'pilldoc', 'sapper'].includes(k) ? { blast: 1 } : {}]); // the newer quacks; -1: turn up from RAMP_FROM
+for (const k of MORE_FOES) if (!RANDOM_FOES.some((f) => f[0] === k)) RANDOM_FOES.push([k, -1, 1, { detox: { blast: 1 }, miner: { blast: 1 }, alpha: { room: 3 }, dronecaller: { room: 3 } }[k] || {}]);
+// posts that mix roles, left to right (the player comes from the left): a medic behind a shield, a flag-bearer with grunts, a blocker with a shooter behind
+const GEN_GROUPS = [['shield', 'medic'], ['flagbearer', 'grunt', 'grunt'], ['shield', 'shield', 'sniper'], ['pinboard', 'grunt', 'grunt'], ['alpha', 'medic'], ['streamer', 'grunt', 'grunt'], ['dronecaller', 'shield'], ['detox', 'grunt'], ['knight', 'pilldoc'], ['yogi', 'grunt']];
 // easy / normal / hard: p is how far into the campaign it feels (0 first mission, 1 finale), hp scales the boss
 const GEN_DIFF = { easy: { p: 0.2, hp: 1 }, normal: { p: 0.55, hp: 1.2 }, hard: { p: 1, hp: 1.5 } };
 // small word lists for names, briefings and intel
@@ -1994,7 +2009,12 @@ function genLevel(seed, dk = 'normal') {
     const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p), budget = missionTarget(p) * (end / ARENA_AT);
     let spent = 0;
     for (let pass = 0; pass < 3 && spent < budget; pass++) for (let k = 26 + pass * 3; k < end - 3 && spent < budget; k += Q.int(7, 13)) {
-      const n = Q.int(1, 3);
+      let grouped = false; // sometimes the whole post is one mixed group (all or nothing)
+      if (Q.chance(0.3)) {
+        const gs = GEN_GROUPS.filter((g) => g.every((t) => foes.some((f) => f[0] === t) && !((RANDOM_FOES.find((f) => f[0] === t)[3] || {}).blast && wet(k - 8, k + 12)))), grp = gs.length ? Q.pick(gs) : null;
+        if (grp && grp.every((t, i) => { const j = k + i; return j < end - 1 && path[j] >= 0 && Math.abs(path[j] - path[k]) <= 1 && genRoom(j, path[j]) >= ((RANDOM_FOES.find((f) => f[0] === t)[3] || {}).room || 2) && tileAt(j, path[j] + 1) !== ACID; })) { grp.forEach((t, i) => { H.sp(t, k + i, path[k + i]); spent += THREAT[t] || 2; }); grouped = true; }
+      }
+      const n = grouped ? 0 : Q.int(1, 3);
       for (let i = 0; i < n && spent < budget; i++) {
         let [type, , , o = {}] = Q.wpick(foes, (f) => f[2]); if (o.blast && wet(k - 8, k + 12)) [type, , , o = {}] = foes[0];
         const room = o.room || 2, spots = [];
@@ -2859,6 +2879,7 @@ let ceasefire = 0; // seconds left of the quiet start of a mission
 let diff = { p: 1, keep: 1, fire: 1, react: 0, bossHp: 1 }, rampOn = true;
 const RAMP_FROM = { bomber: 0.08, grenadier: 0.08, medic: 0.08, flamer: 0.15, turret: 0.15, guru: 0.2, rocketeer: 0.2, jetpack: 0.22, camdrone: 0.25, heavy: 0.28, sniper: 0.3, brute: 0.32, mortar: 0.36, preacher: 0.36 };
 Object.assign(RAMP_FROM, { minelayer: 0.12, jumper: 0.2, pilldoc: 0.3, flagbearer: 0.4, sapper: 0.5, knight: 0.6 });
+Object.assign(RAMP_FROM, { diffuser: 0.22, miner: 0.3, detox: 0.38, streamer: 0.45, yogi: 0.52, pinboard: 0.58, alpha: 0.66, dronecaller: 0.72 });
 function campaignDiff(n) {
   const p = !rampOn || mode !== 'campaign' || n >= LEVELS.length ? 1 : n / (LEVELS.length - 1);
   return { p, keep: 0.5 + 0.5 * p, fire: 0.65 + 0.35 * p, react: (1 - p) * 0.5, bossHp: 0.65 + 0.35 * p };
@@ -2866,6 +2887,7 @@ function campaignDiff(n) {
 // how dangerous each enemy is, for setting a mission's difficulty
 const THREAT = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
 Object.assign(THREAT, { minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sapper: 2, knight: 3 });
+Object.assign(THREAT, { diffuser: 2, miner: 2, detox: 2.5, streamer: 2.5, yogi: 2.5, pinboard: 2.5, alpha: 3, dronecaller: 3 });
 const missionTarget = (p) => 14 + 40 * p; // threat on screen over the whole mission: 14 on the first, 54 on the finale
 function applyDifficulty(n) {
   diff = campaignDiff(n);
@@ -3165,6 +3187,7 @@ const floatText = (x, y, txt, col = '#f2c94c') => fx.push({ kind: 'text', x, y, 
 // quacks share one brain (patrol, spot, alert, attack); each type adds its own attack
 const QUACK = { grunt: 1, shield: 1, heavy: 1, scout: 1, grenadier: 1, rocketeer: 1, guru: 1, para: 1, jetpack: 1, sniper: 1, flamer: 1, brute: 1, medic: 1, preacher: 1, mortar: 1 };
 for (const k of NEW_FOES) QUACK[k] = 1;
+for (const k of MORE_FOES) QUACK[k] = 1;
 const BOSS = { boss: 1, kopter: 1, crawler: 1, tank: 1, engine: 1, blimp: 1, citrus: 1, director: 1 };
 const BOSS_NAME = { boss: 'HOMEOPATHITRON', kopter: 'DETOXKOPTER', crawler: 'CRYSTAL CRAWLER', tank: 'SNAKE OIL TANK', engine: 'SUCCUSSION ENGINE', blimp: 'FLAT EARTH ZEPPELIN', citrus: 'KING CITRUS', director: 'THE DIRECTOR' };
 const isQuack = (e) => QUACK[e.type] === 1;
@@ -3177,6 +3200,7 @@ const DIMS = {
   spring: [12, 6, 1], mine: [8, 10, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], director: [30, 22, 110], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
 Object.assign(DIMS, { minelayer: [10, 15, 2], jumper: [10, 15, 2], pilldoc: [10, 15, 2], flagbearer: [10, 15, 2], sapper: [10, 15, 3], knight: [10, 15, 6] });
+Object.assign(DIMS, { streamer: [10, 15, 2], diffuser: [10, 15, 2], detox: [10, 15, 3], miner: [10, 15, 2], yogi: [10, 15, 2], pinboard: [10, 15, 3], alpha: [14, 17, 10], dronecaller: [10, 15, 2] });
 const BOMBER_SPEED = 88, BOMBER_BEEP = 0.6, BOMBER_FUSE = 3.4; // was 125 px/s with no warning; now about a quack's panic run, after a beeping wind-up
 function makeEnt(s) {
   const e = { type: s.type, vx: 0, vy: 0, kx: 0, face: -1, flash: 0, dead: false, onGround: false, wall: 0, t: 0, rp: 0 };
@@ -3295,12 +3319,13 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
     return;
   }
   if (e.type === 'knight' && how === 'shot' && kx && Math.sign(kx) === -e.face) { dmg *= 0.25; sfx('ting'); const [cx, cy] = center(e); for (let i = 0; i < 2; i++) part(cx + e.face * 6, cy - 2, e.face * rand(40, 130), rand(-100, 20), '#fff6c2', 0.2, 1, G); } // placebo armour: shots from the front barely scratch it
+  if (e.type === 'alpha' && P.alive && P.y + P.h < e.y + 4 && how !== 'blast' && how !== 'burn') { dmg *= 3; floatText(e.x + e.w / 2, e.y - 8, 'HEADSHOT', '#f2c94c'); } // the alpha's weak spot is his head: hit him from above
   if (e.dizzy > 0) dmg *= 2; // King Citrus takes double while he sees stars
   if (e.type === 'crawler' && e.state === 'stuck') dmg *= 1.5; // a crawler stuck in the sand
   if (e.fervor > 0) dmg *= 0.6;
   if (e.bug > 0) dmg *= 2; // Hopper marked it
   e.hp -= dmg; e.flash = 0.08; e.flinch = 0.12; e.provoked = true; e.calmT = 0; // a boss you are hitting never calms down // shoot one during the ceasefire and that one fights back
-  if (e.type === 'heavy' || e.type === 'brute') kx *= 0.08;
+  if (e.type === 'heavy' || e.type === 'brute' || e.type === 'alpha') kx *= 0.08;
   if (e.type !== 'turret' && !BOSS[e.type]) e.kx += kx;
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
   if ((isQuack(e) || e.type === 'dog') && how === 'shot') { const [cx, cy] = center(e); bleed(cx - Math.sign(kx) * 3, cy - 2, 3, kx * 0.6); }
@@ -4117,6 +4142,7 @@ function respawn() {
   for (const o of ents) {
     if (isQuack(o) || o.type === 'dog') Object.assign(o, { aware: false, provoked: false, lost: 0, react: 0.6, aim: 0, windup: 0, chant: 0, fireT: 0, spin: 0, charge: 0, huh: 1 });
     if (o.type === 'camdrone') Object.assign(o, { dive: false, lockT: 0, vx: 0, vy: 0, fuse: 4 });
+    if (MORE_FOES.includes(o.type)) Object.assign(o, { stomp: 0 });
   }
 }
 
@@ -4643,7 +4669,7 @@ function updatePlayer(dt) {
   if (!dir || (padFull === 0 && !keys.left && !keys.right)) P.run = false;
   if (padFull && padFull === dir) P.run = true;
   P.sprint = P.run && P.dash <= 0 && dir !== 0;
-  if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * (P.sprint ? 185 : 118), (P.onGround ? (onIce ? 240 : 1500) : 950) * dt);
+  if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * (P.sprint ? 185 : 118) * oilSlow(), (P.onGround ? (onIce ? 240 : 1500) : 950) * dt);
   if (P.onGround && dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 70) { // skid when turning at speed
     if (Math.random() < 0.6) part(P.x + 5 + Math.sign(P.vx) * 4, P.y + P.h, Math.sign(P.vx) * rand(20, 60), rand(-30, -5), theme.dust, 0.35, 2, 0, 'smoke');
     if (Math.random() < 0.08) sfx('skid');
@@ -4949,7 +4975,7 @@ function patrol(e, dt, speed) {
   if (!solidPx(ahead, e.y + e.h + 4) || solidPx(ahead, e.y + 6)) e.face *= -1;
   return e.face * speed;
 }
-const PATROL = { heavy: 14, shield: 18, guru: 16, knight: 14 };
+const PATROL = { heavy: 14, shield: 18, guru: 16, knight: 14, alpha: 20 };
 function updateQuack(e, dt) {
   e.huh -= dt; e.atk -= dt; e.stun = (e.stun || 0) - dt; e.kneel = false;
   if (e.chute) { // paratrooper drifting down under a canopy
@@ -4994,11 +5020,11 @@ function updateQuack(e, dt) {
     return;
   }
   if (e.type === 'jetpack') { flyJetpack(e, dt); return; }
-  if (e.type === 'brute' && e.charge > 0) { bruteCharge(e, dt); return; }
+  if ((e.type === 'brute' || e.type === 'alpha') && e.charge > 0) { bruteCharge(e, dt); return; }
   if (e.type === 'medic' && medicWork(e, dt)) return;
   if (e.fervor > 0) { e.fervor -= dt; e.cool -= dt * 0.7; } // preached at: reloads faster
   if (e.brave > 0) { e.brave -= dt; e.cool -= dt * 0.5; } // the flag-bearer's rally: reloads faster and runs quicker
-  const S = { preacher: [220, 90], mortar: [420, 160], rocketeer: [240, 30], grenadier: [210, 90], guru: [210, 120], scout: [200, 40], sniper: [420, 70], brute: [190, 30], pilldoc: [180, 90], jumper: [190, 90] }[e.type] || [190, 26]; // grunts notice you at about 12 tiles; snipers and mortars reach further, but only on screen
+  const S = { preacher: [220, 90], mortar: [420, 160], rocketeer: [240, 30], grenadier: [210, 90], guru: [210, 120], scout: [200, 40], sniper: [420, 70], brute: [190, 30], pilldoc: [180, 90], jumper: [190, 90] }[e.type] || MORE_RANGE[e.type] || [190, 26]; // grunts notice you at about 12 tiles; snipers and mortars reach further, but only on screen
   const sees = playerSees(e, S[0], S[1]) && (Math.sign(P.x - e.x) === e.face || e.aware || Math.abs(P.x - e.x) < 50);
   let walk = 0;
   if (sees) {
@@ -5055,6 +5081,7 @@ function quackAttack(e, dt) {
   if (e.jam > 0) { if (Math.random() < 0.08) part(e.x + e.w / 2 + e.face * 6, e.y + 7, rand(-30, 30), rand(-50, -10), '#66c2a5', 0.2, 1); return 0; } // jammed: the gun only crackles
   const [ex, ey] = center(e), [px] = center(P), dist = Math.abs(px - ex);
   const mx = e.x + (e.face > 0 ? e.w + 1 : -1), my = e.y + 8;
+  if (MORE_FOES.includes(e.type)) return moreAttack(e, dt, ex, ey, dist, mx, my);
   switch (e.type) {
     case 'grunt': case 'para':
       if (e.cool <= 0) { pill(mx, my, e.face * 165, 0); e.cool = rand(0.9, 1.5); e.atk = 0.15; }
@@ -5268,6 +5295,105 @@ function meleeSwing(e, dt, reach) {
     if (P.alive && P.inv <= 0 && Math.abs(P.x + P.w / 2 - (e.x + e.w / 2)) < reach && Math.abs(P.y - e.y) < 14) killPlayer('shot', e.face);
   }
   return true;
+}
+// ---- the second batch of quacks (MORE_FOES). They share the quack brain, so they only act once they have spotted you (on screen, about 12 tiles), forget you when you die and stay quiet in the safe start.
+const MORE_RANGE = { streamer: [190, 90], detox: [190, 60], yogi: [190, 60], alpha: [190, 120], dronecaller: [190, 90] }; // how far they notice you (x, y); the rest use the grunt's
+// the diffuser's oil mist slows you to half speed while you stand in it
+function oilSlow() { for (const f of fx) if (f.kind === 'oil' && f.t > 0 && Math.abs(P.x + P.w / 2 - f.x) < f.r && Math.abs(P.y + P.h / 2 - f.y) < 18) return 0.5; return 1; }
+// the streamer's "viewers": two paratroopers drop in (never more than 5 about)
+function callViewers() {
+  let n = ents.filter((o) => o.type === 'para' && !o.dead).length;
+  for (let k = 0; k < 2 && n < 5; k++, n++) { const p = makeEnt({ type: 'para', c: 0, y: cam.y - 30 - k * 26 }); p.x = clamp(P.x + rand(-120, 120), cam.x + 20, cam.x + VW - 20); p.face = P.x > p.x ? 1 : -1; ents.push(p); }
+}
+// the yogi blinks 4 to 7 tiles sideways onto free ground on screen; false if there is no such spot
+function yogiBlink(e) {
+  const ds = [-7, -6, -5, -4, 4, 5, 6, 7].sort(() => Math.random() - 0.5);
+  for (const d of ds) {
+    const nx = e.x + d * T, cx = nx + e.w / 2;
+    if (nx < cam.x + 12 || nx + e.w > cam.x + VW - 12 || nx < 8 || nx > LW * T - 24 || Math.abs(nx - P.x) < 24 || Math.abs(nx - P.x) > 9 * T) continue; // stays in your sight
+    if ([e.y + 1, e.y + 8, e.y + e.h - 2].some((y) => solidPx(cx, y) || solidPx(cx - 4, y) || solidPx(cx + 4, y)) || !solidPx(cx, e.y + e.h + 3) || rectAcid(cx - 3, e.y + e.h, 6, 6)) continue;
+    for (let i = 0; i < 10; i++) part(e.x + rand(0, e.w), e.y + rand(0, e.h), rand(-30, 30), rand(-60, 10), '#e6e2f0', 0.4, 2);
+    e.x = nx; e.vx = 0; e.vy = 0; e.kx = 0;
+    for (let i = 0; i < 10; i++) part(e.x + rand(0, e.w), e.y + rand(0, e.h), rand(-30, 30), rand(-60, 10), '#f29e4c', 0.4, 2);
+    return true;
+  }
+  return false;
+}
+// the pinboard guy's wall: two crate blocks, shot or blown away to get through
+function pinWall(e) {
+  const c = Math.floor((e.x + e.w / 2) / T) + e.face * 3, r0 = Math.floor((e.y + e.h - 1) / T), cells = [[c, r0], [c, r0 - 1]];
+  if (c < 1 || c >= LW - 1 || !isSolidT(tileAt(c, r0 + 1)) || cells.some(([cc, rr]) => tileAt(cc, rr) !== EMPTY || overlap(P, { x: cc * T, y: rr * T, w: T, h: T }) || ents.some((o) => !o.dead && o !== e && overlap(o, { x: cc * T, y: rr * T, w: T, h: T })))) return false;
+  for (const [cc, rr] of cells) { tiles[rr * LW + cc] = CRATE; thp[rr * LW + cc] = TILE_HP[CRATE]; }
+  miniDirty = true; e.fence = cells; e.builds = (e.builds || 0) + 1; sfx('clink', e.x); floatText(e.x + e.w / 2, e.y - 12, 'IT ALL CONNECTS', '#d9534f');
+  for (let i = 0; i < 8; i++) part(c * T + rand(0, T), r0 * T + rand(-T, T), rand(-30, 30), rand(-60, -10), '#d9534f', 0.4, 1);
+  return true;
+}
+// each of the eight does one trick; returns how fast it walks meanwhile
+function moreAttack(e, dt, ex, ey, dist, mx, my) {
+  switch (e.type) {
+    case 'streamer': // the ring light comes on (a bright flash in your face), then two "viewers" parachute in; keeps his distance
+      if (e.cool <= 0 && !e.chant) { e.chant = 0.9; sfx('alert', e.x); }
+      if (e.chant > 0) { e.chant -= dt; e.atk = 0.2; if (e.chant <= 0) { e.chant = 0; e.cool = rand(7, 9); sfx('horn', e.x); fx.push({ kind: 'screen', t: 0.4, max: 0.4, col: '#fff6c2' }); floatText(ex, e.y - 12, 'GOING LIVE!', '#e78ac3'); callViewers(); } return 0; }
+      return dist < 90 ? -e.face * 34 : 0;
+    case 'diffuser': // walks at you and leaves a cloud of oil mist every 1.3 s (4 at most, 6 s each) that slows you; plinks a pistol
+      if (e.cool <= 0) { pill(mx, my, e.face * 150, 0); e.cool = rand(1.8, 2.6); e.atk = 0.15; }
+      e.layT = (e.layT || 0) - dt;
+      if (e.layT <= 0 && e.onGround) { e.layT = 1.3; if (fx.filter((f) => f.kind === 'oil' && f.src === e && f.t > 0).length < 4) { fx.push({ kind: 'oil', x: ex, y: e.y + e.h - 8, r: 24, t: 6, max: 6, src: e }); sfx('hiss', e.x); } }
+      return dist > 70 ? e.face * 30 : 0;
+    case 'detox': // cheeks swell, then three green globs fly in an arc and burst where they land; backs off when you get close
+      if (e.cool <= 0 && !e.windup && dist > 30) e.windup = 0.6;
+      if (e.windup > 0) {
+        e.windup -= dt; e.atk = 0.3;
+        if (e.windup <= 0) {
+          e.windup = 0; e.cool = rand(2.6, 3.4); const [px, py] = center(P), g = 700; sfx('throw', e.x);
+          for (let k = -1; k <= 1; k++) { const t = 0.8 + k * 0.1; bullets.push({ x: mx, y: my - 2, vx: clamp((px + k * 24 - ex) / t, -240, 240), vy: Math.max((py - ey - 0.5 * g * t * t) / t, -430), grav: g, owner: 'e', kind: 'vomit', life: 1.6, dmg: 2, explode: 14, tp: 1 }); }
+        }
+      }
+      return dist < 70 ? -e.face * 40 : 0;
+    case 'miner': // keeps his distance; every 1.4 s a coin rolls out toward you and blows up after about 2 s (3 out at most); shoot them
+      e.layT = (e.layT || 0) - dt;
+      if (e.layT <= 0 && e.onGround && bullets.filter((b) => b.kind === 'coin' && b.src === e && !b.dead).length < 3) { e.layT = 1.4; e.atk = 0.2; bullets.push({ x: ex + e.face * 4, y: e.y + e.h - 4, vx: e.face * 70, roll: e.face * 70, vy: -90, grav: 700, bounce: 99, owner: 'e', kind: 'coin', life: 2.2, dmg: 3, explode: 22, tp: 1.5, src: e }); sfx('clink', e.x); }
+      return dist < 70 ? -e.face * 36 : dist > 130 ? e.face * 30 : 0;
+    case 'yogi': // sits and meditates; every 3 s, or when you come close, he fades out, blinks to another spot and fires a quick shot
+      if ((e.cool <= 0 || dist < 28) && !e.aim) { e.aim = 0.45; sfx('zap', e.x); }
+      if (e.aim > 0) {
+        e.aim -= dt; e.atk = 0.3;
+        if (e.aim <= 0) { e.aim = 0; e.cool = rand(2.6, 3.6); if (yogiBlink(e)) { e.face = P.x > e.x ? 1 : -1; pill(e.x + (e.face > 0 ? e.w + 1 : -1), e.y + 8, e.face * 185, 0); e.atk = 0.2; sfx('zap', e.x); } }
+        return 0;
+      }
+      e.kneel = true; return 0;
+    case 'pinboard': // pins up a cork wall 3 tiles in front of himself (two blocks high: shoot it to cut it), then plinks from behind it
+      if (e.cool <= 0) { pill(mx, my, e.face * 150, 0); e.cool = rand(1.6, 2.4); e.atk = 0.15; }
+      e.layT = (e.layT || 0) - dt;
+      if (e.layT <= 0 && e.onGround && dist > 70 && (e.builds || 0) < 5) { e.layT = 2.5; if (!(e.fence || []).some(([c, r]) => tileAt(c, r) === CRATE)) pinWall(e); }
+      return dist < 80 ? -e.face * 30 : 0;
+    case 'alpha': // roars and charges like a brute; up close he slams the floor (a shockwave that kills you unless you are in the air). Hits from above land on his head for triple damage
+      if (e.stomp > 0) {
+        e.stomp -= dt; e.atk = 0.3;
+        if (e.stomp <= 0) {
+          e.stomp = 0; e.cool = 2; shake = Math.min(10, shake + 4); sfx('thud', e.x); fx.push({ kind: 'ring2', x: ex, y: e.y + e.h - 2, t: 0.4, max: 0.4 });
+          for (let i = 0; i < 8; i++) part(ex + rand(-20, 20), e.y + e.h, rand(-80, 80), rand(-60, -10), theme.dust, 0.4, 2, 0, 'smoke');
+          if (P.alive && P.inv <= 0 && P.onGround && Math.abs(P.x + P.w / 2 - ex) < 50 && Math.abs(P.y + P.h - (e.y + e.h)) < 8) killPlayer('crush');
+        }
+        return 0;
+      }
+      if (e.cool <= 0 && !e.windup && dist < 44) { e.stomp = 0.5; sfx('roar', e.x); return 0; }
+      if (e.cool <= 0 && !e.windup) { e.windup = 0.45; sfx('roar', e.x); }
+      if (e.windup > 0) { e.windup -= dt; e.atk = 0.3; if (e.windup <= 0) { e.windup = 0; e.charge = 1.4; e.cool = 2.5; } }
+      return 0;
+    case 'dronecaller': // keeps back, holds up a controller, then two camera drones go for you (3 of his out at most)
+      if (e.cool <= 0 && !e.windup) e.windup = 0.8;
+      if (e.windup > 0) {
+        e.windup -= dt; e.atk = 0.3;
+        if (e.windup <= 0) {
+          e.windup = 0; e.cool = rand(5, 7); let n = ents.filter((o) => o.src === e && !o.dead).length;
+          for (let k = 0; k < 2 && n < 3; k++, n++) { const d = makeEnt({ type: 'camdrone', c: 0, y: e.y - 16 - k * 10 }); d.x = ex - 5 + e.face * k * 10; d.home = d.y; d.src = e; d.lockT = 0.3; ents.push(d); }
+          sfx('alert', e.x); floatText(ex, e.y - 12, 'SWARM!', '#66c2a5');
+        }
+      }
+      return dist < 90 ? -e.face * 34 : 0;
+  }
+  return 0;
 }
 function callParas(e) {
   let n = ents.filter((o) => o.type === 'para' && !o.dead).length;
@@ -6172,7 +6298,7 @@ function shatterIcicle(e) {
 
 // ---------------------------------------------------------------- projectiles
 const SHOOTABLE = { rocket: 1, missile: 1, bomb: 1, grenade: 1 };
-SHOOTABLE.pillbomb = 1;
+SHOOTABLE.pillbomb = 1; SHOOTABLE.vomit = 1; SHOOTABLE.coin = 1;
 // homing: enemy missiles chase you, finches (and punched-back missiles) chase the nearest quack
 function steer(b, d) {
   let tx, ty;
@@ -6325,6 +6451,7 @@ function updateBullets(dt, edt) {
     if (b.kind === 'rocket') { if (b.aimed) { const sp = Math.hypot(b.vx, b.vy) || 1, k = Math.min(300, sp + 320 * d) / sp; b.vx *= k; b.vy *= k; } else b.vx = clamp(b.vx + Math.sign(b.vx) * 320 * d, -300, 300); if (Math.random() < 0.7) part(b.x - Math.sign(b.vx) * 6, b.y, rand(-10, 10), rand(-20, 0), '#4b4766', rand(0.4, 0.8), rand(2, 4), 0, 'smoke'); } // an aimed rocket speeds up along its path
     if (b.kind === 'missile' && Math.random() < 0.6) part(b.x - Math.cos(b.ang) * 5, b.y - Math.sin(b.ang) * 5, rand(-10, 10), rand(-10, 10), theme.dust, rand(0.3, 0.6), rand(2, 3), 0, 'smoke');
     if (b.kind === 'glob' && Math.random() < 0.4) part(b.x, b.y, 0, 20, '#a6d854', 0.3, 1, G);
+    if (b.kind === 'coin') { b.vx = b.roll; if (solidPx(b.x, b.y + 3)) b.vy = Math.min(b.vy, -70); } // the miner's coin keeps rolling toward you at a steady pace
     if (b.grav) b.vy += b.grav * d;
     const ox = b.x, oy = b.y;
     b.x += b.vx * d; b.y += b.vy * d;
@@ -7147,6 +7274,21 @@ function drawQuack(e, t) {
     case 'sapper': { const h = drawArm(sh, F, e.windup > 0 || (e.atk > 0 && Math.floor(t * 8) % 2) ? 'up' : 'down', coat, skin, swing); ctx.fillStyle = '#7a5c36'; ctx.fillRect(h.x, h.y - 6, 1, 9); ctx.fillStyle = '#b4bed0'; ctx.fillRect(h.x - 2, h.y - 7, 5, 2); break; }
     case 'pilldoc': { const h = drawArm(sh, F, e.windup > 0 ? 'throw' : 'down', coat, skin, swing); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(h.x, h.y - 1, 2, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(h.x + 2, h.y - 1, 2, 2); break; }
     case 'jumper': { const h = drawArm(sh, F, e.aware ? 'aim' : 'down', coat, skin, swing); if (e.aware) rifle(h, F); const bx = Math.round(sh.x - F * 6); ctx.fillStyle = '#8b93ad'; ctx.fillRect(bx - 1, sh.y, 3, 7); if (e.leap && !e.onGround) { ctx.fillStyle = Math.floor(t * 30) % 2 ? '#f29e4c' : '#fff6c2'; ctx.fillRect(bx, sh.y + 7, 1, 3 + Math.floor(t * 40) % 3); } break; }
+    case 'streamer': { const h = drawArm(sh, F, 'up', coat, skin, swing), on = e.chant > 0 ? Math.floor(t * 16) % 2 : 1; ctx.fillStyle = '#25223a'; ctx.fillRect(h.x, h.y - 5, 2, 5); ctx.fillStyle = '#8fd3ff'; ctx.fillRect(h.x, h.y - 5, 1, 3); ctx.fillStyle = on ? '#ffffff' : '#fff6c2'; ctx.fillRect(h.x - 2, h.y - 11, 6, 1); ctx.fillRect(h.x - 2, h.y - 7, 6, 1); ctx.fillRect(h.x - 3, h.y - 10, 1, 3); ctx.fillRect(h.x + 4, h.y - 10, 1, 3); break; } // a phone inside a ring light
+    case 'diffuser': { drawArm(sh, F, 'down', coat, skin, swing); const bx = Math.round(sh.x - F * 6); ctx.fillStyle = '#b3a6ff'; ctx.fillRect(bx - 2, sh.y, 4, 7); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(bx - 1, sh.y - 1, 2, 1); if (Math.floor(t * 4) % 2) { ctx.fillStyle = 'rgba(179,166,255,0.6)'; ctx.fillRect(bx - 1 - F * 2, sh.y - 3, 2, 2); } break; } // a tank of oil on the back, puffing mist
+    case 'detox': { const h = drawArm(sh, F, e.windup > 0 ? 'throw' : 'down', coat, skin, swing); ctx.fillStyle = '#a6d854'; ctx.fillRect(h.x, h.y, 3, 4); ctx.fillStyle = '#e8ffc0'; ctx.fillRect(h.x, h.y, 1, 1); if (e.windup > 0) { ctx.fillStyle = '#a6d854'; const k = Math.round((0.6 - e.windup) * 6); ctx.fillRect(F > 0 ? x + 8 : x - 1 - k, y + 4, 3 + k, 3); } break; } // a green juice jug; the cheeks swell before he spits
+    case 'miner': { const h = drawArm(sh, F, 'down', coat, skin, swing); ctx.fillStyle = '#f2a21a'; ctx.fillRect(h.x, h.y + 1, 3, 3); ctx.fillStyle = '#fff6c2'; ctx.fillRect(h.x + 1, h.y + 1, 1, 2); break; } // a coin in hand
+    case 'yogi': { drawArm(sh, F, 'down', coat, skin, swing); ctx.fillStyle = e.aim > 0 && Math.floor(t * 20) % 2 ? '#ffffff' : '#fff6c2'; ctx.fillRect(x + 1, y - 4, 8, 1); ctx.fillRect(x, y - 3, 1, 1); ctx.fillRect(x + 9, y - 3, 1, 1); break; } // a halo
+    case 'pinboard': { drawArm(sh, F, 'down', coat, skin, swing); const px = F > 0 ? x + 7 : x - 3; ctx.fillStyle = '#7a5c36'; ctx.fillRect(px, y + 3, 6, 9); ctx.fillStyle = '#c9a26a'; ctx.fillRect(px + 1, y + 4, 4, 7); ctx.fillStyle = '#d9534f'; ctx.fillRect(px + 1, y + 5, 4, 1); ctx.fillRect(px + 2, y + 5, 1, 5); ctx.fillRect(px + 1, y + 9, 3, 1); break; } // a cork board with red string
+    case 'alpha': { // fists up; both arms up for the slam; a gold chain
+      const up = e.stomp > 0 || e.windup > 0, h = drawArm(sh, F, e.charge > 0 || up ? 'punch' : 'down', coat, skin, swing);
+      ctx.fillStyle = skin; ctx.fillRect(h.x - 1, h.y - 1, 4, 4);
+      if (e.charge > 0 || up) drawArm({ x: sh.x - F * 6, y: sh.y + 2 }, F, 'punch', coat, skin);
+      ctx.fillStyle = '#f2c94c'; ctx.fillRect(Math.round(cx) - 2, sh.uy + 7, 5, 1);
+      if (e.stun > 0) { ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) { const a = t * 6 + k * 2.1; ctx.fillRect(Math.round(cx + Math.cos(a) * 7), Math.round(sh.uy - 4 + Math.sin(a) * 2), 2, 2); } }
+      break;
+    }
+    case 'dronecaller': { const h = drawArm(sh, F, 'up', coat, skin, swing); ctx.fillStyle = '#25223a'; ctx.fillRect(h.x - 1, h.y - 4, 4, 3); ctx.fillStyle = e.windup > 0 || Math.floor(t * 3) % 2 ? '#66c2a5' : '#d9534f'; ctx.fillRect(h.x, h.y - 3, 1, 1); ctx.fillStyle = '#8b93ad'; ctx.fillRect(h.x + 2, h.y - 8, 1, 4); break; } // a remote with an antenna
     case 'knight': { const h = drawArm(sh, F, e.windup > 0 ? 'up' : 'down', coat, skin, swing); ctx.fillStyle = '#e6e2f0'; if (e.windup > 0) ctx.fillRect(h.x, h.y - 9, 1, 10); else ctx.fillRect(h.x, h.y + 1, 1, 8); const px = F > 0 ? x + 8 : x - 1; ctx.fillStyle = '#5c6480'; ctx.fillRect(px, y + 2, 3, 12); ctx.fillStyle = '#b4bed0'; ctx.fillRect(F > 0 ? px + 1 : px, y + 3, 2, 10); break; }
     case 'shield': {
       const h = drawArm(sh, F, 'aim', coat, skin);
@@ -7572,6 +7714,8 @@ function drawBullets() {
       case 'rock': if (b.vit) { ctx.fillStyle = '#f28a1a'; ctx.fillRect(x - 4, y - 2, 4, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x, y - 2, 4, 4); break; }
         ctx.fillStyle = '#62626c'; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.fillStyle = '#3e3e46'; ctx.fillRect(x - 1, y, 3, 2); break;
       case 'pillbomb': ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x - 3, y - 1, 3, 3); ctx.fillStyle = '#d9534f'; ctx.fillRect(x, y - 1, 3, 3); if (b.life < 0.5 && Math.floor(b.life * 16) % 2) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 3, 2, 1); } break;
+      case 'vomit': ctx.fillStyle = '#8fb23a'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#d8f08a'; ctx.fillRect(x - 1, y - 2, 1, 1); break;
+      case 'coin': ctx.fillStyle = '#f2a21a'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = b.life < 0.6 && Math.floor(b.life * 16) % 2 ? '#ffffff' : '#fff6c2'; ctx.fillRect(x - 1, y - 2, 2, 4); break;
       case 'slug': ctx.fillStyle = '#ff6a4a'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x, y, 1, 1); break;
       case 'dot': ctx.fillStyle = '#4f8fd0'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'star': ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 3, 2, 6); ctx.fillRect(x - 3, y - 1, 6, 2); break;
@@ -7698,6 +7842,8 @@ function drawFx() {
       ctx.globalAlpha = a * 0.45; ctx.save(); ctx.translate(f.x + 5, f.y + 8); ctx.rotate(f.rot); ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore(); ctx.globalAlpha = 1;
     } else if (f.kind === 'acidpool') {
       ctx.globalAlpha = Math.min(1, a * 2); ctx.fillStyle = '#4f9c2f'; ctx.fillRect(f.x - 9, f.y - 2, 18, 2); ctx.fillStyle = '#a6d854'; ctx.fillRect(f.x - 7, f.y - 3, 14, 1); ctx.globalAlpha = 1;
+    } else if (f.kind === 'oil') { // the diffuser's mist: a few soft purple blobs that drift
+      ctx.globalAlpha = Math.min(0.4, a) * 0.8; ctx.fillStyle = '#b3a6ff'; for (let k = 0; k < 5; k++) { const o = f.t * 1.5 + k * 1.3; ctx.beginPath(); ctx.arc(f.x + Math.cos(o) * f.r * 0.5, f.y + Math.sin(o * 1.3) * 5, f.r * 0.4, 0, 7); ctx.fill(); } ctx.globalAlpha = 1;
     } else if (f.kind === 'marker') { // where the mortar shell will land: a red cross that blinks faster as it falls
       if (Math.floor(f.t * (f.t < 0.8 ? 16 : 6)) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(f.x - 6, f.y - 2, 13, 1); ctx.fillRect(f.x, f.y - 8, 1, 7); ctx.fillRect(f.x - 4, f.y - 6, 1, 1); ctx.fillRect(f.x + 4, f.y - 6, 1, 1); }
     } else if (f.kind === 'ring2') {
@@ -8883,5 +9029,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LEAK, meat, splat, edgeSplat }); // gore hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { GEN_WORDS, HQ_DEATH, BRO_QUIPS, EVENT_RADIO, ENDING, decor: () => decor }); // satire hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { MORE_FOES, GEN_GROUPS, oilSlow, tiles: () => tiles }); // second-round quacks hooks
 })();
 </script>
