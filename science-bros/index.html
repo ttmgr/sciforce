@@ -1915,6 +1915,7 @@ function breakTile(c, r) {
   const i = r * LW + c, v = tiles[i];
   if (!isSolidT(v)) return;
   tiles[i] = EMPTY; decals.delete(i); shk[i] = 0; miniDirty = true; career.blocks++;
+  cutBy = blame; // whatever this cut brings down is on whoever made it
   if (r + 1 < LH && tiles[i + LW] === DIRT) sproutAt.set(i + LW, lifeT); // the earth under it is bare now: grass sprouts back
   const cols = TILE_COL[v];
   for (let k = 0; k < 4; k++) chunk(c * T + rand(3, 13), r * T + rand(3, 13), rand(-110, 110), rand(-230, -40), cols[k % 2]);
@@ -1927,6 +1928,88 @@ function breakTile(c, r) {
   collapseDirty = true;
 }
 let blastAt = null;
+
+// ---------------------------------------------------------------- who set it off
+// blame: who caused what is happening right now: 'p' (the player, his shots and specials) or 'e' (quacks, bosses,
+// the level). It rides along through chain reactions: a barrel, propane tank, fuel tank or mine he hit, a fire his
+// blast lit, an icicle he shot down, a block his shot cut loose. Nothing the player set off can kill him.
+let blame = 'e', cutBy = 'e';
+const pShk = new Set(); // loose blocks shaking because of a cut the player made
+const blamed = (e) => (blame === 'p' || (e && e.by === 'p') ? 'p' : 'env'); // the owner of a blast something goes off in
+const P_FX = { well: 1, hole: 1, sun: 1, heat: 1, rad: 1, jet: 1 }; // effects only the player's specials and shots make
+
+// ---------------------------------------------------------------- weapon destruction
+// How each of the player's weapons breaks blocks, all in one table to tune. Keys: the shot's kind, or the name of a
+// beam, blade or pickup gun. Blocks have 2 hp (earth, ice), 3 (crates) or 6 (brick); steel never breaks.
+// p: damage to the block hit. m: how hard each material takes it, [earth, brick, crate, ice] (a MAT preset).
+// shape: chip (only that block), punch (the block behind takes half: heavy rounds go through), line (a thin cut
+// n blocks deep, each half as hard), round (a crater from the blast; r scales its reach into blocks, p its power),
+// tunnel (punch, and the block above goes too: a hole a bro fits through), burn (only what burns or melts; stone is
+// just scorched), eat (eats into the earth around it), fork (the arc jumps to two neighbours), quake (cracks only),
+// none (passes through).
+const MAT = { all: [1, 1, 1, 1], soft: [1, 0.4, 1, 1], stone: [0.8, 1.6, 1, 1.2], wood: [0, 0, 1, 0], fire: [0, 0, 2.5, 2], acid: [2.5, 0.35, 1.2, 1], glass: [0.5, 0.5, 1.5, 2.5], demo: [1, 1.5, 1.2, 1], sound: [0, 0, 0.3, 3] };
+const MI = [0, 0, 1, 0, 2, 0, 3, 0]; // tile type -> its column in MAT
+const DESTRUCT = {
+  // light, quick shots only chip
+  photon: { p: 0.5, shape: 'chip' }, card: { p: 0.35, shape: 'chip', m: 'soft' }, finch: { p: 0.3, shape: 'chip', m: 'soft' },
+  enigma: { p: 0.35, shape: 'chip' }, pea: { p: 0.25, shape: 'chip', m: 'soft' }, dart: { p: 0.2, shape: 'chip', m: 'soft' },
+  hawk: { p: 0.22, shape: 'chip' }, bit: { p: 0.5, shape: 'chip' }, parity: { p: 0.5, shape: 'chip' }, plasma: { p: 0.4, shape: 'chip' },
+  red: { p: 0.5, shape: 'chip' }, disc: { p: 0.15, shape: 'chip' }, orbit: { p: 0.15, shape: 'chip' }, chip: { p: 0.2, shape: 'chip' },
+  elemNe: { p: 0.5, shape: 'chip' }, star: { p: 0.5, shape: 'chip' }, pellet: { p: 0.6, shape: 'chip' }, mg: { p: 0.5, shape: 'chip' },
+  scalpel: { p: 0.4, shape: 'chip', m: 'soft' }, // Vesalius' blades scratch stone
+  xtal: { p: 0.6, shape: 'chip', m: 'glass' }, // Hodgkin's crystals shatter ice and crates
+  hoot: { p: 3, shape: 'chip', m: 'sound' }, // Goodall's call shatters ice, nothing else
+  weld: { p: 0.4, shape: 'chip', m: 'stone' }, // Faraday's welder cuts stone
+  railgun: { p: 8, shape: 'chip' }, // per block along its line: everything but steel goes in one shot
+  // heavy rounds punch through a block
+  bolt2: { p: 1.6, shape: 'punch' }, alpha: { p: 0.8, shape: 'punch' }, elemFe: { p: 1.4, shape: 'punch' }, glove: { p: 0.8, shape: 'punch' },
+  // beams cut thin lines
+  xray: { p: 2.2, shape: 'line', n: 2 }, qwave: { p: 0.6, shape: 'line', n: 2 },
+  zap: { p: 1.2, shape: 'fork' }, // Tesla's arc scorches a ragged patch
+  // the drill and the hammer tunnel
+  drill: { p: 0.55, shape: 'tunnel' }, hammer: { p: 3, shape: 'tunnel' },
+  // fire and mould take only what burns or rots; radiation eats earth
+  sunbeam: { p: 0.5, shape: 'burn', m: 'fire' }, flame: { p: 0.1, shape: 'burn', m: 'fire' }, spores: { p: 0.25, shape: 'burn', m: 'wood' },
+  neutron: { p: 0.5, shape: 'eat', m: 'acid' },
+  // through everything, or along the ground
+  dot: { shape: 'none' }, leap: { shape: 'none' }, pwave: { shape: 'quake' },
+  // explosives carve round craters
+  vial: { p: 1, r: 1, shape: 'round', m: 'acid' }, bigvial: { p: 1, r: 1.1, shape: 'round', m: 'acid' }, elemU: { p: 1, r: 1, shape: 'round', m: 'acid' },
+  apple: { p: 1.1, r: 1, shape: 'round' }, calc: { p: 1, r: 1, shape: 'round' }, fission: { p: 0.9, r: 1, shape: 'round' }, torp: { p: 1, r: 1, shape: 'round' },
+  elemNa: { p: 1, r: 1, shape: 'round' }, elemHe: { p: 0.8, r: 1, shape: 'round' }, plasma2: { p: 1, r: 1, shape: 'round' },
+  tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo' }, rocket: { p: 1.3, r: 1.2, shape: 'round' }, bomb: { p: 1.2, r: 1.2, shape: 'round' },
+};
+const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot
+const NB4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+// a weapon hits block (c, r) travelling along (dx, dy): break it that weapon's way (dflt: the old damage, for anything
+// not in the table). k scales the damage (Hubble's shots grow as they fly).
+function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
+  const D = DESTRUCT[key]; if (!D) return damageTile(c, r, dflt * k);
+  const v = tileAt(c, r); if (!isSolidT(v) || v === STEEL) return false;
+  const mm = MAT[D.m || 'all'], p = (D.p || 0) * k, sx = Math.abs(dx) >= Math.abs(dy) ? Math.sign(dx) : 0, sy = sx ? 0 : Math.sign(dy) || -1, x = c * T + 8, y = r * T + 8;
+  const hit = (cc, rr, q) => { const w = tileAt(cc, rr), h = isSolidT(w) && w !== STEEL ? q * mm[MI[w]] : 0; return h > 0 && damageTile(cc, rr, h); };
+  switch (D.shape) {
+    case 'none': return false;
+    case 'quake': if (Math.random() < 0.3) decal(x + rand(-7, 7), r * T + rand(0, 4), '#1d1a26', 1); return false; // the ripple cracks the ground
+    case 'burn': // what does not burn is only blackened; a crate may catch fire
+      if (mm[MI[v]] <= 0) { if (Math.random() < 0.3) decal(x - sx * 7 + rand(-3, 3), y - sy * 7 + rand(-6, 6), '#1d1a26', 2); return false; }
+      if (v === CRATE && Math.random() < 0.04 && !isSolidT(tileAt(c, r - 1))) ignite(x, r * T - 2, 1, 2);
+      return hit(c, r, p);
+    case 'eat': { const b = hit(c, r, p); for (const [a, e] of NB4) if (tileAt(c + a, r + e) === DIRT && Math.random() < 0.5) hit(c + a, r + e, p * 0.4); if (Math.random() < 0.5) decal(x - sx * 7, y + rand(-6, 6), '#5f7a2e', 1); return b; }
+    case 'fork': { const b = hit(c, r, p); for (let i = 0; i < 2; i++) { const [a, e] = NB4[(Math.random() * 4) | 0]; hit(c + a, r + e, p * 0.4); } decal(x - sx * 7, y + rand(-6, 6), '#1d1a26', 1); return b; }
+    case 'punch': { const b = hit(c, r, p); hit(c + sx, r + sy, p * 0.5); return b; }
+    case 'line': { let b = false, q = p; for (let i = 0; i < (D.n || 2) && tileAt(c + sx * i, r + sy * i) !== STEEL; i++, q *= 0.5) b = hit(c + sx * i, r + sy * i, q) || b; return b; }
+    case 'tunnel': { const b = hit(c, r, p); hit(c + sx, r + sy, p * 0.5); if (sx) hit(c, r - 1, p * 0.5); else hit(c + (P.face || 1), r, p * 0.5); return b; }
+    default: return hit(c, r, p); // chip
+  }
+}
+
+// ---------------------------------------------------------------- boss damage
+// Weak weapons hit bosses harder: the player's damage to a boss (and its parts) is multiplied while that bro's main
+// weapon fires and by the shots it fired. Tuned with tests/weapons_bosses.js so every bro deals at least about 60%
+// of the median boss damage per second; the strongest weapons are left as they were.
+const BOSS_MUL = { goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1 };
+let bossMul = 1;
 
 // ---------------------------------------------------------------- structure collapse
 // A solid tile stays up while a chain of solid neighbours links it to bedrock (the bottom row) or to steel.
@@ -1945,7 +2028,7 @@ function checkCollapse() {
     for (const j of nb) if (j >= 0 && j < N && !seen[j] && LOOSE(tiles[j])) { seen[j] = 1; q.push(j); }
   }
   let n = 0;
-  for (let i = 0; i < N; i++) if (LOOSE(tiles[i]) && !seen[i] && shk[i] <= 0) { shk[i] = 0.5; shakeList.push(i); n++; }
+  for (let i = 0; i < N; i++) if (LOOSE(tiles[i]) && !seen[i] && shk[i] <= 0) { shk[i] = 0.5; shakeList.push(i); n++; if (cutBy === 'p') pShk.add(i); }
   if (n) sfx('creak');
   return n;
 }
@@ -1958,12 +2041,13 @@ function updateCollapse(dt) {
     if (shk[i] > 0) continue;
     shakeList.splice(k, 1); shk[i] = 0;
     if (!isSolidT(tiles[i])) continue;
-    falling.push({ c, x: c * T, y: r * T, r0: r, vy: 0, v: tiles[i], hp: thp[i], dec: decals.get(i) });
+    falling.push({ c, x: c * T, y: r * T, r0: r, vy: 0, v: tiles[i], hp: thp[i], dec: decals.get(i), by: pShk.delete(i) ? 'p' : 'e' });
     tiles[i] = EMPTY; decals.delete(i); miniDirty = true;
   }
   if (!falling.length) return;
   falling.sort((a, b) => b.y - a.y); // lowest first, so stacked blocks land on each other in order
   for (const f of falling) {
+    blame = f.by || 'e';
     f.vy = Math.min(f.vy + G * dt, 520);
     const ny = f.y + f.vy * dt, box = { x: f.x + 1, y: ny, w: T - 2, h: T };
     let blocked = false;
@@ -1973,7 +2057,7 @@ function updateCollapse(dt) {
       if (HITTABLE[e.type]) { e.kx = 0; hitEnemy(e, 99, 0, 'crush'); }
     }
     if (blocked) { shatter(f); continue; }
-    if (P.alive && P.inv <= 0 && overlap(P, box)) killPlayer('crush');
+    if (P.alive && P.inv <= 0 && overlap(P, box)) { if (f.by === 'p') { shatter(f); continue; } killPlayer('crush'); } // a block you cut loose breaks on your helmet
     for (const b of bodies) if (b.x > box.x && b.x < box.x + T && b.y > ny && b.y < ny + T + 4) { b.vy = f.vy; b.rest = false; if (b.kind === 'corpse') { b.life = Math.min(b.life, 0.5); gibBody(b); } }
     const rb = Math.floor((ny + T - 0.01) / T);
     if (rb >= LH) { f.dead = true; continue; }
@@ -1991,6 +2075,7 @@ function updateCollapse(dt) {
     if (rectAcid(f.x + 3, ny + 6, T - 6, T - 8)) { splash(f.x + 8, ny + 6, 14); f.dead = true; continue; }
     f.y = ny;
   }
+  blame = 'e';
   falling = falling.filter((f) => !f.dead);
 }
 function shatter(f) {
@@ -2810,7 +2895,7 @@ function startLevel(n) {
   buildTiles(levelDef(n).look ? Object.assign({}, THEMES[levelDef(n).theme], levelDef(n).look) : THEMES[levelDef(n).theme]); // a level can twist its theme's look
   buildLevel();
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
-  shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false;
+  shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false; pShk.clear();
   boss = ents.find((e) => e.final); chopper = null;
   for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
   radioQ = []; radioCur = null; storyFlag = false;
@@ -2840,6 +2925,8 @@ const foe = (e) => live(e) && !OBJ[e.type];
 function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (e.dead || (BOSS[e.type] && e.doomed)) return;
   if (BOSS[e.type] && !e.active) e.poked = true; // a shot wakes a sleeping boss, even from outside its arena
+  if (blame === 'p' && OBJ[e.type]) e.by = 'p'; // a barrel, tank, mine or icicle the player hit: its blast is his
+  if (blame === 'p' && BOSS[e.type]) dmg *= bossMul; // weak weapons hit bosses harder (see BOSS_MUL)
   if (e.type === 'propane') { if (how === 'crush') killEnemy(e); else lightPropane(e, kx, 0.3); return; }
   if (e.type === 'icicle') { if (!e.falling) { e.falling = true; sfx('glass'); } return; }
   if (e.vats && e.vats.some((v) => !v.dead)) { if (PART_WORDS[e.type] && !(e.hintT > lifeT)) { e.hintT = lifeT + 1.6; floatText(e.x + e.w / 2, e.y - 10, PART_WORDS[e.type][2], '#f2c94c'); } sfx('ting'); for (let i = 0; i < 3; i++) part(e.x + e.w / 2, e.y + e.h / 2, rand(-120, 120), rand(-100, 20), '#8fd3ff', 0.25, 1, G); return; } // shielded until the vats are gone
@@ -2867,6 +2954,7 @@ function dropShield(e, dir) {
   body({ kind: 'chunk', x: e.x + e.w / 2 + e.face * 6, y: e.y + 7, vx: dir * rand(120, 200), vy: -rand(150, 250), col: '#8b93ad', s: 5, r: 3, bounce: 0.35, fric: 0.6, vr: rand(-15, 15), life: 6 });
 }
 function lightPropane(e, kx, fuse) {
+  if (blame === 'p') e.by = 'p';
   if (e.lit) { e.fuse = Math.min(e.fuse, fuse); return; }
   e.lit = true; e.fuse = fuse; e.dirx = Math.sign(kx) || (Math.random() < 0.5 ? -1 : 1); sfx('hiss');
 }
@@ -2882,10 +2970,10 @@ function killEnemy(e, how = 'shot') {
   if (BOSS[e.type]) { bossDying(e); return; }
   e.dead = true;
   const [cx, cy] = center(e), f = e.face > 0 ? 0 : 1;
-  if (e.type === 'barrel') { explode(cx, cy, 44, 6, 'env', 4); return; }
-  if (e.type === 'propane') { explode(cx, cy, 40, 6, 'env', 4); return; }
-  if (e.type === 'fueltank') { explode(cx, cy, 72, 8, 'env', 5); ignite(cx, cy, 6, 60); shake += 6; return; }
-  if (e.type === 'mine') { explode(cx, cy, 30, 6, 'env', 2); return; }
+  if (e.type === 'barrel') { explode(cx, cy, 44, 6, blamed(e), 4); return; }
+  if (e.type === 'propane') { explode(cx, cy, 40, 6, blamed(e), 4); return; }
+  if (e.type === 'fueltank') { explode(cx, cy, 72, 8, blamed(e), 5); ignite(cx, cy, 6, 60); shake += 6; return; }
+  if (e.type === 'mine') { explode(cx, cy, 30, 6, blamed(e), 2); return; }
   if (e.type === 'alarm') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-120, 120), rand(-200, -60), i % 2 ? '#d9534f' : '#5c6480'); floatText(cx, cy - 10, 'ALARM DOWN', '#a6d854'); return; }
   if (e.type === 'guncrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#c96a2a' : '#25223a'); const pk = spawnPickup(cx, cy); pk.item = 'gun'; pk.gun = e.gun || Object.keys(GUNS)[(Math.random() * 4) | 0]; return; }
   if (e.type === 'itemcrate') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#3a7a9a' : '#bfe9ff'); const pk = spawnPickup(cx, cy); pk.item = e.item || ['shield', 'overclock', 'jetpack', 'life', 'gun'][(Math.random() * 5) | 0]; if (pk.item === 'gun') pk.gun = Object.keys(GUNS)[(Math.random() * 4) | 0]; return; }
@@ -2898,8 +2986,8 @@ function killEnemy(e, how = 'shot') {
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
   if (e.type === 'heavy' || e.type === 'brute') bigKill(cx, cy);
-  if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, 'env', 3); return; }
-  if (e.type === 'camdrone') { career.drones++; explode(cx, cy, 30, 5, 'env', 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
+  if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, blamed(e), 3); return; }
+  if (e.type === 'camdrone') { career.drones++; explode(cx, cy, 30, 5, blamed(e), 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
   if (e.type === 'turret') {
     sfx('hit');
     for (let i = 0; i < 9; i++) chunk(cx + rand(-6, 6), cy + rand(-4, 4), rand(-150, 150), rand(-260, -60), ['#8b93ad', '#5c6480', '#e6e2f0'][i % 3]);
@@ -2907,8 +2995,8 @@ function killEnemy(e, how = 'shot') {
     return;
   }
   if (e.type === 'para' && e.chute) dropChute(e);
-  if (e.type === 'jetpack') setTimeoutGame(() => explode(cx, cy, 18, 3, 'env', 1), 0.05); // the pack goes up
-  if (e.type === 'flamer') setTimeoutGame(() => { explode(cx, cy, 28, 4, 'env', 2); ignite(cx, cy, 3, 24); }, 0.05); // and the fuel tank
+  if (e.type === 'jetpack') setTimeoutGame(() => explode(cx, cy, 18, 3, blamed(e), 1), 0.05); // the pack goes up
+  if (e.type === 'flamer') setTimeoutGame(() => { explode(cx, cy, 28, 4, blamed(e), 2); ignite(cx, cy, 3, 24); }, 0.05); // and the fuel tank
   if (e.type === 'shield' && e.shield > 0) dropShield(e, Math.sign(e.kx) || -e.face);
   if (e.type === 'dog') {
     sfx('yelp');
@@ -2986,10 +3074,11 @@ function ignite(x, y, n, spread) {
     if (rr >= LH || rr - r > 4) continue;
     for (let up = 0; up < 3 && rr > 0 && isSolidT(tileAt(c, rr - 1)); up++) rr--;
     if (isSolidT(tileAt(c, rr - 1))) continue;
-    fx.push({ kind: 'fire', x: fx0, y: rr * T, c, r: rr, t: rand(2, 3.4), max: 3.4 });
+    fx.push({ kind: 'fire', x: fx0, y: rr * T, c, r: rr, t: rand(2, 3.4), max: 3.4, by: blame });
   }
 }
-function explode(x, y, r, dmg, owner, tp) {
+function explode(x, y, r, dmg, owner, tp, key) {
+  const ob = blame; blame = owner === 'p' ? 'p' : 'e'; // what this blast sets off is on its owner
   lifeBlast(x, y, r);
   sfx('boom', x); rumble(Math.min(1, r / 60), 120 + r * 3);
   shake = Math.min(12, shake + r / 7);
@@ -3004,11 +3093,12 @@ function explode(x, y, r, dmg, owner, tp) {
   for (let i = 0; i < r / 8; i++) part(x + rand(-r / 3, r / 3), y + rand(-r / 3, r / 3), rand(-30, 30), rand(-70, -30), '', rand(0.5, 1), 2, 0, 'fire'); // embers
   for (let i = 0; i < r / 6; i++) part(x, y, rand(-220, 220), rand(-300, -80), '#f29e4c', rand(0.6, 1.2), 1, G);
   if (tp > 0) {
-    const c0 = Math.floor((x - r) / T), c1 = Math.floor((x + r) / T), r0 = Math.floor((y - r) / T), r1 = Math.floor((y + r) / T);
+    const D = (key && DESTRUCT[key]) || {}, rt = r * (D.r || 1), mt = MAT[D.m || 'all'], R = Math.max(r, rt); // the weapon's crater: its reach and what it eats
+    const c0 = Math.floor((x - R) / T), c1 = Math.floor((x + R) / T), r0 = Math.floor((y - R) / T), r1 = Math.floor((y + R) / T);
     blastAt = { x, y };
     for (let rr = r0; rr <= r1; rr++) for (let c = c0; c <= c1; c++) {
       const d = Math.hypot(c * T + 8 - x, rr * T + 8 - y);
-      if (d < r) damageTile(c, rr, tp * (1.25 - d / r));
+      if (d < rt) damageTile(c, rr, tp * (D.p || 1) * (1.25 - d / rt) * mt[MI[tileAt(c, rr)]]);
       if (tileAt(c, rr) === LADDER && d < r * 0.8) { tiles[rr * LW + c] = EMPTY; for (let k = 0; k < 3; k++) chunk(c * T + 8, rr * T + 8, rand(-120, 120), rand(-200, -40), '#7a5c36'); }
       const i = rr * LW + c; // blow holes in the back walls too, so the sky shows through
       if (c >= 0 && c < LW && rr >= 0 && rr < LH && bg[i] && !isSolidT(tiles[i]) && d < r * 0.7 && Math.random() < 0.85) {
@@ -3034,7 +3124,7 @@ function explode(x, y, r, dmg, owner, tp) {
     if (e.dead || !HITTABLE[e.type]) continue;
     const [cx, cy] = center(e), d = Math.hypot(cx - x, cy - y);
     if (d < r + Math.max(e.w, e.h) / 2) {
-      if (e.type === 'barrel') { e.dead = true; setTimeoutGame(() => explode(cx, cy, 44, 6, 'env', 4), 0.09); continue; }
+      if (e.type === 'barrel') { e.dead = true; setTimeoutGame(() => explode(cx, cy, 44, 6, blamed(e), 4), 0.09); continue; }
       if (e.type === 'propane') { lightPropane(e, cx - x, 0.05); e.kx += Math.sign(cx - x) * 120; e.vy = -260; continue; }
       hitEnemy(e, dmg, Math.sign(cx - x) * 160, d < r * 0.75 ? 'gib' : 'blast');
       if (!BOSS[e.type] && e.type !== 'turret' && e.type !== 'heavy' && !e.dead) e.vy = -200;
@@ -3046,13 +3136,14 @@ function explode(x, y, r, dmg, owner, tp) {
   for (const b of bodies) if (b.kind === 'corpse' && Math.hypot(b.x - x, b.y - y) < r * 0.7) gibBody(b);
   for (const L of lamps) { if (L.fall) continue; const d = Math.hypot(L.c * T + 8 - x, (L.r + 1) * T - y); if (d < r * 3) L.va += Math.sign(L.c * T + 8 - x || 1) * (1 - d / (r * 3)) * 14; }
   for (const dd of decor) { if (dd.gone) continue; const d = Math.hypot(dd.c * T + 8 - x, dd.r * T - 10 - y); if (d < r * 2.5) dd.kick = Math.sign(dd.c * T + 8 - x || 1) * (1 - d / (r * 2.5)); if (d < r * 0.6 && tp > 0) { dd.gone = true; topple(dd); } }
+  blame = ob;
   if (!P.alive) return;
   const [px, py] = center(P), pd = Math.hypot(px - x, py - y);
   if (owner !== 'p' && P.inv <= 0 && pd < r + 4) { killPlayer('gib'); return; }
   if (pd < r * 2) { const k = (1 - pd / (r * 2)) * 360; P.vx += ((px - x) / (pd || 1)) * k; P.vy = Math.min(P.vy, -k * 0.7); }
 }
 const timers = [];
-function setTimeoutGame(fn, t) { timers.push({ fn, t }); }
+function setTimeoutGame(fn, t) { const by = blame; timers.push({ fn: () => { const o = blame; blame = by; fn(); blame = o; }, t }); } // a delayed blast keeps who set it off
 
 const GUNS = {
   shotgun: { name: 'SHOTGUN', ammo: 14, col: '#7a5c36' }, rocket: { name: 'ROCKET LAUNCHER', ammo: 8, col: '#4b5a3a' },
@@ -3138,11 +3229,11 @@ function fireAlt(f, gx, gy, dx = f, dy = 0) {
       P.cool = 0.045 + 0.16 * (1 - (P.spin || 0)); P.recoil = 1; P.vx -= f * 6; sfx('mg'); break;
     }
     case 'railgun': { // one line through everything that is not steel
-      let ex = gx, ey = gy;
+      let ex = gx, ey = gy, cut = -1;
       for (let d = 0; d < 420; d += 4) {
         ex = gx + dx * d; ey = gy + dy * d; const c = Math.floor(ex / T), r = Math.floor(ey / T), v = tileAt(c, r);
         if (v === STEEL) break;
-        if (isSolidT(v)) damageTile(c, r, 3);
+        if (isSolidT(v) && r * LW + c !== cut) { cut = r * LW + c; wreck('railgun', c, r, dx, dy, 3); }
       }
       for (const e of ents) if (live(e) && segHit(gx, gy, ex, ey, e, 1)) hitEnemy(e, 7, f * 300, 'gib');
       fx.push({ kind: 'beam', x0: gx, x1: ex, y: gy, y1: ey, t: 0.25, max: 0.25, col: '#8fd3ff' });
@@ -3172,6 +3263,7 @@ function fireWeapon() {
   const dx = f * Math.cos(a), dy = -Math.sin(a), n0 = bullets.length; // the aim as a unit vector
   lifeNoise(gx, gy, 150);
   if (P.alt) { fireAlt(f, gx, gy, dx, dy); aimShots(n0, f); return; }
+  bossMul = BOSS_MUL[P.bro.id] || 1;
   switch (P.bro.id) {
     case 'einstein':
       bullets.push({ x: gx, y: gy, vx: f * 500, vy: rand(-10, 10), owner: 'p', dmg: 1, tdmg: 0.6, life: 0.55, kind: 'photon', pierce: 1 });
@@ -3249,6 +3341,7 @@ function fireWeapon() {
     }
   }
   aimShots(n0, f);
+  for (let i = n0; i < bullets.length; i++) bullets[i].bm = bossMul; bossMul = 1;
   if (slowT > 0) P.cool *= 0.6; // dilated time: you shoot faster
   if (P.bro.id !== 'hopper' && !P.bro.melee) gunFeel(GUNFX[P.bro.id], f, gx, gy); // Hopper's three rounds each flash on their own
 }
@@ -3276,7 +3369,7 @@ function swing(reach, dmg, knock, tdmg, col, glove = false) {
   }
   for (let r = Math.floor(box.y / T); r <= Math.floor(Math.min(box.y + box.h, P.y + P.h - 2) / T); r++) for (let c = Math.floor(box.x / T); c <= Math.floor((box.x + box.w) / T); c++) { // not the floor you stand on
     const v = tileAt(c, r);
-    if (isSolidT(v) && v !== STEEL) { damageTile(c, r, tdmg); hit = true; }
+    if (isSolidT(v) && v !== STEEL) { wreck({ anning: 'hammer', vesalius: 'scalpel', hooke: 'glove' }[P.bro.id], c, r, dx, dy, tdmg); hit = true; }
   }
   fx.push({ kind: 'slash', x: P.x + P.w / 2, y: P.y + 7, a: Math.atan2(dy, dx), r: reach + 6, col, glove, t: 0.12, max: 0.12 });
   P.punch = 0.12;
@@ -3292,7 +3385,7 @@ function punch() {
     if (!live(e) || !overlap(e, box)) continue;
     hit = true;
     if (e.type === 'barrel' || e.type === 'propane') { e.kx = f * 330; e.vy = -170; if (e.type === 'propane') lightPropane(e, f, 0.35); continue; }
-    if (e.type === 'bomber') { e.punched = true; e.run = true; e.fuse = 0.7; e.kx = f * 420; e.vy = -230; continue; }
+    if (e.type === 'bomber') { e.punched = true; e.by = 'p'; e.run = true; e.fuse = 0.7; e.kx = f * 420; e.vy = -230; continue; }
     if (e.type === 'shield' && e.shield > 0 && f === -e.face) { dropShield(e, f); e.kx = f * 160; e.vy = -100; continue; }
     if (e.type === 'heavy' || e.type === 'brute') { e.kx = f * 140; hitEnemy(e, 3, 0); continue; }
     if (isQuack(e) || e.type === 'dog') { e.vy = -150; hitEnemy(e, 5, f * 380, 'punch'); continue; }
@@ -3341,7 +3434,7 @@ function zap(gx, gy, f, dx = f, dy = 0) {
   }
   if (pts.length === 1) {
     let ex = gx, ey = gy;
-    for (let d = 0; d < 80; d += 3) { ex = gx + dx * d; ey = gy + dy * d; if (solidPx(ex, ey)) { damageTile(Math.floor(ex / T), Math.floor(ey / T), 1.2); break; } }
+    for (let d = 0; d < 80; d += 3) { ex = gx + dx * d; ey = gy + dy * d; if (solidPx(ex, ey)) { wreck('zap', Math.floor(ex / T), Math.floor(ey / T), dx, dy, 1.2); break; } }
     pts.push([ex, ey + rand(-6, 6)]);
   }
   fx.push({ kind: 'bolt', pts, t: 0.12, max: 0.12, col: '#bfe9ff' });
@@ -3351,7 +3444,7 @@ function sunbeam(gx, gy, f, dx = f, dy = 0) {
   let ex = gx, ey = gy;
   for (let d = 0; d < 170; d += 3) {
     ex = gx + dx * d; ey = gy + dy * d;
-    if (solidPx(ex, ey)) { const c = Math.floor(ex / T), r = Math.floor(ey / T); damageTile(c, r, 0.25); if (tileAt(c, r) === CRATE && Math.random() < 0.08) ignite(ex, ey - 8, 1, 2); break; }
+    if (solidPx(ex, ey)) { const c = Math.floor(ex / T), r = Math.floor(ey / T); wreck('sunbeam', c, r, dx, dy, 0.25); if (tileAt(c, r) === CRATE && Math.random() < 0.08) ignite(ex, ey - 8, 1, 2); break; }
     for (const e of ents) if (live(e) && ex >= e.x && ex <= e.x + e.w && ey >= e.y && ey <= e.y + e.h) { hitEnemy(e, 0.35, f * 10); setBurn(e); }
     const pa = partAt(ex, ey); if (pa) { hitVat(pa[0], pa[1], 0.35); break; }
   }
@@ -3364,7 +3457,7 @@ function drill(f) {
   const box = a ? { x: P.x + 5 + f * Math.cos(a) * 18 - 12, y: P.y + 7 - Math.sin(a) * 22 - 12, w: 24, h: 24 } : { x: x0, y: P.y - 2, w: 26, h: 16 }; // aimed up: it chews above you
   for (let yy = box.y; yy < box.y + box.h; yy += 8) for (let xx = box.x; xx < box.x + box.w; xx += 8) {
     const c = Math.floor(xx / T), r = Math.floor(yy / T), v = tileAt(c, r);
-    if (v && v !== STEEL && v !== ACID) { damageTile(c, r, 0.55); if (Math.random() < 0.2) part(xx, yy, -f * rand(20, 120), rand(-100, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
+    if (v && v !== STEEL && v !== ACID) { wreck('drill', c, r, f * Math.cos(a), -Math.sin(a), 0.55); if (Math.random() < 0.2) part(xx, yy, -f * rand(20, 120), rand(-100, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
   }
   for (const e of ents) if (live(e) && overlap(e, box)) { hitEnemy(e, 0.35, f * 30); if (Math.random() < 0.3) bleed(e.x + e.w / 2, e.y + 8, 2, f * 60); }
   hitPartsIn(box, 0.35);
@@ -3378,7 +3471,7 @@ function arcWeld(gx, gy, f, dx = f, dy = 0) {
   let ex = gx, ey = gy; const pts = [[gx, gy]];
   for (let d = 0; d < 100; d += 4) {
     ex = gx + dx * d; ey = gy + dy * d;
-    if (solidPx(ex, ey)) { damageTile(Math.floor(ex / T), Math.floor(ey / T), 0.35); break; }
+    if (solidPx(ex, ey)) { wreck('weld', Math.floor(ex / T), Math.floor(ey / T), dx, dy, 0.35); break; }
     for (const e of ents) if (live(e) && ex >= e.x - 2 && ex <= e.x + e.w + 2 && ey >= e.y - 2 && ey <= e.y + e.h + 2) { hitEnemy(e, 0.3, f * 15); if (isQuack(e)) e.stun = Math.max(e.stun || 0, 0.15); }
     const pa = partAt(ex, ey); if (pa) { hitVat(pa[0], pa[1], 0.3); break; }
   }
@@ -3395,6 +3488,7 @@ function spores(gx, gy, f, dx = f, dy = 0) {
   for (const e of ents) if (live(e) && !isQuack(e) && !BOSS[e.type] && overlap(e, box)) hitEnemy(e, 0.3, 0); // dogs, turrets, crates and barrels rot instead
   for (const e of ents) if (BOSS[e.type] && live(e) && overlap(e, box)) hitEnemy(e, 0.4, 0); // bosses don't get sick: the mould eats into them instead
   hitPartsIn(box, 0.4);
+  for (let d = 8; d < 90; d += 8) { const c = Math.floor((gx + dx * d) / T), r = Math.floor((gy + dy * d) / T); if (isSolidT(tileAt(c, r))) { wreck('spores', c, r, dx, dy, 0); break; } } // mould rots the first wood it meets
   if (Math.random() < 0.15) sfx('hiss');
 }
 function beam(gx, gy, f, dx = f, dy = 0) {
@@ -3404,7 +3498,7 @@ function beam(gx, gy, f, dx = f, dy = 0) {
   for (let d = 0; d < 200; d += 3) {
     ex = gx + dx * d; ey = gy + dy * d;
     if (solidPx(ex, ey)) { // X-rays pass through one block, cutting it
-      const c = Math.floor(ex / T), r = Math.floor(ey / T); damageTile(c, r, 0.9); part(ex, ey, -dx * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G);
+      const c = Math.floor(ex / T), r = Math.floor(ey / T); if (pen === undefined) wreck('xray', c, r, dx, dy, 0.9); part(ex, ey, -dx * 60, rand(-60, 0), '#d8d0ff', 0.25, 2, G);
       if (pen === undefined) { pen = r * LW + c; } else if (r * LW + c !== pen) break;
     }
     for (const e of ents) {
@@ -3708,6 +3802,7 @@ function updateNukes(dt) {
 function detonate(n) {
   const x = n.x, y = n.y - 6;
   n.boom = true; n.pulses = 10; n.pulseT = 0; n.budget = new Map();
+  const ob = blame; blame = n.owner === 'p' ? 'p' : 'e';
   whiteT = 1.1; ashT = 10; quake = 2.6; hitStop = Math.max(hitStop, 0.16); shake = Math.min(24, shake + 18);
   sfx('nuke', x); rumble(1, 1800); lifeBlast(x, y, 200);
   fx.push({ kind: 'flash', x, y, r: 90, t: 0.9, max: 0.9, lobes: Array.from({ length: 8 }, () => [rand(0, 6.3), rand(0.4, 0.8), rand(0.4, 0.65)]) });
@@ -3717,7 +3812,7 @@ function detonate(n) {
   for (let i = 0; i < 24; i++) part(x + rand(-70, 70), y + rand(-30, 10), rand(-40, 40), rand(-50, -10), i % 2 ? '#4b4766' : '#36324d', rand(1.5, 3), rand(6, 11), 0, 'smoke');
   for (let i = 0; i < 18; i++) part(x + rand(-60, 60), y + rand(-20, 10), rand(-50, 50), rand(-90, -30), '', rand(0.6, 1.4), 2, 0, 'fire');
   for (const b of bullets) if (b.owner === 'e' && Math.abs(b.x - x) < NUKE_BOX[0] + 80) b.dead = true; // shots in the air are blown away
-  const [px, py] = center(P), inside = P.alive && Math.hypot(px - x, py - y) < NUKE_R && P.inv <= 0;
+  const [px, py] = center(P), inside = P.alive && Math.hypot(px - x, py - y) < NUKE_R && P.inv <= 0 && n.owner !== 'p'; // your own nuke only throws you
   if (P.alive && !inside) { // outside the ring: thrown, but nothing the blast sets off can kill him for a moment
     P.inv = Math.max(P.inv, 1.2);
     const k = clamp(1 - Math.hypot(px - x, py - y) / 420, 0, 1) * 420; P.vx += Math.sign(px - x || 1) * k; P.vy = Math.min(P.vy, -k * 0.5);
@@ -3734,6 +3829,7 @@ function detonate(n) {
   for (const b of bodies) if (b.kind === 'corpse' && Math.hypot(b.x - x, b.y - y) < NUKE_R) gibBody(b);
   for (const L of lamps) if (!L.fall && Math.abs(L.c * T + 8 - x) < 400) L.va += Math.sign(L.c * T + 8 - x || 1) * 18;
   for (const dd of decor) if (!dd.gone && Math.hypot(dd.c * T + 8 - x, dd.r * T - 10 - y) < NUKE_R * 1.3) { dd.gone = true; topple(dd); }
+  blame = ob;
   if (inside) killPlayer(P.mech ? 'crush' : 'gib'); // inside the ring nothing lives
 }
 // bosses: ten hits of at most 6 hp, a quarter of the boss (and its shield parts) in all
@@ -4122,7 +4218,7 @@ function step(dt) {
 
   for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const t = timers.splice(i, 1)[0]; t.fn(); } }
 
-  updatePlayer(dt);
+  blame = 'p'; updatePlayer(dt); blame = 'e';
   updateDevices(dt);
   for (const e of ents) if (!e.dead) updateEnt(e, e.type === 'boss' || HITTABLE[e.type] ? edt : dt);
   ents = ents.filter((e) => !e.dead || e === boss);
@@ -4474,7 +4570,7 @@ function updateEnt(e, dt) {
     if (e.ptick <= 0) { e.ptick = 0.3; hitEnemy(e, 0.3, 0, 'shot'); part(e.x + 5, e.y + 2, rand(-20, 20), -15, '#a6d854', 0.6, 2, 0, 'smoke'); }
     for (const o of ents) if (o !== e && isQuack(o) && !o.dead && !(o.sick > 0) && overlap(o, e)) o.sick = 4;
   }
-  if (e.lever && e.onGround && !e.dead) { e.lever = false; if (vyp > 250) { hitEnemy(e, 4, 0, 'crush'); shake = Math.min(10, shake + 1); } }
+  if (e.lever && e.onGround && !e.dead) { e.lever = false; if (vyp > 250) { const ob = blame; blame = 'p'; hitEnemy(e, 4, 0, 'crush'); blame = ob; shake = Math.min(10, shake + 1); } } // only the player's specials throw things
 }
 const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 function pill(x, y, vx, vy, kind = 'pill') { bullets.push({ x, y, vx, vy, owner: 'e', dmg: 1, tdmg: 0.4, life: 1.8, kind }); sfx(kind === 'mg' ? 'mg' : 'eshot', x); } // quack shots fly about 18 tiles, not across the whole screen
@@ -5595,6 +5691,7 @@ function drawDirector(b, t) {
   }
 }
 function hitVat(e, v, dmg) {
+  if (blame === 'p') dmg *= bossMul;
   v.hp -= dmg; v.flash = 0.08;
   if (v.hp <= 0 && !v.dead) {
     v.dead = true; explode(v.x + v.w / 2, v.y + v.h / 2, 36, 0, 'p', e.type === 'engine' ? 2 : 0);
@@ -5702,7 +5799,7 @@ function updateIcicle(e, dt) {
   e.vy = Math.min(e.vy + G * dt, 600); e.y += e.vy * dt;
   let hit = solidPx(e.x + e.w / 2, e.y + e.h);
   for (const o of ents) if (live(o) && o !== e && overlap(o, e)) { if (BOSS[o.type]) hitEnemy(o, 6); else hitEnemy(o, 99, 0, 'crush'); hit = true; }
-  if (P.alive && overlap(P, e)) { killPlayer('crush'); hit = true; }
+  if (P.alive && overlap(P, e)) { if (e.by !== 'p') killPlayer('crush'); hit = true; } // one you shot down only shatters on you
   if (hit || e.y > LH * T) shatterIcicle(e);
 }
 function shatterIcicle(e) {
@@ -5747,7 +5844,7 @@ function acidPool(x, y) {
   while (r < LH && !isSolidT(tileAt(c, r))) r++;
   if (r >= LH) return;
   while (r > 0 && isSolidT(tileAt(c, r - 1))) r--;
-  fx.push({ kind: 'acidpool', x: c * T + 8, y: r * T, c, r, t: 2.6, max: 2.6 });
+  fx.push({ kind: 'acidpool', x: c * T + 8, y: r * T, c, r, t: 2.6, max: 2.6, by: blame });
 }
 // does the segment (x0,y0)-(x1,y1) touch box b grown by m on every side? (Liang-Barsky clipping)
 function segHit(x0, y0, x1, y1, b, m) {
@@ -5763,7 +5860,7 @@ function segHit(x0, y0, x1, y1, b, m) {
 const hurtbox = () => ({ x: P.x + 1, y: P.y + 2, w: P.w - 2, h: P.h - 2 });
 // an explosive bullet goes off; some leave something behind
 function burst(b, x, y, own) {
-  explode(x, y, b.explode, b.dmg, own, b.tp);
+  explode(x, y, b.explode, b.dmg, own, b.tp, own === 'p' ? dkey(b) : undefined);
   if (b.rad) fx.push({ kind: 'rad', x, y, r: b.rad, t: 2.6, max: 2.6, tick: 0 });
 }
 // a player bullet hits something: damage plus whatever the weapon adds (poison, sickness, a stun)
@@ -5788,7 +5885,7 @@ const BCOL = { photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3
 function impact(b, v) {
   const x = b.x, y = b.y, d = -Math.sign(b.vx) || 1, col = BCOL[b.kind];
   if (b.kind === 'flame') { if (v === CRATE && Math.random() < 0.15) ignite(x, y - 8, 1, 2); return; } // the torch lights crates
-  if (b.kind === 'plasma2') { explode(x - b.vx * 0.01, y, 10 + 8 * b.size, 2, 'p', 1); return; }
+  if (b.kind === 'plasma2') { explode(x - b.vx * 0.01, y, 10 + 8 * b.size, 2, 'p', 1, 'plasma2'); return; }
   if (b.glow) glowAt(x - b.vx * 0.01, y, b.glow);
   if (b.kind === 'hoot' && v === ICE) damageTile(Math.floor(x / T), Math.floor(y / T), 3); // the call shatters ice
   if (fx.length < 260) fx.push({ kind: 'pop', x: x + d * 2, y, t: 0.1, max: 0.1, col: col || (v === STEEL ? '#fff6c2' : '#e6e2f0'), r: col ? 4 : 2 });
@@ -5811,6 +5908,7 @@ function tunnels(b) {
 function updateBullets(dt, edt) {
   for (const b of bullets) {
     if (b.dead) continue;
+    blame = b.owner === 'p' ? 'p' : 'e'; bossMul = b.bm || 1;
     const d = b.owner === 'e' ? edt : dt, own = b.owner === 'e' ? 'env' : 'p';
     b.life -= d;
     if (b.life <= 0 && !(b.kind === 'fission' && b.gen < 2)) {
@@ -5847,13 +5945,14 @@ function updateBullets(dt, edt) {
     if (b.kind === 'pwave') { // a ripple that runs along the ground
       if (solidPx(b.x + Math.sign(b.vx) * 5, b.y) || !solidPx(b.x, b.y + 9)) { b.dead = true; continue; }
       if (Math.random() < 0.6) part(b.x, b.y + 5, rand(-30, 30), rand(-90, -30), theme.dust, 0.3, 2, G);
+      if (Math.random() < 0.2) wreck('pwave', Math.floor(b.x / T), Math.floor((b.y + 9) / T), b.vx, 0, 0); // it cracks the ground it runs along
       const col = { x: b.x - 4, y: b.y - 64, w: 8, h: 66 }; // the shock goes up as well: it hits what hovers just above the ground
       if (!b.hits) b.hits = new Set();
       for (const e of ents) if (live(e) && !b.hits.has(e) && overlap(e, col) && !(e.x <= b.x && b.x <= e.x + e.w && e.y <= b.y && b.y <= e.y + e.h)) { b.hits.add(e); bulletHit(b, e); }
       for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && !b.hits.has(v) && overlap(v, col)) { b.hits.add(v); hitVat(e, v, b.dmg); }
       for (const e of ents) if (e.type === 'crawler' && live(e) && !b.hits.has(e) && e.segs.some((sg) => Math.abs(sg.x - b.x) < 10 && sg.y > b.y && sg.y - b.y < 64)) { b.hits.add(e); hitEnemy(e, b.dmg, 0, 'blast'); } // it shakes a crawler burrowing under it
     }
-    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) damageTile(Math.floor(b.x / T), Math.floor(b.y / T), 0.15); // they cut through
+    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) wreck(b.kind, Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.15); // they cut through
     if (b.kind === 'fission' && b.gen < 2 && b.life <= 0) { // split into two smaller orbs
       b.dead = true; sfx('zap');
       for (const k of [-1, 1]) { const a = Math.atan2(b.vy, b.vx) + k * 0.35, sp = Math.hypot(b.vx, b.vy); bullets.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, owner: 'p', dmg: 2, life: b.gen === 0 ? 0.3 : 0.4, kind: 'fission', gen: b.gen + 1, explode: 14, tp: 1.2 }); }
@@ -5886,7 +5985,7 @@ function updateBullets(dt, edt) {
     }
     if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
     else if (b.kind === 'enigma' && solidPx(b.x, b.y) && b.bounces > 0) { // ricochet: step back out of the wall and bounce off it
-      b.bounces--; damageTile(Math.floor(b.x / T), Math.floor(b.y / T), 0.3);
+      b.bounces--; wreck('enigma', Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.3);
       const px = b.x - b.vx * d, py = b.y - b.vy * d;
       if (solidPx(px, b.y)) b.vy = -b.vy; else b.vx = -b.vx;
       b.x = px; b.y = py; sfx('ting');
@@ -5895,6 +5994,7 @@ function updateBullets(dt, edt) {
     }
     if (b.bounce > 0 && solidPx(b.x, b.y)) {
       b.bounce--; const px = b.x - b.vx * d, py = b.y - b.vy * d;
+      if (b.kind === 'alpha' && b.owner === 'p') wreck('alpha', Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0); // heavy particles knock chips off as they bounce
       if (solidPx(px, b.y)) { b.vy = -b.vy * 0.55; b.vx *= 0.8; } else b.vx = -b.vx * 0.6;
       b.x = px; b.y = py; sfx('clink');
       continue;
@@ -5906,7 +6006,7 @@ function updateBullets(dt, edt) {
       if (b.kind === 'rock') { for (let i = 0; i < 4; i++) chunk(b.x, b.y - 2, rand(-100, 100), rand(-150, -40), '#62626c'); sfx('crumble'); continue; }
       if (b.explode) { burst(b, b.x - b.vx * d, b.y - b.vy * d, own); continue; }
       const tc = Math.floor(b.x / T), tr = Math.floor(b.y / T), tv = tileAt(tc, tr);
-      damageTile(tc, tr, b.tdmg || 0.5);
+      if (b.owner === 'p') wreck(dkey(b), tc, tr, b.vx, b.vy, b.tdmg || 0.5, b.kind === 'red' ? b.dmg / 0.6 : 1); else damageTile(tc, tr, b.tdmg || 0.5);
       impact(b, tv);
       continue;
     }
@@ -5964,11 +6064,12 @@ function updateBullets(dt, edt) {
       }
     }
   }
+  blame = 'e'; bossMul = 1;
   bullets = bullets.filter((b) => !b.dead && b.x > -50 && b.x < LW * T + 50 && b.y < LH * T + 50 && b.y > -400);
 }
 function updateFx(dt, edt) {
   for (const f of fx) {
-    f.t -= dt;
+    f.t -= dt; blame = f.by || (P_FX[f.kind] ? 'p' : 'e');
     if (f.kind === 'well') {
       for (const e of ents) {
         if (e.dead || !HITTABLE[e.type] || e.type === 'boss' || e.type === 'turret') continue;
@@ -5996,7 +6097,7 @@ function updateFx(dt, edt) {
         f.t = Math.max(f.t, 0.3); damageTile(f.c, f.r, 0.9 * dt);
         if (Math.random() < dt * 0.9) { // creep to a neighbouring crate
           const nc = f.c + (Math.random() < 0.5 ? -1 : 1);
-          if (tileAt(nc, f.r) === CRATE && !isSolidT(tileAt(nc, f.r - 1)) && !fx.some((o) => o.kind === 'fire' && o.c === nc && o.r === f.r)) fx.push({ kind: 'fire', x: nc * T + 8, y: f.r * T, c: nc, r: f.r, t: 2.5, max: 3.4 });
+          if (tileAt(nc, f.r) === CRATE && !isSolidT(tileAt(nc, f.r - 1)) && !fx.some((o) => o.kind === 'fire' && o.c === nc && o.r === f.r)) fx.push({ kind: 'fire', x: nc * T + 8, y: f.r * T, c: nc, r: f.r, t: 2.5, max: 3.4, by: f.by });
         }
       }
       const box = { x: f.x - 5, y: f.y - 12, w: 10, h: 12 };
@@ -6028,10 +6129,11 @@ function updateFx(dt, edt) {
       if (!isSolidT(tileAt(f.c, f.r))) { f.t = 0; continue; }
       if (Math.random() < 0.4) part(f.x + rand(-8, 8), f.y - 1, 0, rand(-30, -10), '#c9f08f', 0.4, 1);
       const box = { x: f.x - 9, y: f.y - 5, w: 18, h: 5 };
-      if (P.alive && P.inv <= 0 && overlap(P, box)) killPlayer('shot');
+      if (P.alive && P.inv <= 0 && f.by !== 'p' && overlap(P, box)) killPlayer('shot'); // spit you batted back is yours
       for (const e of ents) if (isQuack(e) && !e.dead && overlap(e, box)) hitEnemy(e, 99, 0, 'burn');
     }
   }
+  blame = 'e';
   fx = fx.filter((f) => f.t > 0);
 }
 // hanging lamps swing like pendulums and drop when their ceiling goes; decor drops when its tile goes
@@ -8408,5 +8510,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startE
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWater, fxWorld, fxEdge, blastExtras }); // extra visuals hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
+if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
 })();
 </script>

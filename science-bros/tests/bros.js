@@ -147,7 +147,9 @@ check('Oppenbro: it blows a crater', holes >= 20, holes + ' blocks gone');
 check('Oppenbro: steel and the bottom two rows are untouched', steelLost === 0 && bottomHit === 0, steelLost + ' steel, ' + bottomHit + ' bottom');
 check('Oppenbro: the mushroom cloud lingers for seconds', S.fx.some((f) => f.kind === 'mushroom'));
 setup('oppenheimer'); S.P.inv = 0; S.plantNuke(S.P.x + 5 + 30, S.P.y + 15, 'p', 0.4); run(60);
-check('Oppenbro: inside the red ring the bro dies', !S.P.alive);
+check('Oppenbro: his own nuke never kills him, even inside the red ring', S.P.alive);
+setup('oppenheimer'); S.P.inv = 0; S.plantNuke(S.P.x + 5 + 30, S.P.y + 15, 'npc', 0.4); run(60);
+check('Oppenbro: inside the red ring of a nuke he did not throw, the bro dies', !S.P.alive);
 setup('oppenheimer'); { const B = Object.assign(S.makeEnt({ type: 'boss', c: 16, from: 0 }), { active: true }); S.ents.push(B);
   S.plantNuke(14 * 16, 16 * 16, 'p', 0.3); let last = B.hp, maxHit = 0, hits = 0;
   for (k = 0; k < 150; k++) { S.P.inv = 1e9; run(1); const d = last - B.hp; if (d > 0.01) { hits++; maxHit = Math.max(maxHit, d); } last = B.hp; }
