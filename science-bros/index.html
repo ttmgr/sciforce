@@ -533,6 +533,8 @@ function buildStretch(H, n) {
   const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[n % segs.length] : null;
   const rest = STRETCH - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [];
   for (let k = 0; k < cnt; k++) plan.push([STRETCH_KINDS[(n + k) % STRETCH_KINDS.length], k < cnt - 1 ? Math.floor(rest / cnt) : rest - Math.floor(rest / cnt) * (cnt - 1), {}]);
+  const th = LV().theme, fits = Object.keys(NEW_PIECES).filter((s) => NEW_PIECES[s].themes.includes(th) && !(own && own[0] === s)); // new pieces that fit this theme: they take the slots after the first
+  for (let k = 1; k < cnt && fits.length; k++) { const s = fits.splice(Math.floor(hash(97 + k) * fits.length), 1)[0], [lo, hi] = NEW_PIECES[s].w, w = Math.min(hi, Math.max(lo, plan[k][1])); plan[0][1] += plan[k][1] - w; plan[k] = [s, w, {}]; }
   if (own) plan.splice(1, 0, [own[0], own[1], Object.assign({}, own[2], { put: [] })]);
   let c = cutAt;
   for (const [kind, w, o] of plan) {
@@ -1351,6 +1353,173 @@ Object.assign(ARENA, {
     H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 200, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
   },
 });
+// ---- variety pack: twelve more pieces and four more arenas. Same rules: ground meets the next piece at row 16, steel never overhangs the way on.
+// Most keep a steel or brick walkway on the main path, and put barrels in clusters beside the quacks' posts.
+Object.assign(SEG, {
+  freight(H, c, w, o) { // a freight train on the tracks: boxcars with crate doors and roofs to run over, a locomotive with a chimney at the front
+    H.ground(c, c + w - 1, 16); H.fill(c, 16, c + w - 1, 16, STEEL); // rails on a steel bed
+    const car = (x) => { H.fill(x, 12, x + 7, 12, BRICK); H.fill(x, 13, x, 15, CRATE); H.fill(x + 7, 13, x + 7, 15, CRATE); H.fill(x + 8, 12, x + 8, 15, LADDER); H.bgFill(x + 1, 13, x + 6, 15, BG_BRICK); H.lamp(x + 3, 13); };
+    let x = c + 3, n = 0; for (; x + 8 <= c + w - 14; x += 10, n++) { car(x); if (n % 2) { H.sp('barrel', x + 2, 13); H.sp('barrel', x + 4, 13); } else H.sp('guncrate', x + 3, 0); }
+    const L = c + w - 12; H.fill(L, 11, L + 9, 11, BRICK); H.fill(L, 12, L, 15, CRATE); H.fill(L + 9, 12, L + 9, 15, CRATE); H.fill(L + 7, 8, L + 8, 10, BRICK); H.fill(L - 1, 11, L - 1, 15, LADDER); H.bgFill(L + 1, 12, L + 8, 15, BG_BRICK);
+    H.vent(L + 4, 11, 6, { col: '#e6eef8', t: 0.5 }); H.sp('propane', L + 2, 12); H.dc('sign', c + 1, { text: 'FREIGHT' });
+    place(H, c, o);
+  },
+  scaffold(H, c, w, o) { // a skyscraper going up: a brick core with a lobby, a hook lift on its left, a ladder and plank ways down on the right
+    H.ground(c, c + w - 1, 16); H.fill(c, 16, c + w - 1, 16, STEEL);
+    const a = c + (w >> 1) - 4; H.fill(a, 6, a + 7, 15, BRICK); lobby(H, a, a + 7);
+    for (let r = 8; r < 12; r += 3) for (let k = a + 1; k < a + 7; k += 3) { H.fill(k, r, k, r, EMPTY); H.bgFill(k, r, k, r, BG_BRICK); }
+    H.lift(a - 3, 15, 3, 0, -9, { cab: 0, spd: 40, pause: 1.5 }); // the crane hook
+    H.fill(a + 8, 6, a + 8, 15, LADDER);
+    H.fill(c + 3, 9, c + 8, 9, STEEL); H.fill(c + 3, 9, c + 3, 15, LADDER); H.sp('barrel', c + 5, 0); H.sp('barrel', c + 7, 0); H.sp('itemcrate', c + 6, 0); // scaffold planks with a barrel cluster
+    const k = a + 11; if (k + 3 < c + w - 1) { H.fill(k, 11, k + 2, 11, STEEL); H.fill(k + 3, 11, k + 3, 15, LADDER); }
+    H.dc('sign', c + 1, { text: 'NOW HIRING' }); H.dc('sandbags', c + w - 4);
+    place(H, c, o);
+  },
+  canopy(H, c, w, o) { // a jungle: hollow tree trunks to walk through, vine ladders up to the canopy, a rope bridge between the trees
+    H.ground(c, c + w - 1, 16);
+    const trees = w >= 36 ? [c + 6, c + 22] : [c + 8];
+    for (const x of trees) {
+      H.fill(x, 9, x + 4, 15, BRICK); H.fill(x + 1, 13, x + 3, 15, EMPTY); H.bgFill(x + 1, 13, x + 3, 15, BG_EARTH); // the hollow trunk
+      H.fill(x - 4, 9, x + 8, 9, DIRT); H.fill(x - 3, 8, x + 7, 8, DIRT); H.fill(x - 5, 9, x - 5, 15, LADDER); H.fill(x + 9, 9, x + 9, 15, LADDER); // the canopy, with vines either side
+      H.dc('palm', x + 2, { from: 0 });
+    }
+    if (trees.length > 1) { H.fill(trees[0] + 9, 9, trees[1] - 5, 9, CRATE); H.crumble(trees[0] + 9, 9, trees[1] - 5, 9); H.fill(trees[0] + 8, 9, trees[0] + 8, 9, STEEL); H.fill(trees[1] - 4, 9, trees[1] - 4, 9, STEEL); } // steel knots on the branches hold the bridge
+    H.sp('itemcrate', trees[0] + 2, 0); H.sp('spring', c + w - 6);
+    place(H, c, o);
+  },
+  shipdeck(H, c, w, o) { // a ship in dry dock: up the gangplank, along the deck past two masts, over the open cargo hold, down the far gangplank
+    H.ground(c, c + w - 1, 16);
+    const a = c + 6, b = c + w - 7;
+    for (const [x0, x1, t] of [[c + 2, c + 3, 15], [c + 4, c + 5, 14], [b + 1, b + 2, 14], [b + 3, b + 4, 15]]) H.fill(x0, t, x1, 15, CRATE); // gangplanks
+    H.fill(a, 13, b, 14, CRATE); H.fill(a, 15, b, 15, STEEL); // the hull has a steel keel, so the deck never falls away
+    const m = (a + b) >> 1; H.fill(m - 1, 13, m + 1, 14, EMPTY); H.sp('barrel', m - 1, 13); H.sp('barrel', m, 13); H.sp('propane', m + 1, 13); // the cargo hold
+    for (const x of [a + 5, b - 5]) { H.fill(x - 1, 5, x + 1, 5, STEEL); H.fill(x - 2, 5, x - 2, 12, LADDER); } // masts: a ladder up to the crow's nest
+    H.dc('sign', a + 2, { text: 'HMS PLACEBO' }); H.sp('guncrate', a + 3, 0);
+    place(H, c, o);
+  },
+  castle(H, c, w, o) { // a moat with a crate drawbridge, then a gatehouse: shoot the portcullis down, or climb the tower
+    H.ground(c, c + w - 1, 16);
+    const a = c + 4, b = c + 11; H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16); pool(H, a, b); H.fill(a, 16, b, 16, CRATE); for (let k = a + 2; k <= b; k += 4) H.fill(k, 17, k, 20, STEEL);
+    const g = b + 6; H.fill(g, 5, g + 11, 15, BRICK); H.fill(g + 4, 10, g + 7, 15, EMPTY); H.bgFill(g + 4, 10, g + 7, 15, BG_BRICK); H.fill(g + 4, 10, g + 4, 15, CRATE); // the portcullis
+    H.fill(g - 1, 5, g - 1, 15, LADDER); H.sp('turret', g + 1); H.sp('turret', g + 10); H.lamp(g + 6, 10);
+    H.sp('barrel', g + 6, 11); H.sp('barrel', g + 7, 11); H.sp('guncrate', g + 5, 11);
+    H.dc('sign', c + 1, { text: 'DRAWBRIDGE' });
+    place(H, c, o);
+  },
+  mine(H, c, w, o) { // a mine under a rock roof: timber props, a cart on rails, and a trestle whose rotten planks drop you a level
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 8, DIRT); H.bgFill(c, 9, c + w - 1, 15, BG_EARTH);
+    for (let k = c + 6; k < c + w - 4; k += 8) { H.bgFill(k, 9, k + 1, 15, BG_BRICK); H.lamp(k + 3, 9); } // timber props stand against the back wall (a prop you could cling to would trap a bro)
+    for (const k of [c + 9, c + w - 8]) H.sp('icicle', k, 0, { hang: 8, rock: true });
+    const a = c + 12, b = c + w - 13; H.ground(c, a - 1, 16); H.ground(b + 1, c + w - 1, 16);
+    H.fill(a, 16, b, 16, CRATE); for (let k = a + 1; k <= b; k += 4) H.fill(k, 17, k, 20, CRATE);
+    if (b - a > 8) { H.crumble(a + 3, 16, b - 3, 16); catchUnder(H, a + 3, b - 3); } H.fill(a, 21, b, 21, STEEL);
+    H.lift(c + 2, 15, 3, 7, 0, { cab: 0, spd: 40 }); // the ore cart
+    H.sp('barrel', c + w - 6); H.sp('barrel', c + w - 5); H.sp('propane', c + w - 4); H.dc('sign', c + 1, { text: 'MIND THE PROPS', from: 9 });
+    place(H, c, o);
+  },
+  icecave(H, c, w, o) { // an ice cavern: slippery ice steps up and down, icicles overhead, crystals in the walls
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 5, DIRT); H.bgFill(c, 6, c + w - 1, 15, BG_EARTH);
+    const hs = [16, 15, 14, 13, 13, 14, 14, 15, 16, 16, 15, 14, 13, 14, 15, 16], sw = Math.max(2, Math.floor(w / hs.length));
+    hs.forEach((t, i) => { const x0 = c + i * sw, x1 = i === hs.length - 1 ? c + w - 1 : x0 + sw - 1; H.ground(x0, x1, t); H.fill(x0, t, x1, t, ICE); H.fill(x0, 6, x1, t - 1, EMPTY); });
+    for (let k = c + 5; k < c + w - 4; k += 6) H.sp('icicle', k, 0, { hang: 5 });
+    for (let k = c + 4; k < c + w - 3; k += 9) H.dc('crystal', k, { from: openRow(k) });
+    place(H, c, o);
+  },
+  magma(H, c, w, o) { // a magma works: molten pools (hot acid) under a brick walkway on a steel bed, rotten planks, and vents up to a ledge
+    H.ground(c, c + w - 1, 16);
+    const a = c + 6, b = c + w - 7; pool(H, a, b); H.fill(a, 16, b, 16, BRICK); H.fill(a - 1, 16, a - 1, 16, STEEL); H.fill(b + 1, 16, b + 1, 16, STEEL);
+    for (let k = a + 3; k < b; k += 5) H.fill(k, 17, k, 20, STEEL);
+    const m = (a + b) >> 1; H.crumble(m - 3, 16, m + 3, 16); catchUnder(H, m - 3, m + 3, STEEL);
+    H.fill(a + 3, 8, a + 8, 8, DIRT); H.vent(a + 5, 16, 7, { col: '#ffb060', t: 0.3 }); H.fill(b - 8, 8, b - 3, 8, DIRT); H.vent(b - 5, 16, 7, { col: '#ffb060', t: 1.4 });
+    H.sp('barrel', a - 3); H.sp('barrel', a - 2); H.sp('propane', a - 4);
+    place(H, c, o);
+  },
+  junction(H, c, w, o) { // a sewer junction: grates over a sludge channel, an iron pipe to run along overhead, manhole ladders
+    H.ground(c, c + w - 1, 16); H.fill(c, 0, c + w - 1, 5, DIRT); H.bgFill(c, 6, c + w - 1, 15, BG_BRICK);
+    const a = c + 6, b = c + w - 7, m = (a + b) >> 1; pool(H, a, b);
+    H.fill(a, 16, b, 16, CRATE); for (let k = a + 2; k <= b; k += 5) H.fill(k, 17, k, 20, STEEL);
+    H.crumble(m - 3, 16, m + 3, 16); catchUnder(H, m - 3, m + 3);
+    H.fill(a, 11, b, 11, STEEL); H.fill(a - 1, 11, a - 1, 15, LADDER); H.fill(b + 1, 11, b + 1, 15, LADDER); // the pipe
+    for (const k of [m - 8, m + 8]) H.vent(k, 16, 5, { col: '#c9f08f', t: k * 0.3 });
+    H.sp('barrel', c + 2); H.sp('barrel', c + 3); H.lamp(m, 6); H.dc('sign', c + 1, { text: 'NO SWIMMING', from: 6 });
+    place(H, c, o);
+  },
+  radar(H, c, w, o) { // a radar base: a bunker you can walk through, a ladder to its roof, two dishes standing over the roof
+    H.ground(c, c + w - 1, 16);
+    const a = c + 6; H.fill(a, 10, a + 15, 15, BRICK); lobby(H, a, a + 15); H.fill(a, 13, a, 15, CRATE); H.fill(a + 15, 13, a + 15, 15, CRATE); // crate doors
+    H.fill(a - 1, 10, a - 1, 15, LADDER); H.bgFill(a + 1, 13, a + 14, 15, BG_BRICK);
+    for (const d of [a + 5, a + 11]) { H.fill(d - 2, 6, d + 2, 6, STEEL); H.fill(d - 2, 5, d - 2, 5, STEEL); H.fill(d + 2, 5, d + 2, 5, STEEL); H.lamp(d, 6); } // dishes of steel float above the roof, so the roof stays clear
+    H.wind(c, c + w - 1, 1, { r0: 0, r1: 9, socks: [c + 3] }); H.sp('itemcrate', a + 5, 0);
+    place(H, c, o);
+  },
+  market(H, c, w, o) { // a market street: two shops with awnings to bounce up to (springs in front), stalls and barrels between
+    H.ground(c, c + w - 1, 16);
+    for (const a of [c + 6, c + w - 15]) {
+      H.fill(a, 7, a + 8, 15, BRICK); lobby(H, a, a + 8); H.fill(a, 13, a, 15, CRATE); H.fill(a + 8, 13, a + 8, 15, CRATE);
+      H.fill(a - 3, 10, a - 1, 10, BRICK); H.fill(a + 9, 10, a + 11, 10, BRICK); // awnings
+      H.sp('spring', a - 5); H.sp('spring', a + 13); H.sp('itemcrate', a + 4, 0);
+    }
+    for (const k of [c + 2, (c + w) >> 1]) { H.fill(k, 15, k + 2, 15, CRATE); H.sp('barrel', k + 4); H.sp('barrel', k + 5); }
+    H.dc('sign', c + 1, { text: 'FRESH CURES' });
+    place(H, c, o);
+  },
+  watertower(H, c, w, o) { // a water tower: walk under it, or climb to the tank; cut its legs and the whole thing comes down
+    H.ground(c, c + w - 1, 16); H.fill(c, 16, c + w - 1, 16, STEEL);
+    const L = c + (w >> 1) - 5, R = L + 9;
+    H.fill(L, 8, L + 1, 15, BRICK); H.fill(R, 8, R + 1, 15, BRICK); H.fill(L - 2, 7, R + 3, 7, BRICK); H.fill(L - 1, 3, R + 2, 6, BRICK);
+    H.fill(L - 3, 7, L - 3, 15, LADDER); H.fill(L - 2, 3, L - 2, 6, LADDER); H.sp('itemcrate', R, 0); H.sp('guncrate', L + 3, 0);
+    H.sp('barrel', L + 3); H.sp('barrel', L + 5); H.sp('propane', L + 6);
+    place(H, c, o);
+  },
+});
+const NEW_PIECES = { // widths the pieces look right at, and the themes they fit (the stretch picks from these)
+  freight: { w: [32, 40], themes: ['desert', 'rust', 'plant', 'grove', 'citrus', 'sky', 'edge'] },
+  scaffold: { w: [30, 40], themes: ['city', 'rust', 'plant', 'sky', 'moon', 'astro'] },
+  canopy: { w: [30, 42], themes: ['island', 'swamp', 'grove', 'citrus', 'sky'] },
+  shipdeck: { w: [30, 40], themes: ['island', 'swamp', 'edge', 'sewer'] },
+  castle: { w: [34, 42], themes: ['edge', 'citrus', 'snow', 'island', 'moon', 'astro'] },
+  mine: { w: [36, 44], themes: ['cave', 'desert', 'rust', 'astro', 'moon', 'snow'] },
+  icecave: { w: [32, 44], themes: ['snow', 'cave', 'edge', 'moon', 'astro'] },
+  magma: { w: [30, 40], themes: ['citrus', 'grove', 'rust', 'plant', 'cave', 'desert'] },
+  junction: { w: [30, 40], themes: ['sewer', 'swamp', 'city', 'plant', 'cave'] },
+  radar: { w: [34, 44], themes: ['sky', 'astro', 'edge', 'desert', 'moon', 'city', 'snow'] },
+  market: { w: [36, 44], themes: ['city', 'desert', 'citrus', 'grove', 'island', 'sewer'] },
+  watertower: { w: [28, 40], themes: ['desert', 'rust', 'plant', 'grove', 'swamp', 'sky', 'city', 'island'] },
+};
+Object.assign(ARENA, {
+  span(H, o) { // a collapsing span: a steel deck over a dry gorge, with two plank walkways high above that give way when you cross them
+    H.fill(176, 16, 225, 16, STEEL); H.fill(176, 17, 225, 17, DIRT); H.fill(176, 18, 235, 21, STEEL); for (const k of [186, 200, 214]) H.fill(k, 17, k, 17, STEEL);
+    for (const [k0, k1] of [[184, 196], [208, 220]]) { H.fill(k0, 10, k1, 10, CRATE); H.crumble(k0 + 3, 10, k1 - 3, 10); H.fill(k0 - 1, 10, k0 - 1, 15, LADDER); H.fill(k1 + 1, 10, k1 + 1, 15, LADDER); H.fill(k0, 10, k0, 10, BRICK); H.fill(k1, 10, k1, 10, BRICK); }
+    H.sp('ammo', 202); H.fill(226, 0, 227, 15, STEEL); H.ground(228, 235, 16); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+  helipad(H, o) { // a roof with a raised helipad in the middle on ladder legs, wind, aerials, and barrels by the walls
+    H.ground(176, 235, 16); H.fill(177, 16, 225, 16, STEEL);
+    H.fill(198, 11, 212, 11, STEEL); H.fill(197, 11, 197, 15, LADDER); H.fill(213, 11, 213, 15, LADDER); H.lamp(200, 11); H.lamp(210, 11);
+    for (const k of [185, 219]) H.fill(k, 12, k, 15, STEEL); // aerial masts
+    H.sp('barrel', 181); H.sp('barrel', 182); H.sp('barrel', 222); H.sp('propane', 223);
+    H.wind(178, 225, -1, { socks: [183, 221] }); H.dc('neon', 205, { text: 'H', back: true });
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+  quarry(H, o) { // a quarry pit: a stepped bowl of spoil, ladders up the terrace, steel spoil conveyors on ladder legs, blasting barrels on the rim
+    H.ground(176, 177, 11); H.fill(176, 11, 176, 15, LADDER); H.fill(178, 12, 223, 17, DIRT); H.fill(178, 18, 223, 21, STEEL); H.fill(224, 0, 225, 21, STEEL); H.fill(226, 12, 235, 21, STEEL);
+    for (const k of [190, 208]) { H.fill(k, 8, k + 4, 8, STEEL); H.fill(k - 1, 8, k - 1, 11, LADDER); }
+    H.sp('barrel', 177, 0); H.sp('propane', 177, 0); H.sp('barrel', 220, 0);
+    bossAt(H, o, 205, { ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] });
+  },
+  factory(H, o) { // a factory floor: belts at the floor ends push you towards the middle, two catwalk belts run opposite ways overhead
+    H.ground(176, 235, 16);
+    H.belt(178, 187, 16, 1, 45); H.belt(214, 223, 16, -1, 45);
+    H.belt(184, 195, 11, 1, 55); H.belt(207, 218, 11, -1, 55); H.fill(183, 11, 183, 15, LADDER); H.fill(219, 11, 219, 15, LADDER);
+    H.sp('barrel', 224, 0); H.sp('ammo', 200); H.lamp(196, 5); H.lamp(206, 5);
+    H.fill(226, 0, 227, 15, STEEL); bossAt(H, o, 205, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15] });
+  },
+});
+const NEW_ARENAS = { // which boss types each arena works with (the director and the engine need their own floor columns)
+  span: { bosses: ['boss', 'tank', 'citrus', 'kopter', 'blimp', 'director'] },
+  helipad: { bosses: ['boss', 'tank', 'citrus', 'kopter', 'blimp', 'director'] },
+  quarry: { bosses: ['crawler', 'boss', 'tank', 'citrus', 'kopter'] },
+  factory: { bosses: ['boss', 'tank', 'citrus', 'kopter', 'blimp', 'director'] },
+};
 // a mission made of pieces left to right (they must add up to 176 columns), then an arena
 const pieces = (segs, arena, deco) => Object.assign((H) => { let c = 0; for (const [kind, w, o] of segs) { SEG[kind](H, c, w, o || {}); c += w; } ARENA[arena.kind](H, arena); if (deco) deco(H); }, { segs, arena });
 const openRow = (c) => { let r = 0; while (r < LH - 1 && isSolidT(tileAt(c, r))) r++; return r; }; // the first open row from the top (under a rock roof)
@@ -8139,5 +8308,6 @@ if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnProp
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWater, fxWorld, fxEdge, blastExtras }); // extra visuals hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 })();
 </script>
