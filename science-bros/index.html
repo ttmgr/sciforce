@@ -4456,7 +4456,7 @@ function nukeBosses(n) {
 function crater(x, gy) {
   const pad = LV() && padOf(), c0 = Math.floor(x / T), [hw, dn, up] = NUKE_HOLE;
   blastAt = { x, y: gy - 8 };
-  for (let r = Math.floor(gy / T) - up; r <= Math.floor(gy / T) + dn; r++) for (let c = c0 - Math.ceil(hw); c <= c0 + Math.ceil(hw); c++) {
+  for (let r = Math.floor(gy / T) - Math.ceil(up); r <= Math.floor(gy / T) + Math.ceil(dn); r++) for (let c = c0 - Math.ceil(hw); c <= c0 + Math.ceil(hw); c++) { // whole rows: a fractional row would skip the core
     if (r < 0 || r >= LH - 2 || c < 0 || c >= LW || (pad && Math.abs(c - pad[0]) <= 4)) continue;
     const v = tileAt(c, r); if (!isSolidT(v) || v === STEEL || v === LADDER) continue;
     const dx = (c * T + 8 - x) / (hw * T), dy = (r * T + 8 - gy) / ((r * T + 8 < gy ? up : dn) * T), d = dx * dx + dy * dy;
