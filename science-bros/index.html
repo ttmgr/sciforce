@@ -98,7 +98,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const T = 16, VW = 480, VH = 270, LW = 560, LH = 40; // a level is built 236 columns wide, then gets a 324-column stretch before its boss arena (see slideArena); 40 rows: the top 22 as before, earth below (see underground)
+const T = 16, VW = 480, VH = 270, LW = 560, LH = 40; // a level is built 236 columns wide, then gets a 324-column stretch before its boss arena (140 outside the campaign, see stretchW); 40 rows: the top 22 as before, earth below (see underground)
 let G = 900; // gravity; lower on the Moon
 const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
 const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
@@ -527,23 +527,25 @@ function buildLevel() {
     grav: (c0, r0, c1, r1, k = 0.58) => devs.push({ kind: 'grav', k, x0: c0 * T, y0: r0 * T, x1: (c1 + 1) * T, y1: (r1 + 1) * T }),
     crumble: (c0, r0, c1, r1) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) crumbly[r * LW + c] = 1; },
   };
+  stretchW = level < LEVELS.length && mode !== 'rush' ? STRETCH : OLD_STRETCH; playW = 236 + stretchW; // only the 18 campaign missions are long
   LV().build(H);
   stretched = level < LEVELS.length || level === MOON || !!LV().gen; // a random map is built full width (genLevel)
   const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
   if (stretched && !LV().gen) { slideArena(); buildStretch(H, level); }
-  else if (!stretched) for (let r = 0; r < LH; r++) for (let c = 236; c < LW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
+  else if (!stretched) for (let r = 0; r < LH; r++) for (let c = 236; c < playW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
   deepen(); // earth under the level down to the bedrock (see underground)
 }
 // ---- longer maps: every campaign mission and the Moon get a stretch of extra level pieces between the main path
 // and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
-// in it slides STRETCH columns right, and the gap is filled.
-const ARENA_AT = 176, STRETCH = 324;
+// in it slides stretchW columns right, and the gap is filled.
+const ARENA_AT = 176, STRETCH = 324, OLD_STRETCH = 140; // the campaign's stretch; random missions and the bonus modes keep the old one
+let stretchW = STRETCH, playW = LW; // this level's stretch and playable width (236 + stretchW): columns from playW on read as steel and are never shown
 let stretched = false, cutAt = ARENA_AT; // whether the level being played has the stretch, and where it starts
-const arenaCol = (c) => (stretched && c >= cutAt ? c + STRETCH : c); // where a column of the built level ended up
+const arenaCol = (c) => (stretched && c >= cutAt ? c + stretchW : c); // where a column of the built level ended up
 const padOf = () => [arenaCol(LV().pad[0]), LV().pad[1]];
 function slideArena() {
   for (let r = 0; r < LH; r++) for (let c = 235; c >= cutAt; c--) {
-    const i = r * LW + c, j = i + STRETCH;
+    const i = r * LW + c, j = i + stretchW;
     tiles[j] = tiles[i]; thp[j] = thp[i]; bg[j] = bg[i]; crumbly[j] = crumbly[i]; tiles[i] = thp[i] = bg[i] = crumbly[i] = 0;
   }
   const mv = (o, k) => { if (o[k] !== undefined) o[k] = arenaCol(o[k]); };
@@ -551,8 +553,8 @@ function slideArena() {
   for (const o of decor) mv(o, 'c');
   for (const o of lamps) mv(o, 'c');
   for (const d of devs) {
-    if (d.x0 >= cutAt * T) { for (const k of ['x0', 'x1', 'x', 'ax', 'bx']) if (d[k] !== undefined) d[k] += STRETCH * T; for (const k of ['c', 'c0', 'c1', 'gx']) mv(d, k); }
-    else if (d.x1 > cutAt * T) { d.x1 += STRETCH * T; mv(d, 'c1'); } // a device across the cut stretches
+    if (d.x0 >= cutAt * T) { for (const k of ['x0', 'x1', 'x', 'ax', 'bx']) if (d[k] !== undefined) d[k] += stretchW * T; for (const k of ['c', 'c0', 'c1', 'gx']) mv(d, k); }
+    else if (d.x1 > cutAt * T) { d.x1 += stretchW * T; mv(d, 'c1'); } // a device across the cut stretches
     if (d.socks) d.socks = d.socks.map(arenaCol);
   }
 }
@@ -578,7 +580,7 @@ function stretchFork(H, c, w) { // the way splits: a ladder up to a steel high r
 function buildStretch(H, n) {
   const hash = (k) => { const v = Math.sin(k * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); }; // the same layout every time
   const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[n % segs.length] : null;
-  const rest = STRETCH - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [], forks = longOf(n)[0], fk = [];
+  const rest = stretchW - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [], forks = longOf(n)[0], fk = [];
   for (let k = 0; k < cnt; k++) plan.push([STRETCH_KINDS[(n + k) % STRETCH_KINDS.length], k < cnt - 1 ? Math.floor(rest / cnt) : rest - Math.floor(rest / cnt) * (cnt - 1), {}]);
   for (let i = 0; i < forks; i++) fk.push(Math.round(((i + 1) * cnt) / (forks + 1))); // the forks, spread along the stretch
   const th = LV().theme, fits = Object.keys(NEW_PIECES).filter((s) => NEW_PIECES[s].themes.includes(th) && !(own && own[0] === s)); // new pieces that fit this theme: they take the other slots after the first
@@ -591,8 +593,8 @@ function buildStretch(H, n) {
     for (let k = 4; k < w - 3; k += 7) H.sp(STRETCH_FOES[Math.floor(hash(c + k) * STRETCH_FOES.length)], c + k, kind === 'fork' && (k / 7 | 0) % 2 ? 11 : openRow(c + k)); // a fork: every other one on the low road
     stretchPlan.push([kind, c, w]); c += w;
   }
-  for (const k of [cutAt + 2, cutAt + (STRETCH >> 1) + 2]) H.sp('ammo', k, openRow(k));
-  for (const k of [1, 2, 3].map((i) => cutAt + Math.round((STRETCH * i) / 4)).concat(cutAt + STRETCH - 3)) H.sp('flag', k, openRow(k));
+  for (const k of [cutAt + 2, cutAt + (stretchW >> 1) + 2]) H.sp('ammo', k, openRow(k));
+  for (const k of [1, 2, 3].map((i) => cutAt + Math.round((stretchW * i) / 4)).concat(cutAt + stretchW - 3)) H.sp('flag', k, openRow(k));
   underStretch(H, n); // underground detours
 }
 function buildIsland({ fill, ground, sp, bgFill, dc, lamp, vent }) {
@@ -1782,7 +1784,7 @@ function buildSiege({ fill, ground, sp, bgFill, dc, lamp }) {
 }
 
 // ---------------------------------------------------------------- random maps
-// A map randomizer: genLevel(seed) makes a whole mission from scratch: a camp, 480 columns of terrain (level pieces
+// A map randomizer: genLevel(seed) makes a whole mission from scratch: a camp, 296 columns of terrain (level pieces
 // from SEG and pieces of its own), objectives, quacks, a boss arena and a theme. The same seed always makes the same
 // map. The arena is built at ARENA_AT like a campaign one, then slid to the far end (so arenaCol works for its boss).
 function rngOf(seed) { // a small seeded random number generator (mulberry32)
@@ -2005,8 +2007,8 @@ function genLevel(seed, dk = 'normal') {
     stretched = true; cutAt = ARENA_AT;
     (ARENA[arena] || GEN_ARENA[arena])(H, { kind: arena, boss, extra: bossX, text: neon });
     slideArena();
-    const fin = spawns.find((o) => o.final), end = ARENA_AT + STRETCH; // the path runs up to the arena
-    { const pc = Math.min(235, fin.gate[1] - STRETCH + 4), cc = pc + STRETCH; def.pad = [pc, surf(cc, openRow(cc))]; } // the pad sits behind the gate
+    const fin = spawns.find((o) => o.final), end = ARENA_AT + stretchW; // the path runs up to the arena
+    { const pc = Math.min(235, fin.gate[1] - stretchW + 4), cc = pc + stretchW; def.pad = [pc, surf(cc, openRow(cc))]; } // the pad sits behind the gate
     // 2. the camp, then pieces until the arena: about half from SEG, half the randomizer's own; no piece twice in a row
     SEG.camp(H, 0, 20, camp);
     const x = { tree: W.tree[th], ledges: [], high: [] }, meta = (k) => SEG_META[k] || GEN_SEG_DEFAULT;
@@ -2238,7 +2240,7 @@ const EPILOGUE = ['PROF. QUACKENBUSH', 'In prison. His appeal is under review. V
 function surf(c, from) { for (let r = from; r < LH; r++) if (isSolidT(tileAt(c, r))) return r; return LH; }
 
 // ---------------------------------------------------------------- tile physics
-const tileAt = (c, r) => (c < 0 || c >= LW ? STEEL : r < 0 || r >= LH ? EMPTY : tiles[r * LW + c]);
+const tileAt = (c, r) => (c < 0 || c >= playW ? STEEL : r < 0 || r >= LH ? EMPTY : tiles[r * LW + c]);
 const isSolidT = (v) => v !== EMPTY && v !== ACID && v !== LADDER;
 const solidPx = (x, y) => isSolidT(tileAt(Math.floor(x / T), Math.floor(y / T)));
 function rectHas(x, y, w, h, test) {
@@ -2498,7 +2500,7 @@ function ugGen(H, R, x, spots, F, kind, qs, objective, cage) { // stock a random
 // tunnel, up another. A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
 const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant
 function underStretch(H, n) {
-  const want = longOf(n)[1], R = rngOf(4099 + n * 977), c0 = cutAt + 8, end = cutAt + STRETCH - 6, W = Math.floor((end - c0) / want);
+  const want = longOf(n)[1], R = rngOf(4099 + n * 977), c0 = cutAt + 8, end = cutAt + stretchW - 6, W = Math.floor((end - c0) / want);
   for (let i = 0, prev = 0; i < want; i++) { const b = ugDetour(H, n, Math.max(c0 + i * W, prev + 14), end - 24, end, R); if (b > 0) prev = b; } // each starts at its share of the stretch, or the first good spot after it
   if (UG_MISSIONS.includes(n)) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + n * 131));
 }
@@ -3162,7 +3164,7 @@ function applyDifficulty(n) {
     }
     foes.push(e);
   }
-  const target = missionTarget(diff.p) * densMul * (stretched ? (ARENA_AT + STRETCH) / ARENA_AT : 1); // a longer map holds more quacks
+  const target = missionTarget(diff.p) * densMul * (stretched ? (ARENA_AT + stretchW) / ARENA_AT : 1); // a longer map holds more quacks
   let total = foes.reduce((a, e) => a + THREAT[e.type], 0);
   if (total > target) { // too crowded for this point in the campaign: remove quacks in a fixed order until it fits
     for (const e of foes.slice().sort((a, b) => roll(a) - roll(b))) { if (total - THREAT[e.type] < target - 0.5) continue; e.dead = true; total -= THREAT[e.type]; if (total <= target + 0.5) break; }
@@ -3174,7 +3176,7 @@ function applyDifficulty(n) {
       if (total >= target - 0.5) break;
       const c = Math.floor((e.x + e.w / 2) / T) + [2, -2, 4, -4, 6, -6, 8, -8][pass]; if (densMul > 1 && taken.has(c)) continue; // a crowd: one new quack per column
       const r0 = Math.floor((e.y + e.h - 1) / T) - 2;
-      if (c < 24 || c >= LW - 1) continue;
+      if (c < 24 || c >= playW - 1) continue;
       const r = surf(c, Math.max(0, r0)); if (r >= LH || Math.abs(r * T - (e.y + e.h)) > T * 2) continue;
       taken.add(c); const type = allowed(e.type) ? e.type : 'grunt', q = makeEnt({ type, c, from: Math.max(0, r0) }); q.face = e.face; ents.push(q); total += THREAT[type];
     }
@@ -3535,7 +3537,7 @@ function objHit(id, n = 1) {
 }
 function callChopper() {
   const [pc, pr] = padOf();
-  chopper = { x: LW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
+  chopper = { x: playW * T + 80, y: 30, tx: pc * T, ty: pr * T - 112, floor: pr * T, state: 'arrive', t: 0 };
   showBanner('GET TO THE CHOPPER', 'Extraction pad, east side', 4);
 }
 // a new run: 10 random bros unlocked, three lives in reserve
@@ -4317,7 +4319,7 @@ function useSpecial() {
     case 'volta': P.volt = 6; fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#f2c94c' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 120, t: 0.4, max: 0.4 }); break;
     case 'gauss': for (let k = 1; k <= 20; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face, n = bullets.length, sx = P.x + (ff > 0 ? P.w + 2 : -2); bullets.push({ x: sx, y: P.y + 8, sx, vx: ff * 520, vy: rand(-5, 5), owner: 'p', dmg: 0.35 * k, tdmg: 0.6, life: 0.7, kind: 'gauss', pierce: 2, stage: 3, fixed: 1, knock: 30 }); aimShots(n, ff); sfx('shot'); }, k * 0.05); break;
     case 'anning': { // mass extinction: a meteor comes down a few tiles ahead; a red mark shows where
-      const tx = clamp(P.x + 5 + f * 90, 8, LW * T - 8);
+      const tx = clamp(P.x + 5 + f * 90, 8, playW * T - 8);
       fx.push({ kind: 'marker', x: tx, y: P.y + P.h, t: 1, max: 1 });
       bullets.push({ x: tx - f * 40, y: cam.y - 12, vx: f * 40, vy: 260, grav: 500, owner: 'p', kind: 'bomb', explode: 60, tp: 5, dmg: 20, life: 4 });
       sfx('throw'); break;
@@ -4347,7 +4349,7 @@ function useSpecial() {
 // Bohr's quantum jump: gone from here and there at once, at the first free spot up to 8 tiles ahead; a burst at both ends
 function quantumJump(f) {
   for (let d = 8 * T; d >= 2 * T; d -= 4) {
-    const nx = clamp(P.x + f * d, 0, LW * T - P.w);
+    const nx = clamp(P.x + f * d, 0, playW * T - P.w);
     for (const dy of [0, -T, T, -2 * T, 2 * T]) {
       const ny = P.y + dy;
       if (rectSolid(nx, ny, P.w, P.h) || rectAcid(nx, ny, P.w, P.h + 4) || ny < 0) continue;
@@ -4481,7 +4483,7 @@ function updateNukes(dt) {
     if (!n.boom) {
       if (!n.landed) { // a short arc; it stops on the first floor it meets
         n.vy = Math.min(n.vy + G * dt, 500);
-        const nx = n.x + n.vx * dt; if (solidPx(nx, n.y - 3)) n.vx = -n.vx * 0.3; else n.x = clamp(nx, 4, LW * T - 4);
+        const nx = n.x + n.vx * dt; if (solidPx(nx, n.y - 3)) n.vx = -n.vx * 0.3; else n.x = clamp(nx, 4, playW * T - 4);
         const ny = n.y + n.vy * dt;
         if (n.vy > 0 && solidPx(n.x, ny)) { n.y = Math.floor(ny / T) * T; n.landed = true; n.vx = n.vy = 0; sfx('thud', n.x); }
         else if (n.vy < 0 && solidPx(n.x, ny - 6)) n.vy = 0; else n.y = ny;
@@ -4571,10 +4573,10 @@ function resetEvents(n) {
   nukes = []; quake = 0; whiteT = 0; ashT = 0; ev = null; evClock = 0; evPlan = null;
   if (mode !== 'campaign' || n < 2 || n >= LEVELS.length || evRoll(n, 0) > 0.3 + 0.6 * campaignDiff(n).p) return;
   const pool = EVENTS.filter((k) => (k !== 'meteor' || ['edge', 'astro', 'moon'].includes(theme.name)) && (k !== 'blackout' || theme.ambient >= 0.3));
-  const B = ents.find((e) => BOSS[e.type] && e.ax0 !== undefined), end = B ? B.ax0 - 20 : LW - 50;
+  const B = ents.find((e) => BOSS[e.type] && e.ax0 !== undefined), end = B ? B.ax0 - 20 : playW - 50;
   evPlan = { name: pool[Math.floor(evRoll(n, 1) * pool.length)], col: 30 + evRoll(n, 2) * Math.max(10, end - 40), minT: 8, maxT: 75 };
 }
-const bossFight = () => ents.some((e) => BOSS[e.type] && !e.dead && (e.active || (e.ax0 !== undefined && P.x > (e.ax0 - 16) * T && P.x < ((e.ax1 || LW) + 2) * T)));
+const bossFight = () => ents.some((e) => BOSS[e.type] && !e.dead && (e.active || (e.ax0 !== undefined && P.x > (e.ax0 - 16) * T && P.x < ((e.ax1 || playW) + 2) * T)));
 const evQuiet = () => mode !== 'campaign' || level >= LEVELS.length || state !== 'play' || ceasefire > 0 || grace > 0 || !P.alive || P.chute || !!chopper || bossFight();
 function updateEvents(dt) {
   updateNukes(dt);
@@ -4600,10 +4602,10 @@ function startEvent(name) {
 // the top of the open air over column c at the bro's height (row 0 under open sky, else the row under the roof)
 function openAbove(c) { let r = clamp(Math.floor((P.y + 8) / T), 1, LH - 2); while (r > 0 && isSolidT(tileAt(c, r))) r--; while (r > 0 && !isSolidT(tileAt(c, r - 1))) r--; return r; }
 // where something dropping in over x starts: above the top of the screen, or just under a rock roof
-const skyY = (x, up = 0) => { const r = openAbove(clamp(Math.floor(x / T), 0, LW - 1)); return r > 0 ? Math.max(cam.y - 24 - up, r * T + 2) : cam.y - 24 - up; };
+const skyY = (x, up = 0) => { const r = openAbove(clamp(Math.floor(x / T), 0, playW - 1)); return r > 0 ? Math.max(cam.y - 24 - up, r * T + 2) : cam.y - 24 - up; };
 const EV_START = {
   oppenbro(E) {
-    const x = clamp(P.x + 110, cam.x + 30, LW * T - 40), o = makeEnt({ type: 'oppie', c: 0, y: skyY(x) });
+    const x = clamp(P.x + 110, cam.x + 30, playW * T - 40), o = makeEnt({ type: 'oppie', c: 0, y: skyY(x) });
     o.x = x; o.chute = true; o.state = 'drop'; o.face = -1; o.st = 0; ents.push(o); E.o = o;
     showBanner('ROBERT OPPENBRO', 'Dr. Oppenbro drops in with a gadget', 2.4); sfx('flag');
   },
@@ -4615,7 +4617,7 @@ const EV_START = {
     E.crates = [];
     const kinds = [['guncrate'], ['ammo']]; if (Math.random() < 0.35) kinds.push(['itemcrate', 'life']);
     kinds.forEach(([type, item], k) => {
-      const x = clamp(P.x + 60 + k * 26, cam.x + 20, LW * T - 30), e = makeEnt({ type, c: 0, y: skyY(x, k * 18), item });
+      const x = clamp(P.x + 60 + k * 26, cam.x + 20, playW * T - 30), e = makeEnt({ type, c: 0, y: skyY(x, k * 18), item });
       e.x = x; e.dropping = true; if (type === 'guncrate') e.gun = Object.keys(GUNS)[(Math.random() * Object.keys(GUNS).length) | 0]; ents.push(e); E.crates.push(e);
     });
     showBanner('SUPPLY DROP', 'crates coming down ahead: break them open', 2.2); sfx('flag');
@@ -4630,7 +4632,7 @@ const EV_START = {
     showBanner('AMBUSH!', 'League paratroopers on both sides', 2.2); sfx('raid');
   },
   golden(E) {
-    const c = clamp(Math.floor((P.x + 8 * T) / T), 2, LW - 3), g = makeEnt({ type: 'golden', c, from: openAbove(c) });
+    const c = clamp(Math.floor((P.x + 8 * T) / T), 2, playW - 3), g = makeEnt({ type: 'golden', c, from: openAbove(c) });
     g.face = 1; g.tracked = true; g.cool = 0; ents.push(g); E.g = g;
     showBanner('GOLDEN QUACK!', 'it carries a spare bro: catch it before it gets away', 2.4); sfx('gold');
   },
@@ -4673,7 +4675,7 @@ const EV_RUN = {
     E.next -= dt;
     if (E.n > 0 && E.next <= 0) { // a red mark first, the rock a second later
       E.n--; E.next = rand(0.35, 0.65);
-      const tx = E.n % 3 === 0 ? P.x + 5 + rand(-40, 40) : cam.x + rand(20, VW - 20), c = clamp(Math.floor(tx / T), 0, LW - 1), ty = surf(c, openAbove(c)) * T;
+      const tx = E.n % 3 === 0 ? P.x + 5 + rand(-40, 40) : cam.x + rand(20, VW - 20), c = clamp(Math.floor(tx / T), 0, playW - 1), ty = surf(c, openAbove(c)) * T;
       if (ty < LH * T) { fx.push({ kind: 'marker', x: tx, y: ty, t: 1, max: 1 }); E.rocks.push({ tx, ty, x0: tx + 140, y0: cam.y - 30, t: 1 }); sfx('meteor', tx); }
     }
     for (const r of E.rocks) {
@@ -4726,7 +4728,7 @@ function updateEventEnt(e, dt) {
       break;
     case 'plant': e.vx = 0; e.kneel = true; if (e.y <= LH * T) moveBody(e, dt);
       if (e.st > 0.5 || e.y > LH * T) {
-        const n = plantNuke(clamp(e.x + 5, 4, LW * T - 4), Math.min(e.y + e.h + 0.01, (LH - 2) * T), 'npc', 4); n.ev = ev; n.landed = false;
+        const n = plantNuke(clamp(e.x + 5, 4, playW * T - 4), Math.min(e.y + e.h + 0.01, (LH - 2) * T), 'npc', 4); n.ev = ev; n.landed = false;
         e.kneel = false; e.state = 'run'; e.st = 0; e.face = P.x + 5 < n.x ? -1 : -e.face; say('GET CLEAR!');
         showBanner('GET CLEAR!', 'stay out of the red ring', 2); sfx('alert');
       }
@@ -4866,7 +4868,7 @@ function mapInput() {
 function markReached(n) { if (n > reached) { reached = Math.min(LEVELS.length - 1, n); try { localStorage.setItem('sciencebros.reached', String(reached)); } catch (e) { /* storage blocked */ } } }
 function attract(dt) {
   if (state === 'title') {
-    cam.x += 26 * dt; if (cam.x > LW * T - VW) cam.x = 0;
+    cam.x += 26 * dt; if (cam.x > playW * T - VW) cam.x = 0;
     cam.y = clamp(12 * T - VH * 0.58, 0, LH * T - VH);
     attractT -= dt;
     if (attractT <= 0) {
@@ -4948,7 +4950,7 @@ function step(dt) {
 
   // camera
   if (P.alive || P.ride) {
-    const tx = clamp(P.x + P.w / 2 - VW / 2 + P.face * 40, 0, LW * T - VW);
+    const tx = clamp(P.x + P.w / 2 - VW / 2 + P.face * 40, 0, playW * T - VW);
     const ty = clamp(P.y - VH * 0.58, 0, camBottom());
     cam.x += (tx - cam.x) * Math.min(1, dt * 5);
     cam.y += (ty - cam.y) * Math.min(1, dt * 4);
@@ -5045,7 +5047,7 @@ function updatePlayer(dt) {
   const vy0 = P.vy, wasGround = P.onGround;
   moveBody(P, dt);
   P.rp += P.vx * P.face * dt * 0.09; // walking backwards plays the stride backwards
-  P.x = clamp(P.x, 0, LW * T - P.w);
+  P.x = clamp(P.x, 0, playW * T - P.w);
   if (P.onGround && P.pound > 0) groundPound();
   else if (P.onGround && !wasGround && vy0 > 200) { // landing: dust and a squash
     for (let i = 0; i < vy0 / 70; i++) part(P.x + 5 + rand(-4, 4), P.y + P.h, rand(-70, 70), rand(-25, -5), theme.dust, rand(0.25, 0.5), rand(2, 4), 0, 'smoke');
@@ -5626,7 +5628,7 @@ function yogiBlink(e) {
   const ds = [-7, -6, -5, -4, 4, 5, 6, 7].sort(() => Math.random() - 0.5);
   for (const d of ds) {
     const nx = e.x + d * T, cx = nx + e.w / 2;
-    if (nx < cam.x + 12 || nx + e.w > cam.x + VW - 12 || nx < 8 || nx > LW * T - 24 || Math.abs(nx - P.x) < 24 || Math.abs(nx - P.x) > 9 * T) continue; // stays in your sight
+    if (nx < cam.x + 12 || nx + e.w > cam.x + VW - 12 || nx < 8 || nx > playW * T - 24 || Math.abs(nx - P.x) < 24 || Math.abs(nx - P.x) > 9 * T) continue; // stays in your sight
     if ([e.y + 1, e.y + 8, e.y + e.h - 2].some((y) => solidPx(cx, y) || solidPx(cx - 4, y) || solidPx(cx + 4, y)) || !solidPx(cx, e.y + e.h + 3) || rectAcid(cx - 3, e.y + e.h, 6, 6)) continue;
     for (let i = 0; i < 10; i++) part(e.x + rand(0, e.w), e.y + rand(0, e.h), rand(-30, 30), rand(-60, 10), '#e6e2f0', 0.4, 2);
     e.x = nx; e.vx = 0; e.vy = 0; e.kx = 0;
@@ -5638,7 +5640,7 @@ function yogiBlink(e) {
 // the pinboard guy's wall: two crate blocks, shot or blown away to get through
 function pinWall(e) {
   const c = Math.floor((e.x + e.w / 2) / T) + e.face * 3, r0 = Math.floor((e.y + e.h - 1) / T), cells = [[c, r0], [c, r0 - 1]];
-  if (c < 1 || c >= LW - 1 || !isSolidT(tileAt(c, r0 + 1)) || cells.some(([cc, rr]) => tileAt(cc, rr) !== EMPTY || overlap(P, { x: cc * T, y: rr * T, w: T, h: T }) || ents.some((o) => !o.dead && o !== e && overlap(o, { x: cc * T, y: rr * T, w: T, h: T })))) return false;
+  if (c < 1 || c >= playW - 1 || !isSolidT(tileAt(c, r0 + 1)) || cells.some(([cc, rr]) => tileAt(cc, rr) !== EMPTY || overlap(P, { x: cc * T, y: rr * T, w: T, h: T }) || ents.some((o) => !o.dead && o !== e && overlap(o, { x: cc * T, y: rr * T, w: T, h: T })))) return false;
   for (const [cc, rr] of cells) { tiles[rr * LW + cc] = CRATE; thp[rr * LW + cc] = TILE_HP[CRATE]; }
   miniDirty = true; e.fence = cells; e.builds = (e.builds || 0) + 1; sfx('clink', e.x); floatText(e.x + e.w / 2, e.y - 12, 'IT ALL CONNECTS', '#d9534f');
   for (let i = 0; i < 8; i++) part(c * T + rand(0, T), r0 * T + rand(-T, T), rand(-30, 30), rand(-60, -10), '#d9534f', 0.4, 1);
@@ -5834,7 +5836,7 @@ function updateMechSuit(dt) {
   }
   const vy0 = P.vy, was = P.onGround, wp0 = M.wp;
   moveBody(P, dt);
-  P.x = clamp(P.x, 0, LW * T - P.w);
+  P.x = clamp(P.x, 0, playW * T - P.w);
   M.wp += Math.abs(P.vx) * dt * 0.07;
   if (P.onGround && Math.floor(M.wp * 2) !== Math.floor(wp0 * 2)) { shake = Math.min(10, shake + 0.6); sfx('thud'); }
   if (P.onGround && !was && vy0 > 300) { // stomp
@@ -6888,7 +6890,7 @@ function updateBullets(dt, edt) {
     b.px = undefined; if (!b.rain) sfx('splash');
   }
   blame = 'e'; bossMul = 1;
-  bullets = bullets.filter((b) => !b.dead && b.x > -50 && b.x < LW * T + 50 && b.y < LH * T + 50 && b.y > -400);
+  bullets = bullets.filter((b) => !b.dead && b.x > -50 && b.x < playW * T + 50 && b.y < LH * T + 50 && b.y > -400);
 }
 function updateFx(dt, edt) {
   for (const f of fx) {
@@ -7261,7 +7263,7 @@ function drawBackground(t) {
   }
 }
 function viewTiles() {
-  return [Math.max(0, Math.floor(cam.x / T)), Math.min(LW - 1, Math.floor((cam.x + VW) / T)), Math.max(0, Math.floor(cam.y / T)), Math.min(LH - 1, Math.floor((cam.y + VH) / T))];
+  return [Math.max(0, Math.floor(cam.x / T)), Math.min(playW - 1, Math.floor((cam.x + VW) / T)), Math.max(0, Math.floor(cam.y / T)), Math.min(LH - 1, Math.floor((cam.y + VH) / T))];
 }
 function drawBackWalls() {
   drawUnder();
@@ -8450,14 +8452,14 @@ function mapMarks(g, ox, oy, k, c0, c1, blink) {
 }
 function drawMinimap(t) {
   if (miniDirty) updateMini();
-  const w = 104, h = GH, ox = VW - w - 6, oy = VH - h - 8, c0 = clamp(Math.floor(P.x / T) - w / 2, 0, LW - w), r0 = clamp(Math.floor(P.y / T) - 16, 0, LH - GH); // underground the window follows you down
+  const w = 104, h = GH, ox = VW - w - 6, oy = VH - h - 8, c0 = clamp(Math.floor(P.x / T) - w / 2, 0, playW - w), r0 = clamp(Math.floor(P.y / T) - 16, 0, LH - GH); // underground the window follows you down
   ctx.fillStyle = 'rgba(11,14,31,0.7)'; ctx.fillRect(ox - 2, oy - 2, w + 4, h + 4);
   ctx.drawImage(MINI, c0, r0, w, h, ox, oy, w, h);
   ctx.save(); ctx.beginPath(); ctx.rect(ox - 2, oy - 2, w + 4, h + 4); ctx.clip(); mapMarks(ctx, ox, oy - r0, 1, c0, c0 + w, Math.floor(t * 4) % 2); ctx.restore();
 }
 function drawFullMap(t) {
   if (miniDirty) updateMini();
-  const half = Math.ceil(LW / 2), k = Math.min(2, Math.floor(((VW - 40) / half) * 4) / 4), w = Math.round(half * k), ox = Math.round((VW - w) / 2), mr = mapRows(), oy = 112 - (mr - GH) * k * 2, h = mr * k * 2 + 6; // the level in two strips, the first half above the second (taller and higher up when it goes underground)
+  const half = Math.ceil(playW / 2), k = Math.min(2, Math.floor(((VW - 40) / half) * 4) / 4), w = Math.round(half * k), ox = Math.round((VW - w) / 2), mr = mapRows(), oy = 112 - (mr - GH) * k * 2, h = mr * k * 2 + 6; // the level in two strips, the first half above the second (taller and higher up when it goes underground)
   ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
   ctx.imageSmoothingEnabled = false;
   for (const [i, c0] of [[0, 0], [1, half]]) { const y = oy + i * (mr * k + 6); ctx.drawImage(MINI, c0, 0, half, mr, ox, y, w, mr * k); mapMarks(ctx, ox, y, k, c0, c0 + half, Math.floor(t * 4) % 2); }
@@ -9019,7 +9021,7 @@ function collectLights(t) {
   for (const p of plants) if (p.kind === 'mushroom' && !p.cut && !p.gone && theme.name === 'cave') light(p.x, p.y - p.h, 16, '#b3a6ff', 0.4);
   for (const d of decor) if (!d.gone && d.kind === 'crystal') light(d.c * T + 8, d.r * T - 8, 44, '#e78ac3', 0.55 + Math.sin(t * 2 + d.seed) * 0.1);
   // acid glows along its surface
-  const c0 = Math.max(0, Math.floor(cam.x / T)), c1 = Math.min(LW - 1, Math.floor((cam.x + VW) / T)), r0 = Math.max(1, Math.floor(cam.y / T)), r1 = Math.min(LH - 1, Math.floor((cam.y + VH) / T));
+  const c0 = Math.max(0, Math.floor(cam.x / T)), c1 = Math.min(playW - 1, Math.floor((cam.x + VW) / T)), r0 = Math.max(1, Math.floor(cam.y / T)), r1 = Math.min(LH - 1, Math.floor((cam.y + VH) / T));
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c += 2) if (tiles[r * LW + c] === ACID && tiles[(r - 1) * LW + c] !== ACID) light(c * T + 8, r * T + 2, 30, theme.acid[1], 0.5);
   if (chopper) light(chopper.x, chopper.y + 40, 70, '#fff6c2', 0.5);
   eventLights(t);
@@ -9069,7 +9071,7 @@ function groundBelow(x, y) { const c = Math.floor(x / T); let r = Math.max(0, Ma
 function seedLife() {
   plants = []; critters = []; sproutAt = new Map(); lifeT = 0; birdT = 4;
   const L = lifeOf(), tops = [];
-  for (let c = 0; c < LW; c++) for (let r = 1; r < LH - 1; r++) {
+  for (let c = 0; c < playW; c++) for (let r = 1; r < LH - 1; r++) {
     const v = tileAt(c, r), up = tileAt(c, r - 1);
     if (isSolidT(v) && up === EMPTY) {
       tops.push([c, r]);
@@ -9082,8 +9084,8 @@ function seedLife() {
       plants.push({ kind: 'vine', x: c * T + 3 + Math.random() * 10, y: r * T + T, c, r, h: 10 + Math.random() * 26, bend: 0, vb: 0, seed: Math.random() * 9, cut: false, regrow: 0, grow: 1 });
   }
   if (!L.critters.length || !tops.length) return;
-  const roofs = []; for (let c = 0; c < LW; c++) for (let r = 2; r < LH - 2; r++) if (isSolidT(tileAt(c, r - 1)) && tileAt(c, r) === EMPTY && tileAt(c, r + 1) === EMPTY) roofs.push([c, r]);
-  for (let k = 0; k < Math.round(LW / 5); k++) {
+  const roofs = []; for (let c = 0; c < playW; c++) for (let r = 2; r < LH - 2; r++) if (isSolidT(tileAt(c, r - 1)) && tileAt(c, r) === EMPTY && tileAt(c, r + 1) === EMPTY) roofs.push([c, r]);
+  for (let k = 0; k < Math.round(playW / 5); k++) {
     const kind = L.critters[(Math.random() * L.critters.length) | 0];
     if (kind === 'bat') { if (!roofs.length) continue; const [c, r] = roofs[(Math.random() * roofs.length) | 0]; critters.push(newCritter(kind, c * T + 8, r * T + 3)); continue; }
     const [c, r] = tops[(Math.random() * tops.length) | 0];
@@ -9795,7 +9797,7 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
-if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, stretchPlan: () => stretchPlan }); // longer maps hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, OLD_STRETCH, stretchW: () => stretchW, playW: () => playW, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, stretchPlan: () => stretchPlan }); // longer maps hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { genLevel, startRandom, newSeed, SEG_META, ARENA_META, ARENA_DEFAULT, GEN_ARENA, GEN_SEG, RANDOM_FOES, GEN_DIFF, RANDOM, TITLE_MENU, pauseItems, genSeed: () => genSeed, setGenDiff(k) { genDiffKey = k; }, genDiffKey: () => genDiffKey, setUrlSeed(v) { urlSeed = v; } }); // random map hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks

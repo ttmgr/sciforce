@@ -35,9 +35,9 @@ const floating = () => {
   const out = []; for (let i = 0; i < N; i++) if (loose(at(i)) && !seen[i]) out.push([i % LW, Math.floor(i / LW)]); return out;
 };
 const inZone = (c) => S.ugZones().some((z) => c >= z.c0 - 1 && c <= z.c1 + 1);
-// a whole level: earth and bedrock under every column solid at row 21; nothing floats; nothing in a wall
+// a whole level: earth and bedrock under every column solid at row 21 (up to playW: past it the map reads as steel); nothing floats; nothing in a wall
 const sound = (tag, bad) => {
-  let holes = 0; for (let c = 0; c < LW; c++) if (solid(S.tileAt(c, GH - 1)) && !S.deep(c) && (S.tileAt(c, LH - 1) !== 3 || S.tileAt(c, GH + 3) !== 1)) holes++;
+  let holes = 0; for (let c = 0; c < S.playW(); c++) if (solid(S.tileAt(c, GH - 1)) && !S.deep(c) && (S.tileAt(c, LH - 1) !== 3 || S.tileAt(c, GH + 3) !== 1)) holes++;
   if (holes) bad.earth.push(tag + ':' + holes);
   const fl = floating().filter(([c, r]) => r >= GH || inZone(c)); if (fl.length) bad.float.push(tag + ':' + fl.map((p) => p.join(',')).join('/'));
   const F = S.fancy ? S.fancy() : null; // the fancy-map decoration: on solid ground with room over it underground, and nothing standing behind the playfield down there
