@@ -2802,7 +2802,7 @@ const DESTRUCT = {
   frost: { p: 0.3, shape: 'chip', m: 'glass' }, wavelet: { p: 0.6, shape: 'chip' }, wlet: { p: 0.2, shape: 'chip' }, pend: { p: 0.3, shape: 'punch' }, // Kelvin's frost makes ice and crates brittle; Huygens' wave and wavelets chip, his pendulum smashes
   petal: { p: 0.25, shape: 'chip', m: 'soft' }, psi: { p: 0.9, shape: 'punch' }, catbox: { p: 1, r: 1, shape: 'round', m: 'acid' }, // Nightingale's petals scuff; Schrodinger's real shot punches, the box blows a crater
   fib: { p: 0.45, shape: 'chip' }, rabbit: { p: 0.35, shape: 'chip', m: 'soft' }, gene: { p: 0.5, shape: 'chip', m: 'soft' }, cob: { p: 0.8, r: 0.9, shape: 'round', m: 'soft' }, kernel: { p: 0.25, shape: 'chip' }, // Fibonacci's shots chip, his rabbits dig; McClintock's genes and kernels scuff, the cob pops a small crater
-  benzene: { p: 0.35, shape: 'chip', m: 'acid' }, snake: { shape: 'none' }, tag: { p: 0.4, shape: 'punch', m: 'soft' }, microbe: { p: 0.3, shape: 'eat', m: 'soft' }, // Kekule's ring grinds earth like acid, the snake passes over blocks; Linnaeus' tags pin through; the microbes eat earth
+  benzene: { p: 1, shape: 'chip', m: 'acid' }, snake: { shape: 'none' }, tag: { p: 0.4, shape: 'punch', m: 'soft' }, microbe: { p: 0.3, shape: 'eat', m: 'soft' }, // Kekule's ring grinds earth like acid, the snake passes over blocks; Linnaeus' tags pin through; the microbes eat earth
   tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo', s: 0.5 }, rocket: { p: 1.3, r: 1.2, shape: 'round', s: 0.45 }, bomb: { p: 1.2, r: 1.2, shape: 'round', s: 0.5 }, // s: steel power. Only these heavy weapons dent steel (10 hp); the bedrock row and boss arenas never give
 };
 const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot

@@ -134,7 +134,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   S.P.bro = S.BRO.einstein; S.setLives(99); let far = 0;
   for (let i = 0; i < 60 * 90 && far < B.trig; i++) {
     if (i % 25 === 0) S.pressed.jump = true;
-    S.P.inv = 1e9; // the respawned bro too
+    S.P.inv = 1e9; S.P.bro = S.BRO.einstein; // the respawned bro too; a freed cage would swap in another bro, so the result would hang on the bro pool
     step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3, up: i % 240 < 30 });
     if (S.P.alive) far = Math.max(far, S.P.x / T);
   }
