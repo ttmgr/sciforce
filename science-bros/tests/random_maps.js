@@ -126,13 +126,13 @@ for (let seed = 1; seed <= 400 && !(usedPiece && usedArena); seed++) {
 delete S.SEG.testyard; delete S.ARENA.testarena;
 check('an undescribed new piece and arena get picked with default settings', usedPiece && usedArena);
 
-// ---- the bot: right, jump, fire as Einstein, invulnerable; it must reach the boss within 90 s on 95% of the seeds
-let ok = 0; const missed = [];
+// ---- the bot: right, jump, fire as Einstein, invulnerable; it must reach the boss within 90 s per 376 columns of map on 95% of the seeds
+const SECS = Math.round((90 * S.LW) / 376); let ok = 0; const missed = [];
 for (let seed = 1; seed <= SEEDS; seed++) {
   S.startRandom(seed, true); S.endCeasefire(); step();
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
   S.P.bro = S.BRO.einstein; S.setLives(99); let far = 0;
-  for (let i = 0; i < 60 * 90 && far < B.trig; i++) {
+  for (let i = 0; i < 60 * SECS && far < B.trig; i++) {
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9; // the respawned bro too
     step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3, up: i % 240 < 30 });
@@ -140,7 +140,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   }
   if (far >= B.trig) ok++; else missed.push(seed + '@' + far.toFixed(0));
 }
-check('a simple bot reaches the boss within 90 s on at least 95% of ' + SEEDS + ' seeds', ok >= SEEDS * 0.95, ok + ' of ' + SEEDS + (missed.length ? ', missed ' + missed.join(' ') : ''));
+check('a simple bot reaches the boss within ' + SECS + ' s on at least 95% of ' + SEEDS + ' seeds', ok >= SEEDS * 0.95, ok + ' of ' + SEEDS + (missed.length ? ', missed ' + missed.join(' ') : ''));
 
 console.log(fails ? fails + ' check(s) failed' : 'all random map checks passed');
 process.exit(fails ? 1 : 0);

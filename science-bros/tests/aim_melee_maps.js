@@ -107,7 +107,7 @@ check('Mass extinction drops a meteor on the quack ahead', q2.hp < 999, (999 - q
 
 // ---- longer maps
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
-check('the map is 376 columns wide (was 236)', S.LW === 376);
+check('the map is 560 columns wide (was 236, then 376)', S.LW === 560);
 for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const L = S.levelDef(l), tag = L.name;
   S.startLevel(l); S.endCeasefire(); step();
@@ -115,8 +115,8 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const cut = S.cutAt(), inGap = (e) => e.x >= cut * T && e.x < (cut + S.STRETCH) * T;
   const foes = S.ents.filter((e) => inGap(e) && !e.dead && !['flag', 'ammo', 'icicle'].includes(e.type) && !BOSSES.includes(e.type)).length;
   const flags = S.ents.filter((e) => inGap(e) && e.type === 'flag').length;
-  check(tag + ': the boss arena starts 140 columns later', S.isStretched() && B.ax0 >= cut + S.STRETCH && B.trig >= cut + S.STRETCH, 'ax0 ' + B.ax0 + ' trig ' + B.trig);
-  check(tag + ': the new stretch has quacks and two checkpoint flags', foes >= 5 && flags === 2, foes + ' quacks, ' + flags + ' flags');
+  check(tag + ': the boss arena starts ' + S.STRETCH + ' columns later', S.isStretched() && B.ax0 >= cut + S.STRETCH && B.trig >= cut + S.STRETCH, 'ax0 ' + B.ax0 + ' trig ' + B.trig);
+  check(tag + ': the new stretch has quacks and four checkpoint flags', foes >= 5 && flags === 4, foes + ' quacks, ' + flags + ' flags');
   check(tag + ': the extraction pad moved with the arena', S.padOf()[0] === S.levelDef(l).pad[0] + S.STRETCH);
   // a bot that runs right and jumps gets from the end of the old path through the stretch into the arena (invulnerable)
   S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag') e.dead = true; });
