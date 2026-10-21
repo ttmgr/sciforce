@@ -4304,7 +4304,7 @@ function respawn() {
 // Oppenbro's Trinity: a device counts down inside a red ring, then a white flash, a fireball, a crater, shockwaves,
 // a mushroom cloud and falling ash. Inside the ring nothing lives; outside it the bro is thrown but safe.
 // Bosses take ten small hits over a second, a quarter of their health in all.
-const NUKE_R = 80, NUKE_BOX = [330, 220], NUKE_HOLE = [6.5, 3.6, 5]; // ring radius; kill box half-size (px); crater half-width, depth and height (tiles)
+const NUKE_R = 120, NUKE_BOX = [495, 330], NUKE_HOLE = [10, 5.4, 7.5], NUKE_S = 1.5; // ring radius; kill box half-size (px); crater half-width, depth and height (tiles); size of the cloud, fireball and shockwaves
 let nukes = [], quake = 0, whiteT = 0, ashT = 0;
 const specMax = (b) => (b && b.id === 'oppenheimer' ? 1 : 3); // Oppenbro gets one nuke per life
 const ASH = Array.from({ length: 60 }, () => [Math.random() * VW, Math.random() * VH, rand(0.5, 1.4)]);
@@ -4344,19 +4344,19 @@ function detonate(n) {
   const x = n.x, y = n.y - 6;
   n.boom = true; n.pulses = 10; n.pulseT = 0; n.budget = new Map();
   const ob = blame; blame = n.owner === 'p' ? 'p' : 'e';
-  whiteT = 1.1; ashT = 10; quake = 2.6; hitStop = Math.max(hitStop, 0.16); shake = Math.min(24, shake + 18);
-  sfx('nuke', x); rumble(1, 1800); lifeBlast(x, y, 200);
-  fx.push({ kind: 'flash', x, y, r: 90, t: 0.9, max: 0.9, lobes: Array.from({ length: 8 }, () => [rand(0, 6.3), rand(0.4, 0.8), rand(0.4, 0.65)]) });
-  for (const [r, t] of [[260, 0.5], [420, 0.9], [580, 1.3]]) fx.push({ kind: 'shock', x, y, r, t, max: t });
+  whiteT = 1.65; ashT = 15; quake = 3.9; hitStop = Math.max(hitStop, 0.16); shake = Math.min(24, shake + 18);
+  sfx('nuke', x); rumble(1, 1800); lifeBlast(x, y, 300);
+  fx.push({ kind: 'flash', x, y, r: 90 * NUKE_S, t: 0.9, max: 0.9, lobes: Array.from({ length: 8 }, () => [rand(0, 6.3), rand(0.4, 0.8), rand(0.4, 0.65)]) });
+  for (const [r, t] of [[390, 0.5], [630, 0.9], [870, 1.3]]) fx.push({ kind: 'shock', x, y, r, t, max: t });
   fx.push({ kind: 'ring', x, y, r: NUKE_R, t: 0.7, max: 0.7 }); fx.push({ kind: 'mushroom', x, y: n.y, t: 7.5, max: 7.5 });
-  for (let i = 0; i < 70; i++) { const a = rand(0, 6.3), s = rand(80, 420); part(x, y, Math.cos(a) * s, Math.sin(a) * s - 60, ['#ffffff', '#fff6c2', '#f2c94c', '#f29e4c'][i % 4], rand(0.4, 1), 2, 220, i % 2 ? 'spark' : 'p'); }
-  for (let i = 0; i < 24; i++) part(x + rand(-70, 70), y + rand(-30, 10), rand(-40, 40), rand(-50, -10), i % 2 ? '#4b4766' : '#36324d', rand(1.5, 3), rand(6, 11), 0, 'smoke');
-  for (let i = 0; i < 18; i++) part(x + rand(-60, 60), y + rand(-20, 10), rand(-50, 50), rand(-90, -30), '', rand(0.6, 1.4), 2, 0, 'fire');
+  for (let i = 0; i < 105; i++) { const a = rand(0, 6.3), s = rand(120, 630); part(x, y, Math.cos(a) * s, Math.sin(a) * s - 60, ['#ffffff', '#fff6c2', '#f2c94c', '#f29e4c'][i % 4], rand(0.4, 1), 2, 220, i % 2 ? 'spark' : 'p'); }
+  for (let i = 0; i < 36; i++) part(x + rand(-105, 105), y + rand(-45, 15), rand(-40, 40), rand(-50, -10), i % 2 ? '#4b4766' : '#36324d', rand(1.5, 3), rand(6, 11), 0, 'smoke');
+  for (let i = 0; i < 27; i++) part(x + rand(-90, 90), y + rand(-30, 15), rand(-50, 50), rand(-90, -30), '', rand(0.6, 1.4), 2, 0, 'fire');
   for (const b of bullets) if (b.owner === 'e' && Math.abs(b.x - x) < NUKE_BOX[0] + 80) b.dead = true; // shots in the air are blown away
   const [px, py] = center(P), inside = P.alive && Math.hypot(px - x, py - y) < NUKE_R && P.inv <= 0 && n.owner !== 'p'; // your own nuke only throws you
   if (P.alive && !inside) { // outside the ring: thrown, but nothing the blast sets off can kill him for a moment
     P.inv = Math.max(P.inv, 1.2);
-    const k = clamp(1 - Math.hypot(px - x, py - y) / 420, 0, 1) * 420; P.vx += Math.sign(px - x || 1) * k; P.vy = Math.min(P.vy, -k * 0.5);
+    const k = clamp(1 - Math.hypot(px - x, py - y) / 630, 0, 1) * 420; P.vx += Math.sign(px - x || 1) * k; P.vy = Math.min(P.vy, -k * 0.5);
   }
   for (const e of ents) { // everything ordinary in the blast dies; bosses are hit over the next second
     if (e.dead || !HITTABLE[e.type] || BOSS[e.type]) continue;
@@ -4366,9 +4366,9 @@ function detonate(n) {
     hitEnemy(e, 999, Math.sign(dx || 1) * 380, Math.hypot(dx, dy) < NUKE_R * 1.4 ? 'gib' : 'burn');
   }
   crater(x, n.y);
-  pushBodies(x, y, 420, 700);
+  pushBodies(x, y, 630, 1050);
   for (const b of bodies) if (b.kind === 'corpse' && Math.hypot(b.x - x, b.y - y) < NUKE_R) gibBody(b);
-  for (const L of lamps) if (!L.fall && Math.abs(L.c * T + 8 - x) < 400) L.va += Math.sign(L.c * T + 8 - x || 1) * 18;
+  for (const L of lamps) if (!L.fall && Math.abs(L.c * T + 8 - x) < 600) L.va += Math.sign(L.c * T + 8 - x || 1) * 18;
   for (const dd of decor) if (!dd.gone && Math.hypot(dd.c * T + 8 - x, dd.r * T - 10 - y) < NUKE_R * 1.3) { dd.gone = true; topple(dd); }
   blame = ob;
   if (inside) killPlayer(P.mech ? 'crush' : 'gib'); // inside the ring nothing lives
@@ -4644,6 +4644,7 @@ function drawEventsWorld(t) {
 }
 // the cloud: a stem and a rolling cap that rise for two seconds, glow orange early, then cool to grey and fade
 function drawMushroom(f) {
+  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(NUKE_S, NUKE_S); ctx.translate(-f.x, -f.y);
   const age = f.max - f.t, rise = 1 - Math.pow(1 - Math.min(1, age / 2.4), 3), fade = Math.min(1, f.t / 2), hot = Math.max(0, 1 - age / 1.8);
   const top = f.y - 30 - rise * 96, w = 14 + rise * 28, x = f.x + Math.sin(age * 0.5) * 2 * rise;
   const body = mixHex('#f29e4c', '#5a4e58', 1 - hot), lit = mixHex('#fff6c2', '#8a7e86', 1 - hot), dark = mixHex('#b8433f', '#3a3240', 1 - hot);
@@ -4658,7 +4659,7 @@ function drawMushroom(f) {
   ctx.fillStyle = lit;
   for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(x + (i - 2) * w * 0.26, top - w * 0.18 - (i % 2) * 3, w * 0.24, 0, 7); ctx.fill(); }
   if (hot > 0) { ctx.globalAlpha = hot * 0.7; ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(x, f.y - 8, 18 * hot + 6, 0, 7); ctx.fill(); }
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; ctx.restore();
 }
 // screen-space: the white flash, ash, the event label and countdowns
 function drawEventHud(t) {
@@ -4679,7 +4680,7 @@ function drawEventHud(t) {
 function eventLights(t) {
   if (evDark() > 0) for (const L of lights) if (L[3] === null) L[4] *= 0.3; // in a blackout the bro barely sees himself
   for (const n of nukes) if (!n.boom) light(n.x, n.y - 4, n.blink > 0 ? 40 : 18, '#ff3a2a', 0.9);
-  for (const f of fx) if (f.kind === 'mushroom') { const age = f.max - f.t, hot = Math.max(0, 1 - age / 1.8); light(f.x, f.y - 40 - Math.min(1, age / 2.4) * 80, 90 + 120 * hot, '#f29e4c', 0.4 + 0.6 * hot); }
+  for (const f of fx) if (f.kind === 'mushroom') { const age = f.max - f.t, hot = Math.max(0, 1 - age / 1.8); light(f.x, f.y - 60 - Math.min(1, age / 2.4) * 120, 135 + 180 * hot, '#f29e4c', 0.4 + 0.6 * hot); }
   if (!ev) return;
   if (ev.name === 'meteor') for (const r of ev.rocks) light(r.x, r.y, 26, '#f29e4c', 0.9);
   if (ev.name === 'airstrike') for (const p of ev.planes) light(p.x + 20, p.y, 30, '#f29e4c', 0.8);
@@ -9589,7 +9590,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, ar
 if (window.__SB_TEST__) Object.assign(window.__SB__, { genLevel, startRandom, newSeed, SEG_META, ARENA_META, ARENA_DEFAULT, GEN_ARENA, GEN_SEG, RANDOM_FOES, GEN_DIFF, RANDOM, TITLE_MENU, pauseItems, genSeed: () => genSeed, setGenDiff(k) { genDiffKey = k; }, genDiffKey: () => genDiffKey, setUrlSeed(v) { urlSeed = v; } }); // random map hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
-if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startEvent(n), ev: () => ev, evLog: () => evLog, evPlan: () => evPlan, skipEvClock: (s) => { evClock += s; }, nukes: () => nukes, plantNuke, EVENTS, NUKE_R, NUKE_BOX, NUKE_HOLE, quake: () => quake, specMax, evDark, flash: () => whiteT, ash: () => ashT }); // special event and Trinity hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWater, fxWorld, fxEdge, blastExtras }); // extra visuals hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
