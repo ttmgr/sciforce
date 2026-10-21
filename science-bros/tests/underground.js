@@ -22,7 +22,7 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
 const FOE = S.RANDOM_FOES.map((f) => f[0]).concat(['para', 'turret']);
-const LW = S.LW, LH = S.LH, GH = S.GH, NL = 18;
+const LW = S.LW, LH = S.LH, GH = S.GH, NL = S.nLevels;
 const solid = (v) => v !== 0 && v !== 5 && v !== 7;
 const drew = (map) => { try { S.keys.map = !!map; S.render(1); S.keys.map = false; return true; } catch (err) { console.log(err); return false; } };
 const inWall = () => S.ents.filter((e) => !BOSSES.includes(e.type) && e.type !== 'icicle' && e.type !== 'drone' && e.type !== 'flag' && [1, 2, 3, 4, 6].includes(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h / 2) / T))));
@@ -59,7 +59,7 @@ check('every mission and mode: earth down to a steel bedrock at row 39 under the
 check('every mission and mode: nothing floats at the start', !bad.float.length && S.checkCollapse() === 0, bad.float.join(' '));
 check('every mission and mode: nothing spawns inside a wall, no decoration floats or stands behind the underground', !bad.wall.length, bad.wall.join(' '));
 check('several campaign stretches get an underground detour', stretchZones.length >= 8, stretchZones.length + ' missions: ' + stretchZones.join(','));
-check('two missions also go underground in their main part, past the middle', mainZones.join(',') === '9,12' && [8, 11].every((l) => (S.startLevel(l), S.ugZones().every((o) => o.c0 > 90))), mainZones.join(','));
+check('four missions also go underground in their main part, past the middle (Zodiac, Pyramid, and the hand-made mall and volcano)', mainZones.join(',') === '9,12,18,19' && [8, 11, 17, 18].every((l) => (S.startLevel(l), S.ugZones().every((o) => o.c0 > 90))), mainZones.join(','));
 
 // ---- 2. what is down there, in the campaign stretches
 let stretchFoes = 0, stretchLoot = 0, stretchCages = 0, shafts = 0;

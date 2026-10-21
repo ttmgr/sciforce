@@ -32,7 +32,7 @@ const barkCount = S.QUACK_BARKS.spot.length + S.QUACK_BARKS.hit.length + S.QUACK
 check('quack barks: 40 generic plus 12 for special types', barkCount === 52, barkCount);
 const bros = S.BROS.map((b) => b.id);
 check('every bro has a kill shout, a special line and a respawn line', bros.every((id) => S.BRO_LINES[id] && S.BRO_LINES[id].k && S.BRO_LINES[id].s && S.BRO_LINES[id].r) && Object.keys(S.BRO_LINES).length === bros.length, bros.length + ' bros, ' + Object.keys(S.BRO_LINES).length + ' entries');
-check('radio chatter has 16 lines, event radio has 3 extra lines per event, 28 tips, 54 level signs', S.RADIO_CHATTER.length === 16 && Object.keys(S.EVENT_EXTRA).length === 7 && Object.values(S.EVENT_EXTRA).every((a) => a.length === 3) && S.PAUSE_TIPS.length === 28 && Object.values(S.WIT_SIGNS).flat().length === 54);
+check('radio chatter has 16 lines, event radio has 3 extra lines per event, 28 tips, 60 level signs', S.RADIO_CHATTER.length === 16 && Object.keys(S.EVENT_EXTRA).length === 7 && Object.values(S.EVENT_EXTRA).every((a) => a.length === 3) && S.PAUSE_TIPS.length === 28 && Object.values(S.WIT_SIGNS).flat().length === 60);
 check('every campaign mission has its three signs', Array.from({ length: N }, (_, l) => S.levelDef(l).name).every((n) => (S.WIT_SIGNS[n] || []).length === 3));
 check('every event has extra radio lines', Object.keys(S.EVENT_RADIO).every((k) => S.EVENT_EXTRA[k]));
 

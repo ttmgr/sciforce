@@ -86,7 +86,8 @@ const OLD = [38, 43, 46, 46, 51, 51, 49, 48, 50, 53, 54, 60, 57, 60, 67, 64, 63,
 S = boot(); // a fresh game that loads the saved NORMAL / 100%
 check('the saved 100% setting is loaded', S.density() === 1 && S.DIFFS[S.difficulty()].name === 'NORMAL');
 const cnt = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); cnt.push(quacks().length); }
-const ratio = cnt.reduce((a, b) => a + b) / OLD.reduce((a, b) => a + b), per = cnt.map((c, i) => c / OLD[i]);
+const same = cnt.filter((c, l) => l < OLD.length - 1 || l === S.nLevels - 1); // the missions 7fd836a also had: the first 17 and the Citadel (the two new ones sit between)
+const ratio = same.reduce((a, b) => a + b) / OLD.reduce((a, b) => a + b), per = same.map((c, i) => c / OLD[i]);
 console.log('(quacks per mission now ' + cnt.join(' ') + '; before ' + OLD.join(' ') + '; ratio ' + ratio.toFixed(3) + ')');
 check('NORMAL / 100% holds about 1.5x the quacks of before (1.4 to 1.6 over the campaign)', ratio >= 1.4 && ratio <= 1.6, ratio.toFixed(3));
 check('and every mission got between 1.3x and 1.7x', per.every((r) => r >= 1.3 && r <= 1.7), per.map((r) => r.toFixed(2)).join(' '));

@@ -1,4 +1,4 @@
-// Headless checks for the one-time remake of the 18 campaign missions: missions 1-7 got new terrain, placement and
+// Headless checks for the one-time remake of the 18 older campaign missions (missions 18 and 19 came later and are checked here too, from part 2 on): missions 1-7 got new terrain, placement and
 // decoration, missions 8-18 lighter but visible changes, measured against a fingerprint of each mission's hand-made base
 // (the columns before the boss arena) as it was before the remake. Every mission still builds the same way twice, keeps
 // its theme, boss and objectives, has a safe start, keeps its cages, intel and targets where a bro can get to them, has
@@ -14,7 +14,8 @@ const pad = { buttons: Array.from({ length: 18 }, () => ({ pressed: false })), a
 const navigator = { getGamepads: () => [pad] };
 const win = { __SB_TEST__: true };
 // a seeded Math.random, so the bot runs play out the same way every time
-const M = Object.create(Math); { let a = 4242; M.random = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+let seedA = 4242; const reseed = (v) => { seedA = v; }; // each bot run starts from its own seed, so adding missions (more random draws before it) does not move it
+const M = Object.create(Math); { M.random = () => { const a = seedA = (seedA + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const sb = { window: win, document: doc, navigator, addEventListener: noop, performance: { now: () => Date.now() }, requestAnimationFrame: noop, console, Math: M, setTimeout, Set, Map, Array, Object, String, Float32Array, Uint8Array, Promise };
 vm.createContext(sb); vm.runInContext(src, sb);
 const S = win.__SB__, T = S.T;
@@ -90,7 +91,8 @@ const reach = () => {
 };
 const THREAT = S.THREAT, FLY = ['jetpack', 'camdrone', 'drone', 'icicle', 'flag', 'dronecaller', ...BOSSES];
 
-check('the campaign still has 18 missions', N === 18 && OLD.length === 18, N);
+check('the campaign has 20 missions, 18 of them remade (the Citadel is still last)', N === 20 && OLD.length === 18 && S.levelDef(N - 1).name === 'CITRUS CITADEL', N);
+const remade = (i) => (i === OLD.length - 1 ? N - 1 : i); // the fingerprint's mission: the Citadel moved from 18th to last
 
 // ---- 1. the remake: missions 1-7 changed a lot, 8-18 changed some
 // "changed" for a column: its 22 tiles hash differently from before (columns next to an underground zone are left out). "kept" for a spawn or a decoration: the same type at
@@ -98,13 +100,14 @@ check('the campaign still has 18 missions', N === 18 && OLD.length === 18, N);
 // their old spawns kept in place; missions 8-18 need at least 5% of their columns changed and at most 85% of their old spawns kept.
 S.setRamp(false);
 const summary = [];
-for (let l = 0; l < N; l++) {
-  S.startLevel(l); const [theme, boss, obj, cages, cut, cols, sp, dc] = OLD[l], L = S.levelDef(l), tag = (l + 1) + ' ' + L.name;
+for (let i = 0; i < OLD.length; i++) {
+  const l = remade(i);
+  S.startLevel(l); const [theme, boss, obj, cages, cut, cols, sp, dc] = OLD[i], L = S.levelDef(l), tag = (l + 1) + ' ' + L.name;
   let changed = 0, n = 0; for (let c = 0; c < cut; c++) { const was = cols.slice(c * 2, c * 2 + 2); if (was === '--' || S.deep(c)) continue; n++; if (was !== colHash(c)) changed++; }
   const fc = changed / n, now = S.spawnsNow().filter((o) => o.c < cut && !o.final && (o.from || 0) < S.GH).map((o) => o.type + '@' + Math.floor(o.c)), fs2 = kept(sp.split(' '), now);
   const fd = kept(dc.split(' ').filter(Boolean), S.decor().filter((o) => o.c < cut).map((o) => o.kind + '@' + Math.floor(o.c)));
   summary.push((l + 1) + ':' + Math.round(fc * 100) + '/' + Math.round(fs2 * 100) + '/' + Math.round(fd * 100));
-  if (l < 7) check(tag + ': the base is new (at least 60% of columns changed, at most 25% of spawns in their old place)', fc >= 0.6 && fs2 <= 0.25, Math.round(fc * 100) + '% columns changed, ' + Math.round(fs2 * 100) + '% spawns kept, ' + Math.round(fd * 100) + '% decoration kept');
+  if (i < 7) check(tag + ': the base is new (at least 60% of columns changed, at most 25% of spawns in their old place)', fc >= 0.6 && fs2 <= 0.25, Math.round(fc * 100) + '% columns changed, ' + Math.round(fs2 * 100) + '% spawns kept, ' + Math.round(fd * 100) + '% decoration kept');
   else check(tag + ': the base changed (at least 5% of columns changed, at most 85% of spawns in their old place)', fc >= 0.05 && fs2 <= 0.85, Math.round(fc * 100) + '% columns changed, ' + Math.round(fs2 * 100) + '% spawns kept, ' + Math.round(fd * 100) + '% decoration kept');
   // theme, boss, objectives and cages stay what they were
   const B = S.spawnsNow().find((o) => o.final);
@@ -152,7 +155,7 @@ for (let l = 0; l < N; l++) {
 // ---- 5. a bot that runs right, jumps and fires (invulnerable, as Einstein) gets through the base of missions 1-7
 for (let l = 0; l < 7; l++) {
   const tag = (l + 1) + ' ' + S.levelDef(l).name;
-  S.startLevel(l); S.endCeasefire(); S.P.bro = S.BRO.einstein; const goal = S.cutAt() - 4; let far = 0, i = 0;
+  reseed(4242 + l); S.startLevel(l); S.endCeasefire(); S.P.bro = S.BRO.einstein; const goal = S.cutAt() - 4; let far = 0, i = 0;
   for (; i < 60 * 90 && far < goal; i++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;

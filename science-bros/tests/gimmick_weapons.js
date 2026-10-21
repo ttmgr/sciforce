@@ -154,7 +154,7 @@ for (const k of ONCES) {
 {
   const quacks = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
   const frame = (id) => {
-    seed = 7; S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(17); S.P.bro = S.BRO.einstein; S.endCeasefire();
+    seed = 7; S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(S.nLevels - 1); S.P.bro = S.BRO.einstein; S.endCeasefire();
     let best = 24, bn = 0; for (let c = 24; c < 330; c += 4) { const k = quacks().filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (k > bn) { bn = k; best = c; } }
     const near = quacks().find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60); arm(id);
     for (let i = 0; i < 30; i++) { S.P.inv = 1e9; arm(id); step({ fire: true }, true); }

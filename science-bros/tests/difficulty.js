@@ -28,8 +28,8 @@ const flat = (n = 0) => { S.startLevel(n); S.endCeasefire(); step(); for (let c 
 
 // ---- the default is normal and 100%, and plays as before
 check('the default difficulty is NORMAL and the density 100%', S.DIFFS[S.difficulty()].name === 'NORMAL' && S.density() === 1);
-for (const n of [0, 5, 11, 17]) {
-  S.reset(); S.startLevel(n); const p = n / (S.nLevels - 1), d = S.diff;
+for (const n of [0, 5, 11, 17, 18, S.nLevels - 1]) { // the ramp keeps its 18-mission spacing (n / 17, the Citadel at 1); missions 18 and 19 set their own place on it
+  S.reset(); S.startLevel(n); const L = S.levelDef(n), p = n === S.nLevels - 1 ? 1 : L.ramp !== undefined ? L.ramp : n / 17, d = S.diff;
   check('level ' + (n + 1) + ' at the default: the numbers are the campaign ramp', Math.abs(d.react - (1 - p) * 0.5) < 1e-9 && Math.abs(d.fire - (0.65 + 0.35 * p)) < 1e-9 && Math.abs(d.bossHp - (0.65 + 0.35 * p)) < 1e-9 && d.shot === 1 && d.pace === 1 && d.drop === 0);
 }
 S.reset(); check('a new game starts with 3 bros at the default', S.lives === 3);
@@ -66,8 +66,8 @@ level(0, 3, 6); check('the 10 s ceasefire still opens the level', Math.abs(S.cea
 // ---- difficulty: every step moves the numbers the right way (last mission, so the ramp is at 1)
 const row = [];
 for (let d = 0; d < 4; d++) {
-  S.setDifficulty(d, false); S.setDensity(3, false); S.reset(); S.startLevel(17); const df = S.diff, bossHp = S.boss ? S.boss.max : 0, lives = S.lives;
-  flat(17); // a grunt on flat ground 8 tiles away: time to the first shot, shots in 12 s, bullet speed and range
+  S.setDifficulty(d, false); S.setDensity(3, false); S.reset(); S.startLevel(S.nLevels - 1); const df = S.diff, bossHp = S.boss ? S.boss.max : 0, lives = S.lives;
+  flat(S.nLevels - 1); // a grunt on flat ground 8 tiles away: time to the first shot, shots in 12 s, bullet speed and range
   const g = Object.assign(S.makeEnt({ type: 'grunt', c: 38, from: 0 }), { face: -1 }); S.ents.push(g);
   let first = -1, react0 = -1, n = 0, vmax = 0, range = 0; const seen = new Set();
   for (let i = 0; i < 720; i++) {
@@ -97,7 +97,7 @@ check('bros at the start: EASY 5, NORMAL 3, HARD 3, INSANE 2', col('lives').join
   S.setDifficulty(1, false);
 }
 { const hp = []; for (const d of [0, 1, 3]) { S.setDifficulty(d, false); S.reset(); S.startMode('rush'); hp.push(S.boss.max); } check('Boss Rush: boss health follows the difficulty', inc(hp), hp.join(' < ')); S.setDifficulty(1, false); }
-{ level(17, 1, 3); S.state; const b = S.boss, h0 = b.max; S.setDifficulty(3, true); check('changing the difficulty mid-level changes the live boss health', b.max > h0 && Math.abs(b.hp / b.max - 1) < 0.01, h0 + ' -> ' + b.max); check('and the numbers quacks use right now', S.diff.fire > 1.3 && S.diff.shot > 1.1); S.setDifficulty(1, false); }
+{ level(S.nLevels - 1, 1, 3); S.state; const b = S.boss, h0 = b.max; S.setDifficulty(3, true); check('changing the difficulty mid-level changes the live boss health', b.max > h0 && Math.abs(b.hp / b.max - 1) < 0.01, h0 + ' -> ' + b.max); check('and the numbers quacks use right now', S.diff.fire > 1.3 && S.diff.shot > 1.1); S.setDifficulty(1, false); }
 
 // ---- the random mission follows the difficulty
 {
@@ -153,7 +153,7 @@ S.setDifficulty(1, false);
 // ---- frame cost at 300% (INSANE, the last mission, a real fight in its busiest 30 columns)
 {
   const fight = (d, k) => {
-  level(17, d, k); S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
+  level(S.nLevels - 1, d, k); S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
   const n300 = quacks().length; let best = 24, bn = 0;
   for (let c = 24; c < 330; c += 4) { const k = quacks().filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (k > bn) { bn = k; best = c; } }
   const near = quacks().find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60);

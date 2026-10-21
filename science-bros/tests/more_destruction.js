@@ -170,7 +170,7 @@ const cpu = (f) => { const t0 = process.cpuUsage(); f(); const u = process.cpuUs
 }
 { // INSANE at 300%, the last mission, a real fight (the setup of difficulty.js): a collapse next to the player adds under 1 ms a frame on average
   const fight = (collapse) => {
-    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(17); S.P.bro = S.BRO.einstein; S.endCeasefire();
+    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(S.nLevels - 1); S.P.bro = S.BRO.einstein; S.endCeasefire();
     let bn = 0, best = 24; const q = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
     for (let c = 24; c < 330; c += 4) { const k = q().filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (k > bn) { bn = k; best = c; } }
     const near = q().find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60); S.P.alt = { kind: 'minigun', ammo: 99999 };
