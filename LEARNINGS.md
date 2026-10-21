@@ -19,3 +19,5 @@
 - 2026-10-21 · tests — a new bro must be added to the hard-coded id and `DESTRUCT` key lists in `weapons_bosses.js` and the count in `bros.js`; many tests also use mission 1 spots (flat start at row 16, lab, tide pools) as fixtures.
 - 2026-10-21 · agents — parallel agents share one scratchpad folder; give every scratch file a per-workstream prefix, or one agent overwrites another's scripts.
 - 2026-10-21 · timing — with several agents running, load reaches 25-35 and absolute frame-time checks fail on old commits too; measure new vs base back to back on a quiet machine.
+- 2026-10-21 · page — the game's window keydown handler calls preventDefault on Tab, Enter, Space and Esc, which breaks page buttons and details/summary; page controls must stop those keys before they reach the window handler (`pageKeys()`).
+- 2026-10-21 · ladders — ladder tops now hold the bro (`moveBody`), which moves boss-test bots onto new spots; seeded boss checks can flip. Look at where the bot stands before tuning balance.
