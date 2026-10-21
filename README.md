@@ -191,7 +191,7 @@ A minimap in the bottom-right corner shows the level around you. Hold Tab for th
 
 ### Bro-Mech
 
-Walk into a parked mech (Level 1 cliff fort, Level 2 canyon, Level 3 outside the spa) to climb in. It bulldozes soft walls just by walking into them, fires a heavy gun (fire) and rockets (special), smashes through blocks with its fist (punch), shakes the ground when it lands, and takes 24 hits for you. Dash (Shift, V, L1/R1) or Down + Jump gets you out (a hint shows on screen while you are in); the empty suit stays and cannot pull you back in until you step clear of it. If it is destroyed it blows up and throws you clear.
+Walk into a parked mech (Level 1 cliff fort, Level 2 canyon, Level 3 outside the spa) to climb in. It bulldozes soft walls just by walking into them, fires a heavy gun (fire) and rockets (special), smashes through blocks with its fist (punch), shakes the ground when it lands, and takes 24 hits for you. Dash (Shift, V, L1/R1), Down + Jump or a quick double tap of Jump gets you out (a hint shows on screen while you are in); the empty suit stays and cannot pull you back in until you step clear of it. If it is destroyed it blows up and throws you clear.
 
 ### Destruction
 
