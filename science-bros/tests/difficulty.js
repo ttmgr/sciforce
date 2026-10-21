@@ -37,7 +37,7 @@ S.reset(); check('a new game starts with 3 bros at the default', S.lives === 3);
 // ---- density: more quacks at every step (campaign)
 for (const n of [2, 9, 17]) {
   const c = []; for (let k = 0; k < S.DENS.length; k++) { level(n, 1, k); c.push(quacks().length); }
-  check('level ' + (n + 1) + ': quacks grow with the density (25/50/75/100/150/200/300%)', inc(c), c.join(' < '));
+  check('level ' + (n + 1) + ': quacks grow with the density (25/50/75/100/150/200%; 300% equals 200% in the campaign, capped to keep the frame cost)', inc(c.slice(0, 6)) && c[6] >= c[5], c.join(' < '));
 }
 // ---- density never breaks the safe start and puts no quack inside a wall
 let early = 0, embedded = 0, embedded1 = 0;
