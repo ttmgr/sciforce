@@ -6697,30 +6697,6 @@ function updateTank(b, dt) {
   if (b.hp < b.max * 0.5 && Math.random() < 0.3) part(cx + rand(-20, 20), b.y + 4, rand(-10, 10), rand(-50, -20), '#36324d', rand(0.6, 1.1), rand(3, 6), 0, 'smoke');
   if (P.alive && P.inv <= 0 && overlap(P, { x: b.x + 2, y: b.y + 6, w: b.w - 4, h: b.h - 6 })) killPlayer('crush');
 }
-function drawTank(b, t) {
-  if (b.dead) return;
-  const x = Math.round(b.x), y = Math.round(b.y), fl = b.flash > 0, F = b.face;
-  // treads: a dark belt with plates that move as it drives
-  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y + b.h - 11, b.w + 2, 12);
-  ctx.fillStyle = fl ? '#fff' : '#25223a'; ctx.fillRect(x, y + b.h - 10, b.w, 10);
-  ctx.fillStyle = '#4b4766'; for (let k = 0; k < 9; k++) { const tx0 = x + ((k * 8 - Math.floor(b.tread || 0)) % b.w + b.w) % b.w; ctx.fillRect(tx0, y + b.h - 10, 3, 2); ctx.fillRect(tx0, y + b.h - 2, 3, 2); }
-  ctx.fillStyle = '#5c6480'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(x + 7 + k * 12.5, y + b.h - 5, 3, 0, 7); ctx.fill(); }
-  // hull
-  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x + 1, y + 7, b.w - 2, b.h - 16);
-  ctx.fillStyle = fl ? '#fff' : (b.p2 ? '#5a4a2a' : '#4b5a3a'); ctx.fillRect(x + 2, y + 8, b.w - 4, b.h - 18);
-  ctx.fillStyle = '#c9a227'; ctx.fillRect(x + 6, y + 11, b.w - 12, 7);
-  ctx.fillStyle = '#25223a'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('SNAKE OIL', x + b.w / 2, y + 17);
-  ctx.fillStyle = '#5c6480'; ctx.fillRect(F > 0 ? x + b.w - 4 : x - 4, y + b.h - 15, 8, 4); // flamethrower nozzle
-  // turret with Dr. Placebo in the hatch
-  const px = x + b.w / 2 - F * 6, py = y + 2;
-  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 3, py - 9, 6, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(px + F * 3, py - 7, F * 3, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(px - 1, py - 8, 1, 1);
-  ctx.fillStyle = fl ? '#fff' : '#3a4a2c'; ctx.beginPath(); ctx.arc(px, py + 5, 10, Math.PI, 0); ctx.fill(); ctx.fillRect(px - 10, py + 5, 20, 3);
-  ctx.save(); ctx.translate(px, py + 2); ctx.rotate(b.ang);
-  const kick = (b.recoil || 0) * 4;
-  ctx.fillStyle = '#25223a'; ctx.fillRect(6 - kick, -2, 18, 4); ctx.fillStyle = '#4b5a3a'; ctx.fillRect(20 - kick, -3, 5, 6);
-  ctx.restore();
-  if (b.dying > 0 && Math.floor(t * 20) % 2) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(x, y, b.w, b.h); }
-}
 // Succussion Engine: the final machine. Two hammers drop on wherever you stand (a shadow warns you), it sprays
 // diluted solution and spits out quacks. Its core is shielded until the three stabiliser vats are smashed;
 // then it shakes the whole plant, dropping rubble from the roof.
@@ -6754,26 +6730,6 @@ function updateBlimp(b, dt) {
   b.paraT -= dt;
   if (b.paraT <= 0) { b.paraT = 10; if (ents.filter((o) => o.type === 'para' && !o.dead).length < 4) for (const dx of [20, 90]) { const q = makeEnt({ type: 'para', c: 0, y: b.y + b.h }); q.x = b.x + dx; ents.push(q); } }
   if (b.hp < b.max * 0.5 && Math.random() < 0.3) part(b.x + rand(10, b.w - 10), b.y + 4, rand(-10, 10), rand(-40, -15), '#36324d', rand(0.6, 1), rand(3, 6), 0, 'smoke');
-}
-function drawBlimp(b, t) {
-  if (b.dead || !b.active) return;
-  const fl = b.flash > 0, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
-  ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); ctx.rotate(b.rot * b.dir); ctx.scale(b.dir, 1);
-  ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.ellipse(0, 0, b.w / 2 + 1, b.h / 2 + 1, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = fl ? '#fff' : '#c9c4b4'; ctx.beginPath(); ctx.ellipse(0, 0, b.w / 2, b.h / 2, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = '#a8a294'; for (let k = -2; k <= 2; k++) ctx.fillRect(k * 20 - 1, -b.h / 2 + 4, 2, b.h - 8);
-  ctx.fillStyle = '#8e2b3c'; ctx.fillRect(-30, -5, 60, 10); ctx.fillStyle = '#e6e2f0'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('FLAT', 0, 3);
-  ctx.fillStyle = '#8b93ad'; ctx.beginPath(); ctx.moveTo(-b.w / 2 + 4, 0); ctx.lineTo(-b.w / 2 - 12, -14); ctx.lineTo(-b.w / 2 - 12, 14); ctx.fill(); // tail fins
-  const pr = Math.abs(Math.sin(t * 30)) * 10 + 2; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-b.w / 2 - 14, -pr / 2, 2, pr); // propeller
-  ctx.restore();
-  for (const v of b.vats) { // gondolas
-    if (v.dead) continue;
-    ctx.fillStyle = '#5c6480'; ctx.fillRect(Math.round(v.x) + 7, Math.round(v.y) - 4, 2, 4);
-    ctx.fillStyle = '#0d0b18'; ctx.fillRect(Math.round(v.x) - 1, Math.round(v.y) - 1, v.w + 2, v.h + 2);
-    ctx.fillStyle = v.flash > 0 ? '#fff' : '#3d4560'; ctx.fillRect(Math.round(v.x), Math.round(v.y), v.w, v.h);
-    ctx.fillStyle = '#bfe9ff'; ctx.fillRect(Math.round(v.x) + 3, Math.round(v.y) + 3, 10, 3);
-    ctx.fillStyle = '#25223a'; ctx.fillRect(Math.round(v.x) + 6, Math.round(v.y) + v.h, 4, 3);
-  }
 }
 // King Citrus, the Big Bad Orange: hops at you with shockwaves, rolls across the room (dizzy when he hits a wall:
 // double damage), spits seeds, squirts juice that leaves puddles, calls in quacks, and when angry rains vitamin pills
@@ -6853,35 +6809,6 @@ function updateCitrus(b, dt) {
   if (b.hp < b.max * 0.5 && Math.random() < 0.15) part(b.x + rand(0, b.w), b.y + rand(0, b.h), 0, 30, '#f2a030', 0.5, 2, G); // dripping juice
   if (P.alive && P.inv <= 0 && overlap(P, { x: b.x + 4, y: b.y + 4, w: b.w - 8, h: b.h - 4 }) && b.state !== 'dizzy') killPlayer('crush');
 }
-function drawCitrus(b, t) {
-  if (b.dead) return;
-  const cx = Math.round(b.x + b.w / 2), cy = Math.round(b.y + b.h / 2), fl = b.flash > 0, R = 22, F = b.face;
-  // little legs, wiggling when he hops
-  ctx.fillStyle = '#25223a'; const lg = b.onGround ? 0 : 3;
-  ctx.fillRect(cx - 9, cy + R - 4 + lg, 4, 6); ctx.fillRect(cx + 5, cy + R - 4 - lg, 4, 6);
-  ctx.save(); ctx.translate(cx, cy); ctx.rotate(b.state === 'roll' || b.dying > 0 ? b.spin : 0);
-  ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.arc(0, 0, R + 1, 0, 7); ctx.fill();
-  ctx.fillStyle = fl ? '#fff' : (b.p2 ? '#e8601a' : '#f28a1a'); ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
-  ctx.fillStyle = '#d8701a'; for (let k = 0; k < 14; k++) { const a = k * 2.4, r = (k * 7) % 18; ctx.fillRect(Math.round(Math.cos(a) * r), Math.round(Math.sin(a) * r), 1, 1); } // peel dimples
-  ctx.fillStyle = '#ffb04a'; ctx.beginPath(); ctx.arc(-8, -9, 6, 0, 7); ctx.fill(); // shine
-  // face: angry brows, eyes, a mouth that opens to spit
-  const open = b.state === 'seeds' || b.state === 'juice' || b.state === 'rally';
-  ctx.fillStyle = '#25223a'; ctx.fillRect(F * 2 - 9, -7, 6, 2); ctx.fillRect(F * 2 + 3, -7, 6, 2);
-  ctx.fillRect(F * 2 - 8, -9 + (b.p2 ? 1 : 0), 5, 1); ctx.fillRect(F * 2 + 4, -10 + (b.p2 ? 1 : 0), 5, 1);
-  if (b.dizzy > 0) { ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) { const a = t * 6 + k * 2.1; ctx.fillRect(Math.round(Math.cos(a) * 14), Math.round(-R - 4 + Math.sin(a) * 3), 3, 3); } }
-  ctx.fillStyle = open ? '#3a0a0a' : '#25223a'; ctx.fillRect(F * 2 - 6, 6, 12, open ? 6 : 2);
-  if (open) { ctx.fillStyle = '#ffffff'; ctx.fillRect(F * 2 - 5, 6, 3, 2); ctx.fillRect(F * 2 + 2, 6, 3, 2); }
-  ctx.restore();
-  // stem, leaf and crown sit on top (they don't spin)
-  if (b.state !== 'roll') {
-    ctx.fillStyle = '#5a3a1a'; ctx.fillRect(cx - 1, cy - R - 4, 2, 4);
-    ctx.fillStyle = '#3f7f2a'; ctx.beginPath(); ctx.ellipse(cx + 6, cy - R - 3, 6, 3, -0.4, 0, 7); ctx.fill();
-    ctx.fillStyle = '#f2c94c'; ctx.fillRect(cx - 10, cy - R - 10, 20, 5); for (let k = 0; k < 4; k++) ctx.fillRect(cx - 10 + k * 6, cy - R - 14, 3, 4);
-    ctx.fillStyle = '#d9534f'; ctx.fillRect(cx - 1, cy - R - 9, 2, 2);
-  }
-  // stubby arms
-  ctx.fillStyle = '#f28a1a'; ctx.fillRect(cx - R - 4, cy + Math.round(Math.sin(t * 8) * 3), 5, 3); ctx.fillRect(cx + R - 1, cy - Math.round(Math.sin(t * 8) * 3), 5, 3);
-}
 // The Director: a camera on a crane. Its spotlight hunts you; stay in it and it shouts ACTION and fires.
 // It drops sandbags, calls in extras, and hides behind three studio lights. With the lights gone it swoops low.
 function updateDirector(b, dt) {
@@ -6917,27 +6844,6 @@ function updateDirector(b, dt) {
   if (b.bagT <= 0) { b.bagT = exposed ? 1.8 : 3; bullets.push({ x: px + rand(-20, 20), y: cam.y - 10, vx: 0, vy: 40, grav: G, owner: 'e', kind: 'rock', life: 5, dmg: 1 }); }
   b.cueT -= dt;
   if (b.cueT <= 0) { b.cueT = 8; floatText(b.x + b.w / 2, b.y - 6, 'CUE THE EXTRAS', '#e78ac3'); if (ents.filter((o) => o.type === 'para' && !o.dead).length < 4) for (const dx of [-60, 60]) { const q = makeEnt({ type: 'para', c: 0, y: cam.y - 20 }); q.x = clamp(px + dx, b.ax0 * T + 10, b.ax1 * T - 20); ents.push(q); } }
-}
-function drawDirector(b, t) {
-  if (b.dead || !b.active) return;
-  const x = Math.round(b.x), y = Math.round(b.y), fl = b.flash > 0;
-  ctx.fillStyle = '#25223a'; ctx.fillRect(b.ax0 * T, 2 * T, (b.ax1 - b.ax0) * T, 3); // crane rail
-  ctx.fillStyle = '#5c6480'; ctx.fillRect(x + b.w / 2 - 2, 2 * T, 4, Math.max(0, y - 2 * T)); // arm
-  // the spotlight cone down to the floor; red when it is about to fire
-  const lit = b.lock > 0.35;
-  ctx.globalAlpha = lit ? 0.22 + Math.sin(t * 40) * 0.08 : 0.12; ctx.fillStyle = lit ? '#ff6a4a' : '#fff6c2';
-  ctx.beginPath(); ctx.moveTo(x + b.w / 2, y + b.h); ctx.lineTo(b.beamX - 18, 15 * T); ctx.lineTo(b.beamX + 18, 15 * T); ctx.fill(); ctx.globalAlpha = 1;
-  ctx.fillStyle = '#0d0b18'; ctx.fillRect(x - 1, y - 1, b.w + 2, b.h + 2);
-  ctx.fillStyle = fl ? '#fff' : '#3d3d46'; ctx.fillRect(x, y, b.w, b.h); // camera body
-  ctx.fillStyle = '#25223a'; ctx.beginPath(); ctx.arc(x + 8, y - 3, 6, 0, 7); ctx.arc(x + 20, y - 3, 6, 0, 7); ctx.fill(); // film reels
-  ctx.fillStyle = '#8b93ad'; ctx.fillRect(x + (b.dir > 0 ? b.w : -8), y + 6, 8, 10); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x + (b.dir > 0 ? b.w + 6 : -8), y + 8, 2, 6); // lens
-  ctx.fillStyle = Math.floor(t * 3) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(x + 3, y + 3, 3, 3); // recording light
-  for (const v of b.vats) { // studio lights on stands
-    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 8, v.y + 14, 4, 14); continue; }
-    ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 9, v.y + 10, 2, 18); ctx.fillRect(v.x + 3, v.y + 26, 14, 2);
-    ctx.fillStyle = v.flash > 0 ? '#fff' : '#5c6480'; ctx.fillRect(v.x + 2, v.y, 16, 11);
-    ctx.fillStyle = '#fff6c2'; ctx.fillRect(v.x + 4, v.y + 2, 12, 7);
-  }
 }
 function hitVat(e, v, dmg) {
   if (blame === 'p') dmg *= bossMul;
@@ -6994,45 +6900,6 @@ function updateEngine(b, dt) {
   if (exposed) { // succussion: the whole plant shakes and rubble falls from the roof
     b.quakeT -= dt;
     if (b.quakeT <= 0) { b.quakeT = 7; shake = Math.min(14, shake + 9); sfx('roar'); for (let k = 0; k < 3; k++) bullets.push({ x: rand(b.ax0, 214) * T, y: cam.y - 10 - k * 30, vx: 0, vy: 40, grav: 600, owner: 'e', kind: 'rock', life: 4, dmg: 1 }); }
-  }
-}
-function drawEngine(b, t) {
-  if (b.dead) return;
-  const fl = b.flash > 0, sh = b.dying > 0 ? rand(-2, 2) : Math.sin(t * 40) * (b.active ? 0.6 : 0);
-  // gantry frame and pipes behind everything
-  ctx.fillStyle = '#25283a'; ctx.fillRect(213 * T, 2 * T, 2, 13 * T); ctx.fillRect(228 * T, 2 * T, 2, 13 * T); ctx.fillRect(213 * T, 2 * T, 15 * T + 2, 3);
-  ctx.fillStyle = '#3d4560'; for (let k = 0; k < 6; k++) ctx.fillRect(213 * T + k * 40, 2 * T, 2, 7 * T);
-  // the core: a glass sphere churning with nothing, shielded until the vats are gone
-  const cx = b.x + b.w / 2 + sh, cy = b.y + b.h / 2;
-  if (b.y > 9 * T - 30) { ctx.fillStyle = '#8b93ad'; for (let yy = 9 * T; yy < b.y; yy += 4) ctx.fillRect(Math.round(cx) - 1, yy, 2, 3); } // the chain it hangs from
-  ctx.fillStyle = '#5c6480'; ctx.fillRect(b.x - 2 + sh, b.y + b.h - 6, b.w + 4, 6);
-  ctx.fillStyle = fl ? '#fff' : '#bfe9ff'; ctx.beginPath(); ctx.arc(cx, cy - 2, 13, 0, 7); ctx.fill();
-  ctx.fillStyle = '#7de0f0'; for (let k = 0; k < 5; k++) { const a = t * 6 + k * 1.3; ctx.fillRect(Math.round(cx + Math.cos(a) * 7), Math.round(cy - 2 + Math.sin(a * 1.3) * 7), 2, 2); }
-  if (b.vats.some((v) => !v.dead)) { ctx.strokeStyle = '#8fd3ff'; ctx.globalAlpha = 0.4 + Math.sin(t * 8) * 0.2; ctx.beginPath(); ctx.arc(cx, cy - 2, 17, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
-  // Dr. Placebo's control booth above the core
-  ctx.fillStyle = '#25223a'; ctx.fillRect(217 * T, 3 * T, 4 * T, 2 * T); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(217 * T + 4, 3 * T + 4, 4 * T - 8, 12);
-  ctx.drawImage(RIG.guru.still[P.x > cx ? 0 : 1], 0, 0, 14, 10, 218.5 * T, 3 * T + 6, 14, 10);
-  // the stabiliser vats
-  for (const v of b.vats) {
-    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(v.x + 2, v.y + v.h - 6, 16, 6); continue; }
-    ctx.fillStyle = '#0d0b18'; ctx.fillRect(v.x - 1, v.y - 1, v.w + 2, v.h + 2);
-    ctx.fillStyle = v.flash > 0 ? '#fff' : '#5c6480'; ctx.fillRect(v.x, v.y, v.w, 4); ctx.fillRect(v.x, v.y + v.h - 4, v.w, 4);
-    ctx.fillStyle = '#1f6a7a'; ctx.fillRect(v.x + 1, v.y + 4, v.w - 2, v.h - 8);
-    const lvl = (1 - v.hp / v.max) * (v.h - 8); ctx.fillStyle = '#7de0f0'; ctx.fillRect(v.x + 1, v.y + 4 + lvl, v.w - 2, v.h - 8 - lvl);
-    ctx.fillStyle = '#dff8ff'; ctx.fillRect(v.x + 4, v.y + v.h - 8 - ((t * 25) % 14), 2, 2);
-  }
-  // hammers: a piston from the roof, with a shadow and a red line where it is about to land
-  for (const h of b.hammers) {
-    if (h.state === 'track' || h.state === 'warn') {
-      ctx.globalAlpha = h.state === 'warn' ? 0.5 + Math.sin(t * 40) * 0.3 : 0.25; ctx.fillStyle = '#ff3a2a';
-      ctx.fillRect(Math.round(h.x), cam.y, 24, VH); ctx.globalAlpha = 1;
-    }
-    const hy = Math.round(Math.max(cam.y - 10, h.y - 30) );
-    ctx.fillStyle = '#3d4560'; ctx.fillRect(Math.round(h.x) + 8, cam.y - 10, 8, Math.max(0, h.y - cam.y + 10));
-    ctx.fillStyle = '#0d0b18'; ctx.fillRect(Math.round(h.x) - 1, Math.round(h.y) - 1, 26, 42);
-    ctx.fillStyle = '#8b93ad'; ctx.fillRect(Math.round(h.x), Math.round(h.y), 24, 40);
-    ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) ctx.fillRect(Math.round(h.x) + 2 + k * 8, Math.round(h.y) + 34, 4, 4);
-    void hy;
   }
 }
 // icicle: hangs under a tile, shakes when you walk beneath it, then drops and shatters on whatever it hits
@@ -8465,84 +8332,698 @@ function drawTarget(e, t) {
   }
   if (dmg > 0.4 && Math.random() < 0.1) part(x + rand(2, 18), y + rand(2, 20), rand(-10, 10), -30, '#4b4766', 0.8, 3, 0, 'smoke');
 }
+// ---------------------------------------------------------------- boss art
+// Draw only: these functions read boss state and never change it, and never call Math.random (fhash and the clock
+// instead), so seeded tests play out the same. Wear (0 fresh, 1 wrecked) adds cracks, missing plates, sparks, smoke and
+// leaks; each attack has a tell (a charge ring, an opening hatch, a squash); the death sequence glows, sheds plates and sags.
+const bossWear = (b) => (b.dying > 0 ? 1 : clamp(1 - b.hp / b.max, 0, 1));
+const bossEl = (b) => (b.dying > 0 ? (b.type === 'kopter' ? 9 : 3.2) - b.dying : 0); // seconds into the death sequence
+const BOSS_SKIN = new Map();
+let bossMarks = 0; // how many damage and death details the boss art drew (cracks, holes, sparks, leaks, debris): read by tests/boss_art.js
+const mark = (n = 1) => { bossMarks += n; };
+// named variants get their own paint and labels (made-up names only)
+function bossSkin(b) {
+  const key = b.type + '|' + (b.bossName || ''); let s = BOSS_SKIN.get(key); if (s) return s;
+  const n = (b.bossName || '').toUpperCase(), has = (w) => n.includes(w);
+  if (b.type === 'boss') s = has('ZODIAC') ? { v: 'zodiac', half: ['#1e2a5a', '#2f4a9a', '#6a8ad8'], label: 'LEO' } : has('ZEST') ? { v: 'zest', half: ['#a8501a', '#f28a1a', '#ffb04a'], label: 'ZEST' } : has('PILLBOT') ? { v: 'pill', half: ['#8e2b3c', '#d9534f', '#ff8a7a'], label: 'PILL' } : has('GRIFT') ? { v: 'grift', half: ['#2f5a2a', '#3f8a3a', '#a6d854'], label: '$$$' } : has('WALKER') ? { v: 'walker', half: ['#3d4560', '#5c6480', '#8b93ad'], label: '30C' } : { v: 'base', half: ['#4a4580', '#7570b3', '#a6a2e0'], label: '30C' };
+  else if (b.type === 'kopter') s = has('CHEMTRAIL') ? { v: 'chem', pal: ['#6a7080', '#b4bed0', '#e6eef5', '#8fd3ff', '#8b93ad'], label: 'TAP H2O' } : has('ASTRAL') ? { v: 'astral', pal: ['#1e2a5a', '#2f4a9a', '#6a8ad8', '#e78ac3', '#25306a'], label: 'VIBES' } : has('HYPE') ? { v: 'hype', pal: ['#7a2a5a', '#c8508e', '#ffb0dc', '#8fd3ff', '#8e2b5c'], label: 'HYPE' } : has('GYRO') ? { v: 'gyro', pal: ['#7a4a1a', '#c97a2a', '#f2a24c', '#f2c94c', '#8a5a2a'], label: 'GYRO' } : { v: 'base', pal: ['#4a3d78', '#7570b3', '#a6a2e0', '#a6d854', '#5a4a8c'], label: 'DETOX' };
+  else if (b.type === 'crawler') s = has('QUARTZ') ? { v: 'quartz', seg: ['#8a6a9a', '#a888b8', '#5a3a6a', '#d8b8e8'], head: '#a070b0', xt: ['#ffd0f0', '#ffffff', '#e78ac3'], tag: '$999', crown: 5 } : has('SCARAB') ? { v: 'scarab', seg: ['#2a4a2a', '#3a5a2a', '#1a2a1a', '#6a8a3a'], head: '#2f5a2a', xt: ['#c9a227', '#f2c94c', '#8a6a1a'], tag: 'DUNG', crown: 0 } : has('SLUDGE') ? { v: 'sludge', seg: ['#3a5a2a', '#4a6a2a', '#22381a', '#7a9a3a'], head: '#4f7a2f', xt: ['#a6d854', '#7bc043', '#d8ff8a'], tag: 'PURE', crown: 3 } : has('SERPENT') ? { v: 'serpent', seg: ['#2a4a5a', '#3a6070', '#1a2a38', '#6a9aaa'], head: '#3a6a7a', xt: ['#8fd3ff', '#bfe9ff', '#66c2a5'], tag: '$99', crown: 3 } : { v: 'base', seg: ['#6a3d7a', '#7d4a8e', '#4a2a58', '#a070b0'], head: '#8e5aa0', xt: ['#e78ac3', '#b3a6ff', '#fff6c2'], tag: '$99', crown: 3 };
+  else if (b.type === 'tank') s = has('MIASMA') ? { v: 'miasma', hull: ['#2a3a1a', '#4a5a2a', '#7a8a3a'], tur: '#3a4a22', sign: 'MIASMA', smoke: '#7a9a3a', flag: '#a6d854' } : has('STEAMROLLER') ? { v: 'roller', hull: ['#5a4a1a', '#8a6a1a', '#c9a227'], tur: '#6a5a1a', sign: 'ROLLER', smoke: '#5c5870', flag: '#d9534f' } : has('STEAM') ? { v: 'steam', hull: ['#5a3418', '#a8682a', '#e0a860'], tur: '#7a4a1a', sign: 'STEAM', smoke: '#e6e2f0', flag: '#8fd3ff' } : has('HYPE TRAIN') ? { v: 'train', hull: ['#5a1a2a', '#8e2b3c', '#d9534f'], tur: '#6a1a2a', sign: 'HYPE', smoke: '#5c5870', flag: '#f2c94c' } : { v: 'base', hull: ['#2f3a24', '#4b5a3a', '#6f8452'], tur: '#3a4a2c', sign: 'SNAKE OIL', smoke: '#5c5870', flag: '#c9a227' };
+  else if (b.type === 'blimp') s = has('UFO') ? { v: 'ufo', label: 'TOTALLY REAL' } : has('DIFFUSER') ? { v: 'diffuser', label: 'PURE AROMA' } : has('BALLOON') ? { v: 'balloon', label: 'FLAT EARTH' } : { v: 'base', label: 'FLAT EARTH' };
+  else if (b.type === 'citrus') s = has('LEMON') ? { v: 'lemon', pal: ['#b8901a', '#f2d24c', '#fff09a', '#d8b83a'], sash: 'SOUR' } : has('GRAPEFRUIT') ? { v: 'grape', pal: ['#b83a3a', '#f27a5a', '#ffb09a', '#d86050'], sash: 'BITTER' } : has('TANGERINE') ? { v: 'tang', pal: ['#a8401a', '#e8601a', '#ff9a4a', '#c8541a'], sash: 'MEGA C' } : { v: 'base', pal: ['#c0601a', '#f28a1a', '#ffb04a', '#d8701a'], sash: 'MEGA C' };
+  else if (b.type === 'director') s = has('INFLUENCER') || has('STREAMER') ? { v: 'phone', label: 'LIVE' } : has('PITCHMAN') ? { v: 'pitch', label: 'TAKE 99', sign: 'PRE-ORDER NOW' } : { v: 'base', label: 'TAKE 99', sign: 'MOON SET B' };
+  else s = has('FORGE') ? { v: 'forge', sign: 'IMMUNITY: DIY', liq: ['#e8601a', '#ffb04a'] } : { v: has('SHAKER') ? 'shaker' : 'base', sign: has('SHAKER') ? 'SHAKE X1000' : 'DILUTE 10^60' }; // the forge: molten core
+  BOSS_SKIN.set(key, s); return s;
+}
+// a tiny 3x5 pixel font for labels and signs on the bosses, painted once into a small canvas and cached
+const MICRO = { A: '25755', B: '65656', C: '34443', D: '65556', E: '74647', F: '74644', G: '34553', H: '55755', I: '72227', J: '11152', K: '55655', L: '44447', M: '57755', N: '65555', O: '25552', P: '65644', Q: '25563', R: '65655', S: '34216', T: '72222', U: '55557', V: '55552', W: '55775', X: '55255', Y: '55222', Z: '71247',
+  0: '75557', 1: '26227', 2: '61247', 3: '61216', 4: '55711', 5: '74616', 6: '34757', 7: '71122', 8: '75757', 9: '75716', '!': '22202', $: '36236', '%': '51245', '.': '00002', '-': '00700', '?': '61202', '+': '02720', ':': '02020', '^': '25000', '=': '07070' };
+const MICRO_C = new Map();
+function microLabel(s, col, bg) {
+  const k = s + '|' + col + '|' + bg; let c = MICRO_C.get(k); if (c) return c;
+  c = document.createElement('canvas'); c.width = s.length * 4 + 3; c.height = 9; const g = c.getContext('2d');
+  if (bg) { g.fillStyle = bg; g.fillRect(0, 0, c.width, 9); }
+  g.fillStyle = col;
+  for (let i = 0; i < s.length; i++) { const gl = MICRO[s[i]]; if (gl) for (let r = 0; r < 5; r++) { const v = +gl[r]; for (let q = 0; q < 3; q++) if (v & (4 >> q)) g.fillRect(2 + i * 4 + q, 2 + r, 1, 1); } }
+  MICRO_C.set(k, c); return c;
+}
+const micro = (s, x, y, col, bg) => { const c = microLabel(s, col, bg); ctx.drawImage(c, Math.round(x - c.width / 2), Math.round(y)); }; // centred on x, top at y
+// short spark bursts at hashed points inside a box
+function bossSparks(x, y, w, h, n, t, key, col = '#f2c94c') {
+  mark(n);
+  for (let k = 0; k < n; k++) {
+    const cyc = t * 2.3 + k * 0.618, i = Math.floor(cyc), f = cyc - i; if (f > 0.4) continue;
+    const sx = x + fhash(key, i, k) * w, sy = y + fhash(key, i, k + 50) * h, p = f / 0.4;
+    ctx.fillStyle = p < 0.25 ? '#ffffff' : '#fff6c2'; ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 2, 2);
+    ctx.fillStyle = col; for (let j = 0; j < 4; j++) { const a = fhash(key, i, k * 7 + j) * 6.28, d = 2 + p * 9; ctx.fillRect(Math.round(sx + Math.cos(a) * d), Math.round(sy + Math.sin(a) * d * 0.7 + p * p * 8), 1, 1); }
+  }
+}
+// puffs rising from a vent, fading as they go
+function bossSmoke(x, y, n, t, key, col, rise = 24) {
+  ctx.fillStyle = col;
+  for (let k = 0; k < n; k++) { const f = (t * 0.8 + k / n + key * 0.13) % 1; ctx.globalAlpha = 0.6 * (1 - f); ctx.beginPath(); ctx.arc(x + Math.sin(f * 5 + k + key) * 2 + f * 5, y - f * rise, 1.5 + f * 4, 0, 7); ctx.fill(); }
+  ctx.globalAlpha = 1;
+}
+// jagged cracks that appear one by one as the hull takes damage
+function bossCracks(x, y, w, h, wear, key, col = '#0d0b18', most = 6) {
+  const n = Math.floor(wear * most + 0.001); if (!n) return; mark(n);
+  ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath();
+  for (let k = 0; k < n; k++) {
+    let px = Math.round(x + fhash(key, k, 1) * w) + 0.5, py = Math.round(y + fhash(key, k, 2) * h) + 0.5; ctx.moveTo(px, py);
+    for (let j = 0; j < 3; j++) { px += Math.round((fhash(key, k, j + 3) - 0.5) * 8); py += Math.round((fhash(key, k, j + 9) - 0.5) * 8); px = clamp(px, x, x + w); py = clamp(py, y, y + h); ctx.lineTo(px, py); }
+  }
+  ctx.stroke();
+}
+// a charge-up: a ring closing in on a muzzle and a hot dot at its centre
+function bossTell(x, y, k, col = '#ff5a4a') {
+  if (!(k > 0)) return; k = Math.min(1, k);
+  ctx.globalAlpha = 0.3 + k * 0.6; ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 2 + (1 - k) * 10, 0, 7); ctx.stroke();
+  ctx.fillStyle = k > 0.7 ? '#ffffff' : col; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); ctx.globalAlpha = 1;
+}
+// plates thrown off in the death sequence, one every 0.3 s
+function bossDebris(cx, cy, el, n, cols, key) {
+  mark(n);
+  for (let k = 0; k < n; k++) {
+    const s = el - k * 0.3; if (s <= 0 || s > 1.5) continue;
+    const vx = (fhash(key, k, 1) - 0.5) * 240, vy = -130 - fhash(key, k, 2) * 170;
+    ctx.save(); ctx.translate(Math.round(cx + vx * s), Math.round(cy + vy * s + 320 * s * s)); ctx.rotate(s * (5 + k));
+    ctx.fillStyle = '#0d0b18'; ctx.fillRect(-4, -3, 8, 6); ctx.fillStyle = cols[k % cols.length]; ctx.fillRect(-3, -2, 6, 4); ctx.restore();
+  }
+}
+// a hot glow building inside as it dies: orange, then white just before the final blast
+function bossGlow(cx, cy, r, el, end, t) {
+  const p = clamp(el / end, 0, 1), fl = 0.75 + Math.sin(t * 40) * 0.25; mark();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.25 * p * fl; ctx.fillStyle = '#ff6a2a'; ctx.beginPath(); ctx.arc(cx, cy, r * (0.6 + p * 0.6), 0, 7); ctx.fill();
+  ctx.globalAlpha = 0.35 * p * p * fl; ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.5 * (0.5 + p), 0, 7); ctx.fill();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+// a hull plate: lit top-left edge, shaded bottom-right, two rivets. Gone, it leaves a dark hole with cut wires
+function bossPlate(x, y, w, h, pal, gone, fl) {
+  if (gone) { mark(); ctx.fillStyle = '#0d0b18'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#2c2848'; ctx.fillRect(x + 1, y + h - 2, w - 2, 1); ctx.fillStyle = '#d9534f'; ctx.fillRect(x + 1, y + 1, 1, h - 2); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + w - 2, y + 1, 1, h - 3); return; }
+  ctx.fillStyle = fl ? '#fff' : pal[1]; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = fl ? '#fff' : pal[2]; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y, 1, h);
+  ctx.fillStyle = pal[0]; ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x + w - 1, y, 1, h); ctx.fillRect(x + 1, y + 1, 1, 1); ctx.fillRect(x + w - 2, y + 1, 1, 1);
+}
+
+// extra glows for the lighting pass: the kopter's lamps, the tank's flame, the engine core, drop-run lights, the death glow
+function bossLights(b) {
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  if (b.dying > 0) light(cx, cy, 40 + bossEl(b) * 12, '#f29e4c', 0.9);
+  if (b.type === 'kopter') light(cx, cy, 20, '#fff6c2', 0.35);
+  else if (b.type === 'tank' && (b.state === 'flame' || b.state === 'ram')) light(b.face > 0 ? b.x + b.w : b.x, b.y + 16, 30, '#f29e4c', 0.7);
+  else if (b.type === 'engine') light(cx, cy - 2, 36, b.vats.every((v) => v.dead) && b.quakeT < 1.2 ? '#ff5a4a' : '#7de0f0', 0.6);
+  else if (b.type === 'blimp' && b.dipT < 0) light(cx, b.y + b.h, 30, '#ff3a2a', 0.5);
+  else if (b.type === 'citrus' && b.state === 'megadose') light(cx, b.y - 8, 30, '#f2c94c', 0.7);
+}
+
+// Homeopathitron: a walking pill. Hydraulic legs with pistons, a lit capsule with a seam, a steam stack on its back
 function drawMech(b, t) {
   if (b.dead) return;
-  const x = Math.round(b.x), fl = b.flash > 0, floorY = Math.round(b.y) + b.h;
-  const y = Math.round(b.y) + Math.round((b.crouch || 0) * 6) + Math.round(Math.abs(Math.sin(b.wp * Math.PI * 2)) * 2);
-  // legs: hip, knee, foot. The knee bends forward; the feet swap and lift with the walk phase
+  const S = bossSkin(b), W = bossWear(b), el = bossEl(b), fl = b.flash > 0, F = b.face, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
+  const x = Math.round(b.x) - (b.flinch > 0 ? F : 0), floorY = Math.round(b.y) + b.h, sag = el > 0 ? Math.min(1, el / 2.6) : 0;
+  const y = Math.round(b.y) + Math.round((b.crouch || 0) * 6 + sag * 7) + Math.round(Math.abs(Math.sin(b.wp * Math.PI * 2)) * 2);
+  const half = b.p2 && S.v === 'base' ? ['#6a2a4a', '#b0507a', '#e07aa0'] : S.half;
+  // legs: hip, knee, foot, each with a bright piston rod; they buckle as it dies
   ctx.lineCap = 'round';
   for (const k of [1, 0]) {
-    const hx = x + (k ? 30 : 14), ph = b.wp * Math.PI * 2 + k * Math.PI, moving = b.vx !== 0;
+    const hx = x + (k ? 30 : 14), ph = b.wp * Math.PI * 2 + k * Math.PI, moving = b.vx !== 0 && !(b.dying > 0);
     const lift = !b.onGround ? 5 : moving ? Math.max(0, Math.sin(ph)) * 6 : 0;
-    const fx = hx + (moving ? Math.cos(ph) * 8 * Math.sign(b.vx) : 0), fy = floorY - lift;
-    const hy = y + 36, kx = (hx + fx) / 2 + b.face * 6, ky = (hy + fy) / 2 - 2;
-    ctx.strokeStyle = fl ? '#fff' : (k ? '#2c2848' : '#3d3560'); ctx.lineWidth = 7;
-    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy - 3); ctx.stroke();
-    ctx.fillStyle = '#8b93ad'; ctx.fillRect(Math.round(kx) - 2, Math.round(ky) - 2, 4, 4);
-    ctx.fillStyle = fl ? '#fff' : '#25223a'; ctx.fillRect(Math.round(fx) - 8, Math.round(fy) - 3, 16, 3);
+    const fx = hx + (moving ? Math.cos(ph) * 8 * Math.sign(b.vx) : 0) + (k ? 1 : -1) * sag * 3, fy = floorY - lift;
+    const hy = y + 36, kx = (hx + fx) / 2 + F * (6 + sag * 3), ky = (hy + fy) / 2 - 2 + sag * 2;
+    ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy - 3); ctx.stroke();
+    ctx.strokeStyle = C(k ? '#2c2848' : '#3d3560'); ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = C(k ? '#3d3560' : '#5a5088'); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hx - 2, hy - 1); ctx.lineTo(kx - 2, ky - 1); ctx.lineTo(fx - 2, fy - 4); ctx.stroke();
+    ctx.strokeStyle = k ? '#5c6480' : '#b4bed0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx - F * 3 + 0.5, hy + 2); ctx.lineTo((kx + fx) / 2 - F * 3 + 0.5, (ky + fy) / 2); ctx.stroke(); // piston rod
+    const KX = Math.round(kx), KY = Math.round(ky), FX = Math.round(fx), FY = Math.round(fy);
+    ctx.fillStyle = ol; ctx.fillRect(KX - 3, KY - 3, 6, 6); ctx.fillStyle = '#8b93ad'; ctx.fillRect(KX - 2, KY - 2, 4, 4); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(KX - 2, KY - 2, 1, 1);
+    ctx.fillStyle = ol; ctx.fillRect(FX - 9, FY - 5, 18, 5); ctx.fillStyle = C('#25223a'); ctx.fillRect(FX - 8, FY - 4, 16, 4);
+    ctx.fillStyle = '#4b4766'; ctx.fillRect(FX - 8, FY - 4, 16, 1); ctx.fillStyle = '#5c6480'; ctx.fillRect(FX + F * 8 - (F > 0 ? 1 : 2), FY - 3, 3, 3); // toe claw
+    if (b.state === 'jump' || (b.state === 'recover' && b.t > 0.4)) bossSmoke(hx, hy, 2, t * 2, k + 2, '#e6e2f0', 12); // the knees vent steam before a jump
   }
   ctx.lineCap = 'butt'; ctx.lineWidth = 1;
-  if (b.p2) { ctx.fillStyle = '#5c6480'; ctx.fillRect(x + 22 - b.face * 16 - 5, y - 2, 10, 9); ctx.fillStyle = '#d9534f'; for (let k = 0; k < 3; k++) ctx.fillRect(x + 22 - b.face * 16 - 4 + k * 3, y - 3, 2, 2); } // missile rack
-  // capsule body: two halves like a pill
-  ctx.fillStyle = fl ? '#fff' : '#e6e2f0';
-  ctx.beginPath(); ctx.arc(x + 22, y + 22, 18, Math.PI * 0.5, Math.PI * 1.5); ctx.lineTo(x + 22, y + 4); ctx.lineTo(x + 22, y + 40); ctx.fill();
-  ctx.fillRect(x + 4, y + 10, 18, 24);
-  ctx.fillStyle = fl ? '#fff' : (b.p2 ? '#b0507a' : '#7570b3');
-  ctx.beginPath(); ctx.arc(x + 22, y + 22, 18, -Math.PI * 0.5, Math.PI * 0.5); ctx.fill();
-  ctx.fillStyle = '#1b1d2e'; ctx.fillRect(x + 21, y + 4, 2, 36);
-  // cockpit with Dr. Placebo; the glass cracks as it takes damage
-  const cx = x + 22 + b.face * 6;
+  // hip block with hazard stripes
+  ctx.fillStyle = ol; ctx.fillRect(x + 9, y + 33, 26, 6); ctx.fillStyle = C('#3d4560'); ctx.fillRect(x + 10, y + 34, 24, 4);
+  ctx.fillStyle = '#f2c94c'; for (let i = 0; i < 5; i++) ctx.fillRect(x + 11 + i * 5, y + 34, 2, 4);
+  const bx = x + 22, by = y + 22, back = bx - F * 15;
+  // steam stack on its back: white puffs, black smoke once it is hurt
+  ctx.fillStyle = ol; ctx.fillRect(back - 3, y - 2, 6, 12); ctx.fillStyle = C('#5c6480'); ctx.fillRect(back - 2, y - 1, 4, 10); ctx.fillStyle = '#8b93ad'; ctx.fillRect(back - 2, y - 1, 1, 10);
+  bossSmoke(back, y - 3, 3, t, 1, W > 0.5 ? '#36324d' : '#d8dce8', 22);
+  if (b.p2) { // missile rack: three warheads that blink while it fires them
+    const rx = bx - F * 16 - 6; ctx.fillStyle = ol; ctx.fillRect(rx - 1, y - 3, 13, 11); ctx.fillStyle = C('#5c6480'); ctx.fillRect(rx, y - 2, 11, 9);
+    const hot = b.state === 'missiles' && Math.floor(t * 12) % 2; for (let k = 0; k < 3; k++) { ctx.fillStyle = '#e6e2f0'; ctx.fillRect(rx + 1 + k * 4, y - 1, 2, 6); ctx.fillStyle = hot ? '#ffffff' : '#d9534f'; ctx.fillRect(rx + 1 + k * 4, y - 3, 2, 2); }
+  }
+  // the capsule: a light half and a coloured half, each shaded like a sphere, clipped to the pill
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(bx, by, 19.5, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(bx, by, 18, 0, 7); ctx.clip();
+  ctx.fillStyle = C('#b8b3cc'); ctx.fillRect(bx - 18, by - 18, 18, 36);
+  ctx.fillStyle = C('#e6e2f0'); ctx.beginPath(); ctx.arc(bx - 3, by - 3, 15.5, Math.PI * 0.5, Math.PI * 1.5); ctx.lineTo(bx, by - 18); ctx.lineTo(bx, by + 12); ctx.fill();
+  ctx.fillStyle = C(half[0]); ctx.fillRect(bx, by - 18, 18, 36);
+  ctx.fillStyle = C(half[1]); ctx.beginPath(); ctx.arc(bx - 2, by - 3, 15.5, -Math.PI * 0.5, Math.PI * 0.5); ctx.fill();
+  ctx.fillStyle = C(half[2]); ctx.fillRect(bx + 3, by - 15, 7, 2); ctx.fillRect(bx + 10, by - 13, 3, 2);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(bx - 13, by - 11, 2, 7); ctx.fillRect(bx - 11, by - 14, 4, 2);
+  if (S.v === 'zodiac') { ctx.fillStyle = '#fff6c2'; for (const [sx, sy] of [[5, -8], [11, -2], [7, 6], [13, 9], [3, 12]]) ctx.fillRect(bx + sx, by + sy, 1, 1); }
+  if (S.v === 'zest') { ctx.fillStyle = '#d8701a'; for (let k = 0; k < 10; k++) ctx.fillRect(bx + 2 + Math.round(fhash(k, 4) * 13), by - 12 + Math.round(fhash(k, 5) * 24), 1, 1); }
+  ctx.restore();
+  // the seam down the middle, with bolts; it glows as the core overheats in the death sequence
+  ctx.fillStyle = el > 0 ? (el > 2.3 ? '#fff6c2' : '#ff8a2a') : ol; ctx.fillRect(bx - 1, by - 18, 2, 36);
+  ctx.fillStyle = '#8b93ad'; for (const d of [-12, 0, 12]) ctx.fillRect(bx - 1, by + d, 2, 1);
+  // front plates: the label plate and an armour plate; they come off as it takes damage
+  bossPlate(bx - 16, by + 3, 13, 9, ['#8b84a6', '#d8d4e4', '#ffffff'], W > 0.82, fl);
+  if (W <= 0.82) micro(b.p2 && S.v === 'base' ? '200C' : S.label, bx - 9.5, by + 3, '#7570b3');
+  bossPlate(bx + 5, by + 6, 9, 7, half, W > 0.55, fl);
+  // a hatch on top opens and a siren spins when it calls quacks
+  if (b.state === 'summon' && !b.summoned) { ctx.fillStyle = ol; ctx.fillRect(bx - 5, y + 1, 10, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(bx - 4, y + 2, 8, 2); ctx.fillStyle = Math.floor(t * 10) % 2 ? '#ff3a2a' : '#f2c94c'; ctx.fillRect(bx - 1, y - 2, 3, 3); }
+  // cockpit with Dr. Placebo: a framed glass dome with a glint; cracks with damage
+  const cx = bx + F * 6;
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(cx, y + 16, 9, 0, 7); ctx.fill();
   ctx.fillStyle = '#121735'; ctx.beginPath(); ctx.arc(cx, y + 16, 8, 0, 7); ctx.fill();
   ctx.fillStyle = '#e6e2f0'; ctx.fillRect(cx - 3, y + 12, 6, 6);
-  ctx.fillStyle = '#f2c94c'; ctx.fillRect(cx + b.face * 3, y + 15, b.face * 4, 2);
-  ctx.fillStyle = '#d9534f'; ctx.fillRect(cx - 2, y + 13, 1, 1); ctx.fillRect(cx + 1, y + 13, 1, 1);
-  if (b.hp < b.max * 0.5) { ctx.strokeStyle = '#bfe9ff'; ctx.beginPath(); ctx.moveTo(cx - 6, y + 11); ctx.lineTo(cx - 1, y + 16); ctx.lineTo(cx - 4, y + 21); if (b.hp < b.max * 0.25) { ctx.moveTo(cx + 2, y + 9); ctx.lineTo(cx + 5, y + 18); } ctx.stroke(); }
-  // cannon, kicking back when it fires
-  const kick = Math.round((b.recoil || 0) * 3) * b.face;
-  ctx.fillStyle = fl ? '#fff' : '#5c6480';
-  ctx.fillRect((b.face > 0 ? x + 36 : x - 4) - kick, y + 24, 12, 6);
-  ctx.fillStyle = '#f2c94c'; ctx.fillRect((b.face > 0 ? x + 46 : x - 4) - kick, y + 25, 2, 4);
-  if (b.dying > 0 && Math.floor(t * 20) % 2) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(x, y, b.w, b.h); }
-  ctx.fillStyle = '#a6d854'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center';
-  ctx.fillText(b.p2 ? '200C' : '30C', x + 13, y + 26);
+  ctx.fillStyle = '#f2c94c'; ctx.fillRect(cx + F * 3, y + 15, F * 4, 2);
+  ctx.fillStyle = b.p2 || b.state === 'jump' ? '#ff3a2a' : '#d9534f'; ctx.fillRect(cx - 2, y + 13, 1, 1); ctx.fillRect(cx + 1, y + 13, 1, 1);
+  ctx.strokeStyle = '#8fd3ff'; ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.arc(cx, y + 16, 6, -2.7, -1.7); ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 5, y + 11, 1, 1);
+  if (b.hp < b.max * 0.5) { mark(); ctx.strokeStyle = '#bfe9ff'; ctx.beginPath(); ctx.moveTo(cx - 6, y + 11); ctx.lineTo(cx - 1, y + 16); ctx.lineTo(cx - 4, y + 21); if (b.hp < b.max * 0.25) { ctx.moveTo(cx + 2, y + 9); ctx.lineTo(cx + 5, y + 18); } ctx.stroke(); }
+  // antenna with a blinking light
+  ctx.fillStyle = '#5c6480'; ctx.fillRect(bx - F * 5, y - 4, 1, 6); ctx.fillStyle = Math.floor(t * (b.p2 ? 6 : 2)) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(bx - F * 5 - 1, y - 6, 3, 2);
+  // cannon, kicking back when it fires; a charge ring before each spread
+  const kick = Math.round((b.recoil || 0) * 3) * F, gx = (F > 0 ? x + 36 : x - 4) - kick;
+  ctx.fillStyle = ol; ctx.fillRect(gx - 1, y + 23, 14, 8); ctx.fillStyle = C('#5c6480'); ctx.fillRect(gx, y + 24, 12, 6);
+  ctx.fillStyle = '#8b93ad'; ctx.fillRect(gx, y + 24, 12, 1); ctx.fillStyle = '#3d4560'; ctx.fillRect(gx, y + 28, 12, 2);
+  const mz = F > 0 ? gx + 10 : gx; ctx.fillStyle = ol; ctx.fillRect(mz - 1, y + 22, 4, 10); ctx.fillStyle = C('#3d4560'); ctx.fillRect(mz, y + 23, 2, 8);
+  ctx.fillStyle = b.recoil > 0.3 ? '#fff6c2' : '#f2c94c'; ctx.fillRect(F > 0 ? gx + 11 : gx, y + 25, 1, 4);
+  if (b.state === 'spread' && b.shots > 0) bossTell(F > 0 ? gx + 14 : gx - 2, y + 27, 1 - b.shotT / 0.36);
+  // damage: cracks, sparks from the holes, and the death sequence
+  bossCracks(bx - 15, by - 14, 30, 26, W, 3);
+  if (W > 0.45) bossSparks(bx - 14, by - 6, 28, 18, W > 0.75 ? 2 : 1, t, 5);
+  if (el > 0) { bossSparks(x + 4, y + 4, 36, 40, 4, t * 1.7, 6); bossGlow(bx, by, 26, el, 3.2, t); bossDebris(bx, by, el, 7, ['#e6e2f0', half[1], '#5c6480'], 7); }
 }
+
+// Detoxkopter: a shaded fuselage with a stripe and a label, a glass canopy, nav lights, spinning rotors that slow as it dies
 function drawKopter(b, t) {
   if (b.dead || !b.active) return;
-  const fl = b.flash > 0, dir = b.state === 'strafe' ? b.dir : (P.x > b.x + b.w / 2 ? 1 : -1);
-  ctx.save(); ctx.translate(Math.round(b.x + b.w / 2), Math.round(b.y + b.h / 2)); ctx.rotate(b.rot); ctx.scale(dir, 1);
-  ctx.fillStyle = fl ? '#fff' : '#5a4a8c'; ctx.fillRect(-48, -6, 28, 5); ctx.fillRect(-50, -15, 5, 13); // tail boom and fin
-  const tr = Math.abs(Math.sin(t * 50)) * 10 + 2; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-48 - tr / 2, -15, tr, 1); // tail rotor
-  ctx.fillStyle = fl ? '#fff' : '#7570b3'; ctx.beginPath(); ctx.ellipse(0, 0, 26, 11, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = fl ? '#fff' : '#a6d854'; ctx.fillRect(-22, 1, 30, 2);
-  ctx.fillStyle = '#bfe9ff'; ctx.beginPath(); ctx.ellipse(14, -2, 9, 6, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = '#5a4a8c'; ctx.fillRect(12, -5, 5, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(17, -3, 3, 2); // quack pilot
-  ctx.fillStyle = '#25223a'; ctx.fillRect(-18, 12, 36, 2); ctx.fillRect(-12, 9, 2, 4); ctx.fillRect(10, 9, 2, 4); // skids
-  ctx.fillStyle = '#5c6480'; ctx.fillRect(16, 7, 12, 3); ctx.fillRect(-8, 8, 10, 4); // gun pod, missile pod
-  if (b.state === 'strafe' && Math.floor(t * 30) % 2) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(28, 6, 3, 5); }
-  ctx.fillStyle = '#25223a'; ctx.fillRect(-2, -16, 4, 6);
-  const r = Math.abs(Math.sin(t * 38)) * 46 + 6;
-  ctx.globalAlpha = 0.9; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-r / 2 - 4, -17, r + 8, 2);
-  ctx.globalAlpha = 0.2; ctx.fillRect(-52, -18, 104, 3); ctx.globalAlpha = 1;
+  const S = bossSkin(b), Pl = S.pal, W = bossWear(b), el = bossEl(b), fl = b.flash > 0, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
+  const dir = b.state === 'strafe' ? b.dir : (P.x > b.x + b.w / 2 ? 1 : -1);
+  ctx.save(); ctx.translate(Math.round(b.x + b.w / 2) - (b.flinch > 0 ? dir : 0), Math.round(b.y + b.h / 2)); ctx.rotate(b.rot); ctx.scale(dir, 1);
+  if (S.v === 'chem') { ctx.globalAlpha = 0.18; ctx.fillStyle = '#e6eef5'; for (let k = 0; k < 4; k++) ctx.fillRect(-60 - k * 14, -5 + Math.round(Math.sin(t * 3 + k) * 2), 14, 4 + k); ctx.globalAlpha = 1; } // its spray trail
+  // tail boom, tapered, and the fin
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(-16, -8); ctx.lineTo(-51, -6); ctx.lineTo(-51, 0); ctx.lineTo(-16, 3); ctx.fill();
+  ctx.fillStyle = C(Pl[4]); ctx.beginPath(); ctx.moveTo(-16, -7); ctx.lineTo(-50, -5); ctx.lineTo(-50, -1); ctx.lineTo(-16, 2); ctx.fill();
+  ctx.fillStyle = C(Pl[1]); ctx.fillRect(-46, -5, 30, 1);
+  if (W < 0.6) { ctx.fillStyle = Pl[3]; ctx.fillRect(-42, -4, 8, 2); } else bossPlate(-42, -5, 7, 4, Pl, true, false); // a panel blown off the boom
+  ctx.fillStyle = ol; ctx.fillRect(-53, -17, 8, 17); ctx.fillStyle = C(Pl[4]); ctx.fillRect(-52, -16, 6, 15); ctx.fillStyle = C(Pl[1]); ctx.fillRect(-52, -16, 6, 2); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-52, -12, 6, 1);
+  ctx.fillStyle = Math.floor(t * 2.5) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(-53, -18, 2, 2); // tail light
+  // tail rotor: a blur disc and a blade
+  const ta = t * 50; ctx.globalAlpha = 0.25; ctx.fillStyle = '#e6e2f0'; ctx.beginPath(); ctx.arc(-48, -9, 7, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  const tl = Math.cos(ta) * 7; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-49, Math.round(-9 - Math.abs(tl)), 2, Math.max(1, Math.round(Math.abs(tl) * 2))); ctx.fillStyle = '#8b93ad'; ctx.fillRect(-49, -10, 2, 2);
+  // engine housing on top, with an intake grille
+  ctx.fillStyle = ol; ctx.fillRect(-15, -15, 24, 7); ctx.fillStyle = C(Pl[4]); ctx.fillRect(-14, -14, 22, 6); ctx.fillStyle = C(Pl[1]); ctx.fillRect(-14, -14, 22, 1);
+  ctx.fillStyle = '#25223a'; for (let k = 0; k < 4; k++) ctx.fillRect(-10 + k * 3, -12, 1, 3);
+  ctx.fillStyle = '#25223a'; ctx.fillRect(-17, -12, 3, 3); // exhaust
+  // fuselage: outline, then the body shaded inside its own outline
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(0, 0, 27, 12, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, 26, 11, 0, 0, 7); ctx.clip();
+  ctx.fillStyle = C(Pl[1]); ctx.fillRect(-26, -11, 52, 22);
+  ctx.fillStyle = C(Pl[0]); ctx.fillRect(-26, 4, 52, 8);
+  ctx.fillStyle = C(Pl[2]); ctx.fillRect(-20, -9, 30, 2);
+  ctx.fillStyle = C(Pl[3]); ctx.fillRect(-26, 1, 52, 2);
+  if (S.v === 'astral') { ctx.fillStyle = '#fff6c2'; for (const [sx, sy] of [[-18, -4], [-8, -6], [-2, 6], [-14, 7], [4, -3]]) ctx.fillRect(sx, sy, 1, 1); }
+  ctx.save(); ctx.scale(dir, 1); micro(S.label, dir * -8, -7, Pl[0] === '#6a7080' ? '#3d4560' : '#e6e2f0'); ctx.restore();
+  bossCracks(-24, -9, 30, 18, W, 21, '#0d0b18', 5);
   ctx.restore();
+  if (S.v === 'hype') { ctx.strokeStyle = '#ffb0dc'; ctx.globalAlpha = 0.4 + Math.sin(t * 9) * 0.25; ctx.beginPath(); ctx.ellipse(0, 0, 28.5, 13.5, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; } // neon trim
+  if (S.v === 'astral') { for (const [cx2, h] of [[-8, 7], [-2, 10], [4, 6]]) { ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(cx2 - 3, -14); ctx.lineTo(cx2, -15 - h); ctx.lineTo(cx2 + 3, -14); ctx.fill(); ctx.fillStyle = '#e78ac3'; ctx.beginPath(); ctx.moveTo(cx2 - 2, -14); ctx.lineTo(cx2, -14 - h); ctx.lineTo(cx2 + 2, -14); ctx.fill(); ctx.fillStyle = '#ffd0f0'; ctx.fillRect(cx2 - 1, -14 - h + 3, 1, h - 4); } } // crystals on the roof
+  // canopy: glass with a frame bar, the quack pilot and a glint; it cracks with damage
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(14, -2, 10, 7, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = W > 0.7 ? '#8fb9d0' : '#bfe9ff'; ctx.beginPath(); ctx.ellipse(14, -2, 9, 6, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#8fd3ff'; ctx.fillRect(7, 1, 16, 2);
+  ctx.fillStyle = '#5a4a8c'; ctx.fillRect(12, -5, 5, 6); ctx.fillStyle = '#f2c94c'; ctx.fillRect(17, -3, 3, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(15, -4, 1, 1);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(17, -7, 3, 1); ctx.fillRect(20, -6, 1, 1); ctx.fillStyle = ol; ctx.fillRect(9, -8, 1, 10);
+  if (W > 0.5) { mark(); ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(18.5, -7); ctx.lineTo(15.5, -2); ctx.lineTo(19.5, 2); if (W > 0.8) { ctx.moveTo(12.5, -7); ctx.lineTo(10.5, 0); } ctx.stroke(); }
+  ctx.fillStyle = '#fff6c2'; ctx.fillRect(25, 2, 2, 2); // nose light
+  // skids on struts
+  ctx.fillStyle = ol; ctx.fillRect(-19, 11, 39, 3); ctx.fillRect(-13, 7, 4, 6); ctx.fillRect(9, 7, 4, 6);
+  ctx.fillStyle = C('#5c6480'); ctx.fillRect(-18, 12, 37, 1); ctx.fillRect(18, 10, 2, 2); ctx.fillRect(-12, 8, 2, 4); ctx.fillRect(10, 8, 2, 4);
+  // gun pod: the barrels spin while it strafes
+  ctx.fillStyle = ol; ctx.fillRect(15, 6, 15, 5); ctx.fillStyle = C('#3d4560'); ctx.fillRect(16, 7, 13, 3);
+  const spin = b.state === 'strafe' ? Math.floor(t * 30) % 2 : 0; ctx.fillStyle = spin ? '#8b93ad' : '#25223a'; ctx.fillRect(24, 7, 5, 1); ctx.fillStyle = spin ? '#25223a' : '#8b93ad'; ctx.fillRect(24, 9, 5, 1);
+  if (b.state === 'strafe' && Math.floor(t * 30) % 2) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(29, 6, 3, 5); ctx.fillStyle = '#f29e4c'; ctx.fillRect(32, 7, 2, 3); }
+  // missile pod: two red tips; it charges before each missile in a hover
+  ctx.fillStyle = ol; ctx.fillRect(-9, 7, 13, 6); ctx.fillStyle = C('#5c6480'); ctx.fillRect(-8, 8, 11, 4); ctx.fillStyle = '#d9534f'; ctx.fillRect(2, 8, 2, 1); ctx.fillRect(2, 10, 2, 1);
+  if (b.state === 'hover' && b.shots > 0) bossTell(5, 10, 1 - b.shotT / 0.7);
+  if (b.state === 'bomb' && b.shots > 0) { ctx.fillStyle = ol; ctx.fillRect(-4, 10, 9, 3); ctx.fillStyle = '#25223a'; ctx.fillRect(-2, 11, 5, 3); ctx.fillStyle = Math.floor(t * 8) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(0, 13, 1, 1); } // bomb bay open
+  ctx.fillStyle = Math.floor(t * 2.5 + 0.5) % 2 ? '#66c2a5' : '#1f4a3a'; ctx.fillRect(-4, 11, 2, 1); // belly light
+  // main rotor: mast, hub, a blur disc and two blades; they slow down and wobble as it dies
+  ctx.fillStyle = ol; ctx.fillRect(-3, -19, 6, 6); ctx.fillStyle = C('#25223a'); ctx.fillRect(-2, -18, 4, 5);
+  const rate = el > 0 ? 38 * Math.max(0.12, 1 - el / 2.2) : 38, ra = t * rate, wob = W > 0.75 ? Math.round(Math.sin(t * 17)) : 0;
+  ctx.globalAlpha = 0.16; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-52, -19 + wob, 104, 3); ctx.globalAlpha = 1;
+  for (const j of [0, Math.PI]) { const L = Math.cos(ra + j) * 50; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(Math.round(Math.min(0, L)), -19 + wob, Math.max(1, Math.round(Math.abs(L))), 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(Math.round(L) - (L < 0 ? 0 : 2), -19 + wob, 2, 2); }
+  ctx.fillStyle = '#8b93ad'; ctx.fillRect(-4, -20 + wob, 8, 3); ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-4, -20 + wob, 8, 1);
+  if (W > 0.45) bossSparks(-20, -14, 28, 10, W > 0.75 ? 2 : 1, t, 22);
+  if (el > 0) { ctx.fillStyle = Math.floor(t * 20) % 2 ? '#f29e4c' : '#fff6c2'; ctx.fillRect(-16, -16, 5, 4); bossSparks(-24, -12, 46, 20, 3, t * 1.6, 23); }
+  ctx.restore();
+  if (W > 0.3 && !(el > 0)) { mark(); bossSmoke(b.x + b.w / 2 - dir * 17, b.y + 1, 2, t, 4, W > 0.6 ? '#25223a' : '#5c5870', 18); } // engine smoke
+  if (el > 0) bossGlow(b.x + b.w / 2, b.y + b.h / 2, 22, el, 1.5, t);
 }
-// drawn before the tiles, so the sand hides whatever is underground
+
+// Crystal Crawler, drawn before the tiles so the sand hides whatever is underground: shaded segments with crystal
+// shards (they snap off with damage), an armoured head with a crystal crown, mandibles, three eyes and a price tag
 function drawCrawlers(t) {
   for (const b of ents) {
     if (b.type !== 'crawler' || b.dead || !b.segs.length) continue;
+    const S = bossSkin(b), W = bossWear(b), el = bossEl(b), fl = b.flash > 0, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
     for (let i = b.segs.length - 1; i >= 0; i--) {
-      const s = b.segs[i], r = 9 - i * 0.25;
-      ctx.fillStyle = i % 2 ? '#6a3d7a' : '#7d4a8e'; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill();
-      ctx.fillStyle = '#4a2a58'; ctx.fillRect(Math.round(s.x - r + 2), Math.round(s.y + r / 2), Math.round(r * 2 - 4), 2);
-      ctx.fillStyle = i % 3 ? '#e78ac3' : '#b3a6ff'; ctx.fillRect(Math.round(s.x) - 1, Math.round(s.y - r - 3), 3, 4); // crystal spike
+      const s = b.segs[i], r = 9 - i * 0.25, sx = Math.round(s.x), sy = Math.round(s.y);
+      ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(sx, sy, r + 1, 0, 7); ctx.fill();
+      ctx.fillStyle = S.seg[2]; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+      ctx.fillStyle = S.seg[i % 2]; ctx.beginPath(); ctx.arc(sx - 1, sy - 1, r - 1.5, 0, 7); ctx.fill();
+      ctx.fillStyle = S.seg[3]; ctx.fillRect(sx - Math.round(r / 2) - 1, sy - Math.round(r / 2) - 1, 3, 2);
+      ctx.fillStyle = S.seg[2]; ctx.fillRect(Math.round(sx - r + 2), Math.round(sy + r / 2), Math.round(r * 2 - 4), 2);
+      if (S.v === 'scarab') { ctx.fillStyle = S.xt[0]; ctx.fillRect(sx - 1, Math.round(sy - r + 1), 2, Math.round(r)); } // a beetle shell: a gold ridge, no crystals
     }
-    const fl = b.flash > 0, a = Math.atan2(center(P)[1] - b.hy, center(P)[0] - b.hx), open = b.state === 'rear' || b.state === 'leap' || b.state === 'rumble';
-    ctx.fillStyle = fl ? '#fff' : '#8e5aa0'; ctx.beginPath(); ctx.arc(b.hx, b.hy, 11, 0, 7); ctx.fill();
-    for (let k = -1; k <= 1; k++) { ctx.fillStyle = '#b3a6ff'; ctx.fillRect(Math.round(b.hx - Math.cos(a) * 8 + k * 4) - 1, Math.round(b.hy - 13 - Math.abs(k) * -2), 3, 5); } // crown
-    const mx = b.hx + Math.cos(a) * 6, my = b.hy + Math.sin(a) * 6, mr = open ? 5 + Math.sin(t * 12) : 2;
+    if (S.v !== 'scarab') for (let i = b.segs.length - 1; i >= 0; i--) { // crystal shards along the back, on top of the body; they snap off with damage
+      const s = b.segs[i], q = i ? b.segs[i - 1] : { x: b.hx, y: b.hy }, r = 9 - i * 0.25, d = Math.hypot(q.x - s.x, q.y - s.y) || 1;
+      let nx = -(q.y - s.y) / d, ny = (q.x - s.x) / d; if (ny > 0) { nx = -nx; ny = -ny; }
+      const bx = s.x + nx * (r - 2), by = s.y + ny * (r - 2), h = 5 + (i % 3 === 0 ? 3 : 0) - (i > 9 ? 2 : 0), tx = bx + nx * h, ty = by + ny * h, px = -ny * 2.5, py = nx * 2.5;
+      if (fhash(7, i) < W * 0.85) { mark(); ctx.fillStyle = S.seg[2]; ctx.fillRect(Math.round(bx) - 1, Math.round(by) - 1, 3, 2); continue; }
+      ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(bx - px * 1.4, by - py * 1.4); ctx.lineTo(tx + nx, ty + ny); ctx.lineTo(bx + px * 1.4, by + py * 1.4); ctx.fill();
+      ctx.fillStyle = S.xt[i % 3 ? 0 : 1]; ctx.beginPath(); ctx.moveTo(bx - px, by - py); ctx.lineTo(tx, ty); ctx.lineTo(bx + px, by + py); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(bx + nx * 2 - px * 0.4), Math.round(by + ny * 2 - py * 0.4), 1, 1);
+    }
+    const a = Math.atan2(center(P)[1] - b.hy, center(P)[0] - b.hx), open = b.state === 'rear' || b.state === 'leap' || b.state === 'rumble' || el > 0;
+    const hx = Math.round(b.hx), hy = Math.round(b.hy), ca = Math.cos(a), sa = Math.sin(a);
+    // the head: shaded carapace with two plates
+    ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(hx, hy, 12.5, 0, 7); ctx.fill();
+    ctx.fillStyle = C(S.seg[2]); ctx.beginPath(); ctx.arc(hx, hy, 11, 0, 7); ctx.fill();
+    ctx.fillStyle = C(S.head); ctx.beginPath(); ctx.arc(hx - 1, hy - 1, 9.5, 0, 7); ctx.fill();
+    ctx.fillStyle = C(S.seg[3]); ctx.fillRect(hx - 6, hy - 8, 4, 2); ctx.fillRect(hx - 8, hy - 6, 2, 2);
+    ctx.strokeStyle = S.seg[2]; ctx.beginPath(); ctx.arc(hx, hy, 7, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
+    if (S.v === 'scarab') { ctx.fillStyle = ol; ctx.fillRect(hx - Math.round(ca * 4) - 2, hy - 17, 5, 8); ctx.fillStyle = S.xt[0]; ctx.fillRect(hx - Math.round(ca * 4) - 1, hy - 16, 3, 7); ctx.fillRect(hx - Math.round(ca * 4) + (ca > 0 ? 2 : -3), hy - 17, 2, 2); } // horn
+    // the crystal crown: shards that snap off as it takes damage
+    const nc = S.crown;
+    for (let k = 0; k < nc; k++) {
+      const off = k - (nc - 1) / 2; if (W > 0.45 + Math.abs(off) * 0.15 && off !== 0) continue;
+      const bx = hx - Math.round(ca * 5) + Math.round(off * 4), h = 7 - Math.abs(off) * 2 + (off === 0 ? 2 : 0), by = hy - 9;
+      ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(bx - 3, by + 1); ctx.lineTo(bx, by - h - 1); ctx.lineTo(bx + 3, by + 1); ctx.fill();
+      ctx.fillStyle = S.xt[off === 0 ? 1 : 0]; ctx.beginPath(); ctx.moveTo(bx - 2, by); ctx.lineTo(bx, by - h); ctx.lineTo(bx + 2, by); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(bx - 1, by - h + 2, 1, Math.max(1, h - 3));
+    }
+    if (nc && W < 0.6) { const tx = hx - Math.round(ca * 5) + Math.round((nc - 1) / 2 * 4) + 2; ctx.fillStyle = '#8b93ad'; ctx.fillRect(tx, hy - 12, 1, 4); micro(S.tag, tx + S.tag.length * 2 + 1, hy - 9, '#25223a', '#fff6c2'); } // the price tag
+    // mandibles open wide when it rears, leaps or rumbles
+    const mx = hx + ca * 7, my = hy + sa * 7, mr = open ? 5 + Math.sin(t * 12) : 2;
+    ctx.strokeStyle = ol; ctx.lineWidth = 3;
+    for (const sgn of [-1, 1]) { const ma = a + sgn * (open ? 0.9 : 0.5); ctx.beginPath(); ctx.moveTo(hx + Math.cos(ma) * 9, hy + Math.sin(ma) * 9); ctx.lineTo(hx + Math.cos(ma) * 14 + Math.cos(a) * 2, hy + Math.sin(ma) * 14 + Math.sin(a) * 2); ctx.lineTo(hx + Math.cos(a + sgn * 0.25) * 15, hy + Math.sin(a + sgn * 0.25) * 15); ctx.stroke(); }
+    ctx.strokeStyle = S.xt[2] === '#fff6c2' ? '#e6e2f0' : S.xt[2]; ctx.lineWidth = 1;
+    for (const sgn of [-1, 1]) { const ma = a + sgn * (open ? 0.9 : 0.5); ctx.beginPath(); ctx.moveTo(hx + Math.cos(ma) * 9, hy + Math.sin(ma) * 9); ctx.lineTo(hx + Math.cos(ma) * 14 + Math.cos(a) * 2, hy + Math.sin(ma) * 14 + Math.sin(a) * 2); ctx.lineTo(hx + Math.cos(a + sgn * 0.25) * 15, hy + Math.sin(a + sgn * 0.25) * 15); ctx.stroke(); }
     ctx.fillStyle = '#2a0f1f'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill();
     if (open) { ctx.fillStyle = '#e6e2f0'; for (let k = 0; k < 4; k++) { const ta = a + (k - 1.5) * 0.7; ctx.fillRect(Math.round(mx + Math.cos(ta) * mr) - 1, Math.round(my + Math.sin(ta) * mr) - 1, 2, 2); } }
-    ctx.fillStyle = '#a6d854'; for (const k of [-1, 0, 1]) ctx.fillRect(Math.round(b.hx - Math.cos(a) * 2 + Math.cos(a + Math.PI / 2) * k * 4), Math.round(b.hy - 4 + Math.sin(a + Math.PI / 2) * k * 4), 2, 2); // three eyes
+    if (b.state === 'rear' && b.spitT < 0.4) bossTell(mx, my, 1 - b.spitT / 0.4, '#a6d854'); // acid wells up before each spit
+    // three eyes: they blink now and then, and go to crosses when it dies
+    const blink = (t * 0.37 + hx * 0.001) % 1 < 0.04;
+    for (const k of [-1, 0, 1]) {
+      const ex = Math.round(hx - ca * 2 + Math.cos(a + Math.PI / 2) * k * 4), ey = Math.round(hy - 4 + Math.sin(a + Math.PI / 2) * k * 4);
+      if (el > 0) { ctx.fillStyle = '#d9534f'; ctx.fillRect(ex - 1, ey - 1, 1, 1); ctx.fillRect(ex + 1, ey - 1, 1, 1); ctx.fillRect(ex, ey, 1, 1); ctx.fillRect(ex - 1, ey + 1, 1, 1); ctx.fillRect(ex + 1, ey + 1, 1, 1); continue; }
+      ctx.fillStyle = ol; ctx.fillRect(ex - 1, ey - 1, 4, blink ? 2 : 4); ctx.fillStyle = b.state === 'rear' ? '#d8ff8a' : '#a6d854'; ctx.fillRect(ex, ey, 2, blink ? 1 : 2);
+    }
+    // damage: cracks, crystal shards flying, and drips of ichor
+    bossCracks(hx - 8, hy - 7, 15, 14, W, 11, ol, 5);
+    if (W > 0.45) bossSparks(hx - 9, hy - 9, 18, 14, W > 0.75 ? 2 : 1, t, 12, S.xt[0]);
+    if (W > 0.4) for (let k = 0; k < 2; k++) { mark(); const f = (t * 1.3 + k * 0.5) % 1; ctx.globalAlpha = 1 - f; ctx.fillStyle = S.v === 'sludge' ? '#a6d854' : '#b3a6ff'; ctx.fillRect(hx + (k ? 4 : -5), Math.round(hy + 9 + f * 14), 1, 2); } ctx.globalAlpha = 1;
+    if (el > 0) { bossGlow(hx, hy, 18, el, 3.2, t); bossDebris(hx, hy, el, 6, S.xt, 13); }
   }
+}
+
+// Snake Oil Tank: rolling treads with turning wheels, a sloped hull with skirt plates and a sign, a domed turret with
+// Dr. Placebo in the hatch, exhaust stacks, an antenna pennant and a pilot light on the flamethrower
+function drawTank(b, t) {
+  if (b.dead) return;
+  const S = bossSkin(b), H = S.hull, W = bossWear(b), el = bossEl(b), fl = b.flash > 0, F = b.face, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
+  const x = Math.round(b.x) - (b.flinch > 0 ? F : 0), y = Math.round(b.y) + (el > 0 ? Math.round(Math.min(1, el / 2.5) * 2) : 0), w = b.w, tr = b.tread || 0;
+  const X = (dx) => (F > 0 ? x + dx : x + w - dx); // dx measured from the back of the tank
+  // treads: an outlined belt with rounded ends, moving teeth, and wheels whose spokes turn as it drives
+  ctx.fillStyle = ol; ctx.fillRect(x + 4, y + 19, w - 8, 12); ctx.beginPath(); ctx.arc(x + 6, y + 25, 6, 0, 7); ctx.arc(x + w - 6, y + 25, 6, 0, 7); ctx.fill();
+  ctx.fillStyle = C('#25223a'); ctx.fillRect(x + 5, y + 20, w - 10, 10); ctx.beginPath(); ctx.arc(x + 6, y + 25, 5, 0, 7); ctx.arc(x + w - 6, y + 25, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = '#4b4766'; for (let k = 0; k < 9; k++) { const t0 = x + 4 + ((k * 7 - Math.floor(tr)) % (w - 8) + (w - 8)) % (w - 8); ctx.fillRect(t0, y + 20, 3, 1); ctx.fillRect(t0, y + 29, 3, 1); }
+  const wheel = S.v === 'train' ? '#d9534f' : '#5c6480';
+  for (let k = 0; k < 5; k++) {
+    if (S.v === 'roller' && ((F > 0 && k === 4) || (F < 0 && k === 0))) continue;
+    const wx = x + 7 + k * 12.5, wy = y + 25, an = tr / 4;
+    ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(wx, wy, 4, 0, 7); ctx.fill(); ctx.fillStyle = wheel; ctx.beginPath(); ctx.arc(wx, wy, 3, 0, 7); ctx.fill();
+    ctx.fillStyle = '#8b93ad'; ctx.fillRect(Math.round(wx) - 1, wy - 3, 2, 1); ctx.fillStyle = '#25223a'; ctx.fillRect(Math.round(wx + Math.cos(an) * 2) - 1, Math.round(wy + Math.sin(an) * 2) - 1, 2, 2); ctx.fillRect(Math.round(wx - Math.cos(an) * 2), Math.round(wy - Math.sin(an) * 2), 1, 1);
+  }
+  if (S.v === 'roller') { const rx = F > 0 ? x + w - 16 : x; ctx.fillStyle = ol; ctx.fillRect(rx - 1, y + 15, 18, 16); ctx.fillStyle = C('#8b93ad'); ctx.fillRect(rx, y + 16, 16, 14); ctx.fillStyle = '#5c6480'; for (let k = 0; k < 3; k++) ctx.fillRect(rx, y + 16 + ((k * 5 + Math.floor(tr / 2)) % 14 + 14) % 14, 16, 1); ctx.fillStyle = '#c9d4e6'; ctx.fillRect(rx, y + 17, 16, 1); } // the front roller drum
+  // skirt plates over the tread: they come off one by one
+  for (let k = 0; k < 3; k++) bossPlate(x + 6 + k * 18, y + 17, 17, 4, H, W > [0.5, 0.7, 0.86][k], fl);
+  // hull: a sloped front, lit top edge, shaded belly, rivets
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(X(1), y + 7); ctx.lineTo(X(w - 9), y + 7); ctx.lineTo(X(w), y + 13); ctx.lineTo(X(w), y + 18); ctx.lineTo(X(1), y + 18); ctx.fill();
+  ctx.fillStyle = C(H[1]); ctx.beginPath(); ctx.moveTo(X(2), y + 8); ctx.lineTo(X(w - 9), y + 8); ctx.lineTo(X(w - 1), y + 13); ctx.lineTo(X(w - 1), y + 17); ctx.lineTo(X(2), y + 17); ctx.fill();
+  ctx.fillStyle = C(H[2]); ctx.fillRect(Math.min(X(2), X(w - 9)), y + 8, w - 11, 1);
+  ctx.fillStyle = C(H[0]); ctx.fillRect(x + 2, y + 15, w - 4, 2);
+  if (S.v === 'train') { ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(X(w - 2), y + 18); ctx.lineTo(X(w + 5), y + 30); ctx.lineTo(X(w - 6), y + 30); ctx.fill(); ctx.fillStyle = '#c9a227'; for (let k = 0; k < 3; k++) ctx.fillRect(X(w - 4 + k * 2) - (F > 0 ? 0 : 1), y + 21 + k * 2, 1, 9 - k * 2); } // cowcatcher
+  // the sign, and its satire
+  ctx.fillStyle = ol; ctx.fillRect(x + 9, y + 9, w - 18, 7); ctx.fillStyle = C('#c9a227'); ctx.fillRect(x + 10, y + 10, w - 20, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 10, y + 10, w - 20, 1);
+  ctx.fillStyle = '#25223a'; ctx.font = '8px ' + FONT; ctx.textAlign = 'center'; ctx.fillText(S.sign, x + w / 2, y + 16);
+  // exhaust stacks at the back; ramming, they spit flame
+  for (const d of [3, 7]) { ctx.fillStyle = ol; ctx.fillRect(X(d) - 1, y + 1, 4, 7); ctx.fillStyle = C('#3d4560'); ctx.fillRect(X(d), y + 2, 2, 6); ctx.fillStyle = '#8b93ad'; ctx.fillRect(X(d), y + 2, 2, 1); }
+  if (b.state === 'ram' || b.state === 'flame') { ctx.fillStyle = Math.floor(t * 20) % 2 ? '#f29e4c' : '#fff6c2'; ctx.fillRect(X(3), y - 1, 2, 2); ctx.fillRect(X(7), y - 2, 2, 3); }
+  bossSmoke(X(4), y, 3, t, 21, W > 0.5 ? '#25223a' : S.smoke, 20);
+  if (S.v === 'train' || S.v === 'steam') { const sx = X(S.v === 'train' ? w - 14 : 14); ctx.fillStyle = ol; ctx.fillRect(sx - 4, y - 6, 8, 14); ctx.fillRect(sx - 5, y - 8, 10, 3); ctx.fillStyle = C(S.v === 'train' ? '#25223a' : '#c9a227'); ctx.fillRect(sx - 3, y - 5, 6, 12); ctx.fillRect(sx - 4, y - 7, 8, 1); bossSmoke(sx, y - 9, 4, t * 1.3, 8, S.smoke, 30); } // a smokestack
+  // flamethrower nozzle with a flickering pilot light (big while it sprays)
+  const nx = F > 0 ? x + w - 4 : x - 4; ctx.fillStyle = ol; ctx.fillRect(nx - 1, y + 14, 10, 6); ctx.fillStyle = C('#5c6480'); ctx.fillRect(nx, y + 15, 8, 4); ctx.fillStyle = '#8b93ad'; ctx.fillRect(nx, y + 15, 8, 1);
+  const tip = F > 0 ? nx + 8 : nx - 1, flick = Math.sin(t * 31) > 0; ctx.fillStyle = b.state === 'flame' ? '#fff6c2' : flick ? '#8fd3ff' : '#f29e4c'; ctx.fillRect(tip, y + 16, 1, 2);
+  // headlight; ramming, it blazes a cone ahead
+  ctx.fillStyle = '#fff6c2'; ctx.fillRect(X(w - 3) - 1, y + 10, 2, 2);
+  if (b.state === 'ram') { ctx.globalAlpha = 0.18; ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.moveTo(X(w - 2), y + 11); ctx.lineTo(X(w + 40), y + 4); ctx.lineTo(X(w + 40), y + 20); ctx.fill(); ctx.globalAlpha = 1; }
+  // mortar tube on the deck in the second phase, glowing while it fires
+  if (b.p2) { const mx = X(16); ctx.fillStyle = ol; ctx.fillRect(mx - 3, y - 2, 6, 10); ctx.fillStyle = C('#3d4560'); ctx.fillRect(mx - 2, y - 1, 4, 9); if (b.state === 'mortar' && b.shots > 0) bossTell(mx, y - 3, 1 - b.shotT / 0.45, '#f29e4c'); }
+  // turret: Dr. Placebo in the hatch (panicking as it dies), a lit dome, a ring of rivets, an antenna with a pennant
+  const px = x + w / 2 - F * 6, py = y + 2, panic = el > 0 && Math.floor(t * 12) % 2;
+  ctx.fillStyle = ol; ctx.fillRect(px - 8 - F * 2, py - 4, 6, 2); // the open hatch lid
+  ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 3, py - 9 - (el > 0 ? 2 : 0), 6, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(px + F * 3, py - 7 - (el > 0 ? 2 : 0), F * 3, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(px - 1, py - 8 - (el > 0 ? 2 : 0), 1, 1);
+  if (el > 0) { ctx.fillStyle = '#e6e2f0'; ctx.fillRect(px - 5, py - (panic ? 13 : 9), 2, 4); ctx.fillRect(px + 3, py - (panic ? 9 : 13), 2, 4); } // arms waving
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(px, py + 5, 11, Math.PI, 0); ctx.fill(); ctx.fillRect(px - 11, py + 5, 22, 4);
+  ctx.fillStyle = C(S.tur); ctx.beginPath(); ctx.arc(px, py + 5, 10, Math.PI, 0); ctx.fill(); ctx.fillRect(px - 10, py + 5, 20, 3);
+  ctx.fillStyle = C(H[2]); ctx.fillRect(px - 6, py - 3, 5, 1); ctx.fillRect(px - 8, py - 1, 2, 2);
+  ctx.fillStyle = '#25223a'; for (let k = -8; k <= 8; k += 4) ctx.fillRect(px + k, py + 6, 1, 1);
+  ctx.fillStyle = '#8b93ad'; ctx.fillRect(px - F * 9, py - 9, 1, 10);
+  for (let k = 0; k < 5; k++) { ctx.fillStyle = k % 2 ? S.flag : '#e6e2f0'; ctx.fillRect(px - F * 9 - F * (k + 1), py - 9 + Math.round(Math.sin(t * 9 - k * 0.8) * 1), 1, 3 - (k > 3 ? 1 : 0)); }
+  // gun barrel with a muzzle brake, recoil and a charge ring before each shell
+  ctx.save(); ctx.translate(px, py + 2); ctx.rotate(b.ang);
+  const kick = (b.recoil || 0) * 4;
+  ctx.fillStyle = ol; ctx.fillRect(5 - kick, -3, 21, 6); ctx.fillStyle = C('#25223a'); ctx.fillRect(6 - kick, -2, 18, 4); ctx.fillStyle = '#4b4766'; ctx.fillRect(6 - kick, -2, 18, 1);
+  ctx.fillStyle = ol; ctx.fillRect(20 - kick, -4, 7, 8); ctx.fillStyle = C(H[1]); ctx.fillRect(21 - kick, -3, 5, 6); ctx.fillStyle = C(H[2]); ctx.fillRect(21 - kick, -3, 5, 1);
+  ctx.restore();
+  if (b.state === 'shell' && b.shots > 0) bossTell(px + Math.cos(b.ang) * 28, py + 2 + Math.sin(b.ang) * 28, 1 - b.shotT / 0.5);
+  // damage: cracks, sparks, flames licking up from the deck at low health
+  bossCracks(x + 4, y + 8, w - 8, 9, W, 31);
+  if (W > 0.45) bossSparks(x + 4, y + 6, w - 8, 12, W > 0.75 ? 2 : 1, t, 32);
+  if (W > 0.75) for (let k = 0; k < 3; k++) { mark(); const fx2 = x + 12 + Math.round(fhash(33, k) * (w - 24)), fh = 3 + Math.round((Math.sin(t * 17 + k * 2) + 1) * 2); ctx.fillStyle = '#f29e4c'; ctx.fillRect(fx2, y + 7 - fh, 2, fh); ctx.fillStyle = '#fff6c2'; ctx.fillRect(fx2, y + 6, 2, 1); }
+  if (el > 0) { bossSparks(x, y, w, 20, 4, t * 1.7, 34); bossGlow(x + w / 2, y + 14, 30, el, 3.2, t); bossDebris(x + w / 2, y + 10, el, 8, [H[1], H[2], '#25223a'], 35); }
+}
+
+// Succussion Engine: a braced gantry with pipes and a pressure gauge, a glass core of sloshing nothing on a brass base
+// with pumping pistons, Dr. Placebo's booth with a sign, stabiliser vats with labels, and hammer pistons from the roof.
+// Positions are measured from the core, so the frame follows the arena when slideArena() moves it.
+function drawEngine(b, t) {
+  if (b.dead) return;
+  const S = bossSkin(b), W = bossWear(b), el = bossEl(b), fl = b.flash > 0, ol = '#0d0b18';
+  const sh = b.dying > 0 ? Math.round((fhash(Math.floor(t * 60), 3) - 0.5) * 4) : Math.sin(t * 40) * (b.active ? 0.6 : 0);
+  const exposed = b.vats.every((v) => v.dead), quake = exposed && b.quakeT < 1.2, G0 = Math.round(b.x - 6 * T), G1 = Math.round(b.x + 9 * T);
+  // the gantry: two braced posts and a beam with hazard stripes
+  ctx.fillStyle = '#25283a'; ctx.fillRect(G0, 2 * T, 3, 13 * T); ctx.fillRect(G1, 2 * T, 3, 13 * T); ctx.fillRect(G0, 2 * T, G1 - G0 + 3, 4);
+  ctx.fillStyle = '#3d4560'; ctx.fillRect(G0, 2 * T, 1, 13 * T); ctx.fillRect(G1, 2 * T, 1, 13 * T);
+  ctx.fillStyle = '#f2c94c'; for (let k = G0 + 4; k < G1; k += 12) ctx.fillRect(k, 2 * T + 1, 5, 2);
+  ctx.strokeStyle = '#25283a'; ctx.beginPath(); for (let yy = 3 * T; yy < 14 * T; yy += 16) { ctx.moveTo(G0 + 1.5, yy); ctx.lineTo(G0 + 7.5, yy + 8); ctx.lineTo(G0 + 1.5, yy + 16); ctx.moveTo(G1 + 1.5, yy); ctx.lineTo(G1 - 4.5, yy + 8); ctx.lineTo(G1 + 1.5, yy + 16); } ctx.stroke();
+  // pipes down from the beam, with joints that leak steam
+  for (let k = 0; k < 6; k++) { const px = G0 + k * 40; ctx.fillStyle = '#3d4560'; ctx.fillRect(px, 2 * T, 3, 7 * T); ctx.fillStyle = '#5c6480'; ctx.fillRect(px, 2 * T, 1, 7 * T); ctx.fillStyle = '#25283a'; ctx.fillRect(px - 1, 5 * T, 5, 2); }
+  bossSmoke(G0 + 81, 5 * T, 2, t, 3, '#c9d4e6', 14); if (W > 0.4) bossSmoke(G0 + 161, 5 * T, 2, t * 1.3, 5, '#c9d4e6', 14);
+  // pressure gauge: the needle creeps into the red as the core fails
+  const gx = G0 + 26, gy = 4 * T + 2; ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(gx, gy, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#e6e2f0'; ctx.beginPath(); ctx.arc(gx, gy, 6, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d9534f'; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.arc(gx, gy, 6, -0.6, 0.3); ctx.fill();
+  const na = -2.6 + W * 2.4 + Math.sin(t * 23) * (0.05 + W * 0.15); ctx.strokeStyle = '#25223a'; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(na) * 5, gy + Math.sin(na) * 5); ctx.stroke();
+  // the core: chain, a brass base with two pumping pistons, a glass sphere with sloshing liquid, a shield while the vats stand
+  const cx = b.x + b.w / 2 + sh, cy = b.y + b.h / 2, CX = Math.round(cx), CY = Math.round(cy) - 2;
+  if (b.y > 9 * T - 30) { ctx.fillStyle = '#8b93ad'; for (let yy = 9 * T; yy < b.y; yy += 4) ctx.fillRect(CX - 1, yy, 2, 3); }
+  const pump = Math.round(Math.sin(t * (quake ? 30 : 12)) * 2);
+  for (const s of [-1, 1]) { const rx = CX + s * 15; ctx.fillStyle = ol; ctx.fillRect(rx - 2, CY - 4 + pump * s, 4, 22); ctx.fillStyle = '#c9d4e6'; ctx.fillRect(rx - 1, CY - 3 + pump * s, 2, 12); ctx.fillStyle = '#5c6480'; ctx.fillRect(rx - 1, CY + 8, 2, 9); }
+  const by = Math.round(b.y + b.h - 6); ctx.fillStyle = ol; ctx.fillRect(Math.round(b.x - 3 + sh), by - 1, b.w + 6, 8); ctx.fillStyle = fl ? '#fff' : '#a8782a'; ctx.fillRect(Math.round(b.x - 2 + sh), by, b.w + 4, 6); ctx.fillStyle = '#f2c94c'; ctx.fillRect(Math.round(b.x - 2 + sh), by, b.w + 4, 1);
+  ctx.fillStyle = '#5a3a1a'; for (let k = 0; k < 4; k++) ctx.fillRect(Math.round(b.x + sh) + k * 8, by + 3, 2, 2);
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(cx, CY, 14.5, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, CY, 13, 0, 7); ctx.clip();
+  ctx.fillStyle = fl ? '#fff' : '#bfe9ff'; ctx.fillRect(cx - 13, CY - 13, 26, 26);
+  const lvl = CY + 1 + Math.round(W * 4), tilt = Math.sin(t * (quake ? 16 : 8)) * (exposed ? 5 : 3);
+  ctx.fillStyle = fl ? '#fff' : quake && Math.floor(t * 10) % 2 ? '#ff8a7a' : S.liq ? S.liq[0] : '#4fb8d0'; ctx.beginPath(); ctx.moveTo(cx - 14, lvl - tilt); ctx.lineTo(cx + 14, lvl + tilt); ctx.lineTo(cx + 14, CY + 14); ctx.lineTo(cx - 14, CY + 14); ctx.fill();
+  ctx.fillStyle = S.liq ? S.liq[1] : '#7de0f0'; ctx.beginPath(); ctx.moveTo(cx - 14, lvl - tilt); ctx.lineTo(cx + 14, lvl + tilt); ctx.lineTo(cx + 14, lvl + tilt + 2); ctx.lineTo(cx - 14, lvl - tilt + 2); ctx.fill();
+  ctx.fillStyle = '#dff8ff'; for (let k = 0; k < 5; k++) { const a = t * 6 + k * 1.3; ctx.fillRect(Math.round(cx + Math.cos(a) * 7), Math.round(CY + Math.sin(a * 1.3) * 7), 2, 2); }
+  bossCracks(cx - 12, CY - 12, 24, 24, W, 41, '#ffffff', 7);
+  ctx.restore();
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(CX - 8, CY - 9, 3, 2); ctx.fillRect(CX - 9, CY - 7, 1, 3); // glint
+  ctx.fillStyle = ol; ctx.fillRect(CX - 6, CY - 16, 12, 4); ctx.fillStyle = '#a8782a'; ctx.fillRect(CX - 5, CY - 15, 10, 2); ctx.fillStyle = '#f2c94c'; ctx.fillRect(CX - 5, CY - 15, 10, 1); // brass cap
+  if (!exposed) { ctx.strokeStyle = '#8fd3ff'; ctx.globalAlpha = 0.4 + Math.sin(t * 8) * 0.2; ctx.beginPath(); ctx.arc(cx, CY, 17, 0, 7); ctx.stroke(); ctx.globalAlpha = 0.8; ctx.fillStyle = '#dff8ff'; for (let k = 0; k < 6; k++) { const a = t * 1.5 + k * 1.047; ctx.fillRect(Math.round(cx + Math.cos(a) * 17) - 1, Math.round(CY + Math.sin(a) * 17) - 1, 2, 2); } ctx.globalAlpha = 1; }
+  if (quake) { ctx.globalAlpha = 0.3 + Math.sin(t * 30) * 0.2; ctx.strokeStyle = '#ff5a4a'; ctx.beginPath(); ctx.arc(cx, CY, 19, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; } // about to shake the plant
+  if (W > 0.4) for (let k = 0; k < 2; k++) { mark(); const f = (t * 1.1 + k * 0.5) % 1; ctx.globalAlpha = 1 - f; ctx.fillStyle = '#7de0f0'; ctx.fillRect(CX - 3 + k * 6, Math.round(by + 7 + f * 18), 1, 2); } ctx.globalAlpha = 1; // a leak
+  ctx.fillStyle = ol; ctx.fillRect(Math.round(b.x - 7 + sh), Math.round(b.y + 8), 8, 5); ctx.fillStyle = '#5c6480'; ctx.fillRect(Math.round(b.x - 6 + sh), Math.round(b.y + 9), 6, 3); // spray nozzle
+  if (b.active && b.sprayT < 0.5) bossTell(b.x - 7 + sh, b.y + 10, 1 - b.sprayT / 0.5, '#a6d854');
+  // Dr. Placebo's booth with a warning lamp and a sign
+  const BX = Math.round(b.x - 2 * T), BY = 3 * T;
+  ctx.fillStyle = ol; ctx.fillRect(BX - 1, BY - 1, 4 * T + 2, 2 * T + 2); ctx.fillStyle = '#25223a'; ctx.fillRect(BX, BY, 4 * T, 2 * T);
+  ctx.fillStyle = '#bfe9ff'; ctx.fillRect(BX + 4, BY + 4, 4 * T - 8, 12); ctx.fillStyle = '#dff8ff'; ctx.fillRect(BX + 6, BY + 5, 6, 1);
+  ctx.drawImage(RIG.guru.still[P.x > cx ? 0 : 1], 0, 0, 14, 10, BX + 1.5 * T - 8, BY + 6, 14, 10);
+  if (W > 0.5) { mark(); ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(BX + 40.5, BY + 4); ctx.lineTo(BX + 36.5, BY + 10); ctx.lineTo(BX + 42.5, BY + 15); ctx.stroke(); }
+  ctx.fillStyle = exposed && Math.floor(t * (quake ? 12 : 4)) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(BX + 2 * T - 2, BY - 4, 4, 3);
+  micro(S.sign, BX + 2 * T, BY + 2 * T - 9, '#f2c94c');
+  // the stabiliser vats: glass tanks with brass caps, a label, bubbles; they crack and leak as they take hits
+  b.vats.forEach((v, i) => {
+    const vx = Math.round(v.x), vy = Math.round(v.y);
+    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(vx + 1, vy + v.h - 6, 18, 6); ctx.fillStyle = '#bfe9ff'; for (const [dx, h] of [[2, 6], [6, 3], [12, 5], [16, 7]]) { ctx.beginPath(); ctx.moveTo(vx + dx, vy + v.h - 6); ctx.lineTo(vx + dx + 1, vy + v.h - 6 - h); ctx.lineTo(vx + dx + 3, vy + v.h - 6); ctx.fill(); } ctx.globalAlpha = 0.5; ctx.fillStyle = '#7de0f0'; ctx.fillRect(vx - 4, vy + v.h - 1, 28, 1); ctx.globalAlpha = 1; return; }
+    const vw = 1 - v.hp / v.max, vf = v.flash > 0;
+    ctx.fillStyle = '#3d4560'; ctx.fillRect(vx + 9, vy - 8, 2, 8); // hose
+    ctx.fillStyle = ol; ctx.fillRect(vx - 1, vy - 1, v.w + 2, v.h + 2);
+    ctx.fillStyle = vf ? '#fff' : '#a8782a'; ctx.fillRect(vx, vy, v.w, 4); ctx.fillRect(vx, vy + v.h - 4, v.w, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(vx, vy, v.w, 1); ctx.fillRect(vx, vy + v.h - 4, v.w, 1);
+    ctx.fillStyle = '#1f6a7a'; ctx.fillRect(vx + 1, vy + 4, v.w - 2, v.h - 8);
+    const lv = Math.round(vw * (v.h - 8)); ctx.fillStyle = '#4fb8d0'; ctx.fillRect(vx + 1, vy + 4 + lv, v.w - 2, v.h - 8 - lv); ctx.fillStyle = '#7de0f0'; ctx.fillRect(vx + 1, vy + 4 + lv, v.w - 2, 1);
+    ctx.fillStyle = '#dff8ff'; for (let k = 0; k < 3; k++) ctx.fillRect(vx + 3 + k * 6, vy + v.h - 6 - ((t * 25 + k * 5) % Math.max(2, 14 - lv)), 2, 2);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(vx + 2, vy + 5, 1, v.h - 10);
+    micro('C30', vx + v.w / 2, vy + 9, '#25223a', '#e6e2f0');
+    bossCracks(vx + 1, vy + 4, v.w - 2, v.h - 8, vw, 50 + i, '#ffffff', 5);
+    if (vw > 0.5) { const f = (t * 1.6 + i * 0.3) % 1; ctx.fillStyle = '#7de0f0'; ctx.fillRect(vx + 4 + i * 3, Math.round(vy + v.h - 4 + f * 4), 1, 1); }
+  });
+  // hammers: a piston from the roof (sleeve and rod), a heavy head with hazard stripes and a lamp; a red column warns where it lands
+  for (const h of b.hammers) {
+    const HX = Math.round(h.x), HY = Math.round(h.y);
+    if (h.state === 'track' || h.state === 'warn') { ctx.globalAlpha = h.state === 'warn' ? 0.5 + Math.sin(t * 40) * 0.3 : 0.25; ctx.fillStyle = '#ff3a2a'; ctx.fillRect(HX, cam.y, 24, VH); ctx.globalAlpha = 1; }
+    const top = cam.y - 10, mid = Math.max(top, Math.round((top + HY) / 2));
+    ctx.fillStyle = ol; ctx.fillRect(HX + 6, top, 12, Math.max(0, mid - top)); ctx.fillStyle = '#3d4560'; ctx.fillRect(HX + 7, top, 10, Math.max(0, mid - top)); ctx.fillStyle = '#5c6480'; ctx.fillRect(HX + 7, top, 2, Math.max(0, mid - top));
+    ctx.fillStyle = ol; ctx.fillRect(HX + 8, mid, 8, Math.max(0, HY - mid)); ctx.fillStyle = '#c9d4e6'; ctx.fillRect(HX + 9, mid, 6, Math.max(0, HY - mid)); ctx.fillStyle = '#ffffff'; ctx.fillRect(HX + 9, mid, 1, Math.max(0, HY - mid));
+    ctx.fillStyle = ol; ctx.fillRect(HX - 1, HY - 1, 26, 42);
+    ctx.fillStyle = '#8b93ad'; ctx.fillRect(HX, HY, 24, 40); ctx.fillStyle = '#b4bed0'; ctx.fillRect(HX, HY, 3, 40); ctx.fillRect(HX, HY, 24, 2); ctx.fillStyle = '#5c6480'; ctx.fillRect(HX + 21, HY, 3, 40);
+    ctx.fillStyle = '#25223a'; ctx.fillRect(HX + 1, HY + 31, 22, 9); ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 4; k++) ctx.fillRect(HX + 1 + k * 6, HY + 32, 3, 7);
+    ctx.fillStyle = '#5c6480'; for (const d of [5, 18]) ctx.fillRect(HX + d, HY + 6, 2, 2);
+    ctx.fillStyle = h.state === 'warn' && Math.floor(t * 16) % 2 ? '#ff3a2a' : h.state === 'warn' || h.state === 'slam' ? '#ff8a7a' : '#5a1a1a'; ctx.fillRect(HX + 10, HY + 12, 4, 4);
+    if (h.state === 'rise' && h.t > 0.4) bossSparks(HX, HY + 36, 24, 6, 3, t * 3, 60);
+  }
+  // damage and the death sequence
+  if (W > 0.45) bossSparks(b.x - 6, b.y + b.h - 10, b.w + 12, 10, W > 0.75 ? 2 : 1, t, 42);
+  if (el > 0) { bossSparks(G0, 3 * T, G1 - G0, 8 * T, 5, t * 1.8, 43); bossGlow(cx, CY, 30, el, 3.2, t); bossDebris(cx, CY, el, 8, ['#bfe9ff', '#a8782a', '#5c6480'], 44); }
+}
+
+// Flat Earth Zeppelin: a shaded gas bag with gores and a sign, striped fins, a propeller, a bomb bay that opens before a
+// drop, running lights on a drop run, and gondolas whose gunners aim at you. It gets patched, holed and wrinkled with
+// damage, and sags and burns as it goes down. The UFO hoax is a saucer that is lit from inside.
+function drawBlimp(b, t) {
+  if (b.dead || !b.active) return;
+  const S = bossSkin(b), W = bossWear(b), el = bossEl(b), fl = b.flash > 0, ol = '#0d0b18', cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+  const sag = el > 0 ? Math.min(0.4, el * 0.14) : W > 0.85 ? 0.06 : 0, hw = b.w / 2, hh = Math.round(b.h / 2 * (1 - sag));
+  const dip = b.dipT < 0, bay = b.bombT < 0.6 && Math.abs(cx - P.x) < 100;
+  ctx.save(); ctx.translate(Math.round(cx), Math.round(cy) + Math.round(sag * 8)); ctx.rotate(b.rot * b.dir); ctx.scale(b.dir, 1);
+  if (S.v === 'ufo') {
+    ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(0, -5, 25, 14, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#bfe9ff'; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.ellipse(0, -5, 23, 12, 0, Math.PI, 0); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(-6, -9, 4, 0, 7); ctx.fill(); ctx.fillStyle = '#5a4a8c'; ctx.fillRect(4, -13, 5, 8); ctx.fillStyle = '#f2c94c'; ctx.fillRect(9, -11, 2, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(-2, -8, 6, 2); // a quack with a lamp: lit from inside
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(-14, -13, 5, 1);
+    ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(0, 2, hw + 1, hh / 2 + 3, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = fl ? '#fff' : '#8b93ad'; ctx.beginPath(); ctx.ellipse(0, 2, hw, hh / 2 + 2, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = fl ? '#fff' : '#b4bed0'; ctx.beginPath(); ctx.ellipse(0, 0, hw - 4, hh / 2 - 1, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#5c6480'; ctx.fillRect(-hw + 4, 5, b.w - 8, 2);
+    for (let k = 0; k < 10; k++) { const on = (Math.floor(t * 8) + k) % 3 === 0; ctx.fillStyle = on ? '#fff6c2' : '#8e2b3c'; ctx.fillRect(-hw + 8 + k * 11, 1, 3, 2); }
+    ctx.save(); ctx.scale(b.dir, 1); micro(S.label, 0, 5, '#25223a'); ctx.restore();
+  } else {
+    // tail fins and the propeller, behind the bag
+    for (const s of [-1, 1]) { ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(-hw + 12, 0); ctx.lineTo(-hw - 13, s * 16); ctx.lineTo(-hw - 9, 0); ctx.fill(); ctx.fillStyle = fl ? '#fff' : '#8b93ad'; ctx.beginPath(); ctx.moveTo(-hw + 10, s * 1); ctx.lineTo(-hw - 11, s * 14); ctx.lineTo(-hw - 8, s * 1); ctx.fill(); ctx.fillStyle = '#d9534f'; ctx.fillRect(-hw - 10, s > 0 ? 9 : -12, 3, 3); }
+    ctx.fillStyle = ol; ctx.fillRect(-hw - 13, -2, 5, 5); ctx.fillStyle = '#5c6480'; ctx.fillRect(-hw - 12, -1, 3, 3);
+    const pr = Math.cos(t * (el > 0 ? 8 : 30)) * 12; ctx.globalAlpha = 0.22; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-hw - 15, -12, 2, 24); ctx.globalAlpha = 1; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(-hw - 15, Math.round(-Math.abs(pr)), 2, Math.max(1, Math.round(Math.abs(pr) * 2)));
+    // the gas bag, shaded inside its outline
+    ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(0, 0, hw + 1, hh + 1, 0, 0, 7); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, hw, hh, 0, 0, 7); ctx.clip();
+    const base = S.v === 'balloon' ? ['#d9534f', '#f2c94c'] : S.v === 'diffuser' ? ['#b39ddb', '#e78ac3'] : null;
+    ctx.fillStyle = fl ? '#fff' : '#c9c4b4'; ctx.fillRect(-hw, -hh, b.w, hh * 2);
+    if (base && !fl) for (let k = -3; k <= 3; k++) { ctx.fillStyle = base[(k + 4) % 2]; ctx.fillRect(k * 16 - 8, -hh, 16, hh * 2); }
+    ctx.fillStyle = fl ? '#fff' : '#a8a294'; ctx.globalAlpha = base ? 0.35 : 1; ctx.beginPath(); ctx.ellipse(0, hh * 0.5, hw, hh * 0.75, 0, 0, Math.PI); ctx.fill(); ctx.fillRect(-hw, hh * 0.5, b.w, hh);
+    ctx.fillStyle = '#8b8574'; ctx.fillRect(-hw, hh - 4, b.w, 4); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#e8e4d8'; ctx.globalAlpha = 0.8; ctx.beginPath(); ctx.ellipse(-8, -hh + 5, hw * 0.6, 3, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#00000022'; for (let k = -2; k <= 2; k++) { if (k) ctx.fillRect(k * 20 - 1, -hh, 1, hh * 2); }
+    if (sag > 0.04) { mark(); ctx.strokeStyle = '#6a6458'; ctx.beginPath(); for (let k = 0; k < 6; k++) { const wx = -hw + 12 + k * 18; ctx.moveTo(wx, -hh + 3); ctx.quadraticCurveTo(wx + 5, 0, wx - 2, hh - 3); } ctx.stroke(); } // wrinkles
+    // damage on the bag: tape patches, then holes hissing gas
+    for (let k = 0; k < Math.floor(W * 6 + 0.001); k++) { mark(); const px = Math.round(-hw + 14 + fhash(70, k) * (b.w - 28)), py = Math.round(-hh + 4 + fhash(71, k) * (hh * 2 - 8)); if (k % 2 === 0) { ctx.fillStyle = '#8b93ad'; ctx.fillRect(px - 3, py - 1, 7, 2); ctx.fillRect(px - 1, py - 3, 2, 7); } else { ctx.fillStyle = ol; ctx.beginPath(); ctx.ellipse(px, py, 3, 2, 0, 0, 7); ctx.fill(); } }
+    ctx.restore();
+    ctx.fillStyle = '#8b93ad'; ctx.fillRect(hw - 2, -3, 3, 6); // nose cone
+    // the sign, read the right way round whichever way it flies
+    ctx.fillStyle = ol; ctx.fillRect(-33, -7, 66, 12); ctx.fillStyle = '#8e2b3c'; ctx.fillRect(-32, -6, 64, 10); ctx.fillStyle = '#b0405a'; ctx.fillRect(-32, -6, 64, 1);
+    ctx.save(); ctx.scale(b.dir, 1); micro(S.label, 0, -5, '#e6e2f0'); ctx.restore();
+    if (W > 0.85 || el > 0) for (let k = 0; k < 4; k++) { mark(); const fx2 = -hw + 16 + Math.round(fhash(72, k) * (b.w - 32)), fh = 3 + Math.round((Math.sin(t * 15 + k * 2) + 1) * 2.5); ctx.fillStyle = '#f29e4c'; ctx.fillRect(fx2, -hh - fh + 2, 3, fh); ctx.fillStyle = '#fff6c2'; ctx.fillRect(fx2 + 1, -hh, 1, 2); } // burning on top
+  }
+  // under the bag: a bomb bay that opens before a drop, and running lights that flash on a drop run
+  ctx.fillStyle = ol; ctx.fillRect(-8, hh - 2, 16, 4); ctx.fillStyle = bay ? '#25223a' : '#5c6480'; ctx.fillRect(-7, hh - 1, 14, 2);
+  if (bay) { ctx.fillStyle = '#3d4560'; ctx.fillRect(-3, hh, 6, 4); ctx.fillStyle = Math.floor(t * 10) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(-1, hh + 3, 2, 2); }
+  for (const lx of [-36, 36]) { ctx.fillStyle = dip && Math.floor(t * 6) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(lx, hh - 3, 2, 2); }
+  ctx.restore();
+  if (W > 0.5 && !(el > 0)) for (let k = 0; k < 2; k++) { mark(); bossSmoke(b.x + 30 + k * 50, b.y + 6, 2, t * 1.4, 73 + k, '#e6e2f0', 14); } // gas hissing out
+  if (W > 0.45) bossSparks(b.x + 10, b.y + 4, b.w - 20, b.h - 8, W > 0.75 ? 2 : 1, t, 74);
+  // gondolas: cables, a cabin with a window and a gunner whose gun follows you; a flash ring just before he fires
+  const [qx, qy] = center(P);
+  b.vats.forEach((v, i) => {
+    if (v.dead) return;
+    const vx = Math.round(v.x), vy = Math.round(v.y), vf = v.flash > 0, ga = Math.atan2(qy - vy - 8, qx - vx - 8);
+    ctx.fillStyle = '#5c6480'; ctx.fillRect(vx + 3, vy - 4, 1, 4); ctx.fillRect(vx + 12, vy - 4, 1, 4);
+    ctx.fillStyle = ol; ctx.fillRect(vx - 1, vy - 1, v.w + 2, v.h + 2);
+    ctx.fillStyle = vf ? '#fff' : '#3d4560'; ctx.fillRect(vx, vy, v.w, v.h); ctx.fillStyle = vf ? '#fff' : '#5c6480'; ctx.fillRect(vx, vy, v.w, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(vx, vy + v.h - 2, v.w, 2);
+    ctx.fillStyle = '#bfe9ff'; ctx.fillRect(vx + 2, vy + 3, 12, 4); ctx.fillStyle = '#5a4a8c'; ctx.fillRect(vx + 6, vy + 3, 4, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(qx > vx + 8 ? vx + 10 : vx + 4, vy + 5, 2, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(vx + 3, vy + 3, 1, 1);
+    ctx.strokeStyle = ol; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(vx + 8, vy + 10); ctx.lineTo(vx + 8 + Math.cos(ga) * 7, vy + 10 + Math.sin(ga) * 7); ctx.stroke(); ctx.lineWidth = 1;
+    if (v.cool < 0.35) bossTell(vx + 8 + Math.cos(ga) * 8, vy + 10 + Math.sin(ga) * 8, 1 - v.cool / 0.35, '#f2c94c');
+    ctx.fillStyle = '#25223a'; ctx.fillRect(vx + 6, vy + v.h, 4, 3);
+    const vw = 1 - v.hp / v.max; bossCracks(vx, vy, v.w, v.h, vw, 80 + i, '#0d0b18', 3); if (vw > 0.5) bossSmoke(vx + 8, vy, 2, t, 81 + i, '#36324d', 12);
+  });
+  if (el > 0) { bossSparks(b.x, b.y, b.w, b.h, 4, t * 1.6, 75); bossGlow(cx, cy, 40, el, 3, t); bossDebris(cx, cy, el, 8, S.v === 'ufo' ? ['#8b93ad', '#bfe9ff'] : ['#c9c4b4', '#8e2b3c', '#8b93ad'], 76); }
+}
+
+// King Citrus, the Big Bad Orange: a shaded fruit with dimples and a glint, eyes that follow you, a cape, a crown with
+// jewels, a sash and gloves. Peel tears off with damage, juice drips; he squashes before a hop, scrambles before a roll,
+// puffs his cheeks before seeds; dying, he is squeezed flat and his crown falls off.
+function drawCitrus(b, t) {
+  if (b.dead) return;
+  const S = bossSkin(b), Pl = S.pal, W = bossWear(b), el = bossEl(b), fl = b.flash > 0, F = b.face, R = 22, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
+  const cx = Math.round(b.x + b.w / 2) - (b.flinch > 0 ? F : 0), cy = Math.round(b.y + b.h / 2), foot = Math.round(b.y + b.h);
+  const roll = b.state === 'roll', wind = roll && b.t > 0, dirP = P.x > cx ? 1 : -1, base = b.p2 && S.v === 'base' ? '#e8601a' : Pl[1];
+  const squash = el > 0 ? Math.min(0.45, el * 0.16) : b.state === 'hop' && b.onGround && b.t > 0 && b.t < 0.25 ? 0.1 : 0;
+  // cape behind him, waving (not while rolling)
+  if (!roll && !(el > 0)) { ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(cx - 16, cy - 12); ctx.lineTo(cx + 16, cy - 12); for (let k = 4; k >= -4; k--) ctx.lineTo(cx + k * 5 - F * 4, foot - 4 + Math.round(Math.sin(t * 6 + k) * 2)); ctx.fill(); ctx.fillStyle = C('#8e2b3c'); ctx.beginPath(); ctx.moveTo(cx - 15, cy - 11); ctx.lineTo(cx + 15, cy - 11); for (let k = 4; k >= -4; k--) ctx.lineTo(cx + k * 5 - F * 4, foot - 5 + Math.round(Math.sin(t * 6 + k) * 2)); ctx.fill(); }
+  // legs and boots: they scramble before a roll and dangle in a hop
+  const lg = b.onGround ? 0 : 3, run = wind ? Math.round(Math.sin(t * 40) * 3) : 0;
+  for (const [lx, d] of [[-9, 1], [5, -1]]) { const ly = cy + R - 4 + lg * d + run * d; ctx.fillStyle = ol; ctx.fillRect(cx + lx - 1, ly, 6, 8); ctx.fillStyle = '#25223a'; ctx.fillRect(cx + lx, ly, 4, 7); ctx.fillStyle = '#4b4766'; ctx.fillRect(cx + lx, ly + 4, 4, 1); ctx.fillStyle = '#25223a'; ctx.fillRect(cx + lx + (F > 0 ? 1 : -2), ly + 5, 5, 2); }
+  if (wind) bossSmoke(cx - F * 10, foot - 1, 3, t * 3, 90, '#c9b48a', 8);
+  ctx.save(); ctx.translate(cx, foot); ctx.scale(1 + squash * 0.6, 1 - squash); ctx.translate(0, -(foot - cy));
+  ctx.rotate(roll || el > 0 ? b.spin : 0);
+  // the fruit: dark rim, body, a lighter cheek and a glint; peel dimples
+  ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(0, 0, R + 1, 0, 7); ctx.fill();
+  ctx.fillStyle = C(Pl[0]); ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
+  ctx.fillStyle = C(base); ctx.beginPath(); ctx.arc(-2, -2, R - 2, 0, 7); ctx.fill();
+  ctx.fillStyle = C(Pl[2]); ctx.beginPath(); ctx.arc(-8, -9, 7, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(-11, -13, 3, 2); ctx.fillRect(-12, -11, 1, 2);
+  ctx.fillStyle = Pl[3]; for (let k = 0; k < 22; k++) { const a = k * 2.4, r = 4 + ((k * 7) % 17); ctx.fillRect(Math.round(Math.cos(a) * r), Math.round(Math.sin(a) * r), 1, 1); }
+  if (S.v === 'lemon') { ctx.fillStyle = ol; ctx.fillRect(R - 1, -3, 4, 6); ctx.fillRect(-R - 3, -3, 4, 6); ctx.fillStyle = C(Pl[1]); ctx.fillRect(R - 1, -2, 3, 4); ctx.fillRect(-R - 2, -2, 3, 4); } // pointy ends
+  // peel torn away with damage: white pith and the segments underneath
+  for (let k = 0; k < 3; k++) {
+    if (W <= [0.35, 0.6, 0.85][k]) continue;
+    mark();
+    const a0 = fhash(91, k) * 6.28, a1 = a0 + 0.7;
+    ctx.fillStyle = '#fff0d0'; ctx.beginPath(); ctx.moveTo(Math.cos(a0) * 9, Math.sin(a0) * 9); ctx.arc(0, 0, R - 1, a0, a1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = Pl[2]; ctx.beginPath(); ctx.moveTo(Math.cos(a0) * 11, Math.sin(a0) * 11); ctx.arc(0, 0, R - 4, a0 + 0.08, a1 - 0.08); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff0d0'; ctx.beginPath(); const am = (a0 + a1) / 2; ctx.moveTo(Math.cos(am) * 11, Math.sin(am) * 11); ctx.lineTo(Math.cos(am) * (R - 4), Math.sin(am) * (R - 4)); ctx.stroke();
+  }
+  // the sash, across his belly
+  ctx.save(); ctx.rotate(-0.45); ctx.fillStyle = ol; ctx.fillRect(-R, 10, R * 2, 9); ctx.fillStyle = C('#8e2b3c'); ctx.fillRect(-R, 11, R * 2, 7); ctx.fillStyle = '#b0405a'; ctx.fillRect(-R, 11, R * 2, 1); micro(S.sash, 0, 10, '#f2c94c'); ctx.restore();
+  // the face: brows, eyes that follow you (spirals when dizzy, crosses when dying), cheeks that puff, a mouth
+  const ex = F * 2, open = b.state === 'seeds' || b.state === 'juice' || b.state === 'rally' || el > 0, puff = b.state === 'seeds' && b.shotT < 0.2;
+  ctx.fillStyle = '#25223a'; ctx.fillRect(ex - 9, -7 - (b.p2 ? 0 : 1), 6, 2); ctx.fillRect(ex + 3, -7 - (b.p2 ? 0 : 1), 6, 2); ctx.fillRect(ex - 8 + (F > 0 ? 3 : 0), -9 + (b.p2 ? 1 : 0), 3, 1); ctx.fillRect(ex + 4 + (F > 0 ? 0 : 3), -9 + (b.p2 ? 1 : 0), 3, 1);
+  for (const e0 of [ex - 8, ex + 4]) {
+    if (el > 0) { ctx.fillStyle = '#25223a'; ctx.fillRect(e0, -5, 1, 1); ctx.fillRect(e0 + 3, -5, 1, 1); ctx.fillRect(e0 + 1, -4, 2, 2); ctx.fillRect(e0, -2, 1, 1); ctx.fillRect(e0 + 3, -2, 1, 1); continue; }
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(e0, -5, 4, 4);
+    if (b.dizzy > 0) { ctx.fillStyle = '#25223a'; const a = t * 12; ctx.fillRect(e0 + 1 + Math.round(Math.cos(a)), -4 + Math.round(Math.sin(a)), 2, 2); }
+    else { ctx.fillStyle = b.p2 ? '#8e2b3c' : '#25223a'; ctx.fillRect(e0 + (dirP > 0 ? 2 : 0), -4, 2, 2); }
+  }
+  ctx.fillStyle = '#ff6a4a'; ctx.globalAlpha = puff ? 0.9 : 0.35; ctx.beginPath(); ctx.arc(ex - 11, 4, puff ? 5 : 3, 0, 7); ctx.arc(ex + 11, 4, puff ? 5 : 3, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = open ? '#3a0a0a' : '#25223a'; ctx.fillRect(ex - 6, 6, 12, open ? 6 : 2);
+  if (open) { ctx.fillStyle = '#ffffff'; ctx.fillRect(ex - 5, 6, 3, 2); ctx.fillRect(ex + 2, 6, 3, 2); ctx.fillStyle = '#d9534f'; ctx.fillRect(ex - 3, 10, 6, 2); }
+  if (W > 0.5) { mark(); ctx.fillStyle = '#f0c8a0'; ctx.fillRect(ex + 6, -15, 7, 3); ctx.fillRect(ex + 8, -17, 3, 7); ctx.fillStyle = '#d8a880'; ctx.fillRect(ex + 9, -14, 1, 1); } // a plaster
+  bossCracks(-R + 4, -R + 6, R * 2 - 8, R * 2 - 10, W, 92, Pl[0], 5);
+  ctx.restore();
+  // stubby arms with white gloves: pumping before a roll, one raised to call quacks
+  if (!roll || wind) for (const s of [-1, 1]) {
+    const up = b.state === 'rally' && s === F ? -10 : 0, wv = Math.round(Math.sin(t * 8) * 3) * s, ax = s > 0 ? cx + R - 1 : cx - R - 4, ay = cy + wv + up;
+    ctx.fillStyle = ol; ctx.fillRect(ax - 1, ay - 1, 7, 5); ctx.fillStyle = C(base); ctx.fillRect(ax, ay, 5, 3);
+    ctx.fillStyle = ol; ctx.fillRect(ax + (s > 0 ? 4 : -3), ay - 2, 6, 6); ctx.fillStyle = '#ffffff'; ctx.fillRect(ax + (s > 0 ? 5 : -2), ay - 1, 4, 4);
+  }
+  // stem, leaf and crown sit on top (they don't spin); the crown tilts when he is hurt and falls off as he dies
+  if (!roll || wind) {
+    const top = cy - Math.round(R * (1 - squash)) , dx = el > 0 ? Math.round(el * 14) * -F : 0, dy = el > 0 ? Math.round(Math.min(el * el * 30, foot - top - 6)) : 0;
+    ctx.fillStyle = '#5a3a1a'; ctx.fillRect(cx - 1, top - 4, 2, 4);
+    ctx.fillStyle = '#3f7f2a'; ctx.beginPath(); ctx.ellipse(cx + 6, top - 3, 6, 3, -0.4, 0, 7); ctx.fill(); ctx.fillStyle = '#5f9a3a'; ctx.fillRect(cx + 3, top - 4, 4, 1);
+    if (S.v === 'tang') { ctx.fillStyle = '#3f7f2a'; ctx.beginPath(); ctx.ellipse(cx - 6, top - 2, 5, 2, 0.4, 0, 7); ctx.fill(); }
+    ctx.save(); ctx.translate(cx + dx, top - 8 + dy); ctx.rotate(el > 0 ? el * 3 * -F : W > 0.6 ? -0.25 * F : 0);
+    const mega = b.state === 'megadose';
+    ctx.fillStyle = ol; ctx.fillRect(-11, -3, 22, 7); for (let k = 0; k < 4; k++) ctx.fillRect(-11 + k * 6, -7, 5, 5);
+    ctx.fillStyle = mega ? '#fff6c2' : '#f2c94c'; ctx.fillRect(-10, -2, 20, 5); for (let k = 0; k < 4; k++) ctx.fillRect(-10 + k * 6, -6, 3, 4);
+    ctx.fillStyle = '#c9a227'; ctx.fillRect(-10, 2, 20, 1);
+    ctx.fillStyle = '#d9534f'; ctx.fillRect(-1, -1, 2, 2); ctx.fillStyle = '#8fd3ff'; ctx.fillRect(-7, 0, 2, 2); ctx.fillStyle = '#66c2a5'; ctx.fillRect(5, 0, 2, 2);
+    const gl = Math.floor(t * 3) % 6; if (gl < 4) { ctx.fillStyle = '#ffffff'; ctx.fillRect(-10 + gl * 6, -6, 1, 1); }
+    ctx.restore();
+    if (mega) bossTell(cx, top - 10, 0.5 + Math.sin(t * 20) * 0.3, '#f2c94c');
+  }
+  if (b.dizzy > 0) { ctx.fillStyle = '#f2c94c'; for (let k = 0; k < 3; k++) { const a = t * 6 + k * 2.1; ctx.fillRect(Math.round(cx + Math.cos(a) * 14), Math.round(cy - R - 4 + Math.sin(a) * 3), 3, 3); } }
+  if (wind) { ctx.fillStyle = '#e6e2f0'; for (let k = 0; k < 3; k++) ctx.fillRect(cx - F * (R + 6 + k * 3), cy - 8 + k * 7, 4, 1); } // revving up
+  // juice dripping, sparks of peel, and the squeeze at the end
+  if (W > 0.4) for (let k = 0; k < 3; k++) { mark(); const f = (t * 1.2 + k / 3) % 1; ctx.globalAlpha = 1 - f; ctx.fillStyle = '#f2a030'; ctx.fillRect(cx - 10 + k * 9, Math.round(foot - 8 + f * 10), 1, 2); } ctx.globalAlpha = 1;
+  if (el > 0) { for (let k = 0; k < 8; k++) { const f = (t * 1.5 + k / 8) % 1, a = -Math.PI / 2 + (k - 3.5) * 0.35; ctx.fillStyle = k % 2 ? '#ffb04a' : '#f2c94c'; ctx.fillRect(Math.round(cx + Math.cos(a) * f * 40), Math.round(cy - 6 + Math.sin(a) * f * 40 + f * f * 30), 2, 2); } bossGlow(cx, cy, 30, el, 3.2, t); bossDebris(cx, cy, el, 6, [Pl[1], '#fff0d0', '#3f7f2a'], 93); }
+}
+
+// The Director: a camera on a crane. A truss arm on a trolley, a shaded body with turning film reels, a lens whose glass
+// flares red while it locks on, a REC light and a label; studio lights on tripods with barn doors. The influencer is a
+// phone on a ring light, the pitchman hangs a sign. Damage cracks the lens, unspools film, and sparks.
+function drawDirector(b, t) {
+  if (b.dead || !b.active) return;
+  const S = bossSkin(b), W = bossWear(b), el = bossEl(b), fl = b.flash > 0, ol = '#0d0b18', C = (c) => (fl ? '#fff' : c);
+  const x = Math.round(b.x), y = Math.round(b.y), D = b.dir > 0 ? 1 : -1, mid = x + Math.round(b.w / 2), rail = 2 * T;
+  // crane rail (an I-beam) and the trolley
+  ctx.fillStyle = ol; ctx.fillRect(b.ax0 * T, rail - 1, (b.ax1 - b.ax0) * T, 5); ctx.fillStyle = '#25223a'; ctx.fillRect(b.ax0 * T, rail, (b.ax1 - b.ax0) * T, 3); ctx.fillStyle = '#3d4560'; ctx.fillRect(b.ax0 * T, rail, (b.ax1 - b.ax0) * T, 1);
+  ctx.fillStyle = ol; ctx.fillRect(mid - 7, rail - 3, 14, 6); ctx.fillStyle = '#5c6480'; ctx.fillRect(mid - 6, rail - 2, 12, 4); ctx.fillStyle = '#8b93ad'; ctx.fillRect(mid - 5, rail + 2, 3, 3); ctx.fillRect(mid + 2, rail + 2, 3, 3);
+  // the truss arm
+  const ah = Math.max(0, y - rail - 6);
+  ctx.fillStyle = '#5c6480'; ctx.fillRect(mid - 4, rail + 3, 1, ah); ctx.fillRect(mid + 3, rail + 3, 1, ah);
+  ctx.strokeStyle = '#3d4560'; ctx.beginPath(); for (let yy = 0; yy + 8 <= ah; yy += 8) { ctx.moveTo(mid - 3.5, rail + 3 + yy); ctx.lineTo(mid + 3.5, rail + 7 + yy); ctx.lineTo(mid - 3.5, rail + 11 + yy); } ctx.stroke();
+  if (S.sign) { const sw = S.sign.length * 4 + 3, sx = mid - D * Math.round(sw / 2 + 12), sy = rail + 7; ctx.fillStyle = '#8b93ad'; ctx.fillRect(sx - 6, rail + 3, 1, 4); ctx.fillRect(sx + 5, rail + 3, 1, 4); ctx.fillStyle = ol; ctx.fillRect(sx - Math.ceil(sw / 2) - 1, sy - 1, sw + 2, 11); micro(S.sign, sx, sy, '#25223a', S.v === 'pitch' ? '#f2c94c' : '#e6e2f0'); } // a sign hanging from the rail behind the trolley
+  // the spotlight cone down to the floor; red when it is about to fire
+  const lit = b.lock > 0.35;
+  ctx.globalAlpha = lit ? 0.22 + Math.sin(t * 40) * 0.08 : 0.12; ctx.fillStyle = lit ? '#ff6a4a' : '#fff6c2';
+  ctx.beginPath(); ctx.moveTo(x + b.w / 2, y + b.h); ctx.lineTo(b.beamX - 18, 15 * T); ctx.lineTo(b.beamX + 18, 15 * T); ctx.fill();
+  ctx.globalAlpha = lit ? 0.5 : 0.25; ctx.strokeStyle = lit ? '#ff6a4a' : '#fff6c2'; ctx.beginPath(); ctx.moveTo(x + b.w / 2, y + b.h); ctx.lineTo(b.beamX - 18, 15 * T); ctx.moveTo(x + b.w / 2, y + b.h); ctx.lineTo(b.beamX + 18, 15 * T); ctx.stroke(); ctx.globalAlpha = 1;
+  if (S.v === 'phone') {
+    // a phone in landscape on a ring light: the screen shows a quack's selfie, a LIVE badge, hearts rising
+    ctx.fillStyle = ol; ctx.fillRect(x - 2, y - 2, b.w + 4, b.h + 4); ctx.fillStyle = C('#e6e2f0'); ctx.fillRect(x - 1, y - 1, b.w + 2, b.h + 2);
+    ctx.fillStyle = '#25223a'; ctx.fillRect(x + 2, y + 2, b.w - 4, b.h - 4); ctx.fillStyle = '#3a3a6a'; ctx.fillRect(x + 2, y + 2, b.w - 4, 6);
+    ctx.fillStyle = '#5a4a8c'; ctx.fillRect(x + 10, y + 7, 9, 9); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 19, y + 11, 3, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 15, y + 9, 2, 2); ctx.fillStyle = '#25223a'; ctx.fillRect(x + 16, y + 10, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.25; ctx.fillRect(x + 3, y + 3, 3, b.h - 7); ctx.globalAlpha = 1;
+    micro(S.label, x + 9, y + 1, '#ffffff', Math.floor(t * 2) % 2 ? '#d9534f' : '#8e2b3c');
+    for (let k = 0; k < 3; k++) { const f = (t * 0.7 + k / 3) % 1, hx = x + b.w + 4 + Math.round(Math.sin(f * 6 + k) * 3), hy = Math.round(y + b.h - f * 26); ctx.globalAlpha = 1 - f; ctx.fillStyle = '#e78ac3'; ctx.fillRect(hx, hy, 2, 2); ctx.fillRect(hx + 3, hy, 2, 2); ctx.fillRect(hx + 1, hy + 2, 3, 1); ctx.fillRect(hx + 2, hy + 3, 1, 1); } ctx.globalAlpha = 1;
+  } else {
+    // camera body, shaded, with a label; film reels on top that turn faster as it locks on
+    ctx.fillStyle = ol; ctx.fillRect(x - 1, y - 1, b.w + 2, b.h + 2);
+    ctx.fillStyle = C('#3d3d46'); ctx.fillRect(x, y, b.w, b.h); ctx.fillStyle = C('#5c5c6a'); ctx.fillRect(x, y, b.w, 2); ctx.fillRect(x, y, 2, b.h); ctx.fillStyle = C('#2a2a32'); ctx.fillRect(x, y + b.h - 5, b.w, 5);
+    micro(S.label, x + b.w / 2, y + b.h - 10, '#e6e2f0', '#25223a');
+    const ra = t * (lit ? 12 : 3);
+    for (const rx of [x + 8, x + 22]) {
+      ctx.fillStyle = ol; ctx.beginPath(); ctx.arc(rx, y - 4, 7, 0, 7); ctx.fill(); ctx.fillStyle = C('#25223a'); ctx.beginPath(); ctx.arc(rx, y - 4, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#5c6480'; for (let k = 0; k < 3; k++) { const a = ra + k * 2.09; ctx.fillRect(Math.round(rx + Math.cos(a) * 3.5) - 1, Math.round(y - 4 + Math.sin(a) * 3.5) - 1, 2, 2); }
+      ctx.fillStyle = '#8b93ad'; ctx.fillRect(rx - 1, y - 5, 2, 2);
+    }
+    ctx.fillStyle = '#1b1d2e'; ctx.fillRect(x + 8, y - 11, 14, 1); // film between the reels
+  }
+  // the lens: barrel rings, a glass with a glint; the iris flares red while it locks on, and cracks with damage
+  const lx = D > 0 ? x + b.w : x - 10;
+  ctx.fillStyle = ol; ctx.fillRect(lx - 1, y + 4, 12, 14); ctx.fillStyle = C('#8b93ad'); ctx.fillRect(lx, y + 5, 10, 12); ctx.fillStyle = '#5c6480'; ctx.fillRect(lx + 3, y + 5, 1, 12); ctx.fillRect(lx + 6, y + 5, 1, 12);
+  const gx = D > 0 ? lx + 8 : lx; ctx.fillStyle = lit ? '#ff6a4a' : '#bfe9ff'; ctx.fillRect(gx, y + 7, 2, 8); ctx.fillStyle = '#ffffff'; ctx.fillRect(gx, y + 7, 1, 2);
+  if (S.v === 'phone') { ctx.strokeStyle = '#f2c94c'; ctx.globalAlpha = 0.6 + Math.sin(t * 6) * 0.2; ctx.beginPath(); ctx.arc(gx + D, y + 11, 7, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; } // ring light
+  if (b.lock > 0.1) bossTell(gx + D * 3, y + 11, b.lock / 0.7, '#ff5a4a');
+  if (W > 0.5) { mark(); ctx.fillStyle = '#ffffff'; ctx.fillRect(gx + (D > 0 ? 1 : 0), y + 10, 1, 3); }
+  if (S.v !== 'phone') { ctx.fillStyle = Math.floor(t * 3) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(x + 3, y + 3, 3, 3); if (Math.floor(t * 3) % 2) micro('REC', x + 12, y + 1, '#ff3a2a'); }
+  // damage: cracks, a loop of film hanging out and swinging, sparks and smoke
+  bossCracks(x + 1, y + 1, b.w - 2, b.h - 2, W, 101, '#0d0b18', 5);
+  if (W > 0.3) { mark(); const len = Math.round(W * 26) + (el > 0 ? Math.round(el * 14) : 0), sw = Math.sin(t * 3) * 4; ctx.strokeStyle = '#1b1d2e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 6, y + b.h); ctx.quadraticCurveTo(x + 6 + sw, y + b.h + len, x + 12, y + b.h + 2); ctx.stroke(); ctx.lineWidth = 1; }
+  if (W > 0.45) bossSparks(x, y, b.w, b.h, W > 0.75 ? 2 : 1, t, 102);
+  if (W > 0.6 && !(el > 0)) { mark(); bossSmoke(x + 6, y - 2, 2, t, 103, '#36324d', 14); }
+  // studio lights on tripods: barn doors, a bulb with a glint; they flicker when hurt, and topple when broken
+  b.vats.forEach((v, i) => {
+    const vx = Math.round(v.x), vy = Math.round(v.y), floor = vy + v.h;
+    if (v.dead) { ctx.fillStyle = '#25223a'; ctx.fillRect(vx - 2, floor - 3, 22, 3); ctx.fillStyle = '#5c6480'; ctx.fillRect(vx + 14, floor - 6, 7, 5); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(vx + 4, floor - 1, 2, 1); ctx.fillRect(vx + 9, floor - 1, 1, 1); return; }
+    const vw = 1 - v.hp / v.max, vf = v.flash > 0, dim = vw > 0.5 && fhash(110 + i, Math.floor(t * 12)) < 0.25;
+    ctx.fillStyle = '#25223a'; ctx.fillRect(vx + 9, vy + 10, 2, 16);
+    ctx.strokeStyle = '#25223a'; ctx.beginPath(); ctx.moveTo(vx + 10, floor - 6); ctx.lineTo(vx + 2.5, floor); ctx.moveTo(vx + 10, floor - 6); ctx.lineTo(vx + 17.5, floor); ctx.moveTo(vx + 10, floor - 6); ctx.lineTo(vx + 10, floor); ctx.stroke();
+    ctx.fillStyle = '#1b1d2e'; ctx.fillRect(vx + 17, floor - 1, 10, 1); // cable
+    ctx.fillStyle = ol; ctx.fillRect(vx + 1, vy - 1, 18, 13); ctx.fillRect(vx - 2, vy - 3, 4, 5); ctx.fillRect(vx + 18, vy - 3, 4, 5);
+    ctx.fillStyle = vf ? '#fff' : '#5c6480'; ctx.fillRect(vx + 2, vy, 16, 11); ctx.fillRect(vx - 1, vy - 2, 3, 3); ctx.fillRect(vx + 18, vy - 2, 3, 3); ctx.fillStyle = '#8b93ad'; ctx.fillRect(vx + 2, vy, 16, 1);
+    ctx.fillStyle = dim ? '#8a7a5a' : '#fff6c2'; ctx.fillRect(vx + 4, vy + 2, 12, 7); ctx.fillStyle = '#ffffff'; if (!dim) ctx.fillRect(vx + 5, vy + 3, 3, 1);
+    bossCracks(vx + 4, vy + 2, 12, 7, vw, 120 + i, '#5c6480', 3);
+  });
+  if (el > 0) { bossSparks(x - 4, y - 4, b.w + 8, b.h + 8, 4, t * 1.7, 104); bossGlow(x + b.w / 2, y + b.h / 2, 24, el, 3.2, t); bossDebris(x + b.w / 2, y + b.h / 2, el, 6, ['#3d3d46', '#8b93ad', '#bfe9ff'], 105); }
 }
 // a fading tracer of three dots behind each fast shot, in the shot's own colour
 const TRAIL = { frost: '#e9f6ff', psi: '#b3a6ff', petal: '#ffd6ec', photon: '#8da0cb', mg: '#f29e4c', pellet: '#f29e4c', pill: '#f2c94c', enigma: '#66c2a5', bit: '#66c2a5', hawk: '#b3a6ff', dart: '#e9eef6', red: '#ff6a4a', xtal: '#b3a6ff', bolt2: '#c9d4e6', alpha: '#f2c94c', pea: '#7bc043', card: '#e6e2f0', slug: '#ff6a4a', star: '#fff6c2', calc: '#8da0cb', elem: '#e6e2f0', parity: '#8fd3ff', plasma: '#e78ac3', plasma2: '#e78ac3', torp: '#bfe9ff', chip: '#8b7a6a', fission: '#e78ac3', apple: '#d9534f', vial: '#a6d854', bigvial: '#a6d854', tnt: '#f2c94c', neutron: '#8fd3ff', fizz: '#ffffff', pogo: '#e78ac3' };
@@ -9579,6 +10060,7 @@ function collectLights(t) {
     else if (e.type === 'director' && e.active) { light(e.beamX, 15 * T - 10, 46, '#fff6c2', 0.9); for (const v of e.vats) if (!v.dead) light(v.x + 10, v.y + 6, 50, '#fff6c2', 0.9); }
     else if (e.type === 'rocketeer' && e.aim > 0) light(e.x + 5 + e.face * 10, e.y + 4, 14, '#ff5a4a', 0.6);
   }
+  for (const e of ents) if (BOSS[e.type] && e.active && !e.dead) bossLights(e);
   for (const e of ents) if (e.type === 'camdrone' && !e.dead) light(e.x + 5, e.y + 3, e.dive ? 26 : 12, '#ff3a2a', 0.5);
   for (const p of plants) if (p.kind === 'mushroom' && !p.cut && !p.gone && theme.name === 'cave') light(p.x, p.y - p.h, 16, '#b3a6ff', 0.4);
   for (const d of decor) if (!d.gone && d.kind === 'crystal') light(d.c * T + 8, d.r * T - 8, 44, '#e78ac3', 0.55 + Math.sin(t * 2 + d.seed) * 0.1); else if (!d.gone && d.kind === 'cauldron') light(d.c * T + 8, d.r * T - 6, 30, '#ff7a2a', 0.5 + Math.sin(t * 9 + d.seed) * 0.1);
@@ -10596,5 +11078,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficult
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows, BRO_LEGS, LEG_FRAMES, HEADS }); // bro art hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { bossSkin, bossWear, BOSS_NAME, MICRO, bossMarks: () => bossMarks, drawBoss: (e, t) => (e.type === 'crawler' ? drawCrawlers(t) : drawEnt(e, t)) }); // boss art hooks
 })();
 </script>
