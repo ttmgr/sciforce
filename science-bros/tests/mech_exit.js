@@ -1,4 +1,4 @@
-// Headless checks that you can always get out of the bro-mech (Shift or V, a pad shoulder button, Down + Jump),
+// Headless checks that you can always get out of the bro-mech (Shift or V, a pad shoulder button, Down + Jump, a double tap of Jump),
 // that the empty suit stays and that you can climb back in.
 // Usage: node science-bros/tests/mech_exit.js science-bros/index.html
 const fs = require('fs'), vm = require('vm');
@@ -71,6 +71,12 @@ check('stepping clear and walking in again boards', !!S.P.mech);
 // 5 a destroyed suit still throws you out and leaves no suit
 S.P.mech.hp = 0; run(2);
 check('a wrecked suit ejects you and is gone', !S.P.mech && S.P.alive && suits().length === 0);
+
+// a quick double tap of Jump gets you out; one tap only jumps the suit
+{ const tap = () => { kdown('jump'); run(1); S.keys.jump = false; run(1); };
+  check('a fresh suit to test the double tap', enter(9));
+  tap(); run(40); check('one tap of Jump only jumps the suit', !!S.P.mech);
+  run(30); tap(); run(6); tap(); check('a quick double tap of Jump gets you out', !S.P.mech && S.P.w === 10); }
 
 console.log(fails ? fails + ' check(s) failed' : 'all mech exit checks passed');
 process.exit(fails ? 1 : 0);

@@ -368,16 +368,16 @@ Object.assign(RIG, {
   alpha: buildRig(HEADS.big, BODY_BIG, Object.assign({}, GOON_PAL, { o: '#2a6f9a', c: '#2a6f9a', t: '#f2c94c', p: '#25223a', s: '#d9a074' })),
   dronecaller: buildRig(HEADS.helmet, BODY, Object.assign({}, GOON_PAL, { h: '#3a3a5a', c: '#2a2f4a', t: '#66c2a5' })),
 });
-// dog: its own little 14x8 sprite set
-const DOG_ROWS = [
-  ['..........kk..', '.........kkkr.', 'k.......kkkkkk', '.kkkkkkkkkkkt.', '.kkkkkkkkkk...', '.kk......kk...', 'k..k....k..k..', 'k...k..k....k.'],
-  ['..........kk..', '.........kkkr.', '.k......kkkkkk', '..kkkkkkkkkkt.', '..kkkkkkkkk...', '...kk..kk.....', '...k.kk.k.....', '..k..kk..k....'],
-  ['..........kk..', '.........kkkr.', 'kk......kkkkkk', '..kkkkkkkkkkt.', '.kkkkkkkkk....', 'kk........kk..', 'k..........kk.', '..............'],
-  ['..............', '..........kk..', '.........kkkr.', 'k.......kkkkkk', '.kkkkkkkkkkkt.', '.kkkkkkkkkk...', '.kk.kk...kkk..', '.kk.kk...kkk..'],
+// dog: its own 17x11 sprite set
+const DOG_ROWS = [ // run, run, jump, stand; 17x11 so a level shot hits it
+  ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '..kk......kk.....', '.kk.kk...kk.kk...', 'kk....kk.k....kk.'],
+  ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '....kk..kk.......', '....kkkkk........', '...kk..kkk.......'],
+  ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '.kk..........kk..', 'k..............kk', '.................'],
+  ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '..kk.kk...kk.kk..', '..kk.kk...kk.kk..', '..kk.kk...kk.kk..'],
 ];
 for (const b of BROS) b.rig = buildRig(HEADS[b.id], BODY, b.pal);
-const DOG = DOG_ROWS.map((r) => paint(r, { k: '#4a3a2a', r: '#ff5a4a', t: '#d9534f' }, 14));
-const DOG_W = DOG_ROWS.map((r) => paint(r, { k: '#ffffff', r: '#ffffff', t: '#ffffff' }, 14));
+const DOG = DOG_ROWS.map((r) => paint(r, { k: '#4a3a2a', r: '#ff5a4a', t: '#d9534f' }, 17));
+const DOG_W = DOG_ROWS.map((r) => paint(r, { k: '#ffffff', r: '#ffffff', t: '#ffffff' }, 17));
 // Goodall's chimps: a 10x9 sprite, two running frames
 const CHIMP = [
   ['....kkk...', '...kkffk..', '...kfeff..', '....kfff..', '.kkkkkk...', 'kkkkkkkk..', 'k.kkkkk.k.', '..k...k...', '.kk...kk..'],
@@ -2266,6 +2266,10 @@ function moveBody(b, dt) {
     else b.y = (Math.floor(b.y / T) + 1) * T + 0.01;
     b.vy = 0;
   }
+  if (b === P && dy > 0 && !b.onGround && !P.ladder && !keys.down) { // the top of a ladder holds the bro like a floor; hold down to climb down
+    const rf = Math.floor((b.y + b.h) / T), top = rf * T;
+    if (b.y + b.h - dy <= top + 0.5 && b.y + b.h > top) for (let c = Math.floor((b.x + 3) / T); c <= Math.floor((b.x + b.w - 3) / T); c++) if (tileAt(c, rf) === LADDER && tileAt(c, rf - 1) !== LADDER) { b.y = top - b.h - 0.01; b.onGround = true; b.vy = 0; break; }
+  }
 }
 function los(x0, y0, x1, y1) {
   const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6);
@@ -3467,7 +3471,7 @@ const bname = (e) => e.bossName || BOSS_NAME[e.type];
 const DIMS = {
   jetpack: [10, 15, 2], sniper: [10, 15, 2], flamer: [10, 15, 3], brute: [14, 17, 12], medic: [10, 15, 2], preacher: [10, 15, 3], mortar: [12, 15, 3], camdrone: [10, 8, 1],
   grunt: [10, 15, 2], shield: [10, 15, 2], heavy: [12, 17, 20], scout: [10, 15, 1], grenadier: [10, 15, 2], rocketeer: [10, 15, 2], guru: [10, 15, 4], para: [10, 15, 2],
-  bomber: [10, 15, 1], dog: [12, 8, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
+  bomber: [10, 15, 1], dog: [15, 11, 1], turret: [14, 12, 6], barrel: [12, 14, 1], propane: [8, 14, 1], ammo: [12, 12, 1], strike: [12, 12, 1], pickup: [8, 8, 1], drone: [8, 6, 1],
   cage: [16, 16, 1], flag: [4, 32, 1], mechsuit: [20, 26, 1], peaplant: [8, 10, 1], chimp: [10, 10, 1], guncrate: [12, 12, 1],
   spring: [12, 6, 1], mine: [8, 10, 1], alarm: [8, 12, 2], fueltank: [24, 20, 5], itemcrate: [12, 12, 1], target: [20, 28, 14], icicle: [6, 14, 1], tank: [64, 30, 180], engine: [28, 34, 90], blimp: [120, 36, 70], citrus: [44, 44, 240], director: [30, 22, 110], boss: [44, 52, 150], kopter: [56, 22, 70], crawler: [20, 20, 110],
 };
@@ -5823,6 +5827,7 @@ function updateMechSuit(dt) {
   P.vx = approach(P.vx, dir * 82, (P.onGround ? 700 : 400) * dt);
   P.coy = P.onGround ? 0.09 : P.coy - dt;
   if (pressed.jump && keys.down) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } // Down + Jump gets you out too
+  if (pressed.jump) { if (clock - (M.tap || -9) < 0.3) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } M.tap = clock; } // and so does a quick double tap of Jump
   P.jbuf = pressed.jump ? 0.12 : P.jbuf - dt;
   if (P.jbuf > 0 && P.coy > 0) { P.vy = -300; P.coy = 0; P.jbuf = 0; sfx('jump'); }
   if (!keys.jump && P.vy < -120) P.vy = -120;
@@ -8282,7 +8287,7 @@ function drawHud(t) {
   if (P.alt) text(GUNS[P.alt.kind].name + ' ' + P.alt.ammo, 104, 34, 8, '#c96a2a');
   if (P.once) { const yy = P.mech ? 53 : 40; ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, yy, 142, 11); text('NEXT SPECIAL: ' + ONCE[P.once].name, 8, yy + 8, 8, '#c78bff'); }
   if (P.mech) { ctx.fillStyle = '#2a3160'; ctx.fillRect(104, 31, 60, 2); ctx.fillStyle = P.mech.hp < 8 ? '#d9534f' : '#f2c94c'; ctx.fillRect(104, 31, 60 * Math.max(0, P.mech.hp) / P.mech.max, 2); }
-  if (P.mech) { ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 40, 142, 11); text('SHIFT / DOWN+JUMP: GET OUT', 8, 48, 8, Math.floor(clock * 2) % 2 ? '#f2c94c' : '#e7eaf6'); } // exit hint while in the mech
+  if (P.mech) { ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 40, 142, 11); text('JUMP JUMP / SHIFT: GET OUT', 8, 48, 8, Math.floor(clock * 2) % 2 ? '#f2c94c' : '#e7eaf6'); } // exit hint while in the mech
   ctx.fillStyle = '#2a3160'; ctx.fillRect(40, 31, 60, 2);
   ctx.fillStyle = P.dcool > 0 ? '#5c6480' : '#a6d854'; ctx.fillRect(40, 31, 60 * (1 - Math.max(0, P.dcool) / 0.6), 2);
   // right: score, kills, rescued, time
