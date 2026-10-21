@@ -4644,7 +4644,8 @@ function drawEventsWorld(t) {
 }
 // the cloud: a stem and a rolling cap that rise for two seconds, glow orange early, then cool to grey and fade
 function drawMushroom(f) {
-  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(NUKE_S, NUKE_S); ctx.translate(-f.x, -f.y);
+  const sy = clamp((f.y - cam.y - 6) / 150, 1, NUKE_S); // the cap stays on screen: as tall as fits, never shorter than before
+  ctx.save(); ctx.translate(f.x, f.y); ctx.scale(NUKE_S, sy); ctx.translate(-f.x, -f.y);
   const age = f.max - f.t, rise = 1 - Math.pow(1 - Math.min(1, age / 2.4), 3), fade = Math.min(1, f.t / 2), hot = Math.max(0, 1 - age / 1.8);
   const top = f.y - 30 - rise * 96, w = 14 + rise * 28, x = f.x + Math.sin(age * 0.5) * 2 * rise;
   const body = mixHex('#f29e4c', '#5a4e58', 1 - hot), lit = mixHex('#fff6c2', '#8a7e86', 1 - hot), dark = mixHex('#b8433f', '#3a3240', 1 - hot);
