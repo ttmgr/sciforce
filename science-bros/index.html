@@ -1,11 +1,12 @@
 <meta charset="utf-8">
 <title>Science Bros</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>
-/* Layout: one arcade column. The game screen comes first, controls and the bro roster sit below it. */
+/* Layout: the game screen fills the window under a slim top line; the story opens on demand, controls and the bro roster sit below. */
 :root {
   --bg: #0f1328;
   --panel: #171c37;
@@ -17,53 +18,98 @@
   --teal: #1b9e77;
   --display: "Silkscreen", "Courier New", monospace;
   --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --topbar: 34px;
+  --chrome: 60px; /* top padding + top line + gap + stage border + a little room below: the game gets the rest of the window height */
   color-scheme: dark;
 }
 html, body { background: var(--bg); color: var(--ink); }
 body {
+  margin: 0;
   font-family: var(--body);
   font-size: 15px;
   line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 40px;
+  padding-block: 8px 40px;
 }
-.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; }
-h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 6vw, 44px); line-height: 1; margin: 0; color: var(--lime); letter-spacing: 0.02em; text-wrap: balance; }
-.lvl { font-family: var(--display); font-size: 14px; color: var(--peri); letter-spacing: 0.08em; text-transform: uppercase; }
-.premise { margin: 0; max-width: 65ch; color: var(--muted); }
-.stage { position: relative; border: 2px solid var(--line); background: #000; }
+.wrap { position: relative; max-width: calc((100vh - var(--chrome)) * 16 / 9); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: var(--topbar); align-items: center; gap: 8px 10px; }
+@supports (height: 100svh) { .wrap { max-width: calc((100svh - var(--chrome)) * 16 / 9); } }
+header { grid-area: 1 / 1; display: flex; align-items: baseline; gap: 4px 14px; min-width: 0; white-space: nowrap; overflow: hidden; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1; margin: 0; color: var(--lime); letter-spacing: 0.02em; user-select: none; -webkit-user-select: none; }
+.lvl { font-family: var(--display); font-size: 11px; color: var(--peri); letter-spacing: 0.08em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+.stage { grid-column: 1 / -1; grid-row: 2; position: relative; border: 2px solid var(--line); background: #000; }
 canvas#game { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; outline: none; touch-action: none; }
 canvas#game:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
-.bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: space-between; }
-.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+canvas#game.x-old { filter: sepia(0.85) contrast(1.1) brightness(0.95); }
+canvas#game.x-flip { filter: hue-rotate(180deg) saturate(1.3); }
+canvas#game.x-old.x-flip { filter: hue-rotate(180deg) sepia(0.6) contrast(1.1); }
+.stage:fullscreen { display: flex; align-items: center; justify-content: center; border: 0; background: #000; }
+.stage:fullscreen canvas#game { width: min(100vw, calc(100vh * 16 / 9)); height: auto; outline: none; }
+.stage:-webkit-full-screen { display: flex; align-items: center; justify-content: center; border: 0; background: #000; }
+.stage:-webkit-full-screen canvas#game { width: min(100vw, calc(100vh * 16 / 9)); height: auto; outline: none; }
+.story { grid-area: 1 / 2; }
+.story > summary, button.ui { font-family: var(--display); font-size: 12px; line-height: 1.5; color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 4px 12px; cursor: pointer; }
+.story > summary { list-style: none; user-select: none; -webkit-user-select: none; }
+.story > summary::-webkit-details-marker { display: none; }
+.story > summary::after { content: " +"; color: var(--peri); }
+.story[open] > summary { border-color: var(--peri); }
+.story[open] > summary::after { content: " -"; }
+.story > summary:hover, button.ui:hover { border-color: var(--peri); }
+.story > summary:focus-visible, button.ui:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.premise { position: absolute; z-index: 5; top: calc(var(--topbar) + 4px); right: 0; width: min(64ch, 100%); box-sizing: border-box; max-height: calc(100vh - 80px); overflow: auto; margin: 0; padding: 14px 16px; background: var(--panel); border: 1px solid var(--peri); color: var(--muted); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); }
+#fs { grid-area: 1 / 3; }
+#fs kbd { margin-left: 6px; }
+.controls, .rosterhead, .roster, .lore { grid-column: 1 / -1; }
+.controls { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.ctlhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.mode { font-size: 13px; color: var(--muted); }
+.keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+.keys li { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.keys .kk, .keys .pk { display: inline-flex; flex-wrap: wrap; gap: 3px; flex: none; max-width: 50%; }
+.keys.padmode .kk, .keys:not(.padmode) .pk { display: none; }
+.keys li.on { color: var(--ink); }
+.keys.padmode li.nopad { opacity: 0.4; }
 kbd { font-family: var(--display); font-size: 11px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-bottom-width: 2px; padding: 1px 6px; }
-button.ui { font-family: var(--display); font-size: 12px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 6px 12px; cursor: pointer; }
-button.ui:hover { border-color: var(--peri); }
-button.ui:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+kbd.pad { border-color: var(--teal); }
+kbd.on { background: var(--lime); border-color: var(--lime); color: var(--bg); }
 h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(--peri); margin: 0; letter-spacing: 0.06em; text-transform: uppercase; }
-.roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 12px; }
-.bro { display: grid; grid-template-columns: 48px 1fr; gap: 4px 12px; padding: 12px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
-.bro canvas { grid-row: span 3; width: 48px; height: 64px; image-rendering: pixelated; }
-.bro b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--lime); line-height: 1.2; }
-.bro span { font-size: 13px; color: var(--muted); line-height: 1.35; }
-.bro span em { font-style: normal; color: var(--ink); }
+h2 span { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; margin-left: 10px; }
+.rosterhead { margin-top: 14px; }
+.roster { position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+button.bro { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 10px 6px 8px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); font: inherit; cursor: pointer; }
+button.bro canvas { width: 36px; height: 48px; image-rendering: pixelated; image-rendering: crisp-edges; }
+button.bro b { font-family: var(--display); font-weight: 400; font-size: 10px; line-height: 1.25; color: var(--lime); text-align: center; overflow-wrap: anywhere; }
+button.bro:hover, button.bro.open { border-color: var(--peri); }
+button.bro:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+button.bro.locked b { color: var(--muted); }
+button.bro.ghost { opacity: 0.1; background: transparent; border-style: dashed; }
+button.bro.ghost:hover, button.bro.ghost:focus-visible, button.bro.ghost.open { opacity: 0.75; }
+.brocard { position: absolute; z-index: 6; width: min(320px, 100%); box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--peri); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); font-size: 13px; line-height: 1.4; color: var(--muted); }
+.brocard[hidden] { display: none; }
+.brocard b { font-family: var(--display); font-weight: 400; font-size: 14px; color: var(--lime); }
+.brocard em { font-style: normal; color: var(--ink); }
+.brocard .lab { display: block; font-family: var(--display); font-size: 10px; color: var(--peri); letter-spacing: 0.08em; text-transform: uppercase; }
+.brocard .fx { font-style: italic; color: var(--ink); border-top: 1px solid var(--line); padding-top: 6px; }
+.brocard .free { color: var(--ink); }
+.lore { margin-top: 14px; max-width: 70ch; padding: 14px 16px; background: var(--panel); border: 1px dashed var(--peri); color: var(--muted); font-size: 14px; }
+.lore b { display: block; margin-bottom: 6px; font-family: var(--display); font-weight: 400; font-size: 12px; color: var(--lime); letter-spacing: 0.06em; text-transform: uppercase; }
+.toast { position: fixed; z-index: 50; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: calc(100vw - 32px); box-sizing: border-box; padding: 8px 14px; background: var(--panel); border: 1px solid var(--lime); color: var(--ink); font-family: var(--display); font-size: 12px; pointer-events: none; animation: toast 4s ease forwards; }
+@keyframes toast { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
 .touch { display: none; position: absolute; inset: auto 0 0 0; padding: 8px; justify-content: space-between; pointer-events: none; }
 .touch .grp { display: flex; gap: 8px; pointer-events: auto; }
 .touch button { width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(231,234,246,0.5); background: rgba(23,28,55,0.55); color: var(--ink); font-family: var(--display); font-size: 11px; touch-action: none; user-select: none; -webkit-user-select: none; }
 @media (pointer: coarse) { .touch { display: flex; } }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+@media (max-width: 560px) { .lvl, #fs kbd { display: none; } h1 { font-size: 14px; } .story > summary, button.ui { padding: 4px 8px; } .wrap { column-gap: 8px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } .toast { animation-duration: 6s; } }
 </style>
 
-<div class="wrap">
+<div class="wrap" id="wrap">
   <header>
-    <h1>Science Bros</h1>
-    <div class="lvl">War on the Anti-Science League · 18 missions · 3 bonus modes</div>
+    <h1 id="title">Science Bros</h1>
+    <div class="lvl" id="sub">War on the Anti-Science League · 18 missions · 3 bonus modes</div>
   </header>
-  <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut the base of an outlined brick or crate structure and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin. Then fight through the League's strongholds (the Chemtrail Airfield, the Quartz Caverns, the Miasma Marsh, the Zodiac Observatory, the Perpetual Motion Works, the Crop Circle Fields, the Pyramid Power Plant, the Homeopathic Hot Springs and the Ley Line Lighthouse) to the Citrus Citadel, and juice King Citrus. The campaign starts gentle and gets harder mission by mission. Each freed scientist adds one bro to your reserve. From the title menu you can also hold the Lab Siege, run the Boss Rush or land on the Moon Base.</p>
 
-  <div class="stage">
+  <div class="stage" id="stage">
     <canvas id="game" width="480" height="270" tabindex="0" aria-label="Science Bros game screen"></canvas>
     <div class="touch" aria-hidden="true">
       <div class="grp"><button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button></div>
@@ -71,22 +117,18 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
     </div>
   </div>
 
-  <div class="bar">
-    <ul class="keys">
-      <li><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move; tap twice quickly to run</li>
-      <li><kbd>↑</kbd> / <kbd>W</kbd> / <kbd>Space</kbd> jump; hold against a wall to climb</li>
-      <li><kbd>Z</kbd> / <kbd>J</kbd> fire</li>
-      <li><kbd>X</kbd> / <kbd>K</kbd> special (3 per bro)</li>
-      <li><kbd>C</kbd> / <kbd>L</kbd> punch; <kbd>↓</kbd> + punch in the air slams down</li>
-      <li><kbd>Shift</kbd> / <kbd>V</kbd> dash-roll (dodges bullets)</li>
-      <li>hold <kbd>B</kbd> / <kbd>U</kbd> to aim: you keep facing the same way (walk backwards and keep shooting), and <kbd>↑</kbd> / <kbd>W</kbd> tilts the gun up (45° while moving, straight up when standing); <kbd>Space</kbd> still jumps</li>
-      <li>Jump off a wall to wall-jump · PS5 controller (Broforce layout): ✕ jump, □ fire, ○ special, △ melee, L1/R1 roll, R2 fire, L2 hold to aim (d-pad up tilts the gun), right stick aims freely, touchpad map</li>
-      <li><kbd>Tab</kbd> hold for the map · <kbd>P</kbd> pause menu · <kbd>M</kbd> sound</li>
-    </ul>
-    <button class="ui" id="fs" type="button">Fullscreen</button>
-  </div>
+  <details class="story" id="story">
+    <summary>Story</summary>
+    <p class="premise">The Anti-Science League wants to take over the world. Its leader, King Citrus, the Big Bad Orange, and his general Dr. Placebo hold our scientists in cages. On Placebo Island, blast through the bunker, the acid bridge and the cliff fort (cut the base of an outlined brick or crate structure and it comes down) and destroy the Homeopathitron. In the Detox Desert, storm the Wellness Spa, shoot down the Detoxkopter and kill the Crystal Crawler. On the Cryo Summit, cross the thin ice and stop Dr. Placebo's Snake Oil Tank. In the Dilution Plant, shut down the Succussion Engine. At the Flat Earth Station, bring down the zeppelin. Then fight through the League's strongholds (the Chemtrail Airfield, the Quartz Caverns, the Miasma Marsh, the Zodiac Observatory, the Perpetual Motion Works, the Crop Circle Fields, the Pyramid Power Plant, the Homeopathic Hot Springs and the Ley Line Lighthouse) to the Citrus Citadel, and juice King Citrus. The campaign starts gentle and gets harder mission by mission. Each freed scientist adds one bro to your reserve. From the title menu you can also hold the Lab Siege, run the Boss Rush or land on the Moon Base.</p>
+  </details>
+  <button class="ui" id="fs" type="button" aria-keyshortcuts="F"><span id="fslabel">Fullscreen</span><kbd>F</kbd></button>
 
-  <h2>The bros</h2>
+  <section class="controls" aria-labelledby="ctl-h">
+    <div class="ctlhead"><h2 id="ctl-h">Controls</h2><span class="mode" id="padmode" aria-live="polite">Keyboard</span></div>
+    <ul class="keys" id="keys"></ul>
+  </section>
+
+  <h2 class="rosterhead">The bros<span id="freed"></span></h2>
   <div class="roster" id="roster"></div>
 </div>
 
@@ -3067,11 +3109,6 @@ function rumble(strength, ms) {
     for (const g of navigator.getGamepads()) if (g && g.vibrationActuator) g.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: strength, weakMagnitude: strength * 0.6 }).catch(() => {});
   } catch (e) { /* rumble is optional */ }
 }
-document.getElementById('fs').addEventListener('click', () => {
-  const el = document.querySelector('.stage');
-  try { const p = (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()); if (p && p.catch) p.catch(() => {}); } catch (e) { /* fullscreen is optional */ }
-  cv.focus();
-});
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
@@ -9382,16 +9419,208 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-// roster on the page
-const roster = document.getElementById('roster');
-for (const b of BROS) {
-  const card = document.createElement('div'); card.className = 'bro';
-  const c = mk(12, 16); c.getContext('2d').drawImage(b.spr[0][0], 0, 0);
-  card.appendChild(c);
-  const n = document.createElement('b'); n.textContent = b.name; card.appendChild(n);
-  const w = document.createElement('span'); w.innerHTML = '<em>' + b.weapon + '</em>: ' + b.wdesc; card.appendChild(w);
-  const s = document.createElement('span'); s.innerHTML = '<em>' + b.special + '</em>: ' + b.sdesc; card.appendChild(s);
-  roster.appendChild(card);
+// ---------------------------------------------------------------- the page around the game
+// Fullscreen, the live controls panel (built from KEYMAP) and the bro roster (built from BROS and the unlocked list).
+// It only reads game state and runs in its own animation frame, never inside step() or render().
+// Under the headless test stubs (no document.body) it does nothing.
+let page = null;
+function pageUI() {
+  const d = document;
+  if (typeof d.addEventListener !== 'function' || !d.body) return null;
+  const $ = (id) => d.getElementById(id);
+  const el = (tag, cls, txt) => { const e = d.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const stage = $('stage'), fsBtn = $('fs'), fsLabel = $('fslabel'), keysEl = $('keys'), modeEl = $('padmode'), rosterEl = $('roster'), freedEl = $('freed');
+  const titleEl = $('title'), subEl = $('sub'), wrapEl = $('wrap'), storyEl = $('story');
+  const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const focusGame = () => { try { cv.focus({ preventScroll: true }); } catch (e) { /* focus is optional */ } };
+  const PAGE_KEYS = ['Tab', 'Enter', 'NumpadEnter', 'Space'];
+  const pageKeys = (e) => e.addEventListener('keydown', (ev) => { if (PAGE_KEYS.includes(ev.code)) ev.stopPropagation(); }); // on a page control, Tab/Enter/Space work the page instead of the game
+
+  // ---- fullscreen: the stage goes fullscreen, the canvas keeps 16:9 and its sharp pixels (CSS), Esc leaves
+  const FS_KEY = 'KeyF';
+  const fsOn = () => d.fullscreenElement || d.webkitFullscreenElement || null;
+  function toggleFs() {
+    try {
+      const p = fsOn() ? (d.exitFullscreen || d.webkitExitFullscreen).call(d) : (stage.requestFullscreen || stage.webkitRequestFullscreen).call(stage);
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) { /* fullscreen is optional */ }
+    focusGame();
+  }
+  const fsChange = () => { if (fsLabel) fsLabel.textContent = fsOn() ? 'Exit fullscreen' : 'Fullscreen'; focusGame(); };
+  fsBtn.addEventListener('click', toggleFs); pageKeys(fsBtn);
+  d.addEventListener('fullscreenchange', fsChange); d.addEventListener('webkitfullscreenchange', fsChange);
+  if (storyEl) { pageKeys(storyEl); storyEl.addEventListener('click', (e) => { if (e.detail > 0) setTimeout(focusGame, 0); }); } // a mouse click hands the keys back to the game
+
+  // ---- controls panel: one row per action, keyboard keys read from KEYMAP, pad buttons as pollPad() reads them
+  const KEY_NAME = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', ShiftLeft: 'Shift', ShiftRight: 'Shift', Escape: 'Esc' };
+  const keyName = (c) => KEY_NAME[c] || c.replace(/^Key|^Digit/, '');
+  const PAD_NAME = { left: ['◀'], right: ['▶'], jump: ['✕'], down: ['▼'], fire: ['□', 'R2'], special: ['○'], melee: ['△'], dash: ['L1', 'R1'], aim: ['L2', 'R-stick'], map: ['Touchpad'], pause: ['Options'], start: ['Options'] };
+  const ROWS = [
+    [['left', 'right'], 'move; tap twice quickly to run'],
+    [['jump'], 'jump; hold against a wall to climb, jump off it to wall-jump'],
+    [['down'], 'climb down; in the air with punch: ground pound'],
+    [['fire'], 'fire'],
+    [['special'], 'special (3 per bro)'],
+    [['melee'], 'punch'],
+    [['dash'], 'dash-roll (dodges bullets)'],
+    [['aim'], 'hold to aim: keep facing, Up tilts the gun (Space still jumps)'],
+    [['map'], 'hold for the map'],
+    [['pause'], 'pause menu'],
+    [['start'], 'start / confirm'],
+    [['mute'], 'sound on / off'],
+  ];
+  const acts = [...new Set(Object.values(KEYMAP))];
+  const rows = ROWS.filter((r) => r[0].some((a) => acts.includes(a)));
+  for (const a of acts) if (!ROWS.some((r) => r[0].includes(a))) rows.push([[a], a]); // a newly mapped action still gets a row
+  rows.push([['fullscreen'], 'fullscreen (Esc leaves)']);
+  const codesOf = (a) => (a === 'fullscreen' ? [FS_KEY] : Object.keys(KEYMAP).filter((c) => KEYMAP[c] === a));
+  const ui = [];
+  for (const [as, txt] of rows) {
+    const li = el('li'), kk = el('span', 'kk'), pk = el('span', 'pk'), kbds = [], pads = [], byName = {};
+    for (const a of as) for (const c of codesOf(a)) {
+      const n = keyName(c);
+      if (byName[n]) { byName[n].codes.push(c); continue; }
+      const k = el('kbd', null, n); k.dataset.code = c; kk.appendChild(k); kbds.push(byName[n] = { k, codes: [c], on: false });
+    }
+    for (const a of as) for (const n of PAD_NAME[a] || []) { const k = el('kbd', 'pad', n); pk.appendChild(k); pads.push(k); }
+    li.appendChild(kk); li.appendChild(pk); li.appendChild(el('span', null, txt));
+    if (!pads.length) li.classList.add('nopad');
+    li.dataset.acts = as.join(' ');
+    keysEl.appendChild(li); ui.push({ li, as, kbds, pads, on: false });
+  }
+  const held = new Set();
+  let padMode = false;
+  function paintKeys() {
+    for (const r of ui) {
+      let any = false;
+      for (const k of r.kbds) { const on = k.codes.some((c) => held.has(c)); if (on !== k.on) { k.on = on; k.k.classList.toggle('on', on); } any = any || on; }
+      const act = r.as.some((a) => keys[a]);
+      const on = any || act;
+      if (on !== r.on) { r.on = on; r.li.classList.toggle('on', on); for (const p of r.pads) p.classList.toggle('on', act); }
+    }
+  }
+  const anyPad = () => { try { if (typeof navigator === 'undefined' || !navigator.getGamepads) return false; for (const g of navigator.getGamepads()) if (g) return true; } catch (e) { /* no pads */ } return false; };
+  function checkPad() {
+    const on = padSeen && anyPad();
+    if (on === padMode) return;
+    padMode = on; keysEl.classList.toggle('padmode', on);
+    if (modeEl) modeEl.textContent = on ? 'Controller connected: button names' : 'Keyboard';
+  }
+
+  // ---- roster: one tile per bro in BROS; locked bros are silhouettes until freed
+  const card = el('div', 'brocard'); card.id = 'brocard'; card.setAttribute('role', 'tooltip'); card.hidden = true;
+  const tiles = [];
+  const addTile = (b, ghost) => {
+    const t = el('button', ghost ? 'bro ghost' : 'bro'), c = mk(12, 16), n = el('b');
+    t.type = 'button'; t.setAttribute('aria-describedby', 'brocard'); if (!ghost) t.dataset.id = b.id;
+    t.appendChild(c); t.appendChild(n); rosterEl.appendChild(t);
+    const tile = { t, b, c, n, ghost, locked: null };
+    tiles.push(tile); wireTile(tile); return tile;
+  };
+  function drawTile(tile, locked) {
+    tile.locked = locked;
+    const g = tile.c.getContext('2d');
+    g.clearRect(0, 0, 12, 16);
+    if (tile.ghost) { tile.n.textContent = '?'; return; }
+    g.globalCompositeOperation = 'source-over'; g.drawImage(tile.b.spr[0][0], 0, 0);
+    if (locked) { g.globalCompositeOperation = 'source-in'; g.fillStyle = '#05070f'; g.fillRect(0, 0, 12, 16); g.globalCompositeOperation = 'source-over'; }
+    tile.n.textContent = locked ? '???' : tile.b.name;
+    tile.t.classList.toggle('locked', locked);
+    tile.t.setAttribute('aria-label', locked ? 'Locked bro' : tile.b.name);
+  }
+  let shown = null, pinned = null;
+  function fillCard(tile) {
+    card.textContent = '';
+    if (tile.locked) { card.appendChild(el('b', null, '???')); card.appendChild(el('span', 'free', 'Free me from a cage')); return; }
+    const b = tile.b, line = (lab, name, desc) => { const p = el('span'); p.appendChild(el('span', 'lab', lab)); p.appendChild(el('em', null, name)); p.appendChild(d.createTextNode(': ' + desc)); card.appendChild(p); };
+    card.appendChild(el('b', null, b.name));
+    line('Weapon', b.weapon, b.wdesc);
+    line('Special', b.special, b.sdesc);
+    card.appendChild(el('span', 'fx', b.formula));
+  }
+  function showCard(tile) {
+    if (shown && shown !== tile) shown.t.classList.remove('open');
+    shown = tile; fillCard(tile); card.hidden = false; tile.t.classList.add('open');
+    const top = (tile.t.offsetTop || 0) + (tile.t.offsetHeight || 0) + 6;
+    const maxLeft = Math.max(0, (rosterEl.clientWidth || 0) - (card.offsetWidth || 0));
+    card.style.top = top + 'px'; card.style.left = Math.min(tile.t.offsetLeft || 0, maxLeft) + 'px';
+  }
+  function hideCard() { if (shown) shown.t.classList.remove('open'); shown = null; pinned = null; card.hidden = true; }
+  function toggleTile(tile) { if (pinned === tile) hideCard(); else { showCard(tile); pinned = tile; } }
+  function wireTile(tile) {
+    const t = tile.t;
+    t.addEventListener('mouseenter', () => { if (!pinned) showCard(tile); });
+    t.addEventListener('mouseleave', () => { if (!pinned) hideCard(); });
+    t.addEventListener('focus', () => { if (pinned !== tile) { pinned = null; showCard(tile); } });
+    t.addEventListener('blur', () => { if (!pinned) hideCard(); });
+    t.addEventListener('click', (e) => { toggleTile(tile); if (e.detail > 0) focusGame(); });
+    t.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') { e.preventDefault(); e.stopPropagation(); toggleTile(tile); }
+      else if (e.code === 'Tab') e.stopPropagation();
+    });
+  }
+  for (const b of BROS) addTile(b, false);
+  const NULL_BRO = { name: 'Dr. Null Result', weapon: 'Negative data', wdesc: 'results so solid nobody will publish them', special: 'File drawer', sdesc: 'vanishes into a filing cabinet until the grant runs out', formula: 'p = 0.051 (so close)' };
+  addTile(NULL_BRO, true);
+  rosterEl.appendChild(card);
+  d.addEventListener('click', (e) => { if (pinned && !(rosterEl.contains && rosterEl.contains(e.target))) hideCard(); });
+  let seenList = null, seenLen = -1;
+  function checkRoster() {
+    const list = unlocked || [];
+    if (list === seenList && list.length === seenLen) return;
+    seenList = list; seenLen = list.length;
+    let freed = 0;
+    for (const tile of tiles) {
+      if (tile.ghost) { if (tile.locked === null) drawTile(tile, false); continue; }
+      const locked = !list.includes(tile.b.id);
+      if (!locked) freed++;
+      if (locked !== tile.locked) drawTile(tile, locked);
+    }
+    if (freedEl) freedEl.textContent = freed + ' / ' + BROS.length + ' freed';
+    if (shown) showCard(shown);
+  }
+
+  // ---- extras
+  const toast = (msg) => { const t = el('div', 'toast', msg); t.setAttribute('role', 'status'); d.body.appendChild(t); t.addEventListener('animationend', () => { if (t.remove) t.remove(); }); };
+  const flip = (name) => cv.classList.toggle('x-' + name);
+  const subText = subEl ? subEl.textContent : '';
+  let lore = null;
+  const xs = {
+    a() {
+      if (lore) { toast('Already declassified'); return; }
+      lore = el('section', 'lore'); lore.id = 'lore';
+      lore.appendChild(el('b', null, 'Intercepted · League memo 7/B'));
+      lore.appendChild(el('p', null, 'From: Dr. Placebo, General (self-appointed). To: all quacks. Keep calling gravity "just a theory". Do not test this from the Citadel roof. Last week\'s volunteer did, and the result was inconclusive (volunteer unavailable for comment). P.S. from King Citrus: the vitamin C budget is final. Stop asking.'));
+      wrapEl.appendChild(lore); toast('Declassified: a League memo, below the roster');
+    },
+    b() { toast(flip('flip') ? 'Parallel universe: same game, positive peer review' : 'Back in this universe'); },
+    c() { const on = flip('old'); if (subEl) subEl.textContent = on ? 'Archive footage, 1897 · colour not yet invented' : subText; },
+  };
+  const TOK = { ArrowUp: '^', ArrowDown: '_', ArrowLeft: '<', ArrowRight: '>' };
+  const SEQ = [['theory', 'a'], ['^^__<><>ba', 'b']];
+  let typed = '';
+  addEventListener('keydown', (e) => {
+    held.add(e.code); paintKeys();
+    if (e.repeat) return;
+    if (e.code === FS_KEY && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggleFs(); }
+    else if (e.code === 'Escape' && fsOn()) toggleFs();
+    const tk = TOK[e.code] || (/^Key[A-Z]$/.test(e.code) ? e.code[3].toLowerCase() : '');
+    if (!tk) return;
+    typed = (typed + tk).slice(-16);
+    for (const [s, x] of SEQ) if (typed.endsWith(s)) { typed = ''; xs[x](); }
+  });
+  addEventListener('keyup', (e) => { held.delete(e.code); paintKeys(); });
+  addEventListener('blur', () => { held.clear(); paintKeys(); });
+  let clicks = [];
+  if (titleEl) titleEl.addEventListener('click', () => { const t = now(); clicks = clicks.filter((c) => t - c < 2000); clicks.push(t); if (clicks.length >= 5) { clicks = []; xs.c(); } });
+  const docTitle = d.title;
+  d.addEventListener('visibilitychange', () => { d.title = d.hidden ? 'Unsupervised experiment in progress' : docTitle; });
+
+  function tick() { checkPad(); paintKeys(); checkRoster(); }
+  const loop = () => { try { tick(); } catch (e) { console.warn('page ui', e); return; } requestAnimationFrame(loop); };
+  tick();
+  if (!window.__SB_TEST__) requestAnimationFrame(loop);
+  return { tick, toggleFs, tiles, card, rows: ui, held };
 }
 
 // ---------------------------------------------------------------- fancier maps
@@ -9800,6 +10029,8 @@ if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt,
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
 startFonts();
+try { page = pageUI(); } catch (e) { console.warn('page ui', e); }
+if (window.__SB_TEST__) Object.assign(window.__SB__, { page: () => page }); // page hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, OLD_STRETCH, stretchW: () => stretchW, playW: () => playW, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, stretchPlan: () => stretchPlan }); // longer maps hooks
