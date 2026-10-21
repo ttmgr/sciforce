@@ -197,6 +197,11 @@ const HEADS = {
   huygens: ['..hhhhhh....', '.hhhhhhhh...', 'hhhssssss...', 'hhhsssses...', 'hhhssmmss...', 'hh..ssss....'],
   nightingale: ['...gggg.....', '..ghhhhgg...', '.hhhsssss...', 'hhhsssses...', 'hh.ssssss...', '...sssss....'],
   schrodinger: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hssgegs...', '...ssssss...', '...ssss.....'],
+  fibonacci: ['..gggggg....', '.gggggggggg.', '.hhssssss...', '.hhsssses...', '..hssssss...', '...ssss.....'],
+  mcclintock: ['...hhhhh....', '..hhhhhhhh..', '.hhhsssss...', '.hhsssses...', '..hssssss...', '...sssss....'],
+  kekule: ['............', '...hhhhh....', '..hsssssss..', '.hhsssses...', '.hmmmmmms...', '..mmmmm.....'],
+  linnaeus: ['..wwwwww....', '.wwwwwwww...', 'wwwssssss...', 'w.wsssses...', 'ww.ssssss...', '.w..ssss....'],
+  leeuwenhoek: ['..hhhhhh....', '.hhhhhhhhh..', 'hhhhsssss...', 'hhhsssses...', 'hhhsmmmss...', 'hhh..ss.....'],
   anning: ['..gggggg....', '.gggggggg...', 'ghhssssss...', 'ghhsssses...', 'g.hssssss...', '...sssss....'],
   vesalius: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hsssses...', '..mmssssm...', '...mmmm.....'],
   hooke: ['..wwwwww....', '.wwwwwwww...', 'wwwssssss...', 'wwwsssses...', 'ww.ssssss...', 'w...ssss....'],
@@ -324,6 +329,16 @@ const BROS = [
     pal: { h: '#5a3a26', g: '#f4f1ea', s: '#f2d2b8', e: '#1b1d2e', c: '#2a4a7a', t: '#e9eef6', p: '#2a3a5a', b: '#15161f' } },
   { id: 'schrodinger', name: 'Erwin Schrodinbro', weapon: 'Superposition', wdesc: 'every shot flies as two ghosts; the first to hit is real and the other vanishes', special: 'Cat in a box', sdesc: 'lobs a box that bursts into a poison cloud; the cat is fine', formula: 'alive and dead, until you look', gun: '#b3a6ff',
     pal: { h: '#3a2a20', g: '#c9a227', s: '#f0c9a4', e: '#1b1d2e', c: '#6a5a4a', t: '#e9eef6', p: '#2a2e42', b: '#15161f' } },
+  { id: 'fibonacci', name: 'Leonardo Fibonabro', weapon: 'Fibonacci fire', wdesc: 'each pull fires the next number of the sequence: 1, 1, 2, 3, then 5 shots, and round again', special: 'Rabbit problem', sdesc: 'a pair of rabbits hops out and breeds by the sequence, up to 16, biting quacks for 6 s', formula: 'F(n) = F(n-1) + F(n-2)', gun: '#f2c94c',
+    pal: { h: '#3a2a20', g: '#b8322f', s: '#efc9a6', e: '#1b1d2e', c: '#5a2a4a', t: '#f2c94c', p: '#2a2232', b: '#15161f' } },
+  { id: 'mcclintock', name: 'Barbara McClintbro', weapon: 'Jumping genes', wdesc: 'a gene that jumps from the quack it hits to the next one, three times', special: 'Popcorn', sdesc: 'lobs a cob that pops into a burst of speckled kernels that bounce about', formula: 'transposons in maize, 1948', gun: '#a6d854',
+    pal: { h: '#4a3426', s: '#f0c9a4', e: '#1b1d2e', c: '#6a6a4a', t: '#e6e2d0', p: '#3a3a2a', b: '#15161f' } },
+  { id: 'kekule', name: 'August Kekulbro', weapon: 'Benzene ring', wdesc: 'a spinning ring of six atoms that rolls out 8 tiles, stops and grinds every quack it touches', special: 'Ouroboros', sdesc: 'a snake biting its own tail circles you for 6 s, biting quacks and swallowing shots', formula: 'C6H6, a ring of six', gun: '#e9eef6',
+    pal: { h: '#4a3426', m: '#3a2618', s: '#efc9a6', e: '#1b1d2e', c: '#2a2a3a', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
+  { id: 'linnaeus', name: 'Carl Linnaebro', weapon: 'Binomial tags', wdesc: 'a label shot; every quack of the same kind on screen takes half the hit', special: 'Systema Naturae', sdesc: 'every quack on screen is named and stunned; the bigger its kind, the harder they all get hit', formula: 'kingdom, class, order, genus, species', gun: '#f4f1ea',
+    pal: { w: '#e6e2f0', s: '#f0c9a4', e: '#1b1d2e', c: '#3a5a3a', t: '#e9eef6', p: '#2a3a2a', b: '#15161f' } },
+  { id: 'leeuwenhoek', name: 'Antonie van Leeuwenbro', weapon: 'Animalcules', wdesc: 'slow wriggling microbes; one that hits a quack splits in two that swim on', special: 'Magnify', sdesc: 'for 6 s everything you fire is twice the size and hits twice as hard', formula: 'animalcules, 1676', gun: '#66c2a5',
+    pal: { h: '#7a5436', m: '#4a3426', s: '#efc9a6', e: '#1b1d2e', c: '#1f1f2a', t: '#f4f1ea', p: '#25283a', b: '#15161f' } },
   // melee bros: the fire button swings at what is in reach (see swing)
   { id: 'anning', name: 'Mary Anbro', weapon: 'Fossil hammer', wdesc: 'slow, heavy swings that crush quacks and smash blocks', special: 'Mass extinction', sdesc: 'a meteor slams down a few tiles ahead', formula: 'Ichthyosaurus, Lyme Regis, 1811', gun: '#b4bed0', melee: true,
     pal: { h: '#5a3a26', g: '#3a2a4a', s: '#f2d2b8', e: '#1b1d2e', c: '#6a4a3a', t: '#e6e2d0', p: '#3a3326', b: '#25211a' } },
@@ -341,6 +356,7 @@ const BRO_ITEM = {
   pen: [[2, 2], [2, 1, 'X']], badge: [[2, 2], [3, 2, 'X']], bow: [[4, 1], [5, 1, 'X'], [6, 1]], scarf: [[3, 1], [4, 1], [5, 1, 'X'], [6, 1], [7, 1], [8, 1], [3, 2, 'X']],
   belt: [[1, 4, 'X'], [2, 4], [3, 4], [4, 4], [5, 4, 'k'], [6, 4], [7, 4], [8, 4], [9, 4, 'X']], medal: [[5, 3], [5, 2, 'X']], tie: [[5, 2, 'x'], [5, 3, 'x'], [6, 2, 'X'], [6, 3, 'X'], [5, 4, 'X']],
   chain: [[2, 3], [3, 4, 'X'], [4, 3]], pearls: [[4, 1], [5, 2, 'X'], [6, 1]], sash: [[2, 1], [3, 2], [4, 3, 'X'], [5, 4], [6, 5, 'X']], apron: [[3, 3], [4, 3], [5, 3, 'X'], [6, 3], [3, 4, 'X'], [4, 4], [5, 4], [6, 4], [7, 4], [3, 5], [4, 5, 'X'], [5, 5], [6, 5], [7, 5]],
+  spiral: [[7, 2], [8, 2, 'X'], [8, 3], [7, 4, 'X'], [6, 3]], cob: [[7, 3, 'X'], [8, 3], [7, 4], [8, 4, 'X'], [8, 2, 'k']], hexpin: [[3, 2], [4, 1, 'X'], [5, 2], [5, 3, 'X'], [4, 4], [3, 3, 'X']], sprig: [[2, 1], [2, 2, 'X'], [3, 1, 'X'], [1, 3, 'k']], lens: [[8, 1, 'X'], [8, 2], [9, 2, 'X'], [8, 3, 'k']], // round 6: a gold spiral, a corn cob, a benzene pin, a twinflower, a pocket lens
 };
 const LOOKS = {
   einstein: ['pen', '#f2c94c'], curie: ['badge', '#a6d854'], tesla: ['bow', '#d9534f'], newton: ['scarf', '#e9eef6'], franklin: ['pen', '#e78ac3'], ada: ['pearls', '#c9a227'],
@@ -349,7 +365,7 @@ const LOOKS = {
   sagan: ['scarf', '#8e2b3c'], wegener: ['scarf', '#e6e2d0'], hubble: ['tie', '#8e2b3c'], mendeleev: ['chain', '#c9a227'], hawking: ['tie', '#8e2b3c'], hopper: ['medal', '#f2c94c'],
   wu: ['badge', '#8fd3ff'], hodgkin: ['pearls', '#bfe9ff'], davinci: ['belt', '#7a5c36'], rutherford: ['chain', '#c9a227'], nobel: ['medal', '#f2c94c'], bohr: ['tie', '#8e2b3c'],
   lamarr: ['pearls', '#e9eef6'], lavoisier: ['scarf', '#e9eef6'], goodall: ['sash', '#7a5c36'], jemison: ['badge', '#2a5a9a'], oppenheimer: ['tie', '#3a2618'], semmelweis: ['apron', '#e6e2f0'],
-  torricelli: ['chain', '#b4bed0'], volta: ['medal', '#f2c94c'], gauss: ['pen', '#e9eef6'], kelvin: ['scarf', '#8fd3ff'], huygens: ['scarf', '#e9eef6'], nightingale: ['apron', '#f4f1ea'], schrodinger: ['bow', '#8e2b3c'], anning: ['sash', '#7a5c36'], vesalius: ['apron', '#b4bed0'], hooke: ['scarf', '#e9eef6'],
+  torricelli: ['chain', '#b4bed0'], volta: ['medal', '#f2c94c'], gauss: ['pen', '#e9eef6'], kelvin: ['scarf', '#8fd3ff'], huygens: ['scarf', '#e9eef6'], nightingale: ['apron', '#f4f1ea'], schrodinger: ['bow', '#8e2b3c'], fibonacci: ['spiral', '#f2c94c'], mcclintock: ['cob', '#f2c94c'], kekule: ['hexpin', '#e9eef6'], linnaeus: ['sprig', '#e78ac3'], leeuwenhoek: ['lens', '#c9a227'], anning: ['sash', '#7a5c36'], vesalius: ['apron', '#b4bed0'], hooke: ['scarf', '#e9eef6'],
 };
 const lighten = (hex, a) => { const n = parseInt(hex.slice(1), 16); return '#' + [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * a).toString(16).padStart(2, '0')).join(''); };
 function broRows(id) {
@@ -2540,6 +2556,9 @@ const BRO_LINES = {
   gauss: { k: 'ADDS UP', s: 'One to one hundred in a second. You are welcome.', r: 'Back. Normally distributed, never average.' },
   kelvin: { k: 'ABSOLUTELY ZERO', s: 'Zero kelvin. Nothing moves. Not even their facts.', r: 'Back. Measured, not guessed.' }, huygens: { k: 'WAVE GOODBYE', s: 'Every point a new wave. Every quack a new problem.', r: 'Back. Right on time. I built the clock.' },
   nightingale: { k: 'STATS CHECK', s: 'Lamp on. Data in. Infection out.', r: 'Back. The numbers said I would be.' }, schrodinger: { k: 'COLLAPSED', s: 'The cat is out of the box. Probably.', r: 'Back. Or never gone. Hard to say.' },
+  fibonacci: { k: 'ONE, ONE, TWO, GONE', s: 'Two rabbits. Then three. Then five. Then you run.', r: 'Back. Next in the sequence.' }, mcclintock: { k: 'TRANSPOSED', s: 'Pop goes the maize. Every kernel a new gene.', r: 'Back. They ignored me for thirty years too.' },
+  kekule: { k: 'RING CLOSED', s: 'I dreamt of a snake eating its tail. Meet it.', r: 'Back. Six carbons, no sleep.' }, linnaeus: { k: 'CLASSIFIED: EXTINCT', s: 'Kingdom, class, order. You are all one genus.', r: 'Back. Filed under Homo sapiens, again.' },
+  leeuwenhoek: { k: 'TOO SMALL TO SEE', s: 'Under my lens, even a quack looks big. Briefly.', r: 'Back. Tiny animals everywhere. Wash up.' },
   anning: { k: 'SHE SELLS SEASHELLS', s: 'Smashing rocks since 1810. Credit still due.', r: 'Back. A new find: their plan. It is extinct.' },
   vesalius: { k: 'DISSECTED', s: 'Anatomy lesson, quacks. Pay attention to the cut.', r: 'Back. Cutting-edge science, literally.' },
   hooke: { k: 'ELASTIC LIMIT', s: 'As the stretch, so the punch. Look it up.', r: 'Back. I named the cell first. Do not forget it.' },
@@ -2782,6 +2801,8 @@ const DESTRUCT = {
   volt: { p: 0.5, shape: 'fork', m: 'stone' }, gauss: { p: 1.2, shape: 'line', n: 3, m: 'stone' },
   frost: { p: 0.3, shape: 'chip', m: 'glass' }, wavelet: { p: 0.6, shape: 'chip' }, wlet: { p: 0.2, shape: 'chip' }, pend: { p: 0.3, shape: 'punch' }, // Kelvin's frost makes ice and crates brittle; Huygens' wave and wavelets chip, his pendulum smashes
   petal: { p: 0.25, shape: 'chip', m: 'soft' }, psi: { p: 0.9, shape: 'punch' }, catbox: { p: 1, r: 1, shape: 'round', m: 'acid' }, // Nightingale's petals scuff; Schrodinger's real shot punches, the box blows a crater
+  fib: { p: 0.45, shape: 'chip' }, rabbit: { p: 0.35, shape: 'chip', m: 'soft' }, gene: { p: 0.5, shape: 'chip', m: 'soft' }, cob: { p: 0.8, r: 0.9, shape: 'round', m: 'soft' }, kernel: { p: 0.25, shape: 'chip' }, // Fibonacci's shots chip, his rabbits dig; McClintock's genes and kernels scuff, the cob pops a small crater
+  benzene: { p: 0.35, shape: 'chip', m: 'acid' }, snake: { shape: 'none' }, tag: { p: 0.4, shape: 'punch', m: 'soft' }, microbe: { p: 0.3, shape: 'eat', m: 'soft' }, // Kekule's ring grinds earth like acid, the snake passes over blocks; Linnaeus' tags pin through; the microbes eat earth
   tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo', s: 0.5 }, rocket: { p: 1.3, r: 1.2, shape: 'round', s: 0.45 }, bomb: { p: 1.2, r: 1.2, shape: 'round', s: 0.5 }, // s: steel power. Only these heavy weapons dent steel (10 hp); the bedrock row and boss arenas never give
 };
 const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot
@@ -4274,6 +4295,11 @@ const GUNFX = {
   huygens: { flash: 'ring', c: ['#ffffff', '#8fd3ff'], heat: 0.05, idle: 'flicker' },
   nightingale: { flash: 'glow', c: ['#fff6c2', '#e78ac3'], idle: 'glint' },
   schrodinger: { flash: 'ring', c: ['#ffffff', '#b3a6ff'], eject: 'vent', heat: 0.08, idle: 'flicker' },
+  fibonacci: { flash: 'star', c: ['#fff6c2', '#f2c94c'], heat: 0.06, idle: 'glint' },
+  mcclintock: { flash: 'puff', c: ['#e9ffc2', '#a6d854'], idle: 'leaf' },
+  kekule: { flash: 'ring', c: ['#ffffff', '#b4bed0'], heat: 0.05, kick: 1.5, idle: 'steam' },
+  linnaeus: { flash: 'puff', c: ['#ffffff', '#f4f1ea'], eject: 'card', idle: 'leaf' },
+  leeuwenhoek: { flash: 'mist', c: ['#e9fff6', '#66c2a5'], idle: 'drip' },
   alt_shotgun: { flash: 'cone', c: ['#ffffff', '#f29e4c'], heat: 0.25, kick: 3, shake: 2 },
   alt_rocket: { flash: 'puff', c: ['#fff6c2', '#f29e4c'], heat: 0.3, kick: 3, shake: 2, charge: 1 },
   alt_minigun: { flash: 'star', c: ['#fff6c2', '#f2c94c'], eject: 'brass', heat: 0.03 },
@@ -4356,11 +4382,13 @@ function aimShots(n0, f) {
     if (b.sx !== undefined) b.sy = b.y;
   }
 }
+// Leeuwenhoek's Magnify: for 6 s every shot he fires is twice the size and hits twice as hard
+function magnify(n0) { if (!(P.lens > 0) || P.bro.id !== 'leeuwenhoek') return; for (let i = n0; i < bullets.length; i++) { const o = bullets[i]; if (o.owner !== 'p') continue; o.dmg *= 2; o.hitR = (o.hitR || 2) * 2; o.big = 1; } }
 function fireWeapon() {
   const f = P.face, a = P.aim || 0, gx = P.x + P.w / 2 + f * (P.w / 2 + 2) * Math.cos(a), gy = P.y + 8 - 10 * Math.sin(a);
   const dx = f * Math.cos(a), dy = -Math.sin(a), n0 = bullets.length; // the aim as a unit vector
   lifeNoise(gx, gy, 150);
-  if (P.alt) { fireAlt(f, gx, gy, dx, dy); aimShots(n0, f); return; }
+  if (P.alt) { fireAlt(f, gx, gy, dx, dy); aimShots(n0, f); magnify(n0); return; }
   bossMul = BOSS_MUL[P.bro.id] || 1;
   switch (P.bro.id) {
     case 'einstein':
@@ -4435,6 +4463,11 @@ function fireWeapon() {
     case 'huygens': bullets.push({ x: gx, y: gy, vx: f * 330, vy: 0, owner: 'p', dmg: 1.6, tdmg: 0.6, life: 0.6, kind: 'wavelet', hitR: 5 }); P.cool = 0.24; P.recoil = 1; sfx('zap'); break; // where it hits it bursts into wavelets (see wavelets)
     case 'nightingale': for (let k = 0; k < 5; k++) { const a = (k - 2) * 0.38; bullets.push({ x: gx, y: gy, vx: f * Math.cos(a) * 320, vy: Math.sin(a) * 320, owner: 'p', dmg: 0.9, tdmg: 0.3, life: 0.4, kind: 'petal', pierce: 1 }); } P.cool = 0.3; P.recoil = 1; sfx('throw'); break; // half a rose: five petals fanned out, short range
     case 'schrodinger': { const link = { s: [], hit: false }; for (const sd of [-1, 1]) link.s.push({ x: gx, y: gy + sd, vx: f * 420, vy: sd * 26, owner: 'p', dmg: 2.4, tdmg: 0.8, life: 0.6, kind: 'psi', link, ph: sd }); bullets.push(...link.s); P.cool = 0.26; P.recoil = 1; sfx('shot'); break; } // two ghosts; the first to land is the real one
+    case 'fibonacci': { const n = [1, 1, 2, 3, 5][(P.fib || 0) % 5]; P.fib = ((P.fib || 0) + 1) % 5; for (let k = 0; k < n; k++) { const o = k - (n - 1) / 2, a = o * 0.07; bullets.push({ x: gx, y: gy + o * 2, vx: f * 440 * Math.cos(a), vy: 440 * Math.sin(a), owner: 'p', dmg: 1.1, tdmg: 0.45, life: 0.55, kind: 'fib', n }); } P.cool = 0.12 + n * 0.03; P.recoil = 1 + n * 0.3; sfx('shot'); break; } // 1, 1, 2, 3, 5 shots, then the sequence starts again
+    case 'mcclintock': bullets.push({ x: gx, y: gy, vx: f * 400, vy: 0, owner: 'p', dmg: 1.7, tdmg: 0.5, life: 0.6, kind: 'gene', jumps: 3 }); P.cool = 0.2; sfx('chirp'); break; // it jumps on to the next quack (see genes)
+    case 'kekule': bullets.push({ x: gx + f * 4, y: gy, vx: f * 340, vy: 0, owner: 'p', dmg: 1.1, tdmg: 0.4, life: 1.2, kind: 'benzene', pierce: 99, hitR: 6, spin: 0, tick: 0 }); P.cool = 0.32; P.recoil = 1.5; sfx('clink'); break; // rolls out, stops and grinds what it touches every 0.16 s
+    case 'linnaeus': bullets.push({ x: gx, y: gy, vx: f * 460, vy: rand(-6, 6), owner: 'p', dmg: 1.5, tdmg: 0.5, life: 0.6, kind: 'tag' }); P.cool = 0.17; sfx('shot'); break; // its kind on screen takes half (see classify)
+    case 'leeuwenhoek': for (const k of [-1, 1]) bullets.push({ x: gx, y: gy + k * 2, vx: f * 230, vy: -k * 5, owner: 'p', dmg: 1.2, tdmg: 0.4, life: 0.9, kind: 'microbe', gen: 0, ph: k > 0 ? Math.PI : 0, hitR: 3 }); P.cool = 0.24; if (Math.random() < 0.5) sfx('splash'); break; // two wriggling microbes; each splits on a hit (see bulletHit)
     case 'anning': swing(26, 5, 300, 3, '#e6e2d0'); P.cool = 0.45; shake = Math.min(10, shake + 1.5); break;
     case 'vesalius': swing(20, 1.4, 90, 0.4, '#ffffff'); P.cool = 0.13; break;
     case 'hooke': swing(44, 2.6, 520, 0.8, '#d9534f', true); P.cool = 0.32; break;
@@ -4446,7 +4479,7 @@ function fireWeapon() {
       break;
     }
   }
-  aimShots(n0, f);
+  aimShots(n0, f); magnify(n0);
   for (let i = n0; i < bullets.length; i++) bullets[i].bm = bossMul; bossMul = 1;
   if (slowT > 0) P.cool *= 0.6; // dilated time: you shoot faster
   if (P.volt > 0 && P.bro.id === 'volta') P.cool *= 0.5; // Overcharge
@@ -4747,6 +4780,22 @@ function useSpecial() {
       for (const e of ents) if (isQuack(e) && live(e) && Math.hypot(center(e)[0] - P.x - 5, center(e)[1] - P.y - 8) < 110) e.stun = Math.max(e.stun || 0, 2);
       fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#fff6c2' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 110, t: 0.4, max: 0.4 }); break;
     case 'schrodinger': bullets.push({ x: gx, y: gy - 4, vx: f * 210, vy: -230, grav: 650, owner: 'p', dmg: 9, life: 1.4, kind: 'catbox', explode: 46, tp: 2.5, rad: 40, radCol: '#b3a6ff' }); sfx('throw'); break; // bursts into a poison cloud (see burst)
+    case 'fibonacci': { // the rabbit problem: one pair, then every 0.9 s the pairs breed to the next number (1, 1, 2, 3, 5, 8 pairs); all go home after 6 s
+      const w = {}, t0 = lifeT, FIB = [1, 1, 2, 3, 5, 8];
+      const rab = (x, y, dir) => bullets.push({ x, y, vx: dir * rand(80, 130), vy: -rand(140, 220), owner: 'p', dmg: 1.5, tdmg: 0.35, life: Math.max(0.5, 6 - (lifeT - t0)), kind: 'rabbit', dir, hitR: 4, rb: w });
+      for (const k of [0, 1]) rab(P.x + 5 + f * (4 + k * 5), P.y + 8, f);
+      for (let g = 1; g < 6; g++) setTimeoutGame(() => { const mine = bullets.filter((o) => o.rb === w && !o.dead); for (let i = mine.length; i < 2 * FIB[g]; i++) { const m = mine[i % (mine.length || 1)]; if (m) rab(m.x, m.y - 2, Math.random() < 0.7 ? m.dir : -m.dir); else rab(P.x + 5, P.y + 8, P.face); } }, g * 0.9);
+      sfx('chirp'); break;
+    }
+    case 'mcclintock': bullets.push({ x: gx, y: gy - 4, vx: f * 230, vy: -240, grav: 650, owner: 'p', dmg: 4, life: 1.4, kind: 'cob', explode: 22, tp: 1.5 }); sfx('throw'); break; // pops into kernels (see burst)
+    case 'kekule': for (let k = 0; k < 12; k++) bullets.push({ x: P.x + 5, y: P.y + 6, vx: 0, vy: 0, owner: 'p', dmg: 1.5, tdmg: 0, life: 6, kind: 'snake', pierce: 99, ang: k * Math.PI / 6, seg: k, hitR: 4, tick: 0 }); sfx('hiss'); break; // the ouroboros: see updateBullets
+    case 'linnaeus': { // systema naturae: every quack on screen is named and stunned; each takes 2 for every quack of its kind on screen (at most 12), plus 1
+      const seen = ents.filter((e) => isQuack(e) && live(e) && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10), by = {}, named = new Set();
+      for (const e of seen) by[e.type] = (by[e.type] || 0) + 1;
+      for (const e of seen) { e.stun = Math.max(e.stun || 0, 2); if (!named.has(e.type)) { named.add(e.type); floatText(e.x + e.w / 2, e.y - 10, latin(e.type), '#f4f1ea'); } hitEnemy(e, Math.min(12, 2 * by[e.type]) + 1, 0, 'shot'); }
+      fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#a6d854' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 260, t: 0.45, max: 0.45 }); break;
+    }
+    case 'leeuwenhoek': P.lens = 6; fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#66c2a5' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 90, t: 0.4, max: 0.4 }); break; // Magnify: see magnify
     case 'anning': { // mass extinction: a meteor comes down a few tiles ahead; a red mark shows where
       const tx = clamp(P.x + 5 + f * 90, 8, playW * T - 8);
       fx.push({ kind: 'marker', x: tx, y: P.y + P.h, t: 1, max: 1 });
@@ -5393,7 +5442,7 @@ function updatePlayer(dt) {
   P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
   if (P.mech) { updateMechSuit(dt); return; }
   P.flip = Math.max(0, (P.flip || 0) - dt); P.aimT = Math.max(0, (P.aimT || 0) - dt);
-  P.cage = Math.max(0, (P.cage || 0) - dt); P.volt = Math.max(0, (P.volt || 0) - dt); P.lamp = Math.max(0, (P.lamp || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
+  P.cage = Math.max(0, (P.cage || 0) - dt); P.volt = Math.max(0, (P.volt || 0) - dt); P.lens = Math.max(0, (P.lens || 0) - dt); P.lamp = Math.max(0, (P.lamp || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
   P.shield = Math.max(0, (P.shield || 0) - dt); P.over = Math.max(0, (P.over || 0) - dt); P.jet = Math.max(0, (P.jet || 0) - dt);
   if (P.jet > 0 && keys.jump && !P.onGround && P.coy <= 0 && !P.ladder) { // jetpack thrust
     P.vy = Math.max(P.vy - 2300 * dt, -170);
@@ -6980,6 +7029,7 @@ function burst(b, x, y, own) {
   explode(x, y, b.explode, b.dmg, own, b.tp, own === 'p' ? dkey(b) : undefined);
   if (b.rad) fx.push({ kind: 'rad', x, y, r: b.rad, t: 2.6, max: 2.6, tick: 0, col: b.radCol });
   if (b.kind === 'catbox') floatText(x, y - 14, 'MEOW', '#f2c94c'); // the cat is fine
+  if (b.kind === 'cob' && own === 'p') for (let k = 0; k < 14; k++) { const a = -Math.PI / 2 + (k - 6.5) * 0.2; bullets.push({ x, y: y - 3, vx: Math.cos(a) * rand(150, 250), vy: Math.sin(a) * rand(200, 300), grav: 650, owner: 'p', dmg: 2, tdmg: 0.3, life: 1.6, kind: 'kernel', bounce: 2, hitR: 2, col: ['#f2c94c', '#8e2b3c', '#6a4a8a', '#f4f1ea'][k % 4], bm: b.bm }); } // McClintock's popcorn: speckled kernels, every one a different colour
 }
 // a player bullet hits something: damage plus whatever the weapon adds (poison, sickness, a stun)
 function bulletHit(b, e) {
@@ -6994,7 +7044,29 @@ function bulletHit(b, e) {
   if (b.burn && !e.dead) setBurn(e);
   if (b.kind !== 'flame' && b.kind !== 'hoot') hitSpark(b.x, b.y, e);
   if (b.kind === 'wavelet') wavelets(b, e);
+  if (b.kind === 'gene') genes(b, e);
+  if (b.kind === 'tag') classify(b, e);
+  if (b.kind === 'microbe' && !b.gen) for (const k of [-1, 1]) bullets.push({ x: b.x, y: b.y, vx: b.vx * 0.9, vy: k * 120, owner: 'p', dmg: b.dmg * 0.7, tdmg: 0.3, life: 0.45, kind: 'microbe', gen: 1, ph: 0, hitR: b.big ? 4 : 2, src: e, bm: b.bm, big: b.big }); // binary fission: two daughters swim on
   if (b.glow) glowAt(b.x, b.y, b.glow);
+}
+// McClintock: a jumping gene leaves the quack it hit for the nearest other quack in sight, up to three times
+function genes(b, e) {
+  if (!(b.jumps > 0)) return;
+  const [x, y] = center(e), hops = b.hops || new Set(); hops.add(e);
+  const d2 = (o) => Math.hypot(center(o)[0] - x, center(o)[1] - y);
+  const n = enemiesNear(x, y, 130, (o) => foe(o) && !hops.has(o) && !(o.vats && o.vats.some((v) => !v.dead)) && los(x, y, center(o)[0], center(o)[1])).sort((p, q) => d2(p) - d2(q))[0];
+  if (!n) return;
+  const [tx, ty] = center(n), L = d2(n) || 1;
+  bullets.push({ x, y, vx: (tx - x) / L * 400, vy: (ty - y) / L * 400, owner: 'p', dmg: b.dmg, tdmg: 0.5, life: 0.6, kind: 'gene', jumps: b.jumps - 1, hops, src: e, bm: b.bm, big: b.big, hitR: b.hitR });
+  if (fx.length < 260) fx.push({ kind: 'pop', x, y, t: 0.12, max: 0.12, col: '#a6d854', r: 4 });
+}
+// Linnaeus: a tagged quack is classified, and every other quack of its kind on screen takes half the hit
+const latin = (t) => 'QUACKUS ' + t.toUpperCase().replace(/[AEIOUY]$/, '') + 'US';
+function classify(b, e) {
+  if (!isQuack(e)) return;
+  let n = 0;
+  for (const o of ents) if (o !== e && o.type === e.type && live(o) && Math.abs(center(o)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { hitEnemy(o, b.dmg * 0.5, 0, 'shot'); n++; if (fx.length < 260) fx.push({ kind: 'pop', x: center(o)[0], y: o.y - 2, t: 0.12, max: 0.12, col: '#f4f1ea', r: 3 }); }
+  if (n && !(P.tagT > lifeT)) { P.tagT = lifeT + 1.5; floatText(e.x + e.w / 2, e.y - 8, latin(e.type), '#f4f1ea'); }
 }
 // a short white star where a shot lands, and sparks off anything made of metal
 function hitSpark(x, y, e) {
@@ -7003,7 +7075,7 @@ function hitSpark(x, y, e) {
 }
 // what a shot leaves where it hits a block: sparks off steel, dust and clods off earth, chips off brick, splinters off
 // crates, shards off ice; energy shots pop in their own colour and leave a scorch mark, bullets leave a hole
-const BCOL = { frost: '#bfe9ff', wavelet: '#8fd3ff', wlet: '#8fd3ff', petal: '#e78ac3', psi: '#b3a6ff', photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff', volt: '#f2c94c', gauss: '#8da0cb', mdrop: '#b4bed0', merc: '#b4bed0', bubble: '#bfe9ff' };
+const BCOL = { fib: '#f2c94c', gene: '#a6d854', kernel: '#f2c94c', benzene: '#b4bed0', tag: '#f4f1ea', microbe: '#66c2a5', frost: '#bfe9ff', wavelet: '#8fd3ff', wlet: '#8fd3ff', petal: '#e78ac3', psi: '#b3a6ff', photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff', volt: '#f2c94c', gauss: '#8da0cb', mdrop: '#b4bed0', merc: '#b4bed0', bubble: '#bfe9ff' };
 // Huygens: every point the wave reaches is a new source, so a ring of six little wavelets spreads from where it hits
 function wavelets(b, e) {
   const sp = Math.hypot(b.vx, b.vy) || 1, x = e ? b.x : b.x - b.vx / sp * 7, y = e ? b.y : b.y - b.vy / sp * 7; // off a wall: back out of it first
@@ -7106,6 +7178,28 @@ function updateBullets(dt, edt) {
     if (b.kind === 'missile' && Math.random() < 0.6) part(b.x - Math.cos(b.ang) * 5, b.y - Math.sin(b.ang) * 5, rand(-10, 10), rand(-10, 10), theme.dust, rand(0.3, 0.6), rand(2, 3), 0, 'smoke');
     if (b.kind === 'glob' && Math.random() < 0.4) part(b.x, b.y, 0, 20, '#a6d854', 0.3, 1, G);
     if (b.kind === 'coin') { b.vx = b.roll; if (solidPx(b.x, b.y + 3)) b.vy = Math.min(b.vy, -70); } // the miner's coin keeps rolling toward you at a steady pace
+    if (b.kind === 'rabbit') { // Fibonacci's rabbits hop along the ground, turn (and dig a little) at walls, and bite each quack once per hop
+      b.vy += 900 * d; const nx = b.x + b.vx * d, ny = b.y + b.vy * d, box = { x: b.x - 4, y: b.y - 4, w: 8, h: 7 };
+      if (solidPx(nx + b.dir * 3, b.y - 1)) { wreck('rabbit', Math.floor((nx + b.dir * 3) / T), Math.floor((b.y - 1) / T), b.vx, 0, 0); b.dir = -b.dir; b.vx = b.dir * Math.abs(b.vx); } else b.x = nx;
+      if (b.vy > 0 && solidPx(b.x, ny + 3)) { // landed: hop on, toward a quack within 4 tiles if there is one
+        const q = enemiesNear(b.x, b.y, 64, (e) => foe(e) && Math.abs(center(e)[1] - b.y) < 24)[0]; if (q) b.dir = Math.sign(center(q)[0] - b.x) || b.dir;
+        b.y = Math.floor((ny + 3) / T) * T - 3; b.vy = -rand(120, 180); b.vx = b.dir * rand(70, 120); if (b.hits) b.hits.clear();
+      }
+      else if (b.vy < 0 && solidPx(b.x, ny - 3)) b.vy = 0; else b.y = ny;
+      if (!b.hits) b.hits = new Set();
+      for (const e of ents) if (live(e) && !b.hits.has(e) && overlap(e, box)) { b.hits.add(e); bulletHit(b, e); }
+      for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && !b.hits.has(v) && overlap(v, box)) { b.hits.add(v); hitVat(e, v, b.dmg); }
+      if (rectAcid(b.x, b.y, 1, 1)) b.dead = true;
+      continue;
+    }
+    if (b.kind === 'snake') { // Kekule's ouroboros: twelve segments circle you, bite quacks again every half second and swallow enemy shots
+      if (!P.alive) b.life = 0;
+      b.ang += d * 3.2; b.x = P.x + 5 + Math.cos(b.ang) * 22; b.y = P.y + 6 + Math.sin(b.ang) * 12; b.vx = -Math.sin(b.ang) * 1e-3; b.vy = 0;
+      b.tick -= d; if (b.tick <= 0) { b.tick = 0.5; if (b.hits) b.hits.clear(); }
+      if (b.seg === 0) for (const o of bullets) { if (o.owner !== 'e' || o.dead) continue; const ex = (o.x - P.x - 5) / 22, ey = (o.y - P.y - 6) / 12, q = ex * ex + ey * ey; if (q > 0.55 && q < 1.7) { o.dead = true; if (fx.length < 260) fx.push({ kind: 'pop', x: o.x, y: o.y, t: 0.1, max: 0.1, col: '#7bc043', r: 3 }); } } // the head checks once for the whole ring: a shot that reaches the coil is swallowed
+    }
+    if (b.kind === 'benzene') { const sp = Math.hypot(b.vx, b.vy), k = sp > 0 ? Math.max(0, sp - 420 * d) / sp : 0; b.vx *= k; b.vy *= k; b.spin += d * 12; b.tick -= d; if (b.tick <= 0) { b.tick = 0.16; if (b.hits) b.hits.clear(); } } // Kekule's ring rolls out about 8 tiles, stops and spins there, grinding: it can hit the same quack again every 0.16 s
+    if (b.kind === 'microbe') { b.ph += d * 16; b.y += Math.cos(b.ph) * 50 * d; } // it wriggles about its path as it swims
     if (b.grav) b.vy += b.grav * d;
     const ox = b.x, oy = b.y;
     b.x += b.vx * d; b.y += b.vy * d;
@@ -7123,11 +7217,11 @@ function updateBullets(dt, edt) {
       if (P.alive && P.inv <= 0 && Math.abs(P.x + 5 - b.x) < 8 && P.y + P.h > b.y - 6) killPlayer('shot', Math.sign(b.vx));
       continue;
     }
-    if (!b.explode && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && rectAcid(b.x, b.y, 1, 1)) { // a shot into acid: a little splash
+    if (!b.explode && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && b.kind !== 'snake' && rectAcid(b.x, b.y, 1, 1)) { // a shot into acid: a little splash
       b.dead = true; for (let i = 0; i < 4; i++) part(b.x, b.y - 2, rand(-50, 50), rand(-140, -60), i % 2 ? theme.acid[1] : theme.acid[2], rand(0.3, 0.5), 1, G);
       continue;
     }
-    if ((b.kind === 'disc' || b.kind === 'orbit' || b.kind === 'pend') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
+    if ((b.kind === 'disc' || b.kind === 'orbit' || b.kind === 'pend' || b.kind === 'snake') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
     else if (b.kind === 'enigma' && solidPx(b.x, b.y) && b.bounces > 0) { // ricochet: step back out of the wall and bounce off it
       b.bounces--; wreck('enigma', Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.3);
       const px = b.x - b.vx * d, py = b.y - b.vy * d;
@@ -7145,7 +7239,7 @@ function updateBullets(dt, edt) {
       if (b.kind === 'beach') explode(px, py, 20, b.dmg, 'p', 2, 'beach');
       continue;
     }
-    if ((solidPx(b.x, b.y) && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && !tunnels(b)) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
+    if ((solidPx(b.x, b.y) && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && b.kind !== 'snake' && !tunnels(b)) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
       if ((b.kind === 'tnt' || b.sticky) && solidPx(b.x, b.y)) { b.x = ox; b.y = oy; b.stuck = true; b.life = b.fuse; sfx('fuse', b.x); continue; } // dynamite sticks where it lands
       b.dead = true;
       if (b.kind === 'glob') { splash(b.x, b.y - 2, 6); acidPool(b.x - b.vx * d, b.y - b.vy * d); continue; }
@@ -7176,11 +7270,12 @@ function updateBullets(dt, edt) {
       if (!b.dead) for (const e of ents) { // the engine's stabiliser vats
         if (!e.vats || !live(e)) continue;
         const m = b.hitR || 0;
-        for (const v of e.vats) if (!v.dead && b.x > v.x - m && b.x < v.x + v.w + m && b.y > v.y - m && b.y < v.y + v.h + m) { b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg + (b.poison || 0) * 0.6); break; } // parts can't be poisoned: the dose hits at once
+        for (const v of e.vats) if (!v.dead && b.x > v.x - m && b.x < v.x + v.w + m && b.y > v.y - m && b.y < v.y + v.h + m) { if (b.kind === 'benzene' || b.kind === 'snake') { if (!b.hits) b.hits = new Set(); if (!b.hits.has(v)) { b.hits.add(v); hitVat(e, v, b.dmg); } break; } b.dead = true; if (b.explode) burst(b, b.x, b.y, 'p'); else hitVat(e, v, b.dmg + (b.poison || 0) * 0.6); break; } // parts can't be poisoned: the dose hits at once
       }
       if (!b.dead) for (const e of ents) { // the crawler's crystal body is armoured: bullets spark off it, but chip it a little
         if (e.type !== 'crawler' || !live(e)) continue;
         for (const s of e.segs) if (Math.abs(s.x - b.x) < 8 && Math.abs(s.y - b.y) < 8) {
+          if (b.kind === 'benzene' || b.kind === 'snake') { if (!b.hits) b.hits = new Set(); if (!b.hits.has(e)) { b.hits.add(e); hitEnemy(e, b.dmg * 0.35, 0); sfx('ting'); } break; } // Kekule's ring and snake grind the armour instead of breaking on it
           b.dead = true; sfx('ting');
           if (b.explode) burst(b, b.x, b.y, 'p');
           else { hitEnemy(e, b.dmg * 0.35, 0); for (let i = 0; i < 3; i++) part(b.x, b.y, -Math.sign(b.vx) * rand(40, 120), rand(-100, 20), '#fff6c2', 0.2, 1, G); }
@@ -7903,6 +7998,11 @@ function drawPlayer() {
     ctx.globalAlpha = 0.18; ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(lx, ly + 2, 10 + Math.sin(anim0() * 9), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     ctx.fillStyle = '#a07a1a'; ctx.fillRect(lx - 1, ly - 1, 3, 1); ctx.fillRect(lx - 1, ly + 4, 3, 1); ctx.fillStyle = Math.sin(anim0() * 17) > -0.6 ? '#fff6c2' : '#f2c94c'; ctx.fillRect(lx - 1, ly, 3, 4);
   }
+  if (P.lens > 0 && P.bro.id === 'leeuwenhoek') { // Magnify: a big lens held up ahead of him
+    const lx = Math.round(P.x + 5 + P.face * 12), ly = Math.round(P.y + 5);
+    ctx.globalAlpha = 0.25 + 0.1 * Math.sin(anim0() * 6); ctx.fillStyle = '#bfe9ff'; ctx.beginPath(); ctx.arc(lx, ly, 5, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(lx, ly, 5, 0, 7); ctx.stroke(); ctx.fillStyle = '#ffffff'; ctx.fillRect(lx - 2, ly - 3, 2, 1); ctx.fillStyle = '#a07a1a'; ctx.fillRect(lx - P.face * 4 - (P.face > 0 ? 1 : 0), ly + 4, 2, 4);
+  }
   if ((keys.aim || padAim) && !P.ride && !P.climb) { // holding aim: a faint dotted sight along the aim
     const dx = P.face * Math.cos(P.aim || 0), dy = -Math.sin(P.aim || 0), x0 = P.x + P.w / 2 + dx * 9, y0 = P.y + 8 + dy * 10;
     ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff6c2';
@@ -7975,6 +8075,11 @@ function drawBroGun(bro, hx, hy, f) {
     case 'huygens': ctx.fillStyle = '#c9a227'; M(0, -1, 5, 2); ctx.fillStyle = bro.gun; M(5, -2, 1, 4); M(7, -3, 1, 6); break; // a brass emitter and two wavefronts
     case 'nightingale': ctx.fillStyle = '#e6e2f0'; M(0, -2, 5, 5); ctx.fillStyle = bro.gun; M(1, -1, 2, 2); M(3, 0, 1, 2); ctx.fillStyle = '#8fd3ff'; M(1, 1, 2, 1); break; // a card with her rose chart
     case 'schrodinger': ctx.fillStyle = '#5c6480'; M(0, -1, 5, 3); ctx.globalAlpha = 0.5 + 0.4 * Math.sin(anim0() * 9); ctx.fillStyle = bro.gun; M(5, -2, 2, 1); M(5, 2, 2, 1); ctx.globalAlpha = 1; break; // two barrels, neither quite there
+    case 'fibonacci': ctx.fillStyle = '#7a5c36'; M(0, -2, 7, 5); ctx.fillStyle = '#3a2618'; M(1, -1, 5, 3); ctx.fillStyle = bro.gun; M(1, -1, 1, 1); M(3, 0, 1, 1); M(4, 0, 1, 1); M(2, 1, 1, 1); M(4, 1, 1, 1); M(5, 1, 1, 1); break; // an abacus, beads set to count
+    case 'mcclintock': ctx.fillStyle = '#7bc043'; M(0, -2, 2, 5); ctx.fillStyle = '#f2c94c'; M(2, -1, 5, 3); ctx.fillStyle = '#8e2b3c'; M(3, -1, 1, 1); M(5, 0, 1, 1); ctx.fillStyle = '#6a4a8a'; M(4, 1, 1, 1); M(6, -1, 1, 1); break; // a speckled maize cob in its husk
+    case 'kekule': ctx.fillStyle = '#8b93ad'; M(0, 0, 3, 1); ctx.fillStyle = '#5c6480'; M(4, -2, 1, 1); M(6, -2, 1, 1); M(3, 0, 1, 1); M(7, 0, 1, 1); M(4, 2, 1, 1); M(6, 2, 1, 1); ctx.fillStyle = bro.gun; M(5, -2, 1, 1); M(4, -1, 1, 1); M(6, -1, 1, 1); M(4, 1, 1, 1); M(6, 1, 1, 1); M(5, 2, 1, 1); break; // a ball-and-stick benzene ring on a rod
+    case 'linnaeus': ctx.fillStyle = '#4a7a2a'; M(0, -2, 6, 4); ctx.fillStyle = '#7bc043'; M(1, -2, 4, 1); ctx.fillStyle = '#c9a227'; M(5, -1, 1, 2); ctx.fillStyle = bro.gun; M(6, 0, 2, 2); break; // a green botanist's tin, a label poking out
+    case 'leeuwenhoek': ctx.fillStyle = '#a07a1a'; M(1, -3, 3, 6); ctx.fillStyle = '#c9a227'; M(2, -2, 1, 4); ctx.fillStyle = '#ffffff'; M(2, -1, 1, 1); ctx.fillStyle = '#8b93ad'; M(4, 0, 3, 1); ctx.fillStyle = bro.gun; M(7, 0, 1, 1); break; // his little brass microscope, a pin for the sample
     case 'oppenheimer': ctx.fillStyle = '#5c6480'; M(0, -1, 6, 3); M(0, 2, 2, 2); ctx.fillStyle = Math.floor(anim0() * 6) % 2 ? '#8fd3ff' : '#bfe9ff'; M(2, 0, 3, 1); ctx.fillStyle = '#3d4560'; M(6, -1, 1, 2); break; // a pistol with a glowing core
     case 'jemison': {
       ctx.fillStyle = '#e6e2f0'; M(0, -1, 6, 3); ctx.fillStyle = bro.gun; M(6, -1, 1, 3); ctx.fillStyle = '#5c6480'; M(1, 0, 3, 1);
@@ -9026,7 +9131,7 @@ function drawDirector(b, t) {
   if (el > 0) { bossSparks(x - 4, y - 4, b.w + 8, b.h + 8, 4, t * 1.7, 104); bossGlow(x + b.w / 2, y + b.h / 2, 24, el, 3.2, t); bossDebris(x + b.w / 2, y + b.h / 2, el, 6, ['#3d3d46', '#8b93ad', '#bfe9ff'], 105); }
 }
 // a fading tracer of three dots behind each fast shot, in the shot's own colour
-const TRAIL = { frost: '#e9f6ff', psi: '#b3a6ff', petal: '#ffd6ec', photon: '#8da0cb', mg: '#f29e4c', pellet: '#f29e4c', pill: '#f2c94c', enigma: '#66c2a5', bit: '#66c2a5', hawk: '#b3a6ff', dart: '#e9eef6', red: '#ff6a4a', xtal: '#b3a6ff', bolt2: '#c9d4e6', alpha: '#f2c94c', pea: '#7bc043', card: '#e6e2f0', slug: '#ff6a4a', star: '#fff6c2', calc: '#8da0cb', elem: '#e6e2f0', parity: '#8fd3ff', plasma: '#e78ac3', plasma2: '#e78ac3', torp: '#bfe9ff', chip: '#8b7a6a', fission: '#e78ac3', apple: '#d9534f', vial: '#a6d854', bigvial: '#a6d854', tnt: '#f2c94c', neutron: '#8fd3ff', fizz: '#ffffff', pogo: '#e78ac3' };
+const TRAIL = { fib: '#c9a227', gene: '#e78ac3', tag: '#e6e2d0', frost: '#e9f6ff', psi: '#b3a6ff', petal: '#ffd6ec', photon: '#8da0cb', mg: '#f29e4c', pellet: '#f29e4c', pill: '#f2c94c', enigma: '#66c2a5', bit: '#66c2a5', hawk: '#b3a6ff', dart: '#e9eef6', red: '#ff6a4a', xtal: '#b3a6ff', bolt2: '#c9d4e6', alpha: '#f2c94c', pea: '#7bc043', card: '#e6e2f0', slug: '#ff6a4a', star: '#fff6c2', calc: '#8da0cb', elem: '#e6e2f0', parity: '#8fd3ff', plasma: '#e78ac3', plasma2: '#e78ac3', torp: '#bfe9ff', chip: '#8b7a6a', fission: '#e78ac3', apple: '#d9534f', vial: '#a6d854', bigvial: '#a6d854', tnt: '#f2c94c', neutron: '#8fd3ff', fizz: '#ffffff', pogo: '#e78ac3' };
 function drawBullets() {
   for (const b of bullets) {
     const x = Math.round(b.x), y = Math.round(b.y), tc = TRAIL[b.kind];
@@ -9076,6 +9181,21 @@ function drawBullets() {
       }
       case 'petal': ctx.fillStyle = '#e78ac3'; ctx.fillRect(x - 2, y - 1, 4, 2); ctx.fillStyle = '#ffd6ec'; ctx.fillRect(x + (b.vx > 0 ? 1 : -2), y - 1, 1, 1); break;
       case 'psi': ctx.globalAlpha = 0.45 + 0.35 * Math.sin(lifeT * 40 + b.ph * 2); ctx.fillStyle = '#b3a6ff'; ctx.fillRect(x - 3, y - 1, 6, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 2, 2); ctx.globalAlpha = 1; break; // a ghost: flickers until it lands
+      case 'fib': { const r = b.n >= 5 ? 2 : b.n >= 3 ? 1.5 : 1; ctx.fillStyle = '#c9a227'; ctx.fillRect(x - r - 1, y - r, 2 * r + 2, 2 * r); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x - r, y - r, 2 * r, 2 * r - 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(x + (b.vx > 0 ? 0 : -1), y - r, 1, 1); break; } // a gold tile; the bigger the number in the pull, the bigger the tile
+      case 'rabbit': { const d = b.dir > 0 ? 1 : -1, up = b.vy < 0 ? 1 : 0; ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x - 3, y - 2, 6, 4); ctx.fillRect(x + d * 2 - 1, y - 4, 3, 3); ctx.fillStyle = '#ffffff'; ctx.fillRect(x + d * 2 - (d > 0 ? 0 : 1), y - 7 + up, 1, 3 - up); ctx.fillRect(x + d * 3 - (d > 0 ? 0 : 1), y - 6 + up, 1, 2 - up); ctx.fillStyle = '#1b1d2e'; ctx.fillRect(x + d * 3 - (d > 0 ? 0 : 1), y - 3, 1, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - d * 3 - (d > 0 ? 1 : 0), y - 2, 2, 2); ctx.fillStyle = '#b4bed0'; ctx.fillRect(x - 2, y + 1, 4, 1); break; } // a white rabbit, ears back when it lands
+      case 'gene': { const s2 = b.big ? 2 : 1; for (let k = -2; k <= 2; k++) { ctx.fillStyle = (k + Math.floor(lifeT * 30)) & 1 ? '#a6d854' : '#e78ac3'; ctx.fillRect(x + k * s2, y - s2 + ((k & 1) ? s2 : 0), s2, s2); } ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1); break; } // a little twisting strand
+      case 'cob': ctx.save(); ctx.translate(x, y); ctx.rotate(b.life * 8); ctx.fillStyle = '#7bc043'; ctx.fillRect(-5, -2, 3, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(-2, -2, 7, 4); ctx.fillStyle = '#8e2b3c'; ctx.fillRect(0, -1, 1, 1); ctx.fillRect(3, 0, 1, 1); ctx.fillStyle = '#6a4a8a'; ctx.fillRect(1, 1, 1, 1); ctx.restore(); break; // a speckled corn cob in its husk
+      case 'kernel': ctx.fillStyle = b.col || '#f2c94c'; ctx.fillRect(x - 1, y - 1, 3, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y - 1, 1, 1); break;
+      case 'benzene': { const R = b.big ? 10 : 5; ctx.strokeStyle = '#b4bed0'; ctx.lineWidth = 1; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const a = b.spin + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](x + Math.cos(a) * R, y + Math.sin(a) * R); } ctx.stroke(); ctx.beginPath(); ctx.arc(x, y, R * 0.5, 0, 7); ctx.stroke(); for (let k = 0; k < 6; k++) { const a = b.spin + k * Math.PI / 3; ctx.fillStyle = k & 1 ? '#5c6480' : '#e9eef6'; ctx.fillRect(Math.round(x + Math.cos(a) * R) - 1, Math.round(y + Math.sin(a) * R) - 1, 2, 2); } break; } // six atoms in a ring, the circle for the shared electrons
+      case 'snake': { // the head (segment 0) is thickest, the body thins to the tail just ahead of it, so the head bites its own tail
+        const head = b.seg === 0, r = head ? 4.5 : 1.8 + 2.4 * b.seg / 11;
+        ctx.fillStyle = '#2f5a1a'; ctx.beginPath(); ctx.arc(x, y + 0.5, r + 0.5, 0, 7); ctx.fill();
+        ctx.fillStyle = head ? '#5f9a2c' : b.seg % 3 ? '#7bc043' : '#c9a227'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+        if (head) { const fx2 = Math.cos(b.ang + Math.PI / 2), fy2 = Math.sin(b.ang + Math.PI / 2); ctx.fillStyle = '#fff6c2'; ctx.fillRect(Math.round(x + fx2 * 2) - 1, Math.round(y - 2), 2, 1); ctx.fillStyle = '#1b1d2e'; ctx.fillRect(Math.round(x + fx2 * 2), Math.round(y - 2), 1, 1); ctx.fillStyle = '#e9eef6'; ctx.fillRect(Math.round(x + fx2 * 4), Math.round(y + fy2 * 3), 1, 1); }
+        break;
+      }
+      case 'tag': { const d = Math.sign(b.vx) || 1; ctx.fillStyle = '#f4f1ea'; ctx.fillRect(x - 2, y - 1, 4, 3); ctx.fillStyle = '#8e2b3c'; ctx.fillRect(x - d * 2 - (d > 0 ? 0 : 1), y, 1, 1); ctx.fillStyle = '#7a5c36'; ctx.fillRect(x - d * 4 - (d > 0 ? 0 : 1), y, 2, 1); ctx.fillStyle = '#5c6480'; ctx.fillRect(x - 1, y, 2, 1); break; } // a paper label on a string
+      case 'microbe': { const s2 = b.big ? 2 : 1, d = Math.sign(b.vx) || 1, w = Math.round(Math.sin(b.ph) * s2); ctx.fillStyle = b.gen ? '#a6d854' : '#66c2a5'; ctx.beginPath(); ctx.ellipse(x, y, (b.gen ? 1.5 : 2.5) * s2, (b.gen ? 1.2 : 1.8) * s2, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#e9fff6'; ctx.fillRect(x + d * s2 - (d > 0 ? 0 : s2), y - s2, s2, s2); ctx.fillStyle = '#3a7a6a'; ctx.fillRect(x - d * 3 * s2 - (d > 0 ? s2 : 0), y + w, s2 * 2, 1); break; } // a blob with a nucleus and a lashing tail
       case 'catbox': ctx.save(); ctx.translate(x, y); ctx.rotate(b.life * 6); ctx.fillStyle = '#7a5c36'; ctx.fillRect(-4, -4, 8, 8); ctx.fillStyle = '#a07a46'; ctx.fillRect(-3, -3, 6, 6); ctx.fillStyle = '#1b1d2e'; ctx.fillRect(-1, -2, 2, 1); ctx.fillRect(0, -1, 1, 1); ctx.fillRect(0, 1, 1, 1); ctx.restore(); break; // a box with a question mark
       case 'vial': case 'bigvial': {
         const s = b.kind === 'bigvial' ? 2 : 1;
@@ -9402,7 +9522,8 @@ function drawScreen(t) {
     text('20 MISSIONS · 3 MODES · ' + BROS.length + ' BROS · 22 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     const per = Math.ceil(BROS.length / 2); // the roster in two rows, the second one offset half a step
-    BROS.forEach((b, i) => { const r = Math.floor(i / per), x = Math.round(VW / 2 - per * 9.5 + (i % per) * 19 + r * 9.5); drawRigAt(b.rig, x + 6, 132 + r * 18, 1, { leg: 'stand', fr: 0, bob: Math.floor(t * 2 + i * 0.37) % 2 }, false); }); // outlined, breathing
+    const stp = Math.min(19, Math.floor((VW - 16) / (per + 0.5))); // 19 px apart while the row fits, closer once it would run off the screen
+    BROS.forEach((b, i) => { const r = Math.floor(i / per), x = Math.round(VW / 2 - per * stp / 2 + (i % per) * stp + r * stp / 2); drawRigAt(b.rig, x + 6, 132 + r * 18, 1, { leg: 'stand', fr: 0, bob: Math.floor(t * 2 + i * 0.37) % 2 }, false); }); // outlined, breathing
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
       const sel = i === titleSel, y = 166 + i * 12;
       if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 12); }

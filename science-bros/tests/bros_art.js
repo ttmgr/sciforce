@@ -1,4 +1,4 @@
-// Headless checks for the bro art (round 5) and the four newest bros (Kelvin, Huygens, Nightingale, Schrodinger): 46 bros,
+// Headless checks for the bro art (round 5) and the four bros added in round 5 (Kelvin, Huygens, Nightingale, Schrodinger): 51 bros,
 // every bro is built from shaded rows with a signature item and draws without error, each sprite differs from every other
 // one (the painted pixels are hashed), the rig still fits the hit box; the four new bros are wired into every per-bro
 // table, each weapon hurts a quack and does its own trick, each special works and is limited like the others, weapon and
@@ -56,7 +56,7 @@ const hash = (c) => crypto.createHash('md5').update(c.ops.join(';')).digest('hex
 const colours = (c) => new Set(c.ops.map((o) => o.split('@')[0]));
 
 // ---------------------------------------------------------------- 1. the art: every bro from shaded rows, each one different
-check('there are 46 bros', S.BROS.length === 46, S.BROS.length + ' bros');
+check('there are 51 bros (five more in round 6, see bros_r6.js)', S.BROS.length === 51, S.BROS.length + ' bros');
 check('every bro has a head, a look (item and colour) and a known item', S.BROS.every((b) => S.HEADS[b.id] && S.LOOKS[b.id] && S.BRO_ITEM[S.LOOKS[b.id][0]] && /^#[0-9a-f]{6}$/.test(S.LOOKS[b.id][1])), S.BROS.filter((b) => !S.LOOKS[b.id]).map((b) => b.id).join(','));
 { const bad = []; for (const b of S.BROS) { const R = S.broRows(b.id), rows = R.head.concat(R.body); if (R.head.length !== 6 || R.body.length !== 6 || rows.some((r) => r.length !== 12) || [...rows.join('')].some((ch) => ch !== '.' && !b.rig.pal[ch])) bad.push(b.id); }
   check('every bro is 6 head rows and 6 body rows, 12 wide, and every pixel has a colour in his palette', !bad.length, bad.join(',')); }
@@ -64,8 +64,8 @@ check('every bro has a head, a look (item and colour) and a known item', S.BROS.
   check('every bro is shaded (coat rim, hair rim, skin shadow) and wears his signature item', !bad.length, bad.join(',')); }
 { const bad = S.BROS.filter((b) => { const h = S.broRows(b.id).head.join(''); return /e/.test(h) && !/[EY]/.test(h); }).map((b) => b.id); check('every visible eye has a brow or a white (glasses cover the rest)', !bad.length, bad.join(',')); }
 { const ups = S.BROS.map((b) => hash(b.rig.up[0])), sprs = S.BROS.map((b) => hash(b.spr[0][0]));
-  check('the 46 upper-body sprites are all different (hash of the painted pixels)', new Set(ups).size === 46, new Set(ups).size + ' different');
-  check('the 46 small sprites (HUD, roster, cages) are all different', new Set(sprs).size === 46, new Set(sprs).size + ' different');
+  check('the ' + S.BROS.length + ' upper-body sprites are all different (hash of the painted pixels)', new Set(ups).size === S.BROS.length, new Set(ups).size + ' different');
+  check('the ' + S.BROS.length + ' small sprites (HUD, roster, cages) are all different', new Set(sprs).size === S.BROS.length, new Set(sprs).size + ' different');
   check('the hashes are real: each sprite painted over 90 pixels', S.BROS.every((b) => b.rig.up[0].ops.length > 90 && b.spr[0][0].ops.length > 90), 'fewest ' + Math.min(...S.BROS.map((b) => Math.min(b.rig.up[0].ops.length, b.spr[0][0].ops.length)))); }
 { const thin = S.BROS.filter((b) => colours(b.rig.up[0]).size < 9).map((b) => b.id + ' ' + colours(b.rig.up[0]).size);
   check('each upper body uses at least 9 colours (outline, shades and highlights, item)', !thin.length, thin.join(', '));
