@@ -98,7 +98,7 @@ h2 { font-family: var(--display); font-size: 16px; font-weight: 400; color: var(
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const T = 16, VW = 480, VH = 270, LW = 376, LH = 40; // a level is built 236 columns wide, then gets a 140-column stretch before its boss arena (see slideArena); 40 rows: the top 22 as before, earth below (see underground)
+const T = 16, VW = 480, VH = 270, LW = 560, LH = 40; // a level is built 236 columns wide, then gets a 324-column stretch before its boss arena (see slideArena); 40 rows: the top 22 as before, earth below (see underground)
 let G = 900; // gravity; lower on the Moon
 const EMPTY = 0, DIRT = 1, BRICK = 2, STEEL = 3, CRATE = 4, ACID = 5, ICE = 6, LADDER = 7;
 const TILE_HP = [0, 2, 6, 1e9, 3, 0, 2, 1];
@@ -525,7 +525,7 @@ function buildLevel() {
 // ---- longer maps: every campaign mission and the Moon get a stretch of extra level pieces between the main path
 // and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
 // in it slides STRETCH columns right, and the gap is filled.
-const ARENA_AT = 176, STRETCH = 140;
+const ARENA_AT = 176, STRETCH = 324;
 let stretched = false, cutAt = ARENA_AT; // whether the level being played has the stretch, and where it starts
 const arenaCol = (c) => (stretched && c >= cutAt ? c + STRETCH : c); // where a column of the built level ended up
 const padOf = () => [arenaCol(LV().pad[0]), LV().pad[1]];
@@ -544,30 +544,44 @@ function slideArena() {
     if (d.socks) d.socks = d.socks.map(arenaCol);
   }
 }
-// the stretch: a few plain pieces, one piece of the mission's own kind, quacks every 7 columns, an ammo crate and two flags
+// the stretch: plain pieces, one piece of the mission's own kind, new pieces that fit the theme, forks (a high road over
+// a low road), quacks every 7 columns, two ammo crates, four flags and underground detours (see underStretch)
 const STRETCH_KINDS = ['yard', 'trench', 'hall', 'fort', 'pit', 'cliff'];
 const STRETCH_FOES = ['grunt', 'grunt', 'shield', 'dog', 'grenadier', 'heavy', 'rocketeer', 'grunt', 'sniper', 'flamer', 'medic', 'bomber'];
 const NEW_FOES = ['minelayer', 'jumper', 'pilldoc', 'flagbearer', 'sapper', 'knight']; // the six newer quacks, in the order they first appear
 STRETCH_FOES.push(...NEW_FOES);
 const MORE_FOES = ['streamer', 'diffuser', 'detox', 'miner', 'yogi', 'pinboard', 'alpha', 'dronecaller']; // the eight pseudoscience and internet-culture quacks of the second round
 STRETCH_FOES.push(...MORE_FOES);
+// per mission (by level index): [forks, underground detours] in its stretch. The Moon Base uses LONG_DEFAULT.
+const LONG_MAPS = [[2, 2], [2, 2], [2, 2], [2, 2], [2, 3], [2, 2], [3, 2], [2, 3], [2, 2], [3, 3], [2, 3], [2, 2], [3, 3], [2, 3], [3, 3], [2, 3], [3, 3], [3, 3]], LONG_DEFAULT = [2, 2];
+const longOf = (n) => LONG_MAPS[n] || LONG_DEFAULT;
+let stretchPlan = []; // the pieces of the stretch built last, [kind, first column, width] (for the tests)
+function stretchFork(H, c, w) { // the way splits: a ladder up to a steel high road with cover and loot, or the low road under it past a crate barricade; ladders at both ends
+  const a = c + 6, b = c + w - 7, m = (a + b) >> 1;
+  H.ground(c, c + w - 1, 16); H.fill(a, 10, b, 10, STEEL); H.fill(a - 1, 10, a - 1, 15, LADDER); H.fill(b + 1, 10, b + 1, 15, LADDER);
+  for (let k = a + 4; k < b - 2; k += 9) H.bgFill(k, 11, k, 15, BG_BRICK); // legs behind the low road
+  H.fill(m, 8, m, 9, CRATE); H.sp('guncrate', a + 3, 0); // cover and loot up high
+  H.fill(m + 3, 15, m + 4, 15, CRATE); H.dc('sandbags', a + 2, { from: 11 }); H.dc('sandbags', b - 2, { from: 11 }); H.dc('sign', c + 2, { text: 'HIGH ROAD' });
+}
 function buildStretch(H, n) {
   const hash = (k) => { const v = Math.sin(k * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); }; // the same layout every time
   const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[n % segs.length] : null;
-  const rest = STRETCH - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [];
+  const rest = STRETCH - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [], forks = longOf(n)[0], fk = [];
   for (let k = 0; k < cnt; k++) plan.push([STRETCH_KINDS[(n + k) % STRETCH_KINDS.length], k < cnt - 1 ? Math.floor(rest / cnt) : rest - Math.floor(rest / cnt) * (cnt - 1), {}]);
-  const th = LV().theme, fits = Object.keys(NEW_PIECES).filter((s) => NEW_PIECES[s].themes.includes(th) && !(own && own[0] === s)); // new pieces that fit this theme: they take the slots after the first
-  for (let k = 1; k < cnt && fits.length; k++) { const s = fits.splice(Math.floor(hash(97 + k) * fits.length), 1)[0], [lo, hi] = NEW_PIECES[s].w, w = Math.min(hi, Math.max(lo, plan[k][1])); plan[0][1] += plan[k][1] - w; plan[k] = [s, w, {}]; }
+  for (let i = 0; i < forks; i++) fk.push(Math.round(((i + 1) * cnt) / (forks + 1))); // the forks, spread along the stretch
+  const th = LV().theme, fits = Object.keys(NEW_PIECES).filter((s) => NEW_PIECES[s].themes.includes(th) && !(own && own[0] === s)); // new pieces that fit this theme: they take the other slots after the first
+  for (let k = 1; k < cnt && fits.length; k++) { if (fk.includes(k)) continue; const s = fits.splice(Math.floor(hash(97 + k) * fits.length), 1)[0], [lo, hi] = NEW_PIECES[s].w, w = Math.min(hi, Math.max(lo, plan[k][1])); if (plan[0][1] + plan[k][1] - w < 24) continue; plan[0][1] += plan[k][1] - w; plan[k] = [s, w, {}]; }
+  for (const k of fk) plan[k][0] = 'fork';
   if (own) plan.splice(1, 0, [own[0], own[1], Object.assign({}, own[2], { put: [] })]);
-  let c = cutAt;
+  let c = cutAt; stretchPlan = [];
   for (const [kind, w, o] of plan) {
-    SEG[kind](H, c, w, o);
-    for (let k = 4; k < w - 3; k += 7) H.sp(STRETCH_FOES[Math.floor(hash(c + k) * STRETCH_FOES.length)], c + k, openRow(c + k));
-    c += w;
+    if (kind === 'fork') stretchFork(H, c, w); else SEG[kind](H, c, w, o);
+    for (let k = 4; k < w - 3; k += 7) H.sp(STRETCH_FOES[Math.floor(hash(c + k) * STRETCH_FOES.length)], c + k, kind === 'fork' && (k / 7 | 0) % 2 ? 11 : openRow(c + k)); // a fork: every other one on the low road
+    stretchPlan.push([kind, c, w]); c += w;
   }
-  H.sp('ammo', cutAt + 2, openRow(cutAt + 2));
-  for (const k of [cutAt + (STRETCH >> 1), cutAt + STRETCH - 3]) H.sp('flag', k, openRow(k));
-  underStretch(H, n); // some stretches get a detour under the ground
+  for (const k of [cutAt + 2, cutAt + (STRETCH >> 1) + 2]) H.sp('ammo', k, openRow(k));
+  for (const k of [1, 2, 3].map((i) => cutAt + Math.round((STRETCH * i) / 4)).concat(cutAt + STRETCH - 3)) H.sp('flag', k, openRow(k));
+  underStretch(H, n); // underground detours
 }
 function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   // 1. Beach and hills
@@ -1742,7 +1756,7 @@ function buildSiege({ fill, ground, sp, bgFill, dc, lamp }) {
 }
 
 // ---------------------------------------------------------------- random maps
-// A map randomizer: genLevel(seed) makes a whole mission from scratch: a camp, 296 columns of terrain (level pieces
+// A map randomizer: genLevel(seed) makes a whole mission from scratch: a camp, 480 columns of terrain (level pieces
 // from SEG and pieces of its own), objectives, quacks, a boss arena and a theme. The same seed always makes the same
 // map. The arena is built at ARENA_AT like a campaign one, then slid to the far end (so arenaCol works for its boss).
 function rngOf(seed) { // a small seeded random number generator (mulberry32)
@@ -2430,27 +2444,30 @@ function ugGen(H, R, x, spots, F, kind, qs, objective, cage) { // stock a random
   const foes = RANDOM_FOES.filter((f) => (f[1] >= 0 ? f[1] : RAMP_FROM[f[0]] || 0) <= p && !(f[3] || {}).high && ((f[3] || {}).room || 2) <= 4).map((f) => f[0]);
   ugStock(H, spots, F, { R, Q: rngOf(qs + Math.round(p * 1000)), foes, n: Math.round((1 + p * 3) * densMul), cage, target: objective && tk, ledges: x.ledges });
 }
-// a campaign stretch gets a detour under the ground (two missions in three): down a shaft, through a tunnel, up another.
-// A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
+// a campaign stretch gets two or three detours under the ground (LONG_MAPS), spread along it: down a shaft, through a
+// tunnel, up another. A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
 const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant
 function underStretch(H, n) {
-  if (n % 3 !== 2) ugDetour(H, n, cutAt + 8, cutAt + 70, cutAt + STRETCH - 6, rngOf(4099 + n * 977));
+  const want = longOf(n)[1], R = rngOf(4099 + n * 977), c0 = cutAt + 8, end = cutAt + STRETCH - 6, W = Math.floor((end - c0) / want);
+  for (let i = 0, prev = 0; i < want; i++) { const b = ugDetour(H, n, Math.max(c0 + i * W, prev + 14), end - 24, end, R); if (b > 0) prev = b; } // each starts at its share of the stretch, or the first good spot after it
   if (UG_MISSIONS.includes(n)) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + n * 131));
 }
 function ugDetour(H, n, lo, aMax, hi, R) { // a = the entry shaft between lo and aMax, b = the exit shaft before hi
   const busy = (k) => spawns.some((o) => !THREAT[o.type] && Math.abs(o.c - k - 0.5) < 2.5) || devs.some((d) => d.kind !== 'wind' && d.x1 > (k - 2) * T && d.x0 < (k + 4) * T); // a quack over a shaft just starts at its foot
   const ok = (k) => { const s = surf(k, 0); if (s < 12 || s > 17 || busy(k)) return -1; for (let j = k - 1; j <= k + 2; j++) { if (surf(j, 0) !== s || crumbly[s * LW + j]) return -1; for (let r = s; r < GH; r++) { const v = tileAt(j, r); if (!isSolidT(v) || v === CRATE || v === ICE) return -1; } } return s; };
   let a = -1, b = -1;
-  for (let k = lo; k < aMax && a < 0; k++) if (ok(k) >= 0) a = k;
-  if (a < 0) return;
-  for (let k = a + 18 + R.int(0, 8); k < Math.min(a + 44, hi) && b < 0; k++) if (ok(k - 1) >= 0) b = k;
-  if (b < 0) return;
-  for (let k = a - 9; k <= b + 1; k++) if (!isSolidT(tileAt(k, GH - 1))) return; // no bottomless pit over it
+  for (let k = lo; k < aMax && b < 0; k++) { // the first entry spot with an exit spot after it and no bottomless pit over the two
+    if (ok(k) < 0) continue; a = k;
+    for (let j = a + 18 + R.int(0, 8); j < Math.min(a + 44, hi) && b < 0; j++) if (ok(j - 1) >= 0) b = j;
+    for (let j = a - 9; b >= 0 && j <= b + 1; j++) if (!isSolidT(tileAt(j, GH - 1))) b = -1;
+  }
+  if (b < 0) return -1;
   const kind = ugKind(R), F = R.int(30, 33), L = R.int(4, 8), down = R.pick(['ladder', 'lift', 'crumble']), up = R.pick(['ladder', 'lift', 'vent']), sa = ok(a), sb = ok(b - 1);
   ugZone(a - L - 1, b + 1, kind);
   const spots = ugTunnel(H, a - L, b, F, kind, R, [a, a + 1, b - 1, b]);
   ugShaft(H, a, sa, F, down, false); ugShaft(H, b - 1, sb, F, up, true);
   ugStock(H, spots, F, { R, Q: R, foes: STRETCH_FOES, n: 2 + (n % 3), cage: n >= 4 });
+  return b;
 }
 function drawUnder() { // dark rock behind everything under row 21; it only shows where nothing else is drawn
   if (cam.y + VH <= GH * T) return;
@@ -8247,7 +8264,7 @@ function drawMinimap(t) {
 }
 function drawFullMap(t) {
   if (miniDirty) updateMini();
-  const k = 2, half = Math.ceil(LW / 2), w = half * k, ox = Math.round((VW - w) / 2), mr = mapRows(), oy = 112 - (mr - GH) * k * 2, h = mr * k * 2 + 6; // the level in two strips, the first half above the second (taller and higher up when it goes underground)
+  const half = Math.ceil(LW / 2), k = Math.min(2, Math.floor(((VW - 40) / half) * 4) / 4), w = Math.round(half * k), ox = Math.round((VW - w) / 2), mr = mapRows(), oy = 112 - (mr - GH) * k * 2, h = mr * k * 2 + 6; // the level in two strips, the first half above the second (taller and higher up when it goes underground)
   ctx.fillStyle = 'rgba(5,6,16,0.82)'; ctx.fillRect(0, 0, VW, VH);
   ctx.imageSmoothingEnabled = false;
   for (const [i, c0] of [[0, 0], [1, half]]) { const y = oy + i * (mr * k + 6); ctx.drawImage(MINI, c0, 0, half, mr, ox, y, w, mr * k); mapMarks(ctx, ox, y, k, c0, c0 + half, Math.floor(t * 4) % 2); }
@@ -8629,7 +8646,7 @@ function render(t) {
   drawPlants(t);
   drawCritters(t);
   drawBodies();
-  for (const e of ents) if (!e.dead || e === boss) drawEnt(e, t);
+  for (const e of ents) if ((!e.dead || e === boss) && (BOSS[e.type] || (e.x + e.w > cam.x - 96 && e.x < cam.x + VW + 96))) drawEnt(e, t); // only what is on screen (a 560-column map holds hundreds)
   for (const e of ents) if (e.vats && e.active && !e.dead && !e.doomed && !(e.dying > 0)) drawPartHints(e, t);
   drawChopper(t);
   drawPlayer();
@@ -9585,7 +9602,7 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
-if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt }); // longer maps hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, stretchPlan: () => stretchPlan }); // longer maps hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { genLevel, startRandom, newSeed, SEG_META, ARENA_META, ARENA_DEFAULT, GEN_ARENA, GEN_SEG, RANDOM_FOES, GEN_DIFF, RANDOM, TITLE_MENU, pauseItems, genSeed: () => genSeed, setGenDiff(k) { genDiffKey = k; }, genDiffKey: () => genDiffKey, setUrlSeed(v) { urlSeed = v; } }); // random map hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
