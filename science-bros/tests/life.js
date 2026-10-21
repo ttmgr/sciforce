@@ -73,8 +73,8 @@ check('a shot kills a critter', c4.dead);
 // grass sprouts back on freshly blasted earth
 flat(); S.setTile(30, 15, 1); run(1); S.damageTile(30, 15, 999); run(2);
 const sp = S.sproutAt();
-check('breaking a block leaves the earth under it bare', sp.has(16 * 236 + 30));
-const t0 = sp.get(16 * 236 + 30); run(60 * 15);
+check('breaking a block leaves the earth under it bare', sp.has(16 * S.LW + 30));
+const t0 = sp.get(16 * S.LW + 30); run(60 * 15);
 check('its grass is back after about 14 s', S.lifeT - t0 >= 14);
 flat(); S.explode(40 * T, 16 * T - 4, 30, 0, 'p', 0); run(1);
 check('a blast burns the grass off the earth around it', S.sproutAt().size >= 3, S.sproutAt().size + ' tiles');

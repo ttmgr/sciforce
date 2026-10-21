@@ -29,7 +29,7 @@ S.pressed.start = true; run(1); check('enter deploys into level 1', S.state === 
 check('level 1 lists its objectives', S.objectives.length === 4 && S.objectives.filter((o) => o.req).length === 2);
 
 // ladder: up climbs it
-lone(); S.P.x = 108 * T + 3; S.P.y = 13 * T - 15.01; run(2);
+lone(); S.P.x = 105 * T + 3; S.P.y = 16 * T - 15.01; run(2); // the ladder between the Remedy Lab's floors
 const y0 = S.P.y; run(40, { jump: true });
 check('ladder: holding up climbs', S.P.y < y0 - 30, ((y0 - S.P.y) / T).toFixed(1) + ' tiles');
 
@@ -61,7 +61,7 @@ const pk = S.ents.find((e) => e.type === 'pickup' && !e.dead); if (pk) { S.P.x =
 check('item crate drops a shield and you pick it up', S.P.shield > 0);
 S.P.inv = 0; S.bullets.push({ x: S.P.x + 8, y: S.P.y + 8, vx: -165, vy: 0, owner: 'e', dmg: 1, tdmg: 0.4, life: 2, kind: 'pill' }); run(3);
 check('the shield takes a killing shot', S.P.alive && !(S.P.shield > 0));
-S.P.inv = 1e9; const ov = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'overclock' }); ov.x = S.P.x; S.ents.push(ov); run(3);
+S.P.bro = S.BRO.einstein; S.P.inv = 1e9; const ov = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'overclock' }); ov.x = S.P.x; S.ents.push(ov); run(3);
 S.P.cool = 0; run(1, { fire: true }); check('overclock halves the fire delay', S.P.over > 0 && S.P.cool < 0.06, 'cool ' + S.P.cool.toFixed(3));
 const jp = S.makeEnt({ type: 'pickup', c: 0, y: S.P.y + 4, item: 'jetpack' }); jp.x = S.P.x; S.ents.push(jp); run(3);
 S.pressed.jump = true; run(1, { jump: true }); const jy = S.P.y; run(60, { jump: true });
@@ -74,11 +74,11 @@ check('intel counts toward the objective and joins the dossier', S.objectives.fi
 const vat = spawn('target', 12, { skin: 'vat' }); vat.skin = 'vat'; run(2); S.hitEnemy(vat, 99, 0); run(2);
 check('smashing a vat ticks the vat objective', S.objectives.find((o) => o.id === 'vat').n === 1);
 S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'boss' && e.type !== 'flag') e.dead = true; }); run(1);
-S.P.inv = 1e9; S.P.x = 184 * T; S.P.y = 15 * T - 16; run(5);
+S.P.inv = 1e9; S.P.x = S.arenaCol(184) * T; S.P.y = 15 * T - 16; run(5);
 S.hitEnemy(S.boss, 999, 0); for (let i = 0; i < 400 && !S.boss.dead; i++) run(1);
 check('boss dead but vats left: no chopper yet', S.boss.dead && !S.chopper);
 S.finishObjectives(); S.objectives.find((o) => o.id === 'vat').n = 2; // two of three
-const lastVat = spawn('target', 190, { skin: 'vat' }); lastVat.skin = 'vat'; run(2); S.hitEnemy(lastVat, 99, 0); run(2);
+const lastVat = spawn('target', S.arenaCol(190), { skin: 'vat' }); lastVat.skin = 'vat'; run(2); S.hitEnemy(lastVat, 99, 0); run(2);
 check('the last required objective calls the chopper', !!S.chopper);
 
 // debrief and level 4 map node draw

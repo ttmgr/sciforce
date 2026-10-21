@@ -16,7 +16,7 @@ const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + 
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
 
 const N = S.nLevels;
-check('the campaign has 18 missions', N === 18, N);
+check('the campaign has 25 missions', N === 25, N);
 check('King Citrus is still the last mission', S.levelDef(N - 1).name === 'CITRUS CITADEL');
 check('Lab Siege and Moon Base come right after the campaign', S.levelDef(S.SIEGE).name === 'LAB SIEGE' && S.levelDef(S.MOON).name === 'MOON BASE');
 const names = Array.from({ length: N }, (_, i) => S.levelDef(i).name);
@@ -51,7 +51,7 @@ for (let l = 5; l < N - 1; l++) {
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
   check(tag + ': the boss has its own name', !!B.bossName && B.bossName !== 'THE DIRECTOR', B.bossName);
   // a bot that runs right and jumps gets a fair way in without dying (invulnerable, we only test the path)
-  S.P.inv = 1e9; let far = 0;
+  S.P.inv = 1e9; S.P.bro = S.BRO.einstein; let far = 0; // a new run starts with random bros; this checks the path
   for (let i = 0; i < 60 * 60; i++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;
@@ -91,7 +91,7 @@ check('the mission before the finale points at the Citadel', /Citrus Citadel/i.t
 
 // the campaign gets harder step by step: threat on the map climbs from the first mission to the finale
 {
-  const W = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
+  const W = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3, minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sapper: 2, knight: 3, diffuser: 2, miner: 2, detox: 2.5, streamer: 2.5, yogi: 2.5, pinboard: 2.5, alpha: 3, dronecaller: 3 };
   const threat = []; for (let l = 0; l < N; l++) { S.startLevel(l); threat.push(S.ents.filter((e) => W[e.type]).reduce((a, e) => a + W[e.type], 0)); }
   check('the first mission is the easiest', threat[0] === Math.min(...threat), threat.map((x) => x.toFixed(0)).join(' '));
   check('the finale is among the hardest', threat[N - 1] >= Math.max(...threat) - 6, threat[N - 1].toFixed(0));
