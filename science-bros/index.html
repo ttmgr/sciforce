@@ -9518,7 +9518,7 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('TIP: ' + PAUSE_TIPS[Math.floor(t / 8) % PAUSE_TIPS.length], VW / 2, 119, 8, '#8da0cb', 'center');
+    text('TIP: ' + PAUSE_TIPS[Math.floor(t / 8) % PAUSE_TIPS.length], VW / 2, 30, 8, '#8da0cb', 'center'); // above the logo: the roster rows fill the space under the stats line
     text('20 MISSIONS · 3 MODES · ' + BROS.length + ' BROS · 22 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     const per = Math.ceil(BROS.length / 2); // the roster in two rows, the second one offset half a step
