@@ -116,7 +116,7 @@ const bossFight = (id, type, secs) => {
   const x0 = best[0] * T + 3, y0 = best[1] * T - 15.01, face = tx > x0 ? 1 : -1; arm(id);
   const h0 = hpOf(B); let spike = 0, last = h0, t = secs;
   for (let f = 0; f < secs * 60 && !(B.dead || B.doomed || B.dying > 0); f++) {
-    S.P.inv = 1e9; S.P.alive = true; S.P.spec = 0; S.P.x = x0; S.P.y = y0; S.P.vx = 0; S.P.vy = 0; S.P.face = face; if (f === 0) S.P.cool = 0;
+    S.P.inv = 1e9; S.P.alive = true; S.P.spec = 0; S.P.x = x0; S.P.y = y0; S.P.vx = 0; S.P.vy = 0; S.P.face = B.x + B.w / 2 > x0 + 5 ? 1 : -1; if (f === 0) S.P.cool = 0; // keep facing the boss: the tank can drive past
     if (S.GUNS[id]) { if (S.P.alt) S.P.alt.ammo = Math.max(S.P.alt.ammo, 2); step({ fire: true }); } else { if (f === 0) S.pressed.special = true; step(); }
     const h = hpOf(B); spike = Math.max(spike, last - h); last = h; t = f / 60;
   }
