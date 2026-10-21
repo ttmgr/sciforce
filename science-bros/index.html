@@ -6351,7 +6351,7 @@ function drawPartHints(b, t) {
   const live = b.vats.filter((v) => !v.dead), core = !live.length;
   const tg = core ? [{ x: b.x, y: b.y, w: b.w, h: b.h }] : live;
   const bob = Math.round(Math.sin(t * 7) * 2), col = core ? '#ff5a4a' : '#f2c94c';
-  const shown = new Set();
+  const shown = new Set(), words = []; // words: x of each label drawn, so parts close together share one
   for (const v of tg) {
     const below = b.type === 'blimp' && !core; // gondolas hang under the gas bag: point up at them from below
     const ax = Math.round(v.x + v.w / 2), ay = below ? Math.round(v.y + v.h + 6 - bob) : Math.round(v.y - 6 + bob);
@@ -6367,7 +6367,7 @@ function drawPartHints(b, t) {
     const d = below ? -1 : 1;
     ctx.fillStyle = '#0d0b18'; ctx.beginPath(); ctx.moveTo(ax - 6, ay - d * 7); ctx.lineTo(ax + 6, ay - d * 7); ctx.lineTo(ax, ay + d); ctx.fill();
     ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(ax - 4, ay - d * 6); ctx.lineTo(ax + 4, ay - d * 6); ctx.lineTo(ax, ay - d); ctx.fill();
-    text(core ? W[1] + '!' : 'SHOOT', ax, below ? ay + 15 : ay - 10, 8, col, 'center');
+    if (!words.some((wx) => Math.abs(wx - ax) < 34)) { words.push(ax); text(core ? W[1] + '!' : 'SHOOT', ax, below ? ay + 15 : ay - 10, 8, col, 'center'); }
   }
 }
 // Homeopathitron: a walking pill mech. Walks, fires spreads, jumps for shockwaves, summons quacks;
