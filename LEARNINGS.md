@@ -21,3 +21,6 @@
 - 2026-10-21 · timing — with several agents running, load reaches 25-35 and absolute frame-time checks fail on old commits too; measure new vs base back to back on a quiet machine.
 - 2026-10-21 · page — the game's window keydown handler calls preventDefault on Tab, Enter, Space and Esc, which breaks page buttons and details/summary; page controls must stop those keys before they reach the window handler (`pageKeys()`).
 - 2026-10-21 · ladders — ladder tops now hold the bro (`moveBody`), which moves boss-test bots onto new spots; seeded boss checks can flip. Look at where the bot stands before tuning balance.
+- 2026-10-21 · missions — never seed a mission by its level index or hard-code the Citadel's index; inserting two missions shifted both (use `seedN`, `S.nLevels - 1`). Tests that list bosses per level must find the Citadel as the last mission.
+- 2026-10-21 · merges — branches that each add content to shared pools (bro lines, signs per mission, fingerprints) collide after merging: a new bro needs its `BRO_LINES`, a new mission its `WIT_SIGNS` and a boss skin; take test fingerprints on the head just before the merge, not on the old base.
+- 2026-10-21 · agents — five agents running test batches at once drove the load to 115 and made git time out; tell agents to run tests one at a time and leave the full suite to the lead.
