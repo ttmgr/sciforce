@@ -1,4 +1,4 @@
-// Headless checks for the four newest bros (Semmelweis, Torricelli, Volta, Gauss): 42 bros in all, every per-bro table is
+// Headless checks for the four bros added in round 4 (Semmelweis, Torricelli, Volta, Gauss): 46 bros in all, every per-bro table is
 // filled, each weapon hurts a quack and does its own trick, each special works and is limited like the others, weapon and
 // special cut terrain by material, nothing they fire kills the player, the aim works, they can hurt every boss at a fair
 // pace, a cage can free each of them, a new run still starts with 10 bros, and a busy fight stays under 3 ms a frame.
@@ -44,7 +44,7 @@ const cutBy = (id, mat, n, special) => {
 };
 
 // ---------------------------------------------------------------- 1. the roster and every per-bro table
-check('there are 42 bros', S.BROS.length === 42, S.BROS.length + ' bros');
+check('there are 46 bros', S.BROS.length === 46, S.BROS.length + ' bros');
 check('the four new bros each exist exactly once', NEW.every((id) => S.BRO[id] && S.BROS.filter((b) => b.id === id).length === 1));
 for (const id of NEW) {
   const b = S.BRO[id];
@@ -191,7 +191,7 @@ for (const id of NEW) {
 }
 { real = true; S.reset(); const locked = new Set(NEW); for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein'); const r = S.pickRescueBro(); if (NEW.includes(r)) locked.delete(r); }
   real = false; check('the cage pool includes all four new bros', locked.size === 0, 'missed: ' + [...locked].join(',')); }
-check('freeing every one of the 42 bros unlocks the trophy path (unlocked can reach 42)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 42; })());
+check('freeing every one of the 46 bros unlocks the trophy path (unlocked can reach 46)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 46; })());
 
 // ---------------------------------------------------------------- 9. frame cost on INSANE at 300%, and the shot count stays capped
 {

@@ -193,6 +193,10 @@ const HEADS = {
   torricelli: ['...hhhhh....', '..hhhhhhh...', 'hhhssssss...', 'h.hsssses...', '...ssssss...', '...sssss....'],
   volta:    ['..wwwwww....', '.wwwwwwww...', '.wwssssss...', '..wsssses...', '..ssssss....', '...ssss.....'],
   gauss:    ['...hhhhh....', '.hhhhhhhhh..', '.hssssssh...', '..hsssses...', '...ssssss...', '...sssss....'],
+  kelvin: ['...hhhhh....', '..hhhhhhh...', '.hhssssss...', '.hhsssses...', '.wwwwwwww...', '..wwwwww....'],
+  huygens: ['..hhhhhh....', '.hhhhhhhh...', 'hhhssssss...', 'hhhsssses...', 'hhhssmmss...', 'hh..ssss....'],
+  nightingale: ['...gggg.....', '..ghhhhgg...', '.hhhsssss...', 'hhhsssses...', 'hh.ssssss...', '...sssss....'],
+  schrodinger: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hssgegs...', '...ssssss...', '...ssss.....'],
   anning: ['..gggggg....', '.gggggggg...', 'ghhssssss...', 'ghhsssses...', 'g.hssssss...', '...sssss....'],
   vesalius: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hsssses...', '..mmssssm...', '...mmmm.....'],
   hooke: ['..wwwwww....', '.wwwwwwww...', 'wwwssssss...', 'wwwsssses...', 'ww.ssssss...', 'w...ssss....'],
@@ -211,8 +215,8 @@ const LEGS = [
   ['....pppp....', '....pp.p....', '....pp.p....', '...bbb.bb...'],
   ['...pp..pp...', '..pp...pp...', '..pp....pp..', '..bb....bb..'],
 ];
-function buildSprites(head, pal) {
-  const rows = head.concat(BODY);
+function buildSprites(head, pal, body = BODY) {
+  const rows = head.concat(body);
   const frames = [];
   for (let f = 0; f < 4; f++) {
     const all = rows.concat(LEGS[f]);
@@ -231,7 +235,7 @@ function buildSprites(head, pal) {
   }
   return frames;
 }
-const WHITE = {}; 'hwsemctpbokyg'.split('').forEach(k => (WHITE[k] = '#ffffff'));
+const WHITE = {}; 'hwsemctpbokygxXSCULEHJWVYM'.split('').forEach(k => (WHITE[k] = '#ffffff'));
 
 const BROS = [
   { id: 'einstein', name: 'Albro Einstein', weapon: 'Photon rifle', wdesc: 'rapid light bolts', special: 'Time dilation', sdesc: 'enemies run at 30% speed for 5 s', formula: 'dt\' = gamma x dt', gun: '#8da0cb',
@@ -312,6 +316,14 @@ const BROS = [
     pal: { w: '#d6d6dc', s: '#f0c9a4', e: '#1b1d2e', c: '#8e2b3c', t: '#f2c94c', p: '#2a2e42', b: '#15161f' } },
   { id: 'gauss', name: 'Carl Gaussbro', weapon: 'Coil rifle', wdesc: 'a slug that speeds up through three coils: weak up close, hard at range', special: 'Sum of 1 to 100', sdesc: 'twenty fast slugs in a second, each one hitting harder than the last', formula: '1 + 2 + ... + 100 = 5050', gun: '#8da0cb',
     pal: { h: '#3a2a20', s: '#f0c9a4', e: '#1b1d2e', c: '#2a3a5a', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
+  { id: 'kelvin', name: 'Lord Kelbro', weapon: 'Cryo spray', wdesc: 'a spray of frost that chills quacks stiff for a moment', special: 'Absolute zero', sdesc: 'every quack on screen freezes solid for 4 s', formula: '0 K = -273.15 C', gun: '#bfe9ff',
+    pal: { h: '#9a9aa2', w: '#e6e2f0', s: '#f0c9a4', e: '#1b1d2e', c: '#2a3a5a', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
+  { id: 'huygens', name: 'Christiaan Huygbro', weapon: 'Wavelets', wdesc: 'a wave that bursts into a ring of little wavelets wherever it hits', special: 'Pendulum clock', sdesc: 'a heavy pendulum swings in front of you for 6 s, smashing quacks and blocks', formula: 'T = 2 pi sqrt(L / g)', gun: '#8fd3ff',
+    pal: { h: '#4a3426', m: '#2a1f18', s: '#efc9a6', e: '#1b1d2e', c: '#2a2a3a', t: '#e9eef6', p: '#2a2a3a', b: '#15161f' } },
+  { id: 'nightingale', name: 'Florence Nightinbro', weapon: 'Rose diagram', wdesc: 'five petal shots fanned out like half of her famous chart, short range', special: 'Lady with the lamp', sdesc: 'her lamp shields you for 6 s and dazzles quacks close by', formula: 'polar area diagram, 1858', gun: '#e78ac3',
+    pal: { h: '#5a3a26', g: '#f4f1ea', s: '#f2d2b8', e: '#1b1d2e', c: '#2a4a7a', t: '#e9eef6', p: '#2a3a5a', b: '#15161f' } },
+  { id: 'schrodinger', name: 'Erwin Schrodinbro', weapon: 'Superposition', wdesc: 'every shot flies as two ghosts; the first to hit is real and the other vanishes', special: 'Cat in a box', sdesc: 'lobs a box that bursts into a poison cloud; the cat is fine', formula: 'alive and dead, until you look', gun: '#b3a6ff',
+    pal: { h: '#3a2a20', g: '#c9a227', s: '#f0c9a4', e: '#1b1d2e', c: '#6a5a4a', t: '#e9eef6', p: '#2a2e42', b: '#15161f' } },
   // melee bros: the fire button swings at what is in reach (see swing)
   { id: 'anning', name: 'Mary Anbro', weapon: 'Fossil hammer', wdesc: 'slow, heavy swings that crush quacks and smash blocks', special: 'Mass extinction', sdesc: 'a meteor slams down a few tiles ahead', formula: 'Ichthyosaurus, Lyme Regis, 1811', gun: '#b4bed0', melee: true,
     pal: { h: '#5a3a26', g: '#3a2a4a', s: '#f2d2b8', e: '#1b1d2e', c: '#6a4a3a', t: '#e6e2d0', p: '#3a3326', b: '#25211a' } },
@@ -320,8 +332,48 @@ const BROS = [
   { id: 'hooke', name: 'Robert Hookbro', weapon: 'Spring glove', wdesc: 'a boxing glove on a spring that shoots out 3 tiles and throws quacks far', special: "Hooke's law", sdesc: 'a huge spring punch that flings everything ahead', formula: 'F = -k x', gun: '#d9534f', melee: true,
     pal: { w: '#8a7a6a', s: '#f0c9a4', e: '#1b1d2e', c: '#4a5a3a', t: '#e9eef6', p: '#2a2e42', b: '#15161f' } },
 ];
+// ---------------------------------------------------------------- bro looks
+// Each bro is drawn from his HEADS rows on top of BRO_BODY (a coat with lapels, collar and tie). broRows() shades by rule:
+// a light rim on top of hair and shoulders, a dark rim on the back and the hem, a shaded ear, a shadow under the chin
+// and a brow over the eye. LOOKS: [signature item, its colour]; BRO_ITEM says where the item sits on the coat.
+const BRO_BODY = ['....ssss....', '..cLkktLcc..', '.ccLkttLccc.', '.cccLttLccc.', '.ccccCcccc..', '..cccCccccc.'];
+const BRO_ITEM = {
+  pen: [[2, 2], [2, 1, 'X']], badge: [[2, 2], [3, 2, 'X']], bow: [[4, 1], [5, 1, 'X'], [6, 1]], scarf: [[3, 1], [4, 1], [5, 1, 'X'], [6, 1], [7, 1], [8, 1], [3, 2, 'X']],
+  belt: [[1, 4, 'X'], [2, 4], [3, 4], [4, 4], [5, 4, 'k'], [6, 4], [7, 4], [8, 4], [9, 4, 'X']], medal: [[5, 3], [5, 2, 'X']], tie: [[5, 2, 'x'], [5, 3, 'x'], [6, 2, 'X'], [6, 3, 'X'], [5, 4, 'X']],
+  chain: [[2, 3], [3, 4, 'X'], [4, 3]], pearls: [[4, 1], [5, 2, 'X'], [6, 1]], sash: [[2, 1], [3, 2], [4, 3, 'X'], [5, 4], [6, 5, 'X']], apron: [[3, 3], [4, 3], [5, 3, 'X'], [6, 3], [3, 4, 'X'], [4, 4], [5, 4], [6, 4], [7, 4], [3, 5], [4, 5, 'X'], [5, 5], [6, 5], [7, 5]],
+};
+const LOOKS = {
+  einstein: ['pen', '#f2c94c'], curie: ['badge', '#a6d854'], tesla: ['bow', '#d9534f'], newton: ['scarf', '#e9eef6'], franklin: ['pen', '#e78ac3'], ada: ['pearls', '#c9a227'],
+  darwin: ['chain', '#c9a227'], galileo: ['scarf', '#f2c94c'], turing: ['tie', '#6a4a8a'], johnson: ['pearls', '#e9eef6'], meitner: ['badge', '#e78ac3'], archimedes: ['belt', '#c9a227'],
+  mendel: ['medal', '#c9a227'], pasteur: ['bow', '#1b1d2e'], faraday: ['bow', '#c9a227'], hypatia: ['belt', '#c9a227'], feynman: ['pen', '#8fd3ff'], fleming: ['bow', '#8e2b3c'],
+  sagan: ['scarf', '#8e2b3c'], wegener: ['scarf', '#e6e2d0'], hubble: ['tie', '#8e2b3c'], mendeleev: ['chain', '#c9a227'], hawking: ['tie', '#8e2b3c'], hopper: ['medal', '#f2c94c'],
+  wu: ['badge', '#8fd3ff'], hodgkin: ['pearls', '#bfe9ff'], davinci: ['belt', '#7a5c36'], rutherford: ['chain', '#c9a227'], nobel: ['medal', '#f2c94c'], bohr: ['tie', '#8e2b3c'],
+  lamarr: ['pearls', '#e9eef6'], lavoisier: ['scarf', '#e9eef6'], goodall: ['sash', '#7a5c36'], jemison: ['badge', '#2a5a9a'], oppenheimer: ['tie', '#3a2618'], semmelweis: ['apron', '#e6e2f0'],
+  torricelli: ['chain', '#b4bed0'], volta: ['medal', '#f2c94c'], gauss: ['pen', '#e9eef6'], kelvin: ['scarf', '#8fd3ff'], huygens: ['scarf', '#e9eef6'], nightingale: ['apron', '#f4f1ea'], schrodinger: ['bow', '#8e2b3c'], anning: ['sash', '#7a5c36'], vesalius: ['apron', '#b4bed0'], hooke: ['scarf', '#e9eef6'],
+};
+const lighten = (hex, a) => { const n = parseInt(hex.slice(1), 16); return '#' + [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v + (255 - v) * a).toString(16).padStart(2, '0')).join(''); };
+function broRows(id) {
+  const hh = HEADS[id].length, body = BRO_BODY.map((r) => r.split(''));
+  for (const [x, y, ch] of BRO_ITEM[(LOOKS[id] || [])[0]] || []) body[y][x] = ch || 'x';
+  const R = HEADS[id].map((r) => r.padEnd(12, '.').split('')).concat(body), out = R.map((r) => r.slice());
+  const at = (x, y) => (R[y] && R[y][x]) || '.', hair = (k) => k === 'h' || k === 'w';
+  for (let y = 0; y < R.length; y++) for (let x = 0; x < 12; x++) {
+    const k = R[y][x], up = at(x, y - 1), back = at(x - 1, y), down = at(x, y + 1);
+    if (hair(k)) { if (up === '.' && back !== '.' && y < 2) out[y][x] = k === 'h' ? 'J' : 'V'; else if (back === '.' || (down === '.' && y < hh - 1)) out[y][x] = k === 'h' ? 'H' : 'W'; }
+    else if (k === 'c') { if (back === '.' || down === '.') out[y][x] = 'C'; else if (up === '.' || at(x + 1, y) === '.') out[y][x] = 'U'; }
+    else if (k === 's' && y >= 2 && y < hh && hair(back)) out[y][x] = 'S'; // the ear side of the face
+    else if (k === 's' && y === hh) out[y][x] = 'S'; // the neck, in the shadow of the chin
+    if (k === 'e') { if (at(x, y - 1) === 's') out[y - 1][x] = 'E'; if (at(x - 1, y) === 's') out[y][x - 1] = 'Y'; if (at(x - 1, y + 2) === 's' && at(x, y + 2) !== '.') out[y + 2][x - 1] = 'M'; } // a brow, the white of the eye, a mouth
+  }
+  return { head: out.slice(0, hh).map((r) => r.join('')), body: out.slice(hh).map((r) => r.join('')) };
+}
+function broPal(b) {
+  const p = b.pal, x = (LOOKS[b.id] || [])[1] || '#c9a227', hair = p.h || p.w || '#3a2a20';
+  return Object.assign({ k: '#e9eef6', x, X: shade(x, 0.72), S: shade(p.s, 0.82), Y: '#f4f1ea', M: shade(p.s, 0.62), C: shade(p.c, 0.74), U: lighten(p.c, 0.22), L: shade(p.c, 0.84), E: shade(hair, 0.6) },
+    p.h ? { H: shade(p.h, 0.7), J: lighten(p.h, 0.25) } : {}, p.w ? { W: shade(p.w, 0.78), V: lighten(p.w, 0.35) } : {}, p);
+}
 const BRO = {};
-for (const b of BROS) { b.spr = buildSprites(HEADS[b.id], b.pal); b.white = buildSprites(HEADS[b.id], WHITE); BRO[b.id] = b; }
+for (const b of BROS) { const R = broRows(b.id); b.look = broPal(b); b.spr = buildSprites(R.head, b.look, R.body); b.white = buildSprites(R.head, WHITE, R.body); BRO[b.id] = b; }
 
 // ---------------------------------------------------------------- animation rigs
 // A character is drawn in layers: a leg pose, the upper body (head and torso) that bobs with the stride,
@@ -363,13 +415,13 @@ function paint(rows, pal, w, top = true, bottom = true) {
     return c;
   });
 }
-function buildRig(head, body, pal, flat = false) {
+function buildRig(head, body, pal, flat = false, legSet = LEG_FRAMES) {
   const p = Object.assign({ q: flat ? pal.p : shade(pal.p || '#333344', 0.72), d: flat ? pal.b : shade(pal.b || '#222222', 0.75) }, pal);
   const w = Math.max(12, ...head.concat(body).map((r) => r.length));
   const rig = { w, hh: head.length, uh: head.length + body.length, up: paint(head.concat(body), p, w, true, false), legs: {}, pal: p };
-  for (const k in LEG_FRAMES) rig.legs[k] = Array.isArray(LEG_FRAMES[k][0]) ? LEG_FRAMES[k].map((f) => paint(f, p, w, false, true)) : paint(LEG_FRAMES[k], p, w, false, true);
+  for (const k in legSet) rig.legs[k] = Array.isArray(legSet[k][0]) ? legSet[k].map((f) => paint(f, p, w, false, true)) : paint(legSet[k], p, w, false, true);
   rig.still = [0, 1].map((f) => { const c = mk(w + 2, rig.uh + 6), g = c.getContext('2d'); g.drawImage(rig.legs.stand[f], 0, rig.uh); g.drawImage(rig.up[f], 0, 0); return c; });
-  if (!flat) rig.white = buildRig(head, body, Object.fromEntries(Object.keys(p).map((k) => [k, '#ffffff'])), true);
+  if (!flat) rig.white = buildRig(head, body, Object.fromEntries(Object.keys(p).map((k) => [k, '#ffffff'])), true, legSet);
   return rig;
 }
 const GOON_PAL = { o: '#5a4a8c', k: '#e6e2f0', e: '#1b1d2e', y: '#f2c94c', s: '#3d3560', c: '#2c2840', t: '#7570b3', p: '#25223a', b: '#15141f', h: '#4b5a3a', w: '#e6e2f0' };
@@ -417,7 +469,10 @@ const DOG_ROWS = [ // run, run, jump, stand; 17x11 so a level shot hits it
   ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '.kk..........kk..', 'k..............kk', '.................'],
   ['.............kk..', '............kkkk.', '...........kkkrk.', 'k..........kkkkkk', '.k........kkkkkt.', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkkk..', '..kkkkkkkkkkkk...', '..kk.kk...kk.kk..', '..kk.kk...kk.kk..', '..kk.kk...kk.kk..'],
 ];
-for (const b of BROS) b.rig = buildRig(HEADS[b.id], BODY, b.pal);
+// bros' shoes catch the light on the toe (the front pixel of each shoe); the quacks keep LEG_FRAMES as they are
+const shine = (rows) => rows.map((r) => r.replace(/b(?!b)/g, 'B'));
+const BRO_LEGS = Object.fromEntries(Object.entries(LEG_FRAMES).map(([k, v]) => [k, Array.isArray(v[0]) ? v.map(shine) : shine(v)]));
+for (const b of BROS) { const R = broRows(b.id); b.rig = buildRig(R.head, R.body, Object.assign({ B: lighten(b.pal.b, 0.3) }, b.look), false, BRO_LEGS); }
 const DOG = DOG_ROWS.map((r) => paint(r, { k: '#4a3a2a', r: '#ff5a4a', t: '#d9534f' }, 17));
 const DOG_W = DOG_ROWS.map((r) => paint(r, { k: '#ffffff', r: '#ffffff', t: '#ffffff' }, 17));
 // Goodall's chimps: a 10x9 sprite, two running frames
@@ -442,8 +497,10 @@ function drawRigAt(rig, cx, feet, face, pose, white) {
   return { x: face > 0 ? ox + rig.w - 5 : ox + 3, y: uy + rig.hh + 2, uy, ox };
 }
 // front arm in one of a few poses; returns where the hand is
-function drawArm(sh, face, mode, coat, skin, swing = 0) {
+function drawArm(sh, face, mode, coat, skin, swing = 0, edge = null) { // edge: a darker sleeve underside, so the arm stands out from the coat (bros only)
   let hx, hy;
+  if (edge && (mode === 'aim' || mode === 'punch')) { ctx.fillStyle = edge; ctx.fillRect(face > 0 ? sh.x : sh.x - (mode === 'aim' ? 2 : 5), sh.y + 2, mode === 'aim' ? 4 : 7, 1); }
+  else if (edge) { ctx.fillStyle = edge; ctx.fillRect(sh.x + swing + (face > 0 ? -1 : 2), sh.y + (mode === 'up' ? -5 : 0), 1, mode === 'up' ? 6 : 4); }
   ctx.fillStyle = coat;
   if (mode === 'aim') { ctx.fillRect(face > 0 ? sh.x : sh.x - 2, sh.y, 4, 2); hx = sh.x + face * 3; hy = sh.y; }
   else if (mode === 'punch') { ctx.fillRect(face > 0 ? sh.x : sh.x - 5, sh.y, 7, 2); hx = sh.x + face * 6; hy = sh.y - 1; }
@@ -2415,6 +2472,8 @@ const DESTRUCT = {
   elemNa: { p: 1, r: 1, shape: 'round' }, elemHe: { p: 0.8, r: 1, shape: 'round' }, plasma2: { p: 1, r: 1, shape: 'round' },
   bubble: { p: 0.3, shape: 'chip', m: 'suds' }, merc: { p: 1, shape: 'punch', m: 'stone' }, mdrop: { p: 0.35, shape: 'chip', m: 'stone' },
   volt: { p: 0.5, shape: 'fork', m: 'stone' }, gauss: { p: 1.2, shape: 'line', n: 3, m: 'stone' },
+  frost: { p: 0.3, shape: 'chip', m: 'glass' }, wavelet: { p: 0.6, shape: 'chip' }, wlet: { p: 0.2, shape: 'chip' }, pend: { p: 0.3, shape: 'punch' }, // Kelvin's frost makes ice and crates brittle; Huygens' wave and wavelets chip, his pendulum smashes
+  petal: { p: 0.25, shape: 'chip', m: 'soft' }, psi: { p: 0.9, shape: 'punch' }, catbox: { p: 1, r: 1, shape: 'round', m: 'acid' }, // Nightingale's petals scuff; Schrodinger's real shot punches, the box blows a crater
   tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo', s: 0.5 }, rocket: { p: 1.3, r: 1.2, shape: 'round', s: 0.45 }, bomb: { p: 1.2, r: 1.2, shape: 'round', s: 0.5 }, // s: steel power. Only these heavy weapons dent steel (10 hp); the bedrock row and boss arenas never give
 };
 const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot
@@ -2446,7 +2505,7 @@ function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
 // Weak weapons hit bosses harder: the player's damage to a boss (and its parts) is multiplied while that bro's main
 // weapon fires and by the shots it fired. Tuned with tests/weapons_bosses.js so every bro deals at least about 60%
 // of the median boss damage per second; the strongest weapons are left as they were.
-const BOSS_MUL = { semmelweis: 2, volta: 1.5, torricelli: 1.3, goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1, mendel: 1.15, pasteur: 1.1,
+const BOSS_MUL = { huygens: 1.5, nightingale: 1.15, semmelweis: 2, volta: 1.5, torricelli: 1.3, goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1, mendel: 1.15, pasteur: 1.1,
   g_pogo: 1.9, g_glue: 1.2, g_fizz: 1.4, g_duck: 1.4, s_confetti: 1, s_beach: 1.5, s_spud: 1 }; // the gimmick guns (g_) and one-use specials (s_), tuned with tests/gimmick_weapons.js
 let bossMul = 1;
 
@@ -3899,6 +3958,10 @@ const GUNFX = {
   torricelli: { flash: 'puff', c: ['#ffffff', '#b4bed0'], kick: 2, idle: 'drip', charge: 1 },
   volta: { flash: 'spark', c: ['#ffffff', '#f2c94c'], eject: 'vent', heat: 0.08, idle: 'spark' },
   gauss: { flash: 'ring', c: ['#ffffff', '#8da0cb'], eject: 'vent', heat: 0.1, kick: 2, idle: 'flicker' },
+  kelvin: { flash: 'mist', c: ['#ffffff', '#bfe9ff'], idle: 'steam' },
+  huygens: { flash: 'ring', c: ['#ffffff', '#8fd3ff'], heat: 0.05, idle: 'flicker' },
+  nightingale: { flash: 'glow', c: ['#fff6c2', '#e78ac3'], idle: 'glint' },
+  schrodinger: { flash: 'ring', c: ['#ffffff', '#b3a6ff'], eject: 'vent', heat: 0.08, idle: 'flicker' },
   alt_shotgun: { flash: 'cone', c: ['#ffffff', '#f29e4c'], heat: 0.25, kick: 3, shake: 2 },
   alt_rocket: { flash: 'puff', c: ['#fff6c2', '#f29e4c'], heat: 0.3, kick: 3, shake: 2, charge: 1 },
   alt_minigun: { flash: 'star', c: ['#fff6c2', '#f2c94c'], eject: 'brass', heat: 0.03 },
@@ -3968,7 +4031,7 @@ function fireAlt(f, gx, gy, dx = f, dy = 0) {
 }
 // aiming up: turn the shots just fired by the aim angle. Shots that find their own way (trajectory shells,
 // the boomerang disc, the torpedo, the ground ripple, drill chips) are left alone; a lob never turns backwards.
-const NO_AIM = { calc: 1, disc: 1, torp: 1, pwave: 1, chip: 1, spud: 1 }; // spud: the storm falls from the sky, there is no muzzle to aim
+const NO_AIM = { calc: 1, disc: 1, torp: 1, pwave: 1, chip: 1, spud: 1, pend: 1 }; // spud: the storm falls from the sky, there is no muzzle to aim; pend: Huygens' pendulum swings from its own pivot
 function aimShots(n0, f) {
   const a = P.aim || 0; if (!a) return;
   for (let i = n0; i < bullets.length; i++) {
@@ -4056,6 +4119,10 @@ function fireWeapon() {
     case 'torricelli': bullets.push({ x: gx, y: gy - 2, vx: f * 300 + P.vx * 0.3, vy: -90, grav: 650, owner: 'p', dmg: 1.6, tdmg: 1, life: 2, kind: 'merc', poison: 1.5, knock: 100, hitR: 2 }); P.cool = 0.4; P.recoil = 2; sfx('throw'); break;
     case 'volta': bullets.push({ x: gx, y: gy, vx: f * 520, vy: rand(-8, 8), owner: 'p', dmg: 0.55, tdmg: 0.45, life: 0.5, kind: 'volt', full: P.volt > 0 }); P.cool = 0.1; P.recoil = 1; sfx('zap'); break;
     case 'gauss': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 180, vy: 0, owner: 'p', dmg: 1, tdmg: 0.5, life: 0.75, kind: 'gauss', pierce: 1, stage: 0 }); P.cool = 0.22; P.recoil = 2; sfx('shot'); break;
+    case 'kelvin': for (let k = 0; k < 2; k++) bullets.push({ x: gx, y: gy + rand(-1, 1), vx: f * rand(290, 340), vy: rand(-25, 25), owner: 'p', dmg: 0.45, tdmg: 0.3, life: rand(0.36, 0.44), kind: 'frost', stun: 0.3, hitR: 2 }); P.cool = 0.1; if (Math.random() < 0.4) sfx('splash'); break; // two flakes a pull; each hit chills a quack stiff for a moment
+    case 'huygens': bullets.push({ x: gx, y: gy, vx: f * 330, vy: 0, owner: 'p', dmg: 1.6, tdmg: 0.6, life: 0.6, kind: 'wavelet', hitR: 5 }); P.cool = 0.24; P.recoil = 1; sfx('zap'); break; // where it hits it bursts into wavelets (see wavelets)
+    case 'nightingale': for (let k = 0; k < 5; k++) { const a = (k - 2) * 0.38; bullets.push({ x: gx, y: gy, vx: f * Math.cos(a) * 320, vy: Math.sin(a) * 320, owner: 'p', dmg: 0.9, tdmg: 0.3, life: 0.4, kind: 'petal', pierce: 1 }); } P.cool = 0.3; P.recoil = 1; sfx('throw'); break; // half a rose: five petals fanned out, short range
+    case 'schrodinger': { const link = { s: [], hit: false }; for (const sd of [-1, 1]) link.s.push({ x: gx, y: gy + sd, vx: f * 420, vy: sd * 26, owner: 'p', dmg: 2.4, tdmg: 0.8, life: 0.6, kind: 'psi', link, ph: sd }); bullets.push(...link.s); P.cool = 0.26; P.recoil = 1; sfx('shot'); break; } // two ghosts; the first to land is the real one
     case 'anning': swing(26, 5, 300, 3, '#e6e2d0'); P.cool = 0.45; shake = Math.min(10, shake + 1.5); break;
     case 'vesalius': swing(20, 1.4, 90, 0.4, '#ffffff'); P.cool = 0.13; break;
     case 'hooke': swing(44, 2.6, 520, 0.8, '#d9534f', true); P.cool = 0.32; break;
@@ -4359,6 +4426,15 @@ function useSpecial() {
     case 'torricelli': for (let k = 0; k < 8; k++) setTimeoutGame(() => { bullets.push({ x: cam.x + 12 + (k + rand(0.1, 0.9)) * (VW - 24) / 8, y: cam.y - 6, vx: rand(-20, 20), vy: 380, owner: 'p', dmg: 3, tdmg: 1, life: 2, kind: 'merc', poison: 1.5, knock: 100, hitR: 3, rain: 1 }); }, k * 0.06); break;
     case 'volta': P.volt = 6; fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#f2c94c' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 120, t: 0.4, max: 0.4 }); break;
     case 'gauss': for (let k = 1; k <= 20; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face, n = bullets.length, sx = P.x + (ff > 0 ? P.w + 2 : -2); bullets.push({ x: sx, y: P.y + 8, sx, vx: ff * 520, vy: rand(-5, 5), owner: 'p', dmg: 0.35 * k, tdmg: 0.6, life: 0.7, kind: 'gauss', pierce: 2, stage: 3, fixed: 1, knock: 30 }); aimShots(n, ff); sfx('shot'); }, k * 0.05); break;
+    case 'kelvin': // absolute zero: every quack on screen freezes solid for 4 s
+      for (const e of ents) if (isQuack(e) && live(e) && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.stun = Math.max(e.stun || 0, 4); hitEnemy(e, 2, 0, 'shot'); if (!e.dead && fx.length < 240) fx.push({ kind: 'ice', e, t: 4, max: 4 }); for (let i = 0; i < 4; i++) part(center(e)[0], center(e)[1], rand(-60, 60), rand(-90, -20), i % 2 ? '#ffffff' : '#bfe9ff', rand(0.3, 0.6), 1, G); }
+      fx.push({ kind: 'screen', t: 0.3, max: 0.3, col: '#bfe9ff' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 260, t: 0.5, max: 0.5 }); sfx('glass'); break;
+    case 'huygens': bullets.push({ x: P.x + 5, y: P.y, vx: 0, vy: 0, owner: 'p', dmg: 3, tdmg: 1, life: 6, kind: 'pend', pierce: 99, knock: 320, hitR: 7, t: 0, f, swing: 1 }); sfx('clink'); break; // the pendulum: see updateBullets
+    case 'nightingale': // the lamp: a shield for 6 s, and the light dazzles quacks close by
+      P.shield = Math.max(P.shield || 0, 6); P.lamp = 6;
+      for (const e of ents) if (isQuack(e) && live(e) && Math.hypot(center(e)[0] - P.x - 5, center(e)[1] - P.y - 8) < 110) e.stun = Math.max(e.stun || 0, 2);
+      fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#fff6c2' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 110, t: 0.4, max: 0.4 }); break;
+    case 'schrodinger': bullets.push({ x: gx, y: gy - 4, vx: f * 210, vy: -230, grav: 650, owner: 'p', dmg: 9, life: 1.4, kind: 'catbox', explode: 46, tp: 2.5, rad: 40, radCol: '#b3a6ff' }); sfx('throw'); break; // bursts into a poison cloud (see burst)
     case 'anning': { // mass extinction: a meteor comes down a few tiles ahead; a red mark shows where
       const tx = clamp(P.x + 5 + f * 90, 8, playW * T - 8);
       fx.push({ kind: 'marker', x: tx, y: P.y + P.h, t: 1, max: 1 });
@@ -5004,7 +5080,7 @@ function updatePlayer(dt) {
   P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
   if (P.mech) { updateMechSuit(dt); return; }
   P.flip = Math.max(0, (P.flip || 0) - dt); P.aimT = Math.max(0, (P.aimT || 0) - dt);
-  P.cage = Math.max(0, (P.cage || 0) - dt); P.volt = Math.max(0, (P.volt || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
+  P.cage = Math.max(0, (P.cage || 0) - dt); P.volt = Math.max(0, (P.volt || 0) - dt); P.lamp = Math.max(0, (P.lamp || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
   P.shield = Math.max(0, (P.shield || 0) - dt); P.over = Math.max(0, (P.over || 0) - dt); P.jet = Math.max(0, (P.jet || 0) - dt);
   if (P.jet > 0 && keys.jump && !P.onGround && P.coy <= 0 && !P.ladder) { // jetpack thrust
     P.vy = Math.max(P.vy - 2300 * dt, -170);
@@ -6711,10 +6787,12 @@ const hurtbox = () => ({ x: P.x + 1, y: P.y + 2, w: P.w - 2, h: P.h - 2 });
 function burst(b, x, y, own) {
   if (b.kind === 'confetti' || b.kind === 'fizz') for (let i = 0; i < 14; i++) part(x, y, rand(-220, 220), rand(-300, -60), b.kind === 'fizz' ? ['#ffffff', '#bfe9ff'][i & 1] : ['#e78ac3', '#f2c94c', '#8fd3ff', '#a6d854'][i & 3], rand(0.6, 1.1), 2, G);
   explode(x, y, b.explode, b.dmg, own, b.tp, own === 'p' ? dkey(b) : undefined);
-  if (b.rad) fx.push({ kind: 'rad', x, y, r: b.rad, t: 2.6, max: 2.6, tick: 0 });
+  if (b.rad) fx.push({ kind: 'rad', x, y, r: b.rad, t: 2.6, max: 2.6, tick: 0, col: b.radCol });
+  if (b.kind === 'catbox') floatText(x, y - 14, 'MEOW', '#f2c94c'); // the cat is fine
 }
 // a player bullet hits something: damage plus whatever the weapon adds (poison, sickness, a stun)
 function bulletHit(b, e) {
+  if (b.link) { if (b.link.hit) return; b.link.hit = true; } // Schrodinger: only the first ghost to land is real
   let dm = b.dmg;
   if (b.kind === 'volt') { const st = b.full ? 5 : Math.min(5, (e.voltT > lifeT ? e.volt : 0) + 1); e.volt = st; e.voltT = lifeT + 1.2; dm *= 1 + 0.3 * (st - 1); if (st >= 4) part(b.x, b.y, rand(-60, 60), rand(-60, 0), '#f2c94c', 0.2, 1, 0, 'spark'); } // each hit on the same quack within 1.2 s charges the pile further
   hitEnemy(e, dm, Math.sign(b.vx) * (b.knock || 90), b.how);
@@ -6724,6 +6802,7 @@ function bulletHit(b, e) {
   if (b.lift && !BOSS[e.type] && !e.dead) e.vy = -b.lift;
   if (b.burn && !e.dead) setBurn(e);
   if (b.kind !== 'flame' && b.kind !== 'hoot') hitSpark(b.x, b.y, e);
+  if (b.kind === 'wavelet') wavelets(b, e);
   if (b.glow) glowAt(b.x, b.y, b.glow);
 }
 // a short white star where a shot lands, and sparks off anything made of metal
@@ -6733,9 +6812,16 @@ function hitSpark(x, y, e) {
 }
 // what a shot leaves where it hits a block: sparks off steel, dust and clods off earth, chips off brick, splinters off
 // crates, shards off ice; energy shots pop in their own colour and leave a scorch mark, bullets leave a hole
-const BCOL = { photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff', volt: '#f2c94c', gauss: '#8da0cb', mdrop: '#b4bed0', merc: '#b4bed0', bubble: '#bfe9ff' };
+const BCOL = { frost: '#bfe9ff', wavelet: '#8fd3ff', wlet: '#8fd3ff', petal: '#e78ac3', psi: '#b3a6ff', photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff', volt: '#f2c94c', gauss: '#8da0cb', mdrop: '#b4bed0', merc: '#b4bed0', bubble: '#bfe9ff' };
+// Huygens: every point the wave reaches is a new source, so a ring of six little wavelets spreads from where it hits
+function wavelets(b, e) {
+  const sp = Math.hypot(b.vx, b.vy) || 1, x = e ? b.x : b.x - b.vx / sp * 7, y = e ? b.y : b.y - b.vy / sp * 7; // off a wall: back out of it first
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + 0.3; bullets.push({ x, y, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170, owner: 'p', dmg: 0.45, tdmg: 0.25, life: 0.2, kind: 'wlet', src: e, bm: b.bm, hitR: 2 }); }
+}
 function impact(b, v) {
   const x = b.x, y = b.y, d = -Math.sign(b.vx) || 1, col = BCOL[b.kind];
+  if (b.kind === 'wavelet') wavelets(b, null);
+  if (b.link) b.link.hit = true;
   if (b.kind === 'flame') { if (v === CRATE && Math.random() < 0.15) ignite(x, y - 8, 1, 2); return; } // the torch lights crates
   if (b.kind === 'plasma2') { explode(x - b.vx * 0.01, y, 10 + 8 * b.size, 2, 'p', 1, 'plasma2'); return; }
   if (b.glow) glowAt(x - b.vx * 0.01, y, b.glow);
@@ -6760,6 +6846,7 @@ function tunnels(b) {
 function updateBullets(dt, edt) {
   for (const b of bullets) {
     if (b.dead) continue;
+    if (b.link && b.link.hit) { b.dead = true; if (fx.length < 260) fx.push({ kind: 'pop', x: b.x, y: b.y, t: 0.1, max: 0.1, col: '#b3a6ff', r: 3 }); continue; } // the other ghost was never there
     blame = b.owner === 'p' ? 'p' : 'e'; bossMul = b.bm || 1;
     const d = b.owner === 'e' ? edt : dt, own = b.owner === 'e' ? 'env' : 'p';
     b.life -= d;
@@ -6778,6 +6865,12 @@ function updateBullets(dt, edt) {
       b.spin += d * 30; b.vx -= b.dir * 760 * d;
       if (b.vx * b.dir < 0) { b.vy = clamp((P.y + 8 - b.y) * 4, -200, 200); if (!b.back) { b.back = true; if (b.hits) b.hits.clear(); } } // on the way back it can cut the same quacks again
       if (b.back && Math.abs(b.x - P.x - 5) < 10 && Math.abs(b.y - P.y - 8) < 14) { b.dead = true; continue; }
+    }
+    if (b.kind === 'pend') { // Huygens' pendulum: swings from a pivot over your head and ahead of you; every swing can hit a quack again
+      b.t += d; const a = Math.sin(b.t * 3.4) * 1.3, sw = Math.cos(b.t * 3.4) > 0 ? 1 : -1;
+      if (sw !== b.swing) { b.swing = sw; if (b.hits) b.hits.clear(); }
+      if (!P.alive) b.life = 0;
+      b.px = P.x + 5 + b.f * 30; b.py = P.y - 30; b.x = b.px + Math.sin(a) * 42; b.y = b.py + Math.cos(a) * 42; b.vx = sw * 1e-3; b.vy = 0;
     }
     if (b.kind === 'orbit') { // spiral out around where you stand
       b.ang += d * 6; b.rad += d * 70; b.vx = 0; b.vy = 0; b.x = P.x + 5 + Math.cos(b.ang) * b.rad; b.y = P.y + 8 + Math.sin(b.ang) * b.rad * 0.7;
@@ -6810,7 +6903,7 @@ function updateBullets(dt, edt) {
       for (const e of ents) if (e.vats && live(e)) for (const v of e.vats) if (!v.dead && !b.hits.has(v) && overlap(v, col)) { b.hits.add(v); hitVat(e, v, b.dmg); }
       for (const e of ents) if (e.type === 'crawler' && live(e) && !b.hits.has(e) && e.segs.some((sg) => Math.abs(sg.x - b.x) < 10 && sg.y > b.y && sg.y - b.y < 64)) { b.hits.add(e); hitEnemy(e, b.dmg, 0, 'blast'); } // it shakes a crawler burrowing under it
     }
-    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) wreck(b.kind, Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.15); // they cut through
+    if ((b.kind === 'disc' || b.kind === 'orbit' || b.kind === 'pend') && solidPx(b.x, b.y)) wreck(b.kind, Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.15); // they cut through
     if (b.kind === 'fission' && b.gen < 2 && b.life <= 0) { // split into two smaller orbs
       b.dead = true; sfx('zap');
       for (const k of [-1, 1]) { const a = Math.atan2(b.vy, b.vx) + k * 0.35, sp = Math.hypot(b.vx, b.vy); bullets.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, owner: 'p', dmg: 2, life: b.gen === 0 ? 0.3 : 0.4, kind: 'fission', gen: b.gen + 1, explode: 14, tp: 1.2 }); }
@@ -6839,11 +6932,11 @@ function updateBullets(dt, edt) {
       if (P.alive && P.inv <= 0 && Math.abs(P.x + 5 - b.x) < 8 && P.y + P.h > b.y - 6) killPlayer('shot', Math.sign(b.vx));
       continue;
     }
-    if (!b.explode && b.kind !== 'disc' && b.kind !== 'orbit' && rectAcid(b.x, b.y, 1, 1)) { // a shot into acid: a little splash
+    if (!b.explode && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && rectAcid(b.x, b.y, 1, 1)) { // a shot into acid: a little splash
       b.dead = true; for (let i = 0; i < 4; i++) part(b.x, b.y - 2, rand(-50, 50), rand(-140, -60), i % 2 ? theme.acid[1] : theme.acid[2], rand(0.3, 0.5), 1, G);
       continue;
     }
-    if ((b.kind === 'disc' || b.kind === 'orbit') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
+    if ((b.kind === 'disc' || b.kind === 'orbit' || b.kind === 'pend') && solidPx(b.x, b.y)) { /* discs pass over blocks */ }
     else if (b.kind === 'enigma' && solidPx(b.x, b.y) && b.bounces > 0) { // ricochet: step back out of the wall and bounce off it
       b.bounces--; wreck('enigma', Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0.3);
       const px = b.x - b.vx * d, py = b.y - b.vy * d;
@@ -6861,7 +6954,7 @@ function updateBullets(dt, edt) {
       if (b.kind === 'beach') explode(px, py, 20, b.dmg, 'p', 2, 'beach');
       continue;
     }
-    if ((solidPx(b.x, b.y) && b.kind !== 'disc' && b.kind !== 'orbit' && !tunnels(b)) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
+    if ((solidPx(b.x, b.y) && b.kind !== 'disc' && b.kind !== 'orbit' && b.kind !== 'pend' && !tunnels(b)) || (b.explode && rectAcid(b.x - 1, b.y - 1, 2, 2))) {
       if ((b.kind === 'tnt' || b.sticky) && solidPx(b.x, b.y)) { b.x = ox; b.y = oy; b.stuck = true; b.life = b.fuse; sfx('fuse', b.x); continue; } // dynamite sticks where it lands
       b.dead = true;
       if (b.kind === 'glob') { splash(b.x, b.y - 2, 6); acidPool(b.x - b.vx * d, b.y - b.vy * d); continue; }
@@ -6932,6 +7025,7 @@ function updateBullets(dt, edt) {
     b.px = undefined; if (!b.rain) sfx('splash');
   }
   blame = 'e'; bossMul = 1;
+  for (const b of bullets) if (b.link && b.dead && b.life > 0) b.link.hit = true; // Schrodinger: one ghost landed, so it was the real one
   bullets = bullets.filter((b) => !b.dead && b.x > -50 && b.x < playW * T + 50 && b.y < LH * T + 50 && b.y > -400);
 }
 function updateFx(dt, edt) {
@@ -6985,6 +7079,7 @@ function updateFx(dt, edt) {
       f.r = (1 - f.t / f.max) * 150;
       for (let k = 0; k < 2; k++) { const a = rand(0, 6.3); part(f.x + Math.cos(a) * f.r, f.y + Math.sin(a) * f.r * 0.6, 0, -30, '', 0.25, 2, 0, 'fire'); } // shimmer on the edge
       for (const e of ents) if (live(e) && !f.done.has(e) && Math.hypot(center(e)[0] - f.x, center(e)[1] - f.y) < f.r) { f.done.add(e); hitEnemy(e, 3, Math.sign(center(e)[0] - f.x) * 160, 'blast'); setBurn(e); }
+    } else if (f.kind === 'ice') { if (f.e.dead) f.t = 0; // Kelvin's absolute zero: a block of ice round a frozen quack
     } else if (f.kind === 'rad') { // Curie's radiation: a glowing puddle that hurts quacks standing in it
       f.tick -= dt;
       if (Math.random() < 0.4) part(f.x + rand(-f.r, f.r), f.y + rand(-6, 4), 0, rand(-30, -10), f.col || '#a6d854', 0.6, 2);
@@ -7539,17 +7634,22 @@ function drawPlayer() {
   if (P.sprint && P.onGround && Math.abs(P.vx) > 140) { ctx.translate(cx, feet); ctx.transform(1, 0, -0.12 * P.face, 1, 0, 0); ctx.translate(-cx, -feet); } // lean into the sprint
   if (P.squash) { ctx.translate(cx, feet); ctx.scale(1 + P.squash, 1 - P.squash); ctx.translate(-cx, -feet); } // squash on landing, stretch on jump
   if (P.dash > 0 && P.onGround) { const a = (1 - P.dash / 0.24) * Math.PI * 2 * P.dashDir; ctx.translate(cx, feet - 7); ctx.rotate(a); ctx.translate(-cx, -(feet - 7)); } // roll
-  const sh = drawRigAt(rig, cx, feet, P.face, P.pound > 0 ? { leg: 'jump', fr: 0, bob: 0 } : pose, false), c = P.bro.pal.c, s = P.bro.pal.s;
-  if (P.pound > 0) { const h = drawArm(sh, P.face, 'down', c, s); ctx.fillStyle = s; ctx.fillRect(h.x - 1, h.y + 1, 4, 3); }
-  else if (P.ride || P.climb) drawArm(sh, P.face, 'up', c, s);
-  else if (P.punch > 0) drawArm(sh, P.face, 'punch', c, s);
-  else if (pose.leg === 'run' && P.aimT <= 0 && !keys.fire && !P.aim) { const h = drawArm(sh, P.face, 'down', c, s, [0, 1, 1, 0, -1, -1][pose.fr]); drawBroGun(P.bro, h.x - 2, h.y, P.face); } // gun swings with the stride
+  const sh = drawRigAt(rig, cx, feet, P.face, P.pound > 0 ? { leg: 'jump', fr: 0, bob: 0 } : pose, false), c = P.bro.pal.c, s = P.bro.pal.s, ed = P.bro.look.C;
+  if (P.pound > 0) { const h = drawArm(sh, P.face, 'down', c, s, 0, ed); ctx.fillStyle = s; ctx.fillRect(h.x - 1, h.y + 1, 4, 3); }
+  else if (P.ride || P.climb) drawArm(P.climb ? { x: sh.x, y: sh.y + pose.fr * 2 } : sh, P.face, 'up', c, s, 0, ed); // on a ladder the hand reaches up and pulls down with the legs
+  else if (P.punch > 0) drawArm(sh, P.face, 'punch', c, s, 0, ed);
+  else if (pose.leg === 'run' && P.aimT <= 0 && !keys.fire && !P.aim) { const h = drawArm(sh, P.face, 'down', c, s, [0, 1, 1, 0, -1, -1][pose.fr], ed); drawBroGun(P.bro, h.x - 2, h.y, P.face); } // gun swings with the stride
   else { // the shot kicks the arm back and the muzzle up; aiming up turns arm and gun about the shoulder
     if (P.aim) { ctx.save(); ctx.translate(sh.x, sh.y + 1); ctx.rotate(-P.aim * P.face); ctx.translate(-sh.x, -sh.y - 1); }
-    const h = drawArm({ x: sh.x - P.face * Math.round(P.recoil * 0.4), y: sh.y }, P.face, 'aim', c, s); drawBroGun(P.bro, h.x - P.face * P.recoil, h.y - (P.recoil > 1.6 ? 1 : 0), P.face);
+    const h = drawArm({ x: sh.x - P.face * Math.round(P.recoil * 0.4), y: sh.y }, P.face, 'aim', c, s, 0, ed); drawBroGun(P.bro, h.x - P.face * P.recoil, h.y - (P.recoil > 1.6 ? 1 : 0), P.face);
     if (P.aim) ctx.restore();
   }
   ctx.restore();
+  if (P.lamp > 0 && P.bro.id === 'nightingale') { // the lamp, held out behind her
+    const lx = Math.round(P.x + 5 - P.face * 6), ly = Math.round(P.y + 8);
+    ctx.globalAlpha = 0.18; ctx.fillStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(lx, ly + 2, 10 + Math.sin(anim0() * 9), 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#a07a1a'; ctx.fillRect(lx - 1, ly - 1, 3, 1); ctx.fillRect(lx - 1, ly + 4, 3, 1); ctx.fillStyle = Math.sin(anim0() * 17) > -0.6 ? '#fff6c2' : '#f2c94c'; ctx.fillRect(lx - 1, ly, 3, 4);
+  }
   if ((keys.aim || padAim) && !P.ride && !P.climb) { // holding aim: a faint dotted sight along the aim
     const dx = P.face * Math.cos(P.aim || 0), dy = -Math.sin(P.aim || 0), x0 = P.x + P.w / 2 + dx * 9, y0 = P.y + 8 + dy * 10;
     ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff6c2';
@@ -7618,6 +7718,10 @@ function drawBroGun(bro, hx, hy, f) {
     case 'torricelli': ctx.fillStyle = '#bfe9ff'; M(0, -2, 2, 5); ctx.fillStyle = '#b4bed0'; M(0, 0, 2, 3); ctx.fillStyle = bro.gun; M(2, -1, 5, 2); break; // a mercury tube
     case 'volta': ctx.fillStyle = '#c9a227'; M(0, -1, 2, 3); ctx.fillStyle = '#b4bed0'; M(2, -1, 2, 3); ctx.fillStyle = '#c9a227'; M(4, -1, 2, 3); ctx.fillStyle = Math.floor(anim0() * 10) % 2 ? '#fff6c2' : '#f2c94c'; M(6, 0, 1, 1); break; // a stack of discs
     case 'gauss': ctx.fillStyle = '#5c6480'; M(0, -1, 7, 3); ctx.fillStyle = bro.gun; M(2, -2, 1, 5); M(4, -2, 1, 5); M(6, -2, 1, 5); break; // a barrel with three coils
+    case 'kelvin': ctx.fillStyle = '#b4bed0'; M(0, -2, 4, 5); ctx.fillStyle = '#ffffff'; M(1, -2, 1, 2); ctx.fillStyle = bro.gun; M(4, -1, 3, 2); M(7, -1, 1, 1); break; // a flask of liquid nitrogen with a nozzle
+    case 'huygens': ctx.fillStyle = '#c9a227'; M(0, -1, 5, 2); ctx.fillStyle = bro.gun; M(5, -2, 1, 4); M(7, -3, 1, 6); break; // a brass emitter and two wavefronts
+    case 'nightingale': ctx.fillStyle = '#e6e2f0'; M(0, -2, 5, 5); ctx.fillStyle = bro.gun; M(1, -1, 2, 2); M(3, 0, 1, 2); ctx.fillStyle = '#8fd3ff'; M(1, 1, 2, 1); break; // a card with her rose chart
+    case 'schrodinger': ctx.fillStyle = '#5c6480'; M(0, -1, 5, 3); ctx.globalAlpha = 0.5 + 0.4 * Math.sin(anim0() * 9); ctx.fillStyle = bro.gun; M(5, -2, 2, 1); M(5, 2, 2, 1); ctx.globalAlpha = 1; break; // two barrels, neither quite there
     case 'oppenheimer': ctx.fillStyle = '#5c6480'; M(0, -1, 6, 3); M(0, 2, 2, 2); ctx.fillStyle = Math.floor(anim0() * 6) % 2 ? '#8fd3ff' : '#bfe9ff'; M(2, 0, 3, 1); ctx.fillStyle = '#3d4560'; M(6, -1, 1, 2); break; // a pistol with a glowing core
     case 'jemison': {
       ctx.fillStyle = '#e6e2f0'; M(0, -1, 6, 3); ctx.fillStyle = bro.gun; M(6, -1, 1, 3); ctx.fillStyle = '#5c6480'; M(1, 0, 3, 1);
@@ -8055,7 +8159,7 @@ function drawCrawlers(t) {
   }
 }
 // a fading tracer of three dots behind each fast shot, in the shot's own colour
-const TRAIL = { photon: '#8da0cb', mg: '#f29e4c', pellet: '#f29e4c', pill: '#f2c94c', enigma: '#66c2a5', bit: '#66c2a5', hawk: '#b3a6ff', dart: '#e9eef6', red: '#ff6a4a', xtal: '#b3a6ff', bolt2: '#c9d4e6', alpha: '#f2c94c', pea: '#7bc043', card: '#e6e2f0', slug: '#ff6a4a', star: '#fff6c2', calc: '#8da0cb', elem: '#e6e2f0', parity: '#8fd3ff', plasma: '#e78ac3', plasma2: '#e78ac3', torp: '#bfe9ff', chip: '#8b7a6a', fission: '#e78ac3', apple: '#d9534f', vial: '#a6d854', bigvial: '#a6d854', tnt: '#f2c94c', neutron: '#8fd3ff', fizz: '#ffffff', pogo: '#e78ac3' };
+const TRAIL = { frost: '#e9f6ff', psi: '#b3a6ff', petal: '#ffd6ec', photon: '#8da0cb', mg: '#f29e4c', pellet: '#f29e4c', pill: '#f2c94c', enigma: '#66c2a5', bit: '#66c2a5', hawk: '#b3a6ff', dart: '#e9eef6', red: '#ff6a4a', xtal: '#b3a6ff', bolt2: '#c9d4e6', alpha: '#f2c94c', pea: '#7bc043', card: '#e6e2f0', slug: '#ff6a4a', star: '#fff6c2', calc: '#8da0cb', elem: '#e6e2f0', parity: '#8fd3ff', plasma: '#e78ac3', plasma2: '#e78ac3', torp: '#bfe9ff', chip: '#8b7a6a', fission: '#e78ac3', apple: '#d9534f', vial: '#a6d854', bigvial: '#a6d854', tnt: '#f2c94c', neutron: '#8fd3ff', fizz: '#ffffff', pogo: '#e78ac3' };
 function drawBullets() {
   for (const b of bullets) {
     const x = Math.round(b.x), y = Math.round(b.y), tc = TRAIL[b.kind];
@@ -8095,6 +8199,17 @@ function drawBullets() {
         ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, r * 0.5, 0, 7); ctx.fill(); break;
       }
       case 'photon': ctx.fillStyle = '#d8e2ff'; ctx.fillRect(x - 4, y, 8, 1); ctx.fillStyle = '#8da0cb'; ctx.fillRect(x - 6, y, 2, 1); break;
+      case 'frost': ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1); break; // a snowflake
+      case 'wavelet': { const d = Math.sign(b.vx) || 1, a0 = d > 0 ? -1 : Math.PI - 1; ctx.strokeStyle = '#8fd3ff'; ctx.beginPath(); ctx.arc(x - d * 3, y, 4, a0, a0 + 2); ctx.stroke(); ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x - d * 5, y, 3, a0 + 0.3, a0 + 1.7); ctx.stroke(); break; }
+      case 'wlet': ctx.globalAlpha = Math.min(1, b.life * 6); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(x - 1, y - 1, 2, 2); ctx.globalAlpha = 1; break;
+      case 'pend': { // a brass bob on a rod
+        ctx.strokeStyle = '#8b93ad'; ctx.beginPath(); ctx.moveTo(Math.round(b.px), Math.round(b.py)); ctx.lineTo(x, y); ctx.stroke();
+        ctx.fillStyle = '#5c6480'; ctx.fillRect(Math.round(b.px) - 2, Math.round(b.py) - 1, 5, 2);
+        ctx.fillStyle = '#a07a1a'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); ctx.fillStyle = '#c9a227'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 3, y - 3, 2, 2); break;
+      }
+      case 'petal': ctx.fillStyle = '#e78ac3'; ctx.fillRect(x - 2, y - 1, 4, 2); ctx.fillStyle = '#ffd6ec'; ctx.fillRect(x + (b.vx > 0 ? 1 : -2), y - 1, 1, 1); break;
+      case 'psi': ctx.globalAlpha = 0.45 + 0.35 * Math.sin(lifeT * 40 + b.ph * 2); ctx.fillStyle = '#b3a6ff'; ctx.fillRect(x - 3, y - 1, 6, 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 2, 2); ctx.globalAlpha = 1; break; // a ghost: flickers until it lands
+      case 'catbox': ctx.save(); ctx.translate(x, y); ctx.rotate(b.life * 6); ctx.fillStyle = '#7a5c36'; ctx.fillRect(-4, -4, 8, 8); ctx.fillStyle = '#a07a46'; ctx.fillRect(-3, -3, 6, 6); ctx.fillStyle = '#1b1d2e'; ctx.fillRect(-1, -2, 2, 1); ctx.fillRect(0, -1, 1, 1); ctx.fillRect(0, 1, 1, 1); ctx.restore(); break; // a box with a question mark
       case 'vial': case 'bigvial': {
         const s = b.kind === 'bigvial' ? 2 : 1;
         ctx.fillStyle = '#a6d854'; ctx.fillRect(x - s, y - 2 * s, 2 * s + 1, 3 * s + 1);
@@ -8233,6 +8348,10 @@ function drawFx() {
     } else if (f.kind === 'heat') {
       ctx.globalAlpha = a; ctx.strokeStyle = '#f29e4c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
       ctx.strokeStyle = '#fff6c2'; ctx.beginPath(); ctx.arc(f.x, f.y, Math.max(1, f.r - 4), 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    } else if (f.kind === 'ice') {
+      const e = f.e, ix = Math.round(e.x) - 1, iy = Math.round(e.y) - 1;
+      ctx.globalAlpha = 0.45 * Math.min(1, f.t * 2); ctx.fillStyle = '#bfe9ff'; ctx.fillRect(ix, iy, e.w + 2, e.h + 2);
+      ctx.globalAlpha = 0.9 * Math.min(1, f.t * 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(ix + 1, iy + 1, 2, 1); ctx.fillRect(ix + 1, iy + 2, 1, 2); ctx.fillRect(ix + e.w - 1, iy + e.h - 2, 1, 2); ctx.globalAlpha = 1;
     } else if (f.kind === 'rad') {
       ctx.globalAlpha = 0.25 * a + 0.1; ctx.fillStyle = f.col || '#a6d854'; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, 6, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     } else if (f.kind === 'pod') {
@@ -8411,9 +8530,10 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('18 MISSIONS · 3 MODES · 42 BROS · 20 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('18 MISSIONS · 3 MODES · ' + BROS.length + ' BROS · 20 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
-    BROS.forEach((b, i) => { const x = VW / 2 - 209 + (i % 22) * 19; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 130, 12, 16); });
+    const per = Math.ceil(BROS.length / 2); // the roster in two rows, the second one offset half a step
+    BROS.forEach((b, i) => { const r = Math.floor(i / per), x = Math.round(VW / 2 - per * 9.5 + (i % per) * 19 + r * 9.5); drawRigAt(b.rig, x + 6, 132 + r * 18, 1, { leg: 'stand', fr: 0, bob: Math.floor(t * 2 + i * 0.37) % 2 }, false); }); // outlined, breathing
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
       const sel = i === titleSel, y = 166 + i * 12;
       if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 12); }
@@ -9022,6 +9142,7 @@ const light = (x, y, r, col, a = 1) => { if (x > cam.x - r && x < cam.x + VW + r
 function collectLights(t) {
   lights = [];
   if (P.alive) light(P.x + 5, P.y + 8, 64, null, 0.55);
+  if (P.alive && P.lamp > 0) light(P.x + 5 - P.face * 5, P.y + 9, 90, '#fff6c2', Math.min(1, P.lamp)); // Nightingale's lamp
   for (const L of lamps) if (!L.fall) { const [lx, ly] = lampPos(L); light(lx, ly + 12, 58, '#f2c94c', Math.sin(t * 23 + L.c) > 0.97 ? 0.3 : 0.9); }
   for (const f of fx) {
     const a = Math.max(0, f.t / f.max);
@@ -10049,5 +10170,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decor
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows, BRO_LEGS, LEG_FRAMES, HEADS }); // bro art hooks
 })();
 </script>
