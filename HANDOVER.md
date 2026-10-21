@@ -1,6 +1,6 @@
 # Handover
 
-**Updated:** 2026-10-21 10:30
+**Updated:** 2026-10-21 12:40
 
 Four rounds of work are done on branch `feature/aim-melee-random-maps` and are open as PR #2 (https://github.com/ttmgr/sciforce/pull/2), not yet merged into main. Rounds 1-3: aiming, melee bros, random bros, destruction, random maps, more quacks, underground levels, fancier maps, gore, difficulty and density, satire story. Round 4 (2026-10-21) merged six workstreams plus a follow-up: campaign missions 560 columns wide with 2-3 forks and 2-3 underground detours each (random missions and bonus modes keep 376 / 140-column stretch, `playW` / `stretchW`); a one-time remake of all 18 missions (1-7 most), still fixed and the same every play; Trinity 1.5x (ring 120, crater 10 / 5.4 / 7.5); more destruction (steel above bedrock breaks to heavy weapons, back walls collapse, shootable decor, bigger chunks and dust); 4 new bros (Semmelweis, Torricelli, Volta, Gauss; 42 in all); 4 pickup guns (pogo, glue, fizz, duck) and 3 one-use specials (confetti, beach, spud). Lead fixes after merging: crater core bug (fractional rows), cloud cap kept on screen, BOSS_MUL for Mendel (1.15) and Pasteur (1.1), mission 3 sign, and several seeded tests made robust. Before touching anything: the game is `science-bros/index.html` opened as a file in the browser; old copies under `.claude/worktrees/` are stale agent checkouts, not the game.
 
@@ -15,7 +15,14 @@ Later on 2026-10-21, after playing: dogs are 15x11 (level shots hit them), ladde
 
 ## Next steps
 
-1. Wait for the user's review of PR #2.
+1. Round 5 is PAUSED (user asked on 2026-10-21 to checkpoint and pause). Asked via /goal: dogs aggro later, the first boss walks back to its start after a death with damage kept, about 50% more quacks at NORMAL 100%, better bro and boss graphics, 4 more bros (46), two new themed campaign missions before the Citadel (20 in all), more satire and wit. Five agents started from 7fd836a and were stopped before they finished; their unverified work is saved as local WIP commits (not pushed, not merged):
+   - round5/bros-art d275e4b (bro art + 4 new bros; was rerunning failures alone)
+   - round5/boss-art 690cab8 (boss art, the biggest change; never sent a report)
+   - round5/new-maps 4a91f3e (two new missions; its suite was mid-run, only timing failures seen)
+   - round5/tuning eaf02e3 (dogs, boss reset, density; only timing failures seen)
+   - round5/satire 8aaff31 (more lines; suite mid-run)
+   To resume: for each branch, check the diff, run its own new test and the full suite alone on a quiet machine, compare failures with 7fd836a, fix, then merge with --no-ff in this order: tuning, satire, boss-art, bros-art, new-maps (new-maps touches the most tests). Then screenshots, push, PR #2.
+2. Wait for the user's review of PR #2.
 
 ## Verification commands
 
