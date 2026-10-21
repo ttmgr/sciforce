@@ -157,7 +157,8 @@ for (let l = 0; l < 7; l++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9;
-    step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3, up: stuck && i % 240 < 30 });
+    const pc = Math.floor((S.P.x + 5) / T), overAcid = [1, 2, 3, 4].some((k) => [1, 2, 3, 4, 5, 6].some((d) => S.tileAt(pc + k, Math.floor(S.P.y / T) + d) === 5)); // acid (5) ahead: a player keeps the floes and planks whole
+    step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3 && !overAcid, up: stuck && i % 240 < 30 });
     far = Math.max(far, S.P.x / T);
   }
   check(tag + ': a simple bot gets through the base to the arena in 90 s', far >= goal, 'reached col ' + far.toFixed(0) + ' of ' + goal + ' in ' + (i / 60).toFixed(0) + ' s');

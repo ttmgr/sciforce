@@ -833,7 +833,7 @@ function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
   for (let k = 0; k < 16; k++) { const top = 12 + Math.floor((k + 1) / 4); ground(9 + k, 9 + k, top); if (top < 16) fill(9 + k, top, 9 + k, top, ICE); }
   ground(25, 35, 16); fill(27, 16, 33, 16, ICE);
   sp('guncrate', 4); sp('ammo', 6); sp('grunt', 22); sp('dog', 24); sp('grunt', 27); sp('scout', 30); sp('cage', 33); sp('itemcrate', 35);
-  dc('sign', 2, { text: 'BIOHACK RETREAT' }); dc('pine', 7); dc('pine', 13); dc('snowman', 19); dc('pine', 26); dc('snowman', 34);
+  dc('sign', 4, { text: 'BIOHACK RETREAT' }); dc('pine', 7); dc('pine', 13); dc('snowman', 19); dc('pine', 26); dc('snowman', 34);
 
   // 2. The Cryo Tower: three floors with ice windows, a crate door in, ladders up one side and down the other
   ground(36, 58, 16);
