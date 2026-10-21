@@ -29,7 +29,7 @@ S.pressed.start = true; run(1); check('enter deploys into level 1', S.state === 
 check('level 1 lists its objectives', S.objectives.length === 4 && S.objectives.filter((o) => o.req).length === 2);
 
 // ladder: up climbs it
-lone(); S.P.x = 108 * T + 3; S.P.y = 13 * T - 15.01; run(2);
+lone(); S.P.x = 105 * T + 3; S.P.y = 16 * T - 15.01; run(2); // the ladder between the Remedy Lab's floors
 const y0 = S.P.y; run(40, { jump: true });
 check('ladder: holding up climbs', S.P.y < y0 - 30, ((y0 - S.P.y) / T).toFixed(1) + ' tiles');
 
