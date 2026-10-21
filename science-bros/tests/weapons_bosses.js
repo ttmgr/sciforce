@@ -33,14 +33,14 @@ const fire = (n, keys = {}) => { for (let i = 0; i < n; i++) { S.P.x = 30 * T + 
 const shoot = (bro, mat, frames, alt) => { flat(bro); wall(mat); if (alt) S.P.alt = { kind: alt, ammo: 99 }; fire(frames); return broken(); };
 
 // ---------------------------------------------------------------- 1. every weapon breaks blocks its own way
-check('every bro and pickup gun has a destruction entry', S.BROS.every((b) => b.melee || ['einstein', 'curie', 'tesla', 'newton', 'franklin', 'ada', 'darwin', 'galileo', 'turing', 'johnson', 'meitner', 'archimedes', 'mendel', 'pasteur', 'faraday', 'hypatia', 'feynman', 'fleming', 'sagan', 'wegener', 'hubble', 'mendeleev', 'hawking', 'hopper', 'wu', 'hodgkin', 'davinci', 'rutherford', 'nobel', 'bohr', 'lamarr', 'lavoisier', 'goodall', 'jemison', 'oppenheimer'].includes(b.id))
-  && ['photon', 'vial', 'zap', 'apple', 'xray', 'card', 'finch', 'sunbeam', 'enigma', 'calc', 'fission', 'drill', 'pea', 'dart', 'weld', 'disc', 'qwave', 'spores', 'dot', 'pwave', 'red', 'hawk', 'bit', 'parity', 'xtal', 'bolt2', 'alpha', 'elemNa', 'tnt', 'leap', 'torp', 'flame', 'hoot', 'plasma', 'neutron', 'hammer', 'scalpel', 'glove', 'pellet', 'rocket', 'mg', 'railgun'].every((k) => S.DESTRUCT[k]));
+check('every bro and pickup gun has a destruction entry', S.BROS.every((b) => b.melee || ['einstein', 'curie', 'tesla', 'newton', 'franklin', 'ada', 'darwin', 'galileo', 'turing', 'johnson', 'meitner', 'archimedes', 'mendel', 'pasteur', 'faraday', 'hypatia', 'feynman', 'fleming', 'sagan', 'wegener', 'hubble', 'mendeleev', 'hawking', 'hopper', 'wu', 'hodgkin', 'davinci', 'rutherford', 'nobel', 'bohr', 'lamarr', 'lavoisier', 'goodall', 'jemison', 'oppenheimer', 'semmelweis', 'torricelli', 'volta', 'gauss'].includes(b.id))
+  && ['photon', 'vial', 'zap', 'apple', 'xray', 'card', 'finch', 'sunbeam', 'enigma', 'calc', 'fission', 'drill', 'pea', 'dart', 'weld', 'disc', 'qwave', 'spores', 'dot', 'pwave', 'red', 'hawk', 'bit', 'parity', 'xtal', 'bolt2', 'alpha', 'elemNa', 'tnt', 'leap', 'torp', 'flame', 'hoot', 'plasma', 'neutron', 'hammer', 'scalpel', 'glove', 'pellet', 'rocket', 'mg', 'railgun', 'bubble', 'merc', 'mdrop', 'volt', 'gauss'].every((k) => S.DESTRUCT[k]));
 const sigs = new Map(); // a weapon's mark: the holes it leaves in 1.5 s in an earth, a brick, a crate and an ice wall
 const mark = (id, alt) => [DIRT, BRICK, CRATE, ICE].map((m) => shoot(id, m, 90, alt).map(([c, r]) => (c - 31) + ':' + r).sort().join(' ')).join(' | ');
 for (const b of S.BROS) { const sg = mark(b.id); if (!sigs.has(sg)) sigs.set(sg, []); sigs.get(sg).push(b.id); }
 for (const g of ['shotgun', 'rocket', 'minigun', 'railgun']) { const sg = mark('einstein', g); if (!sigs.has(sg)) sigs.set(sg, []); sigs.get(sg).push(g); }
 if (process.env.SIGS) for (const [k, v] of sigs) console.log(v.join(',') + ': ' + k);
-check('the 38 bros and 4 pickup guns leave many different holes in earth, brick, crate and ice walls', sigs.size >= 22, sigs.size + ' different holes');
+check('the 42 bros and 4 pickup guns leave many different holes in earth, brick, crate and ice walls', sigs.size >= 22, sigs.size + ' different holes');
 let fire0 = shoot('lavoisier', BRICK, 180).length, fire1 = shoot('lavoisier', DIRT, 180).length, fire2 = shoot('lavoisier', CRATE, 180).length;
 check('fire does not burn stone or earth, but burns crates', !fire0 && !fire1 && fire2 >= 1, 'brick ' + fire0 + ', earth ' + fire1 + ', crates ' + fire2 + ' broken');
 let sun0 = shoot('galileo', DIRT, 120).length, sun1 = shoot('galileo', ICE, 120).length;
