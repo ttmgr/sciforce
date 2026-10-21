@@ -116,7 +116,7 @@ flat(); { const B = Object.assign(S.makeEnt({ type: 'boss', c: 66, from: 0 }), {
 {
   const quacks = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
   const fight = () => {
-    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(17); S.P.bro = S.BRO.oppenheimer; S.endCeasefire(); S.P.alt = null; S.P.spec = 1;
+    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(S.nLevels - 1); S.P.bro = S.BRO.oppenheimer; S.endCeasefire(); S.P.alt = null; S.P.spec = 1;
     let best = 24, bn = 0; for (let c = 24; c < 330; c += 4) { const k = quacks().filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (k > bn) { bn = k; best = c; } }
     const near = quacks().find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60);
     for (let i = 0; i < 30; i++) { S.P.inv = 1e9; step({ fire: true }, true); }

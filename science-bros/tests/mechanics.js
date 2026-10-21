@@ -14,7 +14,7 @@ const S = win.__SB__, T = S.T, ACID = 5;
 const run = (n, keys = {}) => { for (let i = 0; i < n; i++) { for (const k in S.keys) S.keys[k] = false; Object.assign(S.keys, keys); S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; if (i % 10 === 0) S.render(i / 60); } };
 let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
-const N = S.nLevels, STRONG = []; for (let l = 5; l < N - 1; l++) STRONG.push(l); // every mission between Flat Earth Station and the Citadel
+const N = S.nLevels, STRONG = []; for (let l = 5; l < N - 1; l++) if (S.levelDef(l).build.segs) STRONG.push(l); // every mission between Flat Earth Station and the Citadel built from pieces (the hand-made mall and volcano have tests/new_maps.js)
 // a mission with every quack gone and an unkillable bro standing at column c, row r (feet on top of row r)
 const lone = (l) => { S.startLevel(l); S.endCeasefire(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag' && e.type !== 'icicle' && !e.final) e.dead = true; }); run(1); S.P.inv = 1e9; };
 const stand = (c, r) => { S.P.x = c * T + 3; S.P.y = r * T - 15.01; S.P.vx = 0; S.P.vy = 0; S.cam.x = Math.max(0, S.P.x - 240); };

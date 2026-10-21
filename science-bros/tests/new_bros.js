@@ -195,7 +195,7 @@ check('freeing every one of the 42 bros unlocks the trophy path (unlocked can re
 
 // ---------------------------------------------------------------- 9. frame cost on INSANE at 300%, and the shot count stays capped
 {
-  const level = () => { S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(17); };
+  const level = () => { S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(S.nLevels - 1); };
   const quacks = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
   const measure = (id, special) => {
     level(); S.P.bro = S.BRO[id]; S.endCeasefire(); S.P.alt = null;

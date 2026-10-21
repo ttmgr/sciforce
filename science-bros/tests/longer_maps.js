@@ -2,7 +2,7 @@
 // its boss arena, the stretch has more sections, forks (a high road over a low road) and more underground detours
 // than before, the boss arena sits where arenaCol() puts it and a bot reaches it, both roads of a fork can be walked,
 // the start stays safe, nothing floats or sits in a wall, missions keep the same quacks every time, and a big fight
-// at INSANE / 300% still costs under 3 ms a frame while every mission builds fast. Only the 18 campaign missions are long:
+// at INSANE / 300% still costs under 3 ms a frame while every mission builds fast. Only the 20 campaign missions are long:
 // random missions, the Moon Base, Lab Siege and Boss Rush keep the 140-column stretch and the 376-column map, and nobody
 // (bro, camera, bullets) gets past column 376 there.
 // Usage: node science-bros/tests/longer_maps.js science-bros/index.html
@@ -28,7 +28,7 @@ const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus'
 const LW = S.LW, LH = S.LH, GH = S.GH, NL = S.nLevels, STEEL = 3, CRATE = 4, LADDER = 7;
 const solid = (v) => v !== 0 && v !== 5 && v !== 7;
 const quacks = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
-const OLD_ZONES = [1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0]; // underground zones per mission at 376 columns (commit 78b2cd6)
+const OLD_ZONES = [1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0]; // underground zones per mission at 376 columns (commit 78b2cd6); missions 18 and 19 came later with one zone of their own in the base
 const ownSeg = (l) => (S.levelDef(l).build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44);
 const oldSections = (l) => { const segs = ownSeg(l), own = segs.length ? segs[l % segs.length] : null; return Math.max(1, Math.round((140 - (own ? own[1] : 0)) / 32)) + (own ? 1 : 0); }; // the 140-column stretch's piece count
 const inWall = () => S.ents.filter((e) => !BOSSES.includes(e.type) && e.type !== 'icicle' && e.type !== 'drone' && e.type !== 'flag' && [1, 2, 3, 4, 6].includes(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h / 2) / T))));
@@ -83,7 +83,7 @@ check('every mission builds in under 60 ms (best of 3)', !bad.slow.length, 'slow
 const clear = () => { for (const e of S.ents) if (S.THREAT[e.type] || S.NEW_FOES.includes(e.type) || e.type === 'icicle' || ['minelayer', 'mine'].includes(e.type)) e.dead = true; };
 const walk = (x, y, until, frames, keys) => { S.P.x = x; S.P.y = y; S.P.vx = 0; S.P.vy = 0; const ys = []; for (let i = 0; i < frames && !until(); i++) { if (i % 30 === 0) S.pressed.jump = true; S.P.inv = 1e9; S.P.alive = true; step(keys(i)); ys.push([S.P.x / T, S.P.y / T]); } return ys; };
 let high = 0, low = 0, nf = 0; const roadInfo = [];
-for (const l of [0, 5, 9, 17]) {
+for (const l of [0, 5, 9, NL - 1]) {
   S.startLevel(l); S.endCeasefire(); step(); S.P.bro = S.BRO.einstein; S.setLives(99); clear();
   for (const [, f0, w] of S.stretchPlan().filter((p) => p[0] === 'fork')) {
     const a = f0 + 6, b = f0 + w - 7; nf++;
@@ -117,7 +117,7 @@ check('the full map draws the 560-column level', (() => { try { S.keys.map = tru
 {
   const level = (n, d, k) => { S.setDifficulty(d, false); S.setDensity(k, false); S.reset(); S.startLevel(n); S.P.bro = S.BRO.einstein; };
   const fight = (d, k) => { // the last mission, its busiest 30 columns anywhere on the map, a minigun and explosions
-    level(17, d, k); S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
+    level(NL - 1, d, k); S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
     const n = quacks().length; let best = 24, bn = 0;
     for (let c = 24; c < LW - 30; c += 4) { const q = quacks().filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (q > bn) { bn = q; best = c; } }
     const near = quacks().find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60);
@@ -130,7 +130,7 @@ check('the full map draws the 560-column level', (() => { try { S.keys.map = tru
   S.setDifficulty(1, false); S.setDensity(3, false);
 }
 
-// ---- 6. only the 18 campaign missions are long: random missions and the bonus modes keep the 140-column stretch and
+// ---- 6. only the campaign missions are long: random missions and the bonus modes keep the 140-column stretch and
 // the 376-column map, with the arena and pad where they were before the longer maps (commit 4cc9ccc)
 const OLD_W = 376, OLD_RANDOM = { 1: [318, 371], 2: [319, 369], 7: [318, 371], 42: [318, 371], 123: [318, 371], 999: [318, 371], 4242: [319, 369], 77777: [318, 371] }; // seed: [arena ax0, pad column] on 4cc9ccc
 const edge = (tag, walk = true) => { // run right at the end of the map: the bro, the camera and the bullets stay inside the old width (walk false: solid steel there, only the view counts)
