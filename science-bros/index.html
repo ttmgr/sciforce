@@ -3323,6 +3323,7 @@ function campaignDiff(n) {
 const THREAT = { grunt: 1, para: 1, dog: 1, scout: 1, shield: 1.5, medic: 1.5, bomber: 1.5, grenadier: 2, flamer: 2, guru: 2, preacher: 2, camdrone: 2, jetpack: 2.5, rocketeer: 2.5, turret: 2.5, heavy: 3, brute: 3, sniper: 3, mortar: 3 };
 Object.assign(THREAT, { minelayer: 2, jumper: 2, pilldoc: 2.5, flagbearer: 2, sapper: 2, knight: 3 });
 Object.assign(THREAT, { diffuser: 2, miner: 2, detox: 2.5, streamer: 2.5, yogi: 2.5, pinboard: 2.5, alpha: 3, dronecaller: 3 });
+const CAMPAIGN_DENS = 1.5, CAMPAIGN_DENS_MAX = 3; // campaign missions hold 1.5x the quacks the original 100% did and the setting multiplies on top; the product stops at 3 (the old 300%), so 200% and 300% are the same in the campaign and the frame cost stays where it was
 const missionTarget = (p) => 14 + 40 * p; // threat on screen over the whole mission: 14 on the first, 54 on the finale
 const foldDiff = (b) => Object.assign({}, b, { react: b.react + DF().react, fire: b.fire * DF().fire, bossHp: b.bossHp * DF().boss, shot: DF().shot, pace: DF().pace, drop: DF().drop }); // the setting on top of the ramp
 function applyDifficulty(n) {
@@ -3344,7 +3345,7 @@ function applyDifficulty(n) {
     }
     foes.push(e);
   }
-  const target = missionTarget(diff.p) * densMul * (stretched ? (ARENA_AT + stretchW) / ARENA_AT : 1); // a longer map holds more quacks
+  const dens = Math.min(densMul * CAMPAIGN_DENS, CAMPAIGN_DENS_MAX), target = missionTarget(diff.p) * dens * (stretched ? (ARENA_AT + stretchW) / ARENA_AT : 1); // a longer map holds more quacks
   let total = foes.reduce((a, e) => a + THREAT[e.type], 0);
   if (total > target) { // too crowded for this point in the campaign: remove quacks in a fixed order until it fits
     for (const e of foes.slice().sort((a, b) => roll(a) - roll(b))) { if (total - THREAT[e.type] < target - 0.5) continue; e.dead = true; total -= THREAT[e.type]; if (total <= target + 0.5) break; }
@@ -3352,9 +3353,9 @@ function applyDifficulty(n) {
     const allowed = (t) => RAMP_FROM[t] === undefined || diff.p >= RAMP_FROM[t];
     const spots = foes.filter((e) => e.x >= 24 * T && isQuack(e) && e.type !== 'para').sort((a, b) => roll(a, 1) - roll(b, 1));
     const taken = new Set(foes.map((e) => Math.floor((e.x + e.w / 2) / T)));
-    for (let pass = 0; pass < (densMul > 1 ? 8 : 3) && total < target - 0.5; pass++) for (const e of spots) {
+    for (let pass = 0; pass < (dens > 1 ? 8 : 3) && total < target - 0.5; pass++) for (const e of spots) {
       if (total >= target - 0.5) break;
-      const c = Math.floor((e.x + e.w / 2) / T) + [2, -2, 4, -4, 6, -6, 8, -8][pass]; if (densMul > 1 && taken.has(c)) continue; // a crowd: one new quack per column
+      const c = Math.floor((e.x + e.w / 2) / T) + [2, -2, 4, -4, 6, -6, 8, -8][pass]; if (dens > 1 && taken.has(c)) continue; // a crowd: one new quack per column
       const r0 = Math.floor((e.y + e.h - 1) / T) - 2;
       if (c < 24 || c >= playW - 1) continue;
       const r = surf(c, Math.max(0, r0)); if (r >= LH || Math.abs(r * T - (e.y + e.h)) > T * 2) continue;
@@ -3666,7 +3667,7 @@ function makeEnt(s) {
   if (s.type === 'scout') e.whistle = 0;
   if (s.type === 'guru') e.cool = 0.8;
   if (s.type === 'para') { e.chute = true; e.aware = true; }
-  if (s.type === 'dog') { e.cool = 0; e.aware = false; e.walkT = rand(1, 3); }
+  if (s.type === 'dog') { e.cool = 0; e.aware = false; e.seeT = 0; e.walkT = rand(1, 3); }
   if (s.type === 'propane') { e.lit = false; e.fuse = 0; e.fly = 0; e.spin = 0; e.dirx = 1; }
   if (s.type === 'turret') { e.cool = rand(0.5, 1.5); e.burst = 0; e.ang = Math.PI; }
   if (s.type === 'bomber') { e.run = false; e.fuse = BOMBER_FUSE; e.beep = 0; }
@@ -4638,7 +4639,7 @@ function respawn() {
   grace = 3 * DF().safe;
   for (const b of bullets) if (b.owner === 'e') { b.dead = true; part(b.x, b.y, 0, -20, '#8b84a6', 0.3, 2, 0, 'smoke'); } // shots still in the air fizzle out
   for (const o of ents) {
-    if (isQuack(o) || o.type === 'dog') Object.assign(o, { aware: false, provoked: false, lost: 0, react: 0.6, aim: 0, windup: 0, chant: 0, fireT: 0, spin: 0, charge: 0, huh: 1 });
+    if (isQuack(o) || o.type === 'dog') Object.assign(o, { aware: false, provoked: false, seeT: 0, lost: 0, react: 0.6, aim: 0, windup: 0, chant: 0, fireT: 0, spin: 0, charge: 0, huh: 1 });
     if (o.type === 'camdrone') Object.assign(o, { dive: false, lockT: 0, vx: 0, vy: 0, fuse: 4 });
     if (MORE_FOES.includes(o.type)) Object.assign(o, { stomp: 0 });
   }
@@ -5286,12 +5287,17 @@ function playerSees(e, rangeX, rangeY) {
 }
 // a boss calms down when you die or step back out of its arena for a moment; it wakes again when you walk back in
 function bossCalm(e, dt) {
+  if (!e.active && !e.home && !e.doomed) { // where it starts, taken before it first wakes
+    e.home = { x: e.x, y: e.y, vx: 0, vy: 0, state: e.state, t: e.t, shots: 0, shotT: 0, crouch: 0, ang: e.ang, recoil: 0 };
+    if (e.segs) Object.assign(e.home, { hx: e.hx, hy: e.hy }); // the burrower's head
+  }
   if (!e.active || e.dying > 0 || e.doomed || !e.trig) return;
   const edge = Math.min(e.ax0 !== undefined ? e.ax0 : e.trig, e.trig) - 3; // well outside the arena, and far from the boss
   const away = !P.alive || (P.x + P.w < edge * T && Math.abs(P.x - (e.x + e.w / 2)) > 10 * T);
   e.calmT = away ? (e.calmT || 0) + dt : 0;
   if (e.calmT < (P.alive ? 2.5 : 0.6)) return;
   e.active = false; e.calmT = 0; e.vx = 0; e.poked = false;
+  if (e.home) { Object.assign(e, e.home); if (e.segs) e.segs = []; } // back to its spot and its idle pose; hp, vats and parts are not touched (the burrower's body trail regrows)
   for (const b of bullets) if (b.owner === 'e' && (b.kind === 'missile' || b.kind === 'bomb')) b.dead = true; // its homing missiles and bombs fizzle
   floatText(e.x + e.w / 2, e.y - 8, 'HMPH', '#a3abd0');
 }
@@ -5905,17 +5911,23 @@ function callParas(e) {
     ents.push(p);
   }
 }
+const DOG_SIGHT = 150, DOG_CHASE = 220, DOG_REACT = 0.5; // a dog notices you inside 150 px after a 0.5 s growl (plus the mission's reaction time, 0.5 s on the first mission) (was 220 px, no delay); once it charges it tracks you out to 220 px
 function updateDog(e, dt) {
   e.cool -= dt;
   let walk = 0;
-  if (playerSees(e, 220, 40)) {
-    if (!e.aware) { e.aware = true; sfx('bark'); }
+  if (playerSees(e, e.aware || e.provoked ? DOG_CHASE : DOG_SIGHT, 40)) {
     e.face = P.x > e.x ? 1 : -1;
-    if (e.onGround) {
+    if (!e.aware) { // a short growl first (a "!" over its head), then the charge; a dog you shot at charges at once
+      if (!(e.seeT > 0)) { e.seeT = 0; sfx('alert'); floatText(e.x + e.w / 2, e.y - 8, '!', '#f2c94c'); }
+      e.seeT += dt;
+      if (e.provoked || e.seeT >= Math.max(0.3, DOG_REACT + diff.react)) { e.aware = true; sfx('bark'); }
+    }
+    if (e.aware && e.onGround) { // (until then it just stands and stares)
       if (Math.abs(center(P)[0] - center(e)[0]) < 72 && e.cool <= 0) { e.vy = -250; e.kx = e.face * 230; e.cool = 1.1; sfx('bark'); }
       else walk = e.face * 140;
     }
   } else {
+    e.seeT = Math.max(0, (e.seeT || 0) - dt * 2); // it loses interest if you step out of sight
     e.walkT -= dt; if (e.walkT <= 0) { e.walkT = rand(1, 3); if (Math.random() < 0.5) e.face *= -1; }
     if (e.onGround) { const ahead = e.x + (e.face > 0 ? e.w + 2 : -2); if (!solidPx(ahead, e.y + e.h + 4) || solidPx(ahead, e.y + 2)) e.face *= -1; walk = e.face * 30; }
   }
