@@ -123,17 +123,17 @@ const tower = () => { arena(); fill(30, 6, 32, 15, BRICK); S.checkCollapse(); ru
   check('a brick gate cut at both legs falls and settles', !solid(55, 11) && floating() === 0);
 }
 
-// ---- 5. the back wall of a building breaks off above a broken floor (level 1, the bunker at columns 48 to 67)
+// ---- 5. the back wall of a building breaks off above a broken floor (level 1, the Remedy Lab's ground floor at columns 93 to 114)
 {
   S.reset(); S.startLevel(0); S.P.bro = S.BRO.einstein; S.endCeasefire(); run(1); S.P.x = 5 * T; S.P.inv = 1e9;
-  const wall = () => { let n = 0; for (let r = 11; r <= 15; r++) for (let c = 48; c <= 67; c++) if (S.bgAt(c, r) === 2) n++; return n; };
+  const wall = () => { let n = 0; for (let r = 12; r <= 15; r++) for (let c = 93; c <= 114; c++) if (S.bgAt(c, r) === 2) n++; return n; };
   const w0 = wall(), firm = S.bgFirm(); let allFirm = true; for (let r = 0; r < LH; r++) for (let c = 0; c < LW; c++) if (S.bgAt(c, r) === 2 && !firm[r * LW + c]) allFirm = false;
   check('every back wall of the mission stands on something when it is built', allFirm && w0 > 80, w0 + ' wall tiles');
-  S.damageTile(52, 16, 99); run(120);
+  S.damageTile(100, 16, 99); run(120);
   check('a one-tile hole in the floor does not bring the wall down', wall() === w0, w0 + ' -> ' + wall());
-  const g = add('grunt', 49, { x: 49 * T + 2, y: 16 * T - 12 }); S.ents.find((e) => e === g).hp = 99;
+  const g = add('grunt', 95, { x: 95 * T + 2, y: 16 * T - 12 }); S.ents.find((e) => e === g).hp = 99;
   const b0 = S.bodies.length; S.setBlame('p');
-  for (let c = 48; c <= 50; c++) S.damageTile(c, 16, 99);
+  for (let c = 94; c <= 96; c++) S.damageTile(c, 16, 99);
   S.setBlame('e'); const hp0 = g.hp; run(240);
   const w1 = wall();
   check('a three-tile hole in the floor brings the wall above it down', w0 - w1 >= 10 && w0 - w1 <= 18, w0 + ' -> ' + w1 + ' wall tiles');

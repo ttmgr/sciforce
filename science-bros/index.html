@@ -595,56 +595,58 @@ function buildStretch(H, n) {
   for (const k of [1, 2, 3].map((i) => cutAt + Math.round((STRETCH * i) / 4)).concat(cutAt + STRETCH - 3)) H.sp('flag', k, openRow(k));
   underStretch(H, n); // underground detours
 }
-function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Beach and hills
-  ground(0, 20, 16); ground(21, 26, 14); ground(27, 33, 15); ground(34, 43, 13);
-  fill(38, 11, 40, 12, DIRT);
-  sp('propane', 22); sp('grunt', 24); sp('grunt', 25.5); sp('ammo', 26); sp('barrel', 29); sp('grunt', 31); sp('dog', 33); sp('cage', 36, 0, { bro: 'curie' }); sp('grunt', 42);
-  sp('pickup', 35, 0, { item: 'intel' }); sp('spring', 32); sp('guncrate', 40);
-  dc('palm', 2); dc('palm', 9, { lean: -1 }); dc('sign', 12, { text: '100% NATURAL' }); dc('sandbags', 6); dc('palm', 19); dc('palm', 30, { lean: -1 }); dc('sandbags', 41);
+function buildIsland({ fill, ground, sp, bgFill, dc, lamp, vent }) {
+  // 1. Landing beach (flat, the way every mission starts), then dunes up to a palm ridge
+  ground(0, 20, 16); ground(21, 26, 14); ground(27, 33, 15);
+  sp('guncrate', 7); sp('ammo', 15); sp('grunt', 22); sp('dog', 25); sp('grunt', 27); sp('barrel', 30); sp('propane', 31);
+  dc('palm', 1, { lean: -1 }); dc('sign', 11, { text: 'NATURE HEALS' }); dc('palm', 14); dc('palm', 19, { lean: -1 }); dc('sandbags', 28);
 
-  // 2. Bunker
-  ground(44, 70, 16);
-  fill(44, 9, 68, 15, BRICK); fill(46, 11, 66, 15, EMPTY);
-  fill(45, 13, 45, 15, EMPTY); fill(44, 13, 44, 15, CRATE);
-  fill(67, 13, 67, 15, EMPTY); fill(68, 13, 68, 15, CRATE);
-  fill(55, 9, 57, 9, STEEL); // girder: the roof holds as long as it is linked to this or a wall
-  bgFill(45, 11, 67, 15, BG_BRICK);
-  sp('target', 55, 11, { skin: 'vat' }); sp('alarm', 47); sp('scout', 47, 11); sp('grunt', 50, 11); sp('barrel', 53, 11); sp('grunt', 56, 11); sp('barrel', 59, 11); sp('propane', 60, 11); sp('grunt', 62, 11); sp('cage', 64, 11, { bro: 'tesla' });
-  lamp(49, 10); lamp(56, 10); lamp(63, 10);
-  dc('plaque', 52, { r: 10, text: 'QUACK HQ' });
-  sp('grunt', 52); sp('medic', 58); sp('turret', 66);
-  sp('flag', 72);
+  // 2. Tree-hut village: three huts up on steel brackets, walk under them or climb the ladder through the floor
+  ground(34, 63, 16);
+  for (const x of [35, 45, 55]) {
+    fill(x, 12, x + 5, 12, CRATE); fill(x, 12, x, 12, STEEL); fill(x + 5, 12, x + 5, 12, STEEL); // the floor on its brackets
+    fill(x, 9, x, 11, CRATE); fill(x + 5, 9, x + 5, 9, CRATE); fill(x - 1, 8, x + 6, 8, BRICK); // a back wall, an open front, the roof
+    fill(x + 3, 12, x + 3, 15, LADDER); bgFill(x + 1, 9, x + 4, 11, BG_BRICK); lamp(x + 2, 8);
+  }
+  sp('cage', 37, 9, { bro: 'curie' }); sp('grunt', 39); sp('scout', 42); sp('target', 47, 9, { skin: 'vat' }); sp('grunt', 49, 9); sp('alarm', 52); sp('medic', 54);
+  sp('pickup', 57, 9, { item: 'intel' }); sp('grunt', 59, 9); sp('barrel', 61); sp('grunt', 62); sp('spring', 44);
+  dc('sandbags', 34); dc('palm', 43, { lean: -1 }); dc('palm', 53);
+  sp('flag', 64);
 
-  // 3. Acid pit with crate bridge and a turret tower
-  ground(69, 76, 16);
-  fill(77, 21, 100, 21, STEEL); fill(77, 17, 100, 17, EMPTY); fill(77, 18, 100, 20, ACID);
-  fill(77, 16, 100, 16, CRATE);
-  for (const c of [80, 84, 88, 92, 96]) fill(c, 17, c, 20, STEEL); // steel piles: hop across them if the crates burn away
-  fill(88, 12, 89, 15, BRICK);
-  sp('shield', 71); sp('ammo', 74); sp('itemcrate', 76); sp('grunt', 81); sp('turret', 88); sp('grunt', 95); sp('bomber', 99);
-  dc('sign', 74, { text: 'ACID' }); dc('sandbags', 70);
+  // 3. Tide pools: three acid pools under crate planks, sand islets between them
+  ground(64, 66, 16); ground(70, 72, 15); ground(76, 78, 14); ground(82, 88, 16);
+  for (const [a, b] of [[67, 69], [73, 75], [79, 81]]) { fill(a, 21, b, 21, STEEL); fill(a, 17, b, 20, ACID); fill(a, 16, b, 16, CRATE); fill(a + 1, 17, a + 1, 20, STEEL); }
+  fill(74, 13, 75, 15, BRICK); sp('turret', 74); // a lookout on the planks: shoot the planks and it drops
+  sp('shield', 71); sp('cage', 77); sp('itemcrate', 76); sp('grunt', 83); sp('bomber', 86);
+  dc('sign', 65, { text: 'TIDE POOLS' }); dc('palm', 71, { lean: -1 }); dc('palm', 87);
 
-  // 4. Cliff with a cave and a watchtower
-  ground(101, 105, 16); ground(106, 108, 13); ground(109, 140, 8);
-  sp('jetpack', 103); sp('sniper', 112);
-  fill(108, 8, 108, 12, LADDER); sp('target', 113, 11, { skin: 'vat' }); sp('pickup', 121, 11, { item: 'intel' });
-  fill(112, 11, 125, 13, EMPTY);
-  fill(124, 4, 128, 4, BRICK); fill(124, 5, 124, 7, CRATE); fill(128, 5, 128, 7, CRATE); // watchtower on wooden legs
-  sp('grenadier', 111); sp('grunt', 114); sp('barrel', 118); sp('grunt', 120); sp('barrel', 123); sp('grunt', 126);
-  sp('cage', 119, 11, { bro: 'newton' }); sp('grunt', 115, 11);
-  sp('grunt', 131); sp('strike', 133); sp('bomber', 134); sp('guru', 137); sp('bomber', 136);
-  lamp(116, 10); lamp(122, 10); dc('palm', 107); dc('sandbags', 132);
-  sp('flag', 139);
+  // 4. The Remedy Lab: two floors, a crate door in, an open door out, a ladder between the floors
+  ground(89, 124, 16);
+  fill(91, 5, 119, 15, BRICK); fill(93, 12, 117, 15, EMPTY); fill(93, 7, 117, 10, EMPTY);
+  fill(91, 13, 91, 15, CRATE); fill(92, 13, 92, 15, EMPTY); fill(118, 12, 119, 15, EMPTY);
+  fill(104, 5, 106, 5, STEEL); fill(116, 5, 117, 5, STEEL); fill(105, 11, 105, 15, LADDER); fill(113, 5, 113, 10, LADDER); // two girders: the roof ladder splits the roof
+  bgFill(92, 7, 118, 15, BG_BRICK);
+  sp('target', 98, 12, { skin: 'vat' }); sp('grunt', 101, 12); sp('barrel', 103, 12); sp('medic', 109, 12); sp('grunt', 114, 12); sp('propane', 116, 12);
+  sp('pickup', 95, 7, { item: 'intel' }); sp('scout', 99, 7); sp('grunt', 107, 7); sp('cage', 111, 7, { bro: 'tesla' }); sp('turret', 110);
+  sp('alarm', 121); sp('flamer', 122);
+  lamp(97, 6); lamp(110, 6); lamp(99, 11); lamp(111, 11);
+  dc('plaque', 101, { r: 11, text: 'REMEDY LAB' }); dc('sandbags', 90);
+  sp('flag', 124);
 
-  // 5. Cliff fort
-  ground(141, 150, 12); ground(151, 175, 16);
-  fill(160, 9, 161, 15, BRICK);
-  sp('mechsuit', 142); sp('grunt', 145); sp('rocketeer', 148); sp('dog', 152); sp('grunt', 155); sp('barrel', 157); sp('propane', 158); sp('turret', 160);
-  sp('cage', 147); sp('guncrate', 151); sp('flamer', 156); sp('fueltank', 154); sp('mine', 159); sp('mine', 162); sp('brute', 163); sp('target', 165, 0, { skin: 'vat' }); sp('pickup', 149, 0, { item: 'intel' }); sp('itemcrate', 143); sp('alarm', 152); sp('grunt', 166); sp('shield', 167); sp('barrel', 168); sp('grunt', 170); sp('cage', 173, 0, { bro: 'franklin' }); sp('ammo', 175);
-  dc('sandbags', 146); dc('sandbags', 153); dc('palm', 164, { lean: -1 }); dc('sign', 171, { text: 'DO YOUR RESEARCH' });
+  // 5. The hot spring crater: drop in, ride the geyser back up to the far rim
+  ground(125, 127, 14); ground(128, 130, 12); ground(131, 143, 18); ground(144, 146, 12); ground(147, 150, 14);
+  vent(141, 18, 8, { col: '#e6eef8' }); fill(143, 12, 143, 17, LADDER);
+  sp('grenadier', 128); sp('pickup', 129, 0, { item: 'intel' }); sp('target', 134, 0, { skin: 'vat' }); sp('grunt', 133); sp('cage', 137, 0, { bro: 'newton' }); sp('dog', 139);
+  sp('sniper', 145); sp('bomber', 148); sp('guru', 149); sp('jetpack', 132);
+  dc('sign', 126, { text: 'HOT SPRING 30C' }); dc('palm', 136); dc('sandbags', 147);
 
-  // 6. Boss arena and extraction pad
+  // 6. Beach fort: a lookout on crate legs, sandbag lines, the last cage before the arena
+  ground(151, 175, 16);
+  fill(160, 14, 160, 15, CRATE); fill(165, 14, 165, 15, CRATE); fill(159, 13, 166, 13, BRICK); // a lookout on short crate legs: cut them and it comes down
+  sp('mechsuit', 153); sp('strike', 155); sp('grunt', 157); sp('spring', 158); sp('rocketeer', 162, 10); sp('turret', 164); sp('shield', 167); sp('fueltank', 156); sp('mine', 154); sp('mine', 169);
+  sp('grunt', 164, 10); sp('brute', 168); sp('cage', 171, 0, { bro: 'franklin' }); sp('grunt', 172); sp('guncrate', 152); sp('ammo', 175);
+  dc('sandbags', 154); dc('sandbags', 170); dc('palm', 158, { lean: -1 }); dc('sign', 173, { text: 'DO YOUR RESEARCH' });
+  // 7. Boss arena and extraction pad
   fill(176, 16, 235, 21, STEEL);
   fill(186, 14, 186, 15, BRICK); fill(196, 15, 197, 15, BRICK);
   fill(214, 6, 215, 15, STEEL);
@@ -652,95 +654,97 @@ function buildIsland({ fill, ground, sp, bgFill, dc, lamp }) {
   sp('boss', 204, 0, { ax0: 177, ax1: 213, trig: 182, final: true, gate: [214, 215, 6, 15] });
   dc('sign', 181, { text: 'DANGER 30C' }); dc('palm', 222); dc('palm', 232, { lean: -1 });
 }
-function buildDesert({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Dunes
-  ground(0, 14, 15); ground(15, 20, 14); ground(21, 27, 13); ground(28, 36, 15);
-  sp('guncrate', 8); sp('cage', 22, 0, { bro: 'ada' }); sp('grunt', 21); sp('dog', 24); sp('scout', 26); sp('ammo', 30); sp('pickup', 31, 0, { item: 'intel' }); sp('grunt', 33);
-  dc('cactus', 3); dc('sign', 7, { text: 'DETOX TEA 4 LIFE' }); dc('cactus', 11); dc('crystal', 16); dc('cactus', 25); dc('palm', 35, { lean: -1 });
+function buildDesert({ fill, ground, sp, bgFill, dc, lamp, wind, crumble }) {
+  // 1. Salt flats and a mesa: walk the tunnel through it or climb over the top
+  ground(0, 12, 16); ground(13, 15, 14); ground(16, 27, 11); ground(28, 36, 15);
+  fill(16, 13, 27, 15, EMPTY); bgFill(16, 13, 27, 15, BG_EARTH); // the tunnel
+  sp('guncrate', 6); sp('ammo', 10); sp('grunt', 23, 13); sp('dog', 25, 13); sp('scout', 24); sp('pickup', 18, 0, { item: 'intel' }); sp('grunt', 30); sp('barrel', 33); sp('barrel', 34);
+  dc('cactus', 2); dc('sign', 9, { text: 'DETOX TEA 4 LIFE' }); dc('cactus', 14); dc('crystal', 19); dc('cactus', 26); dc('cactus', 32);
 
-  // 2. The Wellness Retreat: two floors, crate doors, a hole in the middle floor to climb through
-  ground(37, 82, 16);
-  fill(39, 8, 59, 15, BRICK); fill(41, 12, 57, 15, EMPTY); fill(41, 9, 57, 10, EMPTY);
-  fill(39, 13, 39, 15, CRATE); fill(40, 13, 40, 15, EMPTY); fill(59, 13, 59, 15, CRATE); fill(58, 13, 58, 15, EMPTY);
-  fill(49, 11, 50, 11, EMPTY); fill(48, 8, 50, 8, STEEL);
-  fill(49, 12, 49, 15, LADDER); fill(38, 8, 38, 15, LADDER);
-  bgFill(40, 9, 58, 15, BG_BRICK);
-  sp('pickup', 54, 9, { item: 'intel' }); sp('alarm', 61); sp('shield', 45, 12); sp('medic', 51, 12); sp('grunt', 53, 12); sp('barrel', 55, 12); sp('grenadier', 43, 9); sp('ammo', 47, 9); sp('grunt', 55, 9);
-  sp('guru', 52); sp('rocketeer', 57);
-  lamp(45, 11); lamp(53, 11); lamp(44, 8); lamp(55, 8);
-  dc('plaque', 49, { r: 8, text: 'WELLNESS SPA' }); dc('cactus', 38);
+  // 2. The caravan market: two stalls to hop through, the radio mast in the square between them
+  ground(37, 62, 16);
+  for (const x of [39, 52]) { fill(x, 14, x + 5, 15, CRATE); fill(x, 10, x + 5, 10, BRICK); fill(x - 1, 10, x - 1, 10, STEEL); fill(x + 6, 10, x + 6, 10, STEEL); bgFill(x, 11, x + 5, 13, BG_BRICK); lamp(x + 3, 10); } // stalls: a crate counter to hop onto, a brick awning held by steel poles
+  sp('target', 48, 0, { skin: 'radio' }); sp('cage', 41, 11, { bro: 'ada' }); sp('shield', 43); sp('medic', 50); sp('grunt', 54); sp('grenadier', 42, 9); sp('ammo', 55, 9); sp('guru', 58); sp('rocketeer', 60); sp('alarm', 46);
+  dc('sign', 37, { text: 'WELLNESS BAZAAR' }); dc('palm', 47, { lean: -1 }); dc('palm', 61);
   sp('flag', 62);
 
-  // 3. Oil field
-  fill(74, 13, 77, 15, DIRT);
-  sp('strike', 63); sp('fueltank', 67); sp('itemcrate', 76); sp('fueltank', 79); sp('jetpack', 69); sp('barrel', 65); sp('barrel', 66); sp('dog', 68); sp('propane', 70); sp('barrel', 72); sp('rocketeer', 75); sp('heavy', 80);
-  dc('sandbags', 64); dc('crystal', 71); dc('sign', 79, { text: 'TOXINS OUT CASH IN' });
+  // 3. Oil derricks in a sandstorm: the gusts blow against you; climb a derrick for the loot
+  ground(63, 64, 16); ground(65, 81, 17); ground(82, 82, 16); // a sunken oil basin
+  wind(63, 82, -1, { spd: 60, socks: [64, 81] });
+  for (const x of [67, 76]) { fill(x, 7, x + 1, 16, LADDER); fill(x - 2, 7, x - 1, 7, STEEL); fill(x + 2, 7, x + 3, 7, STEEL); } // a lattice you climb, a deck on either side at the top
+  sp('strike', 64); sp('fueltank', 70); sp('itemcrate', 78, 0); sp('pickup', 65, 0, { item: 'intel' }); sp('jetpack', 72); sp('barrel', 73); sp('dog', 71); sp('propane', 74); sp('rocketeer', 79); sp('heavy', 81); sp('ammo', 66);
+  dc('sandbags', 65); dc('crystal', 70); dc('sign', 80, { text: 'TOXINS OUT CASH IN' });
 
   // 4. Detoxkopter arena: towers to climb so you can reach it
   ground(83, 125, 16);
   fill(92, 12, 93, 15, BRICK); fill(104, 11, 105, 15, BRICK); fill(116, 12, 117, 15, BRICK);
   fill(124, 0, 125, 15, STEEL);
-  sp('ammo', 98); sp('ammo', 110); sp('spring', 96); sp('spring', 112); sp('target', 86, 0, { skin: 'radio' });
+  sp('ammo', 98); sp('ammo', 110); sp('spring', 96); sp('spring', 112);
   sp('kopter', 110, 0, { ax0: 85, ax1: 122, trig: 87, gate: [124, 125, 0, 15] });
-  dc('sandbags', 88); dc('sandbags', 99); dc('sandbags', 111); dc('sign', 85, { text: 'HELIPAD' });
+  dc('sandbags', 89); dc('sandbags', 100); dc('sandbags', 113); dc('sign', 85, { text: 'HELIPAD' }); dc('cactus', 120);
 
-  // 5. Acid canyon
-  ground(126, 134, 16);
-  sp('mechsuit', 127);
-  fill(135, 21, 150, 21, STEEL); fill(135, 17, 150, 20, ACID); fill(135, 16, 150, 16, CRATE);
-  for (const c of [138, 142, 146, 149]) fill(c, 17, c, 20, STEEL);
-  ground(151, 172, 14); fill(158, 11, 161, 13, DIRT);
-  sp('cage', 127, 0); sp('guncrate', 129); sp('mine', 128); sp('mine', 131); sp('grunt', 130); sp('dog', 132); sp('pickup', 160, 11, { item: 'intel' }); sp('itemcrate', 168); sp('shield', 138); sp('grenadier', 144); sp('bomber', 149);
-  sp('flamer', 133); sp('ammo', 153); sp('strike', 154); sp('heavy', 155); sp('brute', 157); sp('sniper', 160); sp('rocketeer', 159); sp('cage', 164, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 170);
-  dc('sign', 128, { text: 'ACID' }); dc('cactus', 152); dc('crystal', 157); dc('cactus', 166);
-  sp('flag', 171);
+  // 5. The dry riverbed: down the banks, past crate cover and a sludge stream under a grating, up the far side
+  ground(126, 128, 16); ground(129, 130, 17); ground(131, 146, 18); ground(147, 148, 17); ground(149, 150, 16);
+  fill(136, 19, 141, 20, ACID); fill(136, 18, 141, 18, STEEL); // the sludge stream under a grating
+  fill(133, 16, 134, 17, CRATE); fill(144, 17, 145, 17, CRATE);
+  sp('shield', 131); sp('mine', 132); sp('grunt', 134); sp('dog', 139); sp('flamer', 142); sp('cage', 143); sp('grenadier', 146); sp('bomber', 148);
+  dc('sign', 127, { text: 'DRY RIVER' }); dc('cactus', 135); dc('sandbags', 145); dc('cactus', 149);
 
-  // 6. Crystal Crawler arena: deep sand over steel, extraction pad behind a steel gate
+  // 6. Oasis plateau: palms, a rock bluff, the last cage before the sand pit
+  ground(151, 158, 14); ground(159, 165, 12); ground(166, 172, 13);
+  fill(153, 13, 154, 13, CRATE); // a stack of spa towels, crated
+  sp('mechsuit', 157); sp('guncrate', 158); sp('itemcrate', 167); sp('ammo', 160); sp('strike', 161); sp('heavy', 162); sp('brute', 164); sp('sniper', 159); sp('rocketeer', 166);
+  sp('pickup', 163, 0, { item: 'intel' }); sp('cage', 169, 0, { bro: 'darwin' }); sp('guru', 168); sp('grunt', 171);
+  dc('palm', 151, { lean: -1 }); dc('palm', 157); dc('crystal', 165); dc('sign', 170, { text: 'SPA THIS WAY' });
+  sp('flag', 172);
+  // 7. Crystal Crawler arena: deep sand over steel, extraction pad behind a steel gate
   ground(173, 177, 12);
   fill(178, 12, 223, 17, DIRT); fill(178, 18, 223, 21, STEEL);
   fill(224, 0, 225, 21, STEEL); fill(226, 12, 235, 21, STEEL);
   sp('crawler', 200, 0, { ax0: 179, ax1: 222, trig: 181, final: true, gate: [224, 225, 0, 11] });
   dc('sign', 175, { text: 'CRYSTAL HEALING' }); dc('crystal', 186); dc('crystal', 201); dc('crystal', 214); dc('palm', 229); dc('cactus', 233);
 }
-function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Loading yard: container stacks, fuel tanks, mines
-  ground(0, 40, 16);
-  fill(14, 13, 17, 15, BRICK); fill(26, 12, 31, 15, BRICK); fill(28, 10, 30, 11, CRATE);
-  sp('guncrate', 6); sp('grunt', 23); sp('pickup', 12, 0, { item: 'intel' }); sp('fueltank', 19); sp('mine', 22); sp('shield', 24); sp('cage', 29, 0, { bro: 'johnson' }); sp('flamer', 34); sp('itemcrate', 37); sp('barrel', 38);
-  dc('sign', 4, { text: 'DILUTION PLANT' }); dc('sandbags', 21);
+function buildPlant({ fill, ground, sp, bgFill, dc, lamp, belt, crumble }) {
+  // 1. Water intake: an intake pipe on a ladder to run along, container stacks, fuel tanks
+  ground(0, 34, 16);
+  fill(6, 14, 9, 15, BRICK); fill(15, 11, 29, 11, STEEL); fill(14, 11, 14, 15, LADDER); fill(30, 13, 32, 15, BRICK);
+  sp('guncrate', 4); sp('pickup', 20, 0, { item: 'intel' }); sp('cage', 27, 0, { bro: 'johnson' }); sp('fueltank', 18); sp('grunt', 22); sp('shield', 25); sp('mine', 28); sp('flamer', 33); sp('itemcrate', 31, 0); sp('barrel', 34);
+  dc('sign', 3, { text: 'DILUTION PLANT' }); dc('sandbags', 11); dc('sign', 24, { text: 'INTAKE' });
 
-  // 2. Factory hall: catwalk with a ladder, two dilution vats on the floor
-  ground(41, 82, 16);
-  fill(44, 6, 76, 15, BRICK); fill(46, 8, 74, 15, EMPTY);
-  fill(44, 13, 44, 15, CRATE); fill(45, 13, 45, 15, EMPTY); fill(76, 13, 76, 15, CRATE); fill(75, 13, 75, 15, EMPTY);
-  fill(58, 6, 60, 6, STEEL); fill(46, 11, 60, 11, STEEL); fill(61, 11, 61, 15, LADDER);
-  bgFill(45, 8, 75, 15, BG_BRICK);
-  sp('target', 52, 12, { skin: 'vat' }); sp('target', 69, 12, { skin: 'vat' });
-  sp('cage', 49, 8, { bro: 'meitner' }); sp('pickup', 56, 8, { item: 'intel' }); sp('sniper', 54, 8);
-  sp('heavy', 64, 12); sp('medic', 66, 12); sp('grunt', 72, 12); sp('alarm', 47, 12);
-  sp('jetpack', 58); sp('rocketeer', 70);
-  lamp(50, 7); lamp(57, 10); lamp(66, 7); lamp(72, 7);
-  dc('plaque', 60, { r: 6, text: 'DILUTION HALL' });
-  sp('flag', 80);
+  // 2. The filter cellar: a pump house up top, the two dilution vats in the cellar under it, steps down at both ends
+  ground(35, 35, 16); ground(39, 62, 16); ground(66, 66, 16);
+  for (let k = 1; k <= 3; k++) { ground(35 + k, 35 + k, 16 + k); ground(66 - k, 66 - k, 16 + k); } // the steps
+  fill(39, 17, 62, 19, EMPTY); bgFill(39, 17, 62, 19, BG_BRICK);
+  fill(47, 11, 55, 15, BRICK); fill(48, 12, 54, 15, EMPTY); fill(47, 13, 47, 15, CRATE); fill(55, 13, 55, 15, EMPTY); fill(50, 11, 52, 11, STEEL);
+  bgFill(48, 12, 54, 15, BG_BRICK);
+  sp('target', 46, 17, { skin: 'vat' }); sp('target', 57, 17, { skin: 'vat' }); sp('cage', 41, 17, { bro: 'meitner' }); sp('heavy', 50, 17); sp('medic', 53, 17); sp('grunt', 60, 17);
+  sp('pickup', 48, 0, { item: 'intel' }); sp('sniper', 51); sp('alarm', 49, 12); sp('grunt', 53, 12); sp('jetpack', 43); sp('rocketeer', 59);
+  lamp(44, 16); lamp(51, 16); lamp(58, 16); lamp(51, 11);
+  dc('plaque', 51, { r: 11, text: 'PUMP HOUSE' }); dc('sign', 36, { text: 'CELLAR' });
+  sp('flag', 65);
 
-  // 3. Toxic channels: jump the gaps of diluted solution; a mech is parked at the start
-  ground(83, 88, 16); fill(89, 21, 91, 21, STEEL); fill(89, 17, 91, 20, ACID);
-  ground(92, 100, 16); fill(101, 21, 103, 21, STEEL); fill(101, 17, 103, 20, ACID);
-  ground(104, 112, 15); fill(113, 21, 115, 21, STEEL); fill(113, 17, 115, 20, ACID);
-  ground(116, 130, 16);
-  sp('mechsuit', 84); sp('cage', 86); sp('guncrate', 91); sp('dog', 94); sp('brute', 98); sp('itemcrate', 95); sp('rocketeer', 108); sp('strike', 107); sp('fueltank', 110);
-  sp('grunt', 119); sp('alarm', 118); sp('flamer', 122); sp('pickup', 124, 0, { item: 'intel' }); sp('spring', 126);
-  dc('sign', 87, { text: 'DO NOT DRINK' });
-  sp('flag', 128);
+  // 3. The bottling line: a floor belt carries you on, a catwalk belt runs back the other way
+  ground(67, 100, 16);
+  belt(69, 82, 16, 1, 50); belt(84, 96, 11, -1, 55); fill(83, 11, 83, 15, LADDER); fill(97, 11, 97, 15, LADDER); fill(87, 14, 88, 15, CRATE);
+  sp('mechsuit', 67); sp('barrel', 72); sp('barrel', 76); sp('dog', 78); sp('strike', 80); sp('cage', 90, 0); sp('brute', 91); sp('rocketeer', 94, 0); sp('grunt', 93); sp('fueltank', 86);
+  dc('sign', 85, { text: 'SHAKE 100 TIMES' });
 
-  // 4. Chimney yard: cut a chimney at the base and it comes down
-  ground(131, 180, 16);
-  fill(140, 2, 141, 15, BRICK); fill(156, 2, 157, 15, BRICK); fill(146, 12, 150, 15, BRICK); fill(164, 10, 165, 15, BRICK);
-  sp('grunt', 136); sp('shield', 144); sp('sniper', 148); sp('jetpack', 152); sp('heavy', 160); sp('grenadier', 164); sp('medic', 167); sp('cage', 172, 0, { bro: 'archimedes' }); sp('itemcrate', 175);
-  dc('sandbags', 134); dc('sandbags', 170);
+  // 4. Settling ponds: a grating over diluted sludge on steel piles; the brick middle crumbles, a trough catches you
+  ground(101, 104, 16); ground(131, 135, 16);
+  fill(105, 21, 130, 21, STEEL); fill(105, 17, 130, 20, ACID); fill(105, 16, 130, 16, STEEL); // a steel grating over the sludge
+  for (let k = 107; k <= 129; k += 4) fill(k, 17, k, 20, STEEL);
+  fill(114, 16, 121, 16, BRICK); fill(113, 17, 122, 18, STEEL); fill(114, 17, 121, 17, EMPTY); crumble(114, 16, 121, 16); // the rotten brick middle, a steel trough under it
+  sp('itemcrate', 103); sp('grunt', 108); sp('shield', 124); sp('grenadier', 128); sp('alarm', 133); sp('flamer', 134); sp('spring', 102);
+  dc('sign', 101, { text: 'DO NOT DRINK' });
+  sp('flag', 135);
+
+  // 5. Cooling towers, open at the top: walk through the base of each, or climb the ladder inside up to the walls
+  ground(136, 180, 16);
+  for (const x of [142, 158]) { fill(x, 4, x + 6, 15, BRICK); fill(x + 2, 4, x + 4, 15, EMPTY); fill(x, 13, x + 1, 15, EMPTY); fill(x + 5, 13, x + 6, 15, EMPTY); fill(x, 12, x + 1, 12, STEEL); fill(x + 5, 12, x + 6, 12, STEEL); fill(x + 3, 5, x + 3, 15, LADDER); bgFill(x + 2, 5, x + 4, 15, BG_BRICK); lamp(x + 1, 12); lamp(x + 5, 12); } // steel lintels over the doors hold the walls
+  sp('grunt', 138); sp('pickup', 143, 0, { item: 'intel' }); sp('sniper', 147, 0); sp('shield', 145); sp('jetpack', 152); sp('heavy', 155); sp('grenadier', 163, 0); sp('medic', 160); sp('mine', 166); sp('cage', 169, 0, { bro: 'archimedes' }); sp('grunt', 171); sp('itemcrate', 175);
+  dc('sandbags', 139); dc('sandbags', 151); dc('sign', 149, { text: 'COOLING' }); dc('sandbags', 167);
   sp('flag', 178);
-
-  // 5. The Succussion Engine: a steel floor with a crumbly concrete top, a gantry with a platform and a ladder
+  // 6. The Succussion Engine: a steel floor with a crumbly concrete top, a gantry with a platform and a ladder
   fill(181, 15, 230, 17, DIRT); fill(181, 18, 235, 21, STEEL);
   fill(205, 11, 209, 11, STEEL); fill(213, 9, 228, 9, STEEL); fill(212, 9, 212, 14, LADDER);
   fill(229, 0, 230, 17, STEEL); fill(231, 15, 235, 17, STEEL);
@@ -748,31 +752,37 @@ function buildPlant({ fill, ground, sp, bgFill, dc, lamp }) {
   dc('sign', 183, { text: 'SHAKE WELL' });
 }
 function buildEdge({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Base camp on the shore
-  ground(0, 30, 16);
-  sp('guncrate', 10); sp('itemcrate', 13); sp('grunt', 22); sp('scout', 25); sp('cage', 27); sp('dog', 29);
-  dc('sign', 6, { text: 'EARTH IS FLAT' }); dc('sign', 16, { text: 'IT IS NOT' }); dc('sandbags', 3);
-  // 2. Radar station: antennas on the roof and in the yard
-  ground(31, 75, 16);
-  fill(36, 10, 58, 15, BRICK); fill(38, 12, 56, 15, EMPTY);
-  fill(36, 13, 36, 15, CRATE); fill(37, 13, 37, 15, EMPTY); fill(58, 13, 58, 15, CRATE); fill(57, 13, 57, 15, EMPTY);
-  fill(46, 10, 48, 10, STEEL); fill(35, 10, 35, 15, LADDER); bgFill(37, 12, 57, 15, BG_BRICK);
-  sp('target', 40, 0, { skin: 'radio' }); sp('target', 54, 0, { skin: 'radio' }); sp('target', 70, 0, { skin: 'radio' });
-  sp('shield', 42, 12); sp('medic', 46, 12); sp('pickup', 49, 12, { item: 'intel' }); sp('grunt', 52, 12); sp('cage', 55, 12);
-  sp('sniper', 47); sp('alarm', 62); sp('heavy', 66);
-  lamp(41, 11); lamp(51, 11);
-  sp('flag', 73);
-  // 3. The ice wall they call the edge of the world: climb it, or blast through it
-  ground(76, 120, 16);
-  fill(88, 6, 91, 15, ICE); fill(87, 6, 87, 15, LADDER);
-  sp('spring', 84); sp('mine', 95); sp('mine', 97); sp('grenadier', 89); sp('rocketeer', 100); sp('strike', 102); sp('jetpack', 105); sp('heavy', 110); sp('fueltank', 114); sp('pickup', 118, 0, { item: 'intel' });
-  dc('sign', 80, { text: 'THE EDGE' });
-  sp('flag', 120);
-  // 4. Launch yard
-  ground(121, 165, 16);
-  fill(132, 12, 133, 15, BRICK); fill(148, 11, 149, 15, BRICK);
-  sp('mechsuit', 124); sp('brute', 128); sp('flamer', 136); sp('alarm', 138); sp('fueltank', 140); sp('guru', 145); sp('pickup', 148, 0, { item: 'intel' });
-  sp('cage', 152); sp('grunt', 156); sp('itemcrate', 158);
+  // 1. The landing: dunes on the shore, a toppled dish
+  ground(0, 9, 16); ground(10, 17, 15); ground(18, 26, 16);
+  fill(20, 15, 24, 15, STEEL); fill(20, 14, 20, 14, STEEL); fill(24, 14, 24, 14, STEEL); // a toppled dish lying in the sand
+  sp('guncrate', 6); sp('itemcrate', 9); sp('grunt', 22); sp('scout', 24); sp('dog', 26);
+  dc('sign', 3, { text: 'EARTH IS FLAT' }); dc('sandbags', 11); dc('sign', 16, { text: 'IT IS NOT' });
+  // 2. The podcast bunker, dug into a hill: run the tunnel or take the hilltop past the first antenna
+  ground(27, 29, 14); ground(30, 60, 11); ground(61, 63, 14);
+  fill(30, 13, 60, 15, EMPTY); bgFill(30, 13, 60, 15, BG_BRICK);
+  for (let x = 33; x <= 57; x += 6) fill(x, 12, x, 12, STEEL); // beams under the roof
+  sp('target', 44, 0, { skin: 'radio' }); sp('sniper', 50); sp('grunt', 38);
+  sp('cage', 33, 13); sp('shield', 37, 13); sp('medic', 42, 13); sp('pickup', 47, 13, { item: 'intel' }); sp('grunt', 52, 13); sp('alarm', 55, 13); sp('heavy', 58, 13);
+  lamp(36, 12); lamp(48, 12); lamp(54, 12);
+  dc('plaque', 45, { r: 12, text: 'JUST ASKING' }); dc('sandbags', 31); dc('sign', 59, { text: 'ON AIR' });
+  sp('flag', 63);
+  // 3. The ice wall they call the edge of the world: up the ladder and over the top, or through the icicle cave under it
+  ground(64, 91, 16); ground(92, 100, 17); ground(101, 110, 16); fill(92, 17, 100, 17, ICE); // the wall, then a frozen hollow
+  fill(70, 6, 84, 15, ICE); fill(70, 13, 84, 15, EMPTY); bgFill(70, 13, 84, 15, BG_EARTH); fill(69, 6, 69, 15, LADDER); fill(85, 6, 85, 15, LADDER); // the wall, its cave, a ladder up each face
+  for (const c of [72, 77, 82]) fill(c, 12, c, 12, STEEL); // steel ribs in the cave roof hold the ice up
+  for (const c of [74, 79]) sp('icicle', c, 0, { hang: 12 });
+  sp('spring', 66); sp('target', 77, 0, { skin: 'radio' }); sp('cage', 73, 0); sp('rocketeer', 81); sp('pickup', 83, 0, { item: 'intel' }); sp('grenadier', 75, 13); sp('grunt', 80, 13);
+  sp('mine', 96); sp('mine', 98); sp('strike', 92); sp('jetpack', 101); sp('heavy', 105); sp('fueltank', 108);
+  dc('sign', 65, { text: 'THE EDGE' }); dc('sign', 93, { text: 'NO GLOBES' });
+  sp('flag', 110);
+  // 4. The launch yard: a fallen rocket to run through or along, the last antenna on a gantry
+  ground(111, 145, 16); ground(146, 160, 15); ground(161, 165, 16); // the gantry stands on a concrete pad
+  fill(126, 12, 139, 15, BRICK); fill(127, 13, 138, 15, EMPTY); fill(126, 13, 126, 15, CRATE); fill(139, 13, 139, 15, EMPTY); fill(139, 12, 139, 12, STEEL); // the rocket on its side
+  fill(124, 13, 125, 14, ICE); bgFill(127, 13, 138, 15, BG_BRICK); lamp(132, 12); // its glass nose
+  fill(150, 5, 151, 14, LADDER); fill(147, 5, 149, 5, STEEL); fill(152, 5, 154, 5, STEEL); // the gantry: a lattice you climb, decks at the top
+  sp('mechsuit', 113); sp('brute', 119); sp('flamer', 129, 13); sp('alarm', 134, 13); sp('cage', 136, 13); sp('pickup', 131, 0, { item: 'intel' }); sp('fueltank', 144);
+  sp('target', 153, 0, { skin: 'radio' }); sp('guru', 147); sp('grunt', 156); sp('itemcrate', 158);
+  dc('sign', 112, { text: 'NO ROCKET SCIENCE' }); dc('sandbags', 145); dc('sandbags', 161);
   sp('flag', 164);
   // 5. Zeppelin field: towers with ladders and springs so you can reach the gondolas
   ground(166, 225, 16);
@@ -783,31 +793,32 @@ function buildEdge({ fill, ground, sp, bgFill, dc, lamp }) {
   dc('sign', 168, { text: 'NO FLY ZONE' });
 }
 function buildCitadel({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Base camp
-  ground(0, 30, 16);
+  // 1. Base camp behind a crate barricade
+  ground(0, 30, 16); fill(17, 14, 18, 15, CRATE);
   sp('guncrate', 8); sp('itemcrate', 11); sp('grunt', 22); sp('dog', 25); sp('scout', 28);
-  dc('sign', 14, { text: 'VITAMIN C CURES ALL' }); dc('sandbags', 4);
-  // 2. Juice works: three megadose vats
+  dc('sign', 13, { text: 'MEGADOSE OR BUST' }); dc('sandbags', 4); dc('orange', 20);
+  // 2. Juice works: three megadose vats, the catwalk now on the far side of the hall
   ground(31, 80, 16);
   fill(36, 8, 70, 15, BRICK); fill(38, 10, 68, 15, EMPTY);
   fill(36, 13, 36, 15, CRATE); fill(37, 13, 37, 15, EMPTY); fill(70, 13, 70, 15, CRATE); fill(69, 13, 69, 15, EMPTY);
-  fill(52, 8, 54, 8, STEEL); fill(38, 12, 50, 12, STEEL); fill(51, 12, 51, 15, LADDER); bgFill(37, 10, 69, 15, BG_BRICK);
-  sp('target', 44, 13, { skin: 'vat' }); sp('target', 60, 10, { skin: 'vat' }); sp('target', 75, 0, { skin: 'vat' });
-  sp('flamer', 44, 10); sp('pickup', 40, 10, { item: 'intel' }); sp('heavy', 58, 10); sp('medic', 63, 10); sp('cage', 66, 10);
-  lamp(42, 9); lamp(56, 9); lamp(64, 9);
+  fill(52, 8, 54, 8, STEEL); fill(56, 12, 68, 12, STEEL); fill(55, 12, 55, 15, LADDER); bgFill(37, 10, 69, 15, BG_BRICK);
+  sp('target', 43, 13, { skin: 'vat' }); sp('target', 62, 10, { skin: 'vat' }); sp('target', 76, 0, { skin: 'vat' });
+  sp('flamer', 48, 10); sp('pickup', 66, 10, { item: 'intel' }); sp('heavy', 58, 10); sp('medic', 52, 10); sp('cage', 40, 10);
+  lamp(42, 9); lamp(50, 9); lamp(60, 9);
   dc('plaque', 53, { r: 8, text: 'JUICE WORKS' });
-  sp('alarm', 72); sp('flag', 78);
+  sp('alarm', 73); sp('flag', 79);
   // 3. The rally: a stage, a crowd of quacks, a guru on the mic
-  ground(81, 130, 16); fill(100, 13, 108, 15, BRICK);
-  sp('mine', 88); sp('grunt', 92); sp('grunt', 95); sp('fueltank', 96); sp('grunt', 98); sp('strike', 101); sp('guru', 104); sp('pickup', 107, 0, { item: 'intel' });
-  sp('grunt', 110); sp('grunt', 113); sp('shield', 116); sp('fueltank', 118); sp('brute', 120); sp('heavy', 124); sp('itemcrate', 127); sp('cage', 102, 0); sp('preacher', 99); sp('mortar', 126); sp('camdrone', 110); sp('camdrone', 150);
-  dc('sign', 84, { text: 'ALPHA RALLY TODAY' });
+  ground(81, 130, 16); fill(106, 13, 114, 15, BRICK);
+  sp('mine', 90); sp('grunt', 93); sp('grunt', 96); sp('fueltank', 99); sp('grunt', 101); sp('strike', 107); sp('guru', 110); sp('pickup', 113, 0, { item: 'intel' });
+  sp('grunt', 116); sp('grunt', 118); sp('shield', 120); sp('fueltank', 122); sp('brute', 124); sp('heavy', 127); sp('itemcrate', 86); sp('cage', 108, 0); sp('preacher', 104); sp('mortar', 128); sp('camdrone', 112); sp('camdrone', 152);
+  dc('sign', 83, { text: 'ALPHA RALLY TODAY' }); dc('orange', 95); dc('orange', 119);
   sp('flag', 129);
   // 4. Citadel walls and a tower: climb, blast, or bulldoze them with the mech
   ground(131, 178, 16);
-  fill(140, 6, 143, 15, BRICK); fill(139, 6, 139, 15, LADDER); fill(158, 4, 161, 15, BRICK); fill(157, 4, 157, 15, LADDER);
-  sp('mechsuit', 134); sp('turret', 141); sp('guncrate', 147); sp('cage', 150); sp('jetpack', 152); sp('turret', 159); sp('sniper', 161);
-  sp('grenadier', 166); sp('heavy', 170); sp('pickup', 174, 0, { item: 'intel' });
+  fill(138, 6, 141, 15, BRICK); fill(137, 6, 137, 15, LADDER); fill(160, 4, 163, 15, BRICK); fill(159, 4, 159, 15, LADDER);
+  sp('mechsuit', 133); sp('turret', 139); sp('guncrate', 146); sp('cage', 149); sp('jetpack', 154); sp('turret', 161); sp('sniper', 163);
+  sp('grenadier', 167); sp('heavy', 171); sp('pickup', 174, 0, { item: 'intel' });
+  dc('sandbags', 144); dc('sandbags', 166);
   sp('flag', 177);
   // 5. Throne room
   fill(179, 15, 224, 17, DIRT); fill(179, 18, 235, 21, STEEL);
@@ -817,50 +828,51 @@ function buildCitadel({ fill, ground, sp, bgFill, dc, lamp }) {
   dc('sign', 181, { text: 'THRONE ROOM' });
 }
 function buildCryo({ fill, ground, sp, bgFill, dc, lamp }) {
-  // 1. Snowy slopes with a frozen pond (ice is slippery)
-  ground(0, 10, 15); ground(11, 18, 14); ground(19, 26, 13); ground(27, 36, 14);
-  fill(12, 14, 17, 14, ICE);
-  sp('guncrate', 5); sp('cage', 28); sp('grunt', 21); sp('dog', 23); sp('grunt', 22); sp('pickup', 24, 0, { item: 'intel' }); sp('scout', 25); sp('ammo', 30); sp('itemcrate', 34); sp('grenadier', 33);
-  dc('pine', 3); dc('sign', 6, { text: 'BIOHACK RETREAT' }); dc('pine', 9); dc('snowman', 20); dc('pine', 29); dc('pine', 35);
+  // 1. The summit station, then an icy run down to a frozen pond
+  ground(0, 8, 12);
+  for (let k = 0; k < 16; k++) { const top = 12 + Math.floor((k + 1) / 4); ground(9 + k, 9 + k, top); if (top < 16) fill(9 + k, top, 9 + k, top, ICE); }
+  ground(25, 35, 16); fill(27, 16, 33, 16, ICE);
+  sp('guncrate', 4); sp('ammo', 6); sp('grunt', 22); sp('dog', 24); sp('grunt', 27); sp('scout', 30); sp('cage', 33); sp('itemcrate', 35);
+  dc('sign', 2, { text: 'BIOHACK RETREAT' }); dc('pine', 7); dc('pine', 13); dc('snowman', 19); dc('pine', 26); dc('snowman', 34);
 
-  // 2. The Cryo Spa: brick, crate doors, an ice floor, a mech parked outside
-  ground(37, 72, 16);
-  fill(42, 8, 66, 15, BRICK); fill(44, 10, 64, 15, EMPTY);
-  fill(42, 13, 42, 15, CRATE); fill(43, 13, 43, 15, EMPTY); fill(66, 13, 66, 15, CRATE); fill(65, 13, 65, 15, EMPTY);
-  fill(53, 8, 55, 8, STEEL); fill(44, 16, 64, 16, ICE);
-  bgFill(43, 10, 65, 15, BG_BRICK);
-  sp('mechsuit', 38);
-  sp('target', 45, 10, { skin: 'server' }); sp('target', 59, 10, { skin: 'server' }); sp('alarm', 67);
-  sp('shield', 48, 10); sp('medic', 52, 10); sp('heavy', 56, 10); sp('grunt', 61, 10); sp('cage', 63, 10, { bro: 'galileo' });
-  sp('guru', 50); sp('rocketeer', 62);
-  lamp(47, 9); lamp(54, 9); lamp(61, 9);
-  dc('plaque', 54, { r: 8, text: 'BIOHACK SPA' }); dc('snowman', 69);
-  sp('flag', 70);
+  // 2. The Cryo Tower: three floors with ice windows, a crate door in, ladders up one side and down the other
+  ground(36, 58, 16);
+  fill(38, 3, 54, 15, BRICK); fill(39, 12, 53, 15, EMPTY); fill(39, 8, 53, 10, EMPTY); fill(39, 4, 53, 6, EMPTY);
+  fill(38, 13, 38, 15, CRATE); fill(54, 13, 54, 15, EMPTY);
+  fill(38, 8, 38, 9, ICE); fill(54, 8, 54, 9, ICE); fill(38, 4, 38, 5, ICE); fill(54, 4, 54, 5, ICE); // the windows
+  fill(45, 3, 47, 3, STEEL); fill(42, 11, 42, 15, LADDER); fill(51, 7, 51, 10, LADDER);
+  bgFill(39, 4, 53, 15, BG_BRICK);
+  sp('shield', 45, 12); sp('medic', 48, 12); sp('grunt', 52, 12); sp('alarm', 56);
+  sp('target', 46, 8, { skin: 'server' }); sp('heavy', 40, 8); sp('grunt', 49, 8);
+  sp('cage', 41, 4, { bro: 'galileo' }); sp('pickup', 44, 4, { item: 'intel' }); sp('guru', 48, 4);
+  sp('mechsuit', 57); sp('rocketeer', 58);
+  lamp(44, 11); lamp(50, 11); lamp(43, 7); lamp(49, 7); lamp(47, 3);
+  dc('plaque', 46, { r: 11, text: 'BIOHACK SPA' }); dc('snowman', 36);
+  sp('flag', 58);
 
-  // 3. Frozen chasm: freezing water under a brittle ice bridge, steel piles to hop on
-  ground(73, 75, 16);
-  fill(76, 21, 104, 21, STEEL); fill(76, 17, 104, 20, ACID); fill(76, 16, 104, 16, ICE);
-  for (const c of [79, 83, 87, 91, 95, 99, 103]) fill(c, 17, c, 20, STEEL);
-  sp('grunt', 82); sp('jetpack', 88); sp('shield', 90); sp('dog', 96); sp('jetpack', 98); sp('bomber', 101);
-  dc('sign', 74, { text: 'THIN ICE' }); sp('spring', 75);
+  // 3. Ice floes: freezing water, floes on steel piles to hop across
+  ground(59, 60, 16); ground(89, 92, 16);
+  fill(61, 21, 88, 21, STEEL); fill(61, 17, 88, 20, ACID);
+  for (const a of [61, 67, 73, 79, 85]) { fill(a, 16, a + 3, 16, ICE); fill(a + 1, 17, a + 1, 20, STEEL); } // floes four wide, two-wide gaps
+  sp('spring', 60); sp('grunt', 62); sp('jetpack', 68); sp('shield', 74); sp('dog', 80); sp('bomber', 86); sp('jetpack', 90);
+  dc('sign', 59, { text: 'THIN ICE' });
 
-  // 4. Cliff with a tunnel underneath: icicles hang from the tunnel roof, rocketeers wait on top
-  ground(105, 112, 16); ground(113, 150, 10);
-  fill(112, 10, 112, 15, LADDER); sp('pickup', 137, 13, { item: 'intel' }); sp('itemcrate', 150);
-  fill(113, 13, 150, 15, EMPTY);
-  for (const c of [120, 132, 144]) fill(c, 10, c, 10, STEEL); // bedrock studs hold the tunnel roof up
-  for (const c of [118, 123, 129, 135, 141]) sp('icicle', c, 0, { hang: 12 });
-  sp('grunt', 120, 13); sp('dog', 126, 13); sp('heavy', 133, 13); sp('grunt', 146, 13);
-  sp('strike', 117); sp('sniper', 121); sp('rocketeer', 125); sp('cage', 131, 0, { bro: 'turing' }); sp('grenadier', 138); sp('ammo', 142); sp('rocketeer', 147);
-  dc('pine', 115); dc('pine', 128); dc('pine', 149);
+  // 4. Avalanche ridge: terraces up, a long icicle cave under the crest, terraces down
+  ground(93, 96, 16); ground(97, 100, 14); ground(101, 104, 12); ground(105, 124, 9); ground(125, 128, 12); ground(129, 134, 15);
+  fill(105, 12, 124, 15, EMPTY); bgFill(105, 12, 124, 15, BG_EARTH); fill(104, 12, 104, 15, LADDER); fill(125, 12, 125, 15, LADDER); // ladders down into the cave and up out of it
+  for (const c of [108, 113, 118, 122]) sp('icicle', c, 0, { hang: 11 });
+  sp('target', 115, 12, { skin: 'server' }); sp('grunt', 110, 12); sp('dog', 117, 12); sp('heavy', 120, 12);
+  sp('strike', 99); sp('sniper', 103); sp('rocketeer', 108); sp('pickup', 112, 0, { item: 'intel' }); sp('cage', 116, 0, { bro: 'turing' }); sp('grenadier', 120); sp('rocketeer', 126); sp('ammo', 130);
+  dc('pine', 98); dc('pine', 106); dc('snowman', 114); dc('pine', 123); dc('pine', 132);
 
-  // 5. Snow fort
-  ground(151, 176, 16);
-  fill(160, 10, 161, 15, BRICK); fill(170, 8, 171, 15, BRICK); fill(169, 8, 169, 15, LADDER);
-  sp('pickup', 158, 0, { item: 'intel' }); sp('mine', 157); sp('mine', 164); sp('fueltank', 166); sp('alarm', 154);
-  sp('flag', 152); sp('guncrate', 153); sp('flamer', 155); sp('shield', 156); sp('brute', 163); sp('grunt', 158); sp('turret', 160); sp('grunt', 165); sp('guru', 167); sp('turret', 170); sp('heavy', 174);
-  dc('sandbags', 154); dc('snowman', 163);
-
+  // 5. Snow fort: an igloo to walk through, an ice wall and a brick tower, turrets on top
+  ground(135, 176, 16);
+  fill(140, 12, 145, 15, ICE); fill(141, 13, 144, 15, EMPTY); fill(140, 14, 140, 15, EMPTY); fill(145, 14, 145, 15, EMPTY); fill(140, 13, 140, 13, STEEL); fill(145, 13, 145, 13, STEEL); // the igloo
+  bgFill(141, 13, 144, 15, BG_EARTH);
+  fill(154, 10, 156, 15, ICE); fill(153, 10, 153, 15, LADDER); fill(166, 8, 167, 15, BRICK); fill(165, 8, 165, 15, LADDER);
+  sp('flag', 136); sp('guncrate', 137); sp('alarm', 139); sp('flamer', 143); sp('mine', 148); sp('shield', 150); sp('fueltank', 151); sp('turret', 155); sp('brute', 158);
+  sp('pickup', 160, 0, { item: 'intel' }); sp('grunt', 161); sp('mine', 163); sp('turret', 166); sp('guru', 169); sp('grunt', 171); sp('heavy', 174);
+  dc('sandbags', 147); dc('snowman', 152); dc('pine', 159); dc('sandbags', 170);
   // 6. Tank arena: snow over steel, the extraction pad behind a gate
   fill(177, 16, 223, 17, DIRT); fill(177, 18, 223, 21, STEEL);
   fill(190, 14, 190, 15, BRICK); fill(205, 14, 205, 15, BRICK);
@@ -1580,44 +1592,45 @@ const NEW_LEVELS = [
     debrief: 'The skies are clear. A flight log points to a cave full of healing crystals.',
     objectives: [{ id: 'radio', text: 'Topple the spray towers', need: 3, req: true }, { id: 'boss', text: 'Shoot down the Chemtrail Copter', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Pilot notes: the mist is water. Do not tell the customers.', 'Order form: 500 tin-foil hats, extra shiny.', 'Map: crystals shipped in from the Quartz Caverns.'],
-    build: pieces([['camp', 20, { sign: 'LOOK UP. BUY HATS' }],
-      ['runway', 44, { put: [['minelayer', 6], ['dog', 12], ['target', 16, 0, { skin: 'radio' }], ['shield', 20], ['grunt', 24], ['fueltank', 31], ['jetpack', 33], ['cage', 39], intelAt(41), ['flag', 43]] }],
-      ['wreck', 36, { put: [['diffuser', 9, 12], ['propane', 13, 12], ['medic', 16, 12], ['cage', 20, 12], intelAt(23, 12), ['sniper', 14], ['grenadier', 22], ['heavy', 32], ['flag', 34, 6]] }],
-      ['hangar', 36, { put: [['mechsuit', 0, 6], ['itemcrate', 6, 12], ['target', 12, 6, { skin: 'radio' }], ['shield', 15, 12], ['alarm', 20, 12], ['rocketeer', 24, 6], ['grunt', 28, 6], ['cage', 30, 6], ['flag', 35]] }],
-      ['ctower', 40, { put: [['dog', 4], ['turret', 9], ['miner', 17, 11], ['sniper', 18, 2], intelAt(22, 2), ['bomber', 27], ['target', 30, 0, { skin: 'radio' }], ['strike', 33], ['guru', 35], ['flag', 39]] }]],
-      { kind: 'airstrip', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays tap water. Sells it as fear.', hpMul: 1.4 } }) },
+    build: pieces([['camp', 20, { sign: 'HATS 20 DOLLARS', decor: 'palm' }],
+      ['hangar', 38, { put: [['mechsuit', 4, 12], ['itemcrate', 10, 12], ['target', 14, 12, { skin: 'radio' }], ['shield', 17, 12], ['alarm', 21, 12], ['diffuser', 23, 12], ['rocketeer', 26, 6], ['grunt', 30, 6], ['cage', 33, 6], ['flag', 37]] }],
+      ['runway', 46, { jets: [12, 30], put: [['minelayer', 4], ['dog', 8], ['target', 20, 0, { skin: 'radio' }], ['shield', 23], ['grunt', 26], ['jetpack', 29], ['fueltank', 39], ['cage', 42], intelAt(44), ['flag', 45]] }],
+      ['radar', 34, { put: [['dog', 3], ['turret', 7, 7], intelAt(8, 7), ['miner', 9, 13], ['target', 14, 7, { skin: 'radio' }], ['sniper', 20, 7], ['bomber', 24], ['strike', 27], ['guru', 30], ['flag', 33]] }],
+      ['wreck', 38, { put: [['propane', 12, 12], ['medic', 15, 12], ['cage', 19, 12], intelAt(24, 12), ['sniper', 13], ['grenadier', 21], ['heavy', 33], ['flag', 36, 6]] }]],
+      { kind: 'airstrip', boss: 'kopter', extra: { name: 'CHEMTRAIL COPTER', sub: 'Sprays tap water. Sells it as fear.', hpMul: 1.4 } },
+      (H) => { H.dc('sign', 57, { text: 'RUNWAY 2' }); H.dc('sign', 104, { text: 'RADAR' }); for (const c of [62, 101, 140]) H.dc('sandbags', c); }) },
   { name: 'QUARTZ CAVERNS', sub: 'Smash the charging vats, kill the Quartz Queen', theme: 'cave', cages: 3, pad: [230, 12],
     brief: 'Deep under the mountains the League charges crystals to sell as medicine. Smash the three crystal-charging vats and kill the Quartz Queen, a crawler grown in the dark. Stalactites fall when you walk under them, and the old plank bridge is rotten: the mine cart is safer.',
     debrief: 'The caverns are quiet. The crystal invoices were paid by a marsh company that sells bad air.',
     objectives: [{ id: 'vat', text: 'Smash the charging vats', need: 3, req: true }, { id: 'boss', text: 'Kill the Quartz Queen', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Label: crystal, charged by moonlight, 400 dollars. Moonlight extra.', 'Lab note: the crystals do nothing. Price goes up.', 'Invoice: paid by Miasma Holdings, Marsh Road.'],
-    build: pieces([['camp', 20, { sign: 'CRYSTALS HEAL', decor: 'crystal', ceil: 6 }],
-      ['tunnels', 40, { rooms: [[10, 17, 9]], drips: [5, 21, 28, 35], lamps: [12, 26], put: [['detox', 6], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['cage', 16], ['shield', 24], ['sniper', 30], intelAt(33), ['flag', 38]] }],
-      ['shaft', 40, { put: [['streamer', 3, 12], ['heavy', 9, 3], ['cage', 13, 3], intelAt(23, 3), ['rocketeer', 27, 3], ['grunt', 36, 12], ['flag', 38, 12]] }],
-      ['chasm', 36, { ceil: 5, put: [['jetpack', 2, 6], ['jumper', 8, 6], ['camdrone', 14, 6], ['grunt', 20, 6], ['target', 33, 6, { skin: 'vat' }], ['flag', 35, 6]] }],
-      ['geode', 40, { put: [['brute', 4, 8], ['target', 9, 8, { skin: 'vat' }], ['preacher', 14, 8], ['cage', 20, 8], ['guru', 24, 8], intelAt(28, 8), ['flamer', 31, 8], ['itemcrate', 34, 8], ['flag', 39, 8]] }]],
+    build: pieces([['camp', 20, { sign: 'GOOD VIBES ONLY', decor: 'crystal', ceil: 6 }],
+      ['icecave', 36, { put: [['detox', 6, 6], ['dog', 10, 6], ['target', 14, 6, { skin: 'vat' }], ['cage', 18, 6], ['shield', 24, 6], intelAt(28, 6), ['sniper', 32, 6], ['flag', 35, 6]] }],
+      ['chasm', 40, { ceil: 5, put: [['jetpack', 2, 6], ['jumper', 8, 6], ['camdrone', 13, 6], ['grunt', 26, 6], ['target', 33, 6, { skin: 'vat' }], ['cage', 36, 6], ['flag', 38, 6]] }],
+      ['mine', 40, { put: [['streamer', 4, 9], ['heavy', 9, 9], ['cage', 14, 9], intelAt(26, 9), ['rocketeer', 29, 9], ['grunt', 33, 9], ['flag', 38, 9]] }],
+      ['tunnels', 40, { floors: [16, 16, 15, 14, 14, 15, 17, 18, 18, 17, 16, 16], rooms: [[18, 25, 8]], drips: [6, 14, 22, 30, 36], lamps: [10, 28], put: [['brute', 5], ['preacher', 12], ['target', 20, 0, { skin: 'vat' }], ['guru', 24], intelAt(31), ['flamer', 33], ['itemcrate', 35], ['flag', 39]] }]],
       { kind: 'cavern', boss: 'crawler', extra: { name: 'QUARTZ QUEEN', sub: 'Grown in the dark on good vibes.', hpMul: 1.3 } },
-      (H) => { for (let c = 3; c < 232; c += 9) H.dc('crystal', c, { from: openRow(c) }); }) }, // glowing crystals light the way
+      (H) => { for (let c = 6; c < 232; c += 11) H.dc('crystal', c, { from: openRow(c) }); }) }, // glowing crystals light the way
   { name: 'MIASMA MARSH', sub: 'Wipe the servers, stop the Miasma Machine', theme: 'swamp', cages: 3, pad: [231, 16],
     brief: 'Miasma Holdings says illness comes from bad air, yells it on its own news channel all day, and sells air filters full of nothing. Wipe their two research servers and stop the Miasma Machine before it fogs the whole coast. The boardwalks are rotten in places, and the bog gas vents will throw you sky high.',
     debrief: 'The fog is lifting. Their best customer was an observatory that sells horoscopes.',
     objectives: [{ id: 'server', text: 'Wipe the research servers', need: 2, req: true }, { id: 'boss', text: 'Stop the Miasma Machine', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Brochure: germs are a myth. Breathe our premium air.', 'Newsroom memo: every headline in CAPITALS. Facts in small print, if at all.', 'Receipt: 10,000 air filters to the Zodiac Observatory.'],
-    build: pieces([['camp', 20, { sign: 'BAD AIR CAUSES ALL', decor: 'pine' }],
-      ['geysers', 36, { col: '#a6d854', vents: [[6, 8], [19, 8], [30, 7]], ledges: [[8, 13, 8], [21, 26, 8], [32, 35, 9]], put: [['shield', 3], ['target', 10, 0, { skin: 'server' }], ['grenadier', 14], ['flamer', 16], ['mortar', 24], ['fueltank', 27], intelAt(33), ['flag', 34, 10]] }],
-      ['mill', 40, { put: [['target', 10, 12, { skin: 'server' }], ['diffuser', 14, 12], ['preacher', 16], ['medic', 18, 6], ['heavy', 20, 12], ['cage', 24, 6], ['sniper', 28, 6], ['alarm', 30, 12], ['flag', 39]] }],
-      ['boardwalk', 44, { rot: [[9, 14], [25, 29]], huts: [18, 34], put: [['minelayer', 5], ['dog', 12], ['cage', 20, 10], ['bomber', 26], ['grunt', 31], intelAt(36, 10), ['flag', 42]] }],
-      ['trench', 36, { put: [['miner', 5], ['rocketeer', 8], ['mine', 10], ['cage', 13], ['guru', 17], ['grunt', 21], ['mortar', 25], intelAt(29), ['itemcrate', 31], ['flag', 34]] }]],
+    build: pieces([['camp', 20, { sign: 'BREATHE OUR AIR', decor: 'pine' }],
+      ['geysers', 36, { col: '#a6d854', vents: [[5, 8], [16, 7], [28, 8]], ledges: [[3, 8, 8], [17, 22, 9], [29, 34, 8]], pits: [[10, 12], [23, 25]], put: [['shield', 4], ['target', 13, 0, { skin: 'server' }], ['grenadier', 14], ['flamer', 19, 10], ['mortar', 26], ['fueltank', 30], intelAt(31), ['flag', 35, 10]] }],
+      ['mill', 40, { put: [['target', 26, 12, { skin: 'server' }], ['diffuser', 12, 12], ['preacher', 17], ['medic', 22, 6], ['heavy', 16, 12], ['cage', 12, 6], ['sniper', 30, 6], ['alarm', 33, 12], ['flag', 39]] }],
+      ['boardwalk', 44, { rot: [[6, 10], [22, 27]], huts: [12, 30], put: [['minelayer', 4], ['dog', 18], ['cage', 32, 10], ['bomber', 20], ['grunt', 28], intelAt(13, 10), ['flag', 42]] }],
+      ['trench', 36, { put: [['rocketeer', 7], ['miner', 9], ['guru', 13], ['mine', 16], ['cage', 21], ['grunt', 24], ['itemcrate', 26], ['mortar', 30], intelAt(33), ['flag', 34]] }]],
       { kind: 'bridge', boss: 'tank', extra: { name: 'MIASMA MACHINE', sub: 'Pumps out bad air and worse headlines.', hpMul: 1.2 } }) },
   { name: 'ZODIAC OBSERVATORY', sub: 'Knock down the horoscope dishes, scrap the Zodiac Mech', theme: 'astro', cages: 3, pad: [231, 16],
     brief: 'The Zodiac Observatory points its dishes at the stars to sell horoscopes, and now an AI writes them: the same nonsense, only faster. Knock down its three dishes and scrap the Zodiac Mech under the great dome. Their astral fields cancel gravity: jump in one and you float.',
     debrief: 'No more horoscopes. The dish money went to a factory that sells perpetual motion machines.',
     objectives: [{ id: 'radio', text: 'Knock down the horoscope dishes', need: 3, req: true }, { id: 'boss', text: 'Scrap the Zodiac Mech', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Horoscope for Leo: avoid scientists today.', 'AI log: asked for evidence. Wrote a very confident poem instead.', 'Bank note: profits sent to the Perpetual Motion Works.'],
-    build: pieces([['camp', 20, { sign: 'YOUR STARS SAY RUN', decor: 'pine' }],
-      ['switchback', 40, { put: [['detox', 6], ['sniper', 15], ['target', 20, 0, { skin: 'radio' }], ['rocketeer', 24], intelAt(29), ['jetpack', 33], ['flag', 38]] }],
-      ['dishes', 36, { put: [['pilldoc', 12, 12], ['target', 14, 0, { skin: 'radio' }], ['cage', 18, 12], ['sniper', 20], intelAt(24, 12), ['mortar', 25], ['dog', 31], ['flag', 34]] }],
-      ['dome', 40, { put: [['yogi', 5, 4], ['heavy', 12, 4], ['cage', 16, 4], ['guru', 22, 4], ['target', 25, 6, { skin: 'radio' }], ['medic', 30, 4], ['flag', 39]] }],
+    build: pieces([['camp', 20, { sign: 'ASK THE STARS', decor: 'pine' }],
+      ['switchback', 40, { steps: [16, 14, 13, 11, 9, 8, 9, 11, 14, 16], put: [['detox', 5], intelAt(13), ['sniper', 17], ['target', 22, 0, { skin: 'radio' }], ['rocketeer', 27], ['jetpack', 31], ['flag', 38]] }],
+      ['dishes', 36, { put: [intelAt(13, 12), ['pilldoc', 15, 12], ['target', 18, 0, { skin: 'radio' }], ['mortar', 20], ['cage', 22, 12], ['sniper', 24], ['dog', 30], ['flag', 34]] }],
+      ['dome', 40, { decks: [[6, 9, 10], [16, 19, 8], [25, 28, 11]], put: [['yogi', 4, 4], ['heavy', 11, 4], ['cage', 17, 4], ['guru', 21, 4], ['target', 26, 6, { skin: 'radio' }], ['medic', 31, 4], ['flag', 39]] }],
       ['ridge', 40, { put: [['pinboard', 3], ['shield', 9], ['jetpack', 18], intelAt(20), ['camdrone', 26], ['brute', 28], ['cage', 30], ['grenadier', 34], ['strike', 36], ['flag', 39]] }]],
       { kind: 'dome', boss: 'boss', extra: { name: 'ZODIAC MECH', sub: 'It is a Leo. It is angry.', hpMul: 1.5 } }) },
   { name: 'PERPETUAL MOTION WORKS', sub: 'Smash the demo engines, stop the Pitchman', theme: 'rust', cages: 3, pad: [231, 16],
@@ -1625,12 +1638,13 @@ const NEW_LEVELS = [
     debrief: 'The show is cancelled. The investors were all League members. They have scattered to hideouts all along the road to the Citrus Citadel.',
     objectives: [{ id: 'vat', text: 'Smash the demo engines', need: 3, req: true }, { id: 'boss', text: 'Stop the Pitchman', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Sales script: it runs forever. Do not ask about the plug.', 'Pitch deck, slide 40: we are disrupting thermodynamics.', 'Guest list: King Citrus, front row. Paid in oranges.'],
-    build: pieces([['camp', 20, { sign: 'FREE ENERGY FOREVER' }],
-      ['assembly', 40, { roof: true, put: [['flagbearer', 8, 12], ['barrel', 12, 12], ['target', 16, 5, { skin: 'vat' }], ['shield', 21, 12], ['heavy', 28, 5], ['cage', 31, 5], ['grunt', 33, 12], ['flag', 39, 5]] }],
-      ['foundry', 36, { put: [['flamer', 4], ['streamer', 10], ['target', 13, 0, { skin: 'vat' }], ['rocketeer', 20], intelAt(25), ['medic', 31], ['flag', 34]] }],
-      ['crane', 40, { put: [['jumper', 6, 6], ['cage', 14, 8], intelAt(12, 6), ['jetpack', 15, 6], ['target', 18, 6, { skin: 'vat' }], ['heavy', 22, 6], ['mortar', 30, 6], ['flag', 38, 6]] }],
+    build: pieces([['camp', 20, { sign: 'NO PLUG NEEDED' }],
+      ['assembly', 40, { roof: true, belts: [[2, 13, 16, 1], [26, 37, 16, -1], [6, 32, 11, -1]], put: [['flagbearer', 10, 12], ['heavy', 12, 5], ['barrel', 14, 12], ['shield', 22, 12], ['target', 24, 5, { skin: 'vat' }], ['cage', 29, 5], ['grunt', 34, 12], ['flag', 39, 5]] }],
+      ['foundry', 36, { put: [['flamer', 3], ['streamer', 9], intelAt(10), ['rocketeer', 15], ['target', 22, 0, { skin: 'vat' }], ['medic', 32], ['flag', 34]] }],
+      ['crane', 40, { put: [['jumper', 8, 6], intelAt(12, 6), ['cage', 14, 8], ['jetpack', 15, 6], ['target', 18, 6, { skin: 'vat' }], ['heavy', 22, 6], ['mortar', 28, 6], ['flag', 38, 6]] }],
       ['warehouse', 40, { put: [['mechsuit', 1, 13], ['cage', 4, 7], ['brute', 9, 13], ['preacher', 18], ['guru', 24], intelAt(28, 7), ['heavy', 34], ['flag', 39]] }]],
-      { kind: 'crane', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Pre-orders only. No refunds.', hpMul: 1.3 } }) },
+      { kind: 'crane', boss: 'director', extra: { name: 'THE PITCHMAN', sub: 'Free energy! Pre-orders only. No refunds.', hpMul: 1.3 } },
+      (H) => { H.fill(13, 14, 14, 15, BRICK); H.fill(17, 13, 18, 15, BRICK); H.fill(17, 12, 17, 12, CRATE); H.fill(96, 14, 97, 15, BRICK); }) }, // container stacks at the camp and by the crane yard
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...NEW_LEVELS); // they come before the Citrus Citadel, which stays the finale
 const MORE_LEVELS = [
@@ -1639,32 +1653,32 @@ const MORE_LEVELS = [
     debrief: 'The aliens were plywood. The ticket money went to a pyramid in the desert that claims to make free power.',
     objectives: [{ id: 'radio', text: 'Topple the beacon masts', need: 3, req: true }, { id: 'boss', text: 'Pop the UFO Hoax Balloon', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Flyer: SEE REAL ALIENS. Children half price. Aliens full price.', 'Shopping list: rope, planks, 400 glow sticks, one balloon.', 'Bank transfer: profits to Pyramid Power Ltd.'],
-    build: pieces([['camp', 20, { sign: 'THEY ARE HERE', decor: 'scarecrow' }],
-      ['field', 40, { put: [['sapper', 4], ['dog', 9], ['target', 15, 0, { skin: 'radio' }], ['scout', 20], ['shield', 27], ['cage', 29], ['grenadier', 33], intelAt(36), ['flag', 39]] }],
+    build: pieces([['camp', 20, { sign: 'ALIENS 30 DOLLARS', decor: 'scarecrow' }],
+      ['field', 40, { fences: [4, 16, 34], bales: [10, 26], crows: [8, 22, 31], put: [['sapper', 6], ['dog', 12], intelAt(14), ['target', 19, 0, { skin: 'radio' }], ['scout', 23], ['shield', 29], ['cage', 31], ['grenadier', 37], ['flag', 39]] }],
       ['silos', 40, { put: [['yogi', 9], ['cage', 13], ['target', 16, 0, { skin: 'radio' }], ['camdrone', 18], ['rocketeer', 22], intelAt(29, 6), ['heavy', 32], ['flag', 38]] }],
       ['barn', 36, { put: [['cage', 4, 6], ['pinboard', 8, 6], ['medic', 14, 11], ['preacher', 20, 11], ['itemcrate', 22, 11], ['shield', 26, 6], ['flag', 35]] }],
-      ['maze', 40, { put: [['guncrate', 2], ['dronecaller', 9], ['dog', 16], ['target', 23, 0, { skin: 'radio' }], ['brute', 25], intelAt(31), ['mortar', 38], ['flag', 39]] }]],
+      ['maze', 40, { walls: [[4, 10, 0], [11, 9, 1], [18, 11, 0], [26, 8, 1], [33, 10, 0]], put: [['guncrate', 1], ['dronecaller', 8], ['dog', 15], ['target', 22, 0, { skin: 'radio' }], ['brute', 24], intelAt(30), ['mortar', 37], ['flag', 39]] }]],
       { kind: 'towers', boss: 'blimp', extra: { name: 'UFO HOAX BALLOON', sub: 'Lit from inside. Full of hot air.', hpMul: 1.1 } }) },
   { name: 'PYRAMID POWER PLANT', sub: 'Smash the pyramid batteries, kill the Sand Scarab', theme: 'desert', cages: 3, pad: [230, 12],
     brief: 'The League says a pyramid shape gathers free energy, and that if you recruit two friends you will get rich. Both are pyramid schemes. Smash the three pyramid batteries and kill the Sand Scarab that guards the vault. A sandstorm blows across the dunes, and the tomb floors are trapped.',
     debrief: 'The batteries were car batteries. The power bill was paid by a hot spring spa up in the mountains.',
     objectives: [{ id: 'vat', text: 'Smash the pyramid batteries', need: 3, req: true }, { id: 'boss', text: 'Kill the Sand Scarab', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Recruiting chart: you, two friends, four friends... and a yacht at the top.', 'Engineer note: unplug the diesel before the tour comes.', 'Invoice: power bill sent to Hot Springs Wellness.'],
-    build: pieces([['camp', 20, { sign: 'RECRUIT 2 FRIENDS', decor: 'cactus' }],
-      ['dunes', 40, { put: [['alpha', 5], ['dog', 9], ['target', 13, 0, { skin: 'vat' }], ['flamer', 18], ['shield', 23], ['cage', 27], ['bomber', 31], intelAt(35), ['flag', 39]] }],
+    build: pieces([['camp', 20, { sign: 'BE YOUR OWN PHARAOH', decor: 'cactus' }],
+      ['dunes', 40, { waves: 2, cacti: [7, 20, 33], put: [['alpha', 6], ['dog', 10], ['target', 15, 0, { skin: 'vat' }], ['flamer', 19], ['shield', 24], ['cage', 29], ['bomber', 32], intelAt(36), ['flag', 39]] }],
       ['pyramid', 48, { put: [intelAt(8, 13), ['knight', 10, 13], ['heavy', 16, 13], ['cage', 21, 8], ['target', 23, 8, { skin: 'vat' }], ['sniper', 24], ['rocketeer', 30], ['guru', 33, 13], ['flag', 46]] }],
       ['ruins', 32, { put: [['preacher', 6], ['target', 10, 0, { skin: 'vat' }], ['dronecaller', 13], ['brute', 23], ['jetpack', 27], ['flag', 31]] }],
-      ['trench', 36, { put: [['pilldoc', 5], ['mortar', 9], ['cage', 13], ['grenadier', 17], ['strike', 20], ['heavy', 25], ['alarm', 26], intelAt(29), ['flag', 34]] }]],
+      ['trench', 36, { put: [['pilldoc', 6], ['mortar', 10], ['cage', 14], ['grenadier', 18], ['strike', 21], ['heavy', 24], ['alarm', 26], intelAt(30), ['flag', 34]] }]],
       { kind: 'sand', boss: 'crawler', extra: { name: 'SAND SCARAB', sub: 'It rolls dung. It rolls you.', hpMul: 1.2 } }) },
   { name: 'HOMEOPATHIC HOT SPRINGS', sub: 'Wipe the booking servers, scrap the Steam Tank', theme: 'snow', cages: 3, pad: [231, 16],
     brief: 'A mountain spa where the water is said to remember medicine it once touched. It is also sold raw: no filter, no treatment, bonus wildlife. Wipe their two booking servers and scrap the Steam Tank that guards the springs. The geysers throw you up to the terraces; the pools will boil you.',
     debrief: 'The guest list holds the whole League leadership, booked into a lighthouse on the ley lines.',
     objectives: [{ id: 'server', text: 'Wipe the booking servers', need: 2, req: true }, { id: 'boss', text: 'Scrap the Steam Tank', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Price list: water that remembers aspirin, 80 dollars a bath.', 'Memo: the water also remembers the sewer. Do not mention it.', 'Booking: League board meeting, Ley Line Lighthouse.'],
-    build: pieces([['camp', 20, { sign: 'WATER REMEMBERS', decor: 'pine' }],
-      ['slope', 36, { put: [['sapper', 5], ['sniper', 13], ['dog', 20], ['shield', 25], ['target', 32, 0, { skin: 'server' }], ['flag', 35]] }],
+    build: pieces([['camp', 20, { sign: 'WATER WITH MEMORY', decor: 'pine' }],
+      ['slope', 36, { peak: 11, put: [['sapper', 4], ['sniper', 11], ['dog', 19], ['shield', 24], ['target', 31, 0, { skin: 'server' }], ['flag', 35]] }],
       ['hotel', 40, { put: [['knight', 8, 12], ['sniper', 8, 4], ['cage', 10, 8], ['heavy', 24, 12], ['target', 26, 4, { skin: 'server' }], ['medic', 30, 8], intelAt(32, 4), ['alarm', 34, 12], ['flag', 39]] }],
-      ['pools', 44, { put: [['jumper', 7], ['target', 13, 0, { skin: 'server' }], ['medic', 14, 9], ['jetpack', 20], ['cage', 27], ['grenadier', 27, 9], ['camdrone', 30], intelAt(34), ['flag', 42]] }],
+      ['pools', 44, { pools: [[2, 6], [15, 20], [33, 38]], terraces: [[9, 13, 12], [24, 30, 13]], vents: [[8, 8], [22, 8], [40, 7]], ledges: [[9, 13, 8], [24, 30, 8]], put: [['jumper', 7], ['target', 11, 0, { skin: 'server' }], ['medic', 12, 9], ['jetpack', 21], ['cage', 27], ['grenadier', 28, 9], ['camdrone', 31], intelAt(39), ['flag', 42]] }],
       ['cliff', 36, { icicles: true, put: [['alpha', 8, 13], ['rocketeer', 16], ['preacher', 22, 13], ['cage', 28, 13], intelAt(31, 13), ['mortar', 33], ['flag', 35]] }]],
       { kind: 'vents', boss: 'tank', extra: { name: 'STEAM TANK', sub: 'Runs on hot water and bad ideas.', hpMul: 1.3 } }) },
   { name: 'LEY LINE LIGHTHOUSE', sub: 'Knock down the antennas, shoot down the Astral Kopter', theme: 'edge', cages: 3, pad: [231, 11],
@@ -1672,11 +1686,11 @@ const MORE_LEVELS = [
     debrief: 'The pilot talked. The League money runs through a water works under the city, where they bottle "structured water".',
     objectives: [{ id: 'radio', text: 'Knock down the ley-line antennas', need: 3, req: true }, { id: 'boss', text: 'Shoot down the Astral Kopter', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Map: ley lines drawn with a ruler, mostly along motorways.', 'Summit swag: tote bag, lanyard, crystal, and a pen that does not write.', 'Ledger: lighthouse donations paid into the Structured Water Works.'],
-    build: pieces([['camp', 20, { sign: 'STARE AT THE LAMP' }],
-      ['cliffs', 36, { put: [['minelayer', 6], ['rocketeer', 12], ['sniper', 18], ['target', 21, 0, { skin: 'radio' }], ['jetpack', 26], ['flag', 35]] }],
+    build: pieces([['camp', 20, { sign: 'FEEL THE LEY LINES' }],
+      ['cliffs', 36, { steps: [16, 15, 13, 12, 10, 9, 9, 10, 11, 12, 13, 15, 16], put: [['minelayer', 5], ['rocketeer', 13], ['sniper', 17], ['target', 23, 0, { skin: 'radio' }], ['jetpack', 28], ['flag', 35]] }],
       ['lighthouse', 40, { put: [['target', 5, 0, { skin: 'radio' }], ['grunt', 9], ['sniper', 15], ['cage', 19, 8], intelAt(21, 3), ['heavy', 22, 12], ['grenadier', 30], ['mortar', 34], ['flag', 39]] }],
-      ['piers', 40, { put: [['knight', 5], ['dog', 10], ['shield', 13], ['cage', 19, 13], ['target', 24, 0, { skin: 'radio' }], ['bomber', 30], ['grunt', 33], intelAt(37), ['flag', 39]] }],
-      ['stones', 40, { put: [['guru', 9], ['strike', 11], ['brute', 13], ['camdrone', 20], intelAt(23), ['preacher', 25], ['cage', 27], ['flamer', 34], ['flag', 39]] }]],
+      ['piers', 40, { rot: [[5, 8], [30, 33]], boat: 18, put: [['knight', 3], ['dog', 11], ['shield', 14], intelAt(16), ['cage', 22, 13], ['grunt', 26], ['target', 28, 0, { skin: 'radio' }], ['bomber', 35], ['flag', 39]] }],
+      ['stones', 40, { at: [6, 19, 31], put: [['guru', 12], ['strike', 14], ['brute', 16], intelAt(20), ['camdrone', 24], ['preacher', 26], ['cage', 28], ['flamer', 36], ['flag', 39]] }]],
       { kind: 'headland', boss: 'kopter', extra: { name: 'ASTRAL KOPTER', sub: 'Steered by crystals and vibes.', hpMul: 1.6 } }) },
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...MORE_LEVELS); // still before the Citrus Citadel
@@ -1687,33 +1701,33 @@ const LAST_LEVELS = [
     debrief: 'The tanks are drained. The bottles were trucked to a wellness district downtown, where an influencer sells them on giant billboards.',
     objectives: [{ id: 'vat', text: 'Smash the vortex tanks', need: 3, req: true }, { id: 'boss', text: 'Kill the Sludge Serpent', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Label: structured water. Ingredients: water. Structure: also water.', 'Engineer log: the vortex tank is a washing machine with no label.', 'Delivery note: 50,000 bottles to the Neon Wellness District.'],
-    build: pieces([['camp', 20, { sign: 'STRUCTURED WATER', ceil: 8 }],
-      ['sluice', 40, { put: [['pilldoc', 6, 12], ['dog', 11, 12], ['target', 18, 12, { skin: 'vat' }], ['shield', 24, 12], ['cage', 29, 12], ['grenadier', 33, 12], intelAt(36, 12), ['flag', 39, 12]] }],
+    build: pieces([['camp', 20, { sign: 'NOW WITH STRUCTURE', ceil: 8 }],
+      ['sluice', 40, { chan: [[3, 11], [18, 29]], drips: [8, 16, 24, 33], put: [['pilldoc', 5, 12], ['dog', 14, 12], ['target', 16, 12, { skin: 'vat' }], ['shield', 26, 12], ['cage', 32, 12], ['grenadier', 35, 12], intelAt(37, 12), ['flag', 39, 12]] }],
       ['assembly', 36, { roof: true, ceil: 3, put: [['pinboard', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'vat' }], ['heavy', 22, 5], ['cage', 25, 5], ['medic', 30, 12], ['flag', 35, 12]] }],
       ['cistern', 44, { put: [['sapper', 14, 4], ['rocketeer', 22, 4], ['target', 28, 4, { skin: 'vat' }], intelAt(31, 4), ['cage', 33, 4], ['flag', 42, 5]] }],
-      ['pumphall', 36, { put: [['yogi', 6, 13], ['target', 10, 4, { skin: 'vat' }], ['cage', 16, 4], ['flamer', 20, 13], ['sniper', 24, 4], ['guru', 28, 9], intelAt(30, 4), ['flag', 35, 4]] }]],
+      ['pumphall', 36, { put: [['yogi', 7, 13], ['target', 12, 4, { skin: 'vat' }], ['cage', 15, 4], ['flamer', 21, 13], ['sniper', 25, 4], ['guru', 28, 9], intelAt(31, 4), ['flag', 35, 4]] }]],
       { kind: 'cavern', boss: 'crawler', extra: { name: 'SLUDGE SERPENT', sub: 'Lives in the sump. Drinks the product.', hpMul: 1.4 } }) },
   { name: 'NEON WELLNESS DISTRICT', sub: 'Topple the billboard masts, cancel The Influencer', theme: 'city', cages: 3, pad: [231, 16],
     brief: 'Downtown, the League\'s best salesman films himself selling cures to millions, between ads for himself. Climb the block, cross the rooftops and topple the three masts that beam his sponsored posts onto the billboards. Then cancel The Influencer: shoot out his studio lights first. The gondolas are the quick way across.',
     debrief: 'The Influencer is offline. His sponsor deals all lead to the orange groves that feed the Citrus Citadel.',
     objectives: [{ id: 'radio', text: 'Topple the billboard masts', need: 3, req: true }, { id: 'boss', text: 'Cancel The Influencer', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Comment section: 4,000 replies. Sources cited: zero. Capital letters: all.', 'Contract: ten percent of every sale to K.C. Paid in oranges.', 'Shipping label: juice pipeline, Orange Groves, for the Citadel.'],
-    build: pieces([['camp', 20, { sign: 'LINK IN BIO' }],
-      ['facade', 36, { put: [['flagbearer', 4], ['shield', 9], ['target', 14, 0, { skin: 'radio' }], ['sniper', 20], ['cage', 25], intelAt(30), ['flag', 33]] }],
-      ['rooftops', 44, { put: [['knight', 4], ['cage', 9, 9], ['rocketeer', 14], intelAt(19, 9), ['target', 24, 0, { skin: 'radio' }], ['jetpack', 26], ['heavy', 34], ['camdrone', 38], ['flag', 41]] }],
+    build: pieces([['camp', 20, { sign: 'SMASH THAT BUTTON' }],
+      ['facade', 36, { top: 7, put: [['flagbearer', 3], ['shield', 10], ['target', 15, 0, { skin: 'radio' }], ['sniper', 21], ['cage', 26], intelAt(31), ['flag', 33]] }],
+      ['rooftops', 44, { roofs: [[0, 9, 7], [12, 19, 5], [22, 29, 8], [32, 43, 6]], put: [['knight', 4], ['cage', 10], ['rocketeer', 15], intelAt(20), ['target', 25, 0, { skin: 'radio' }], ['jetpack', 27], ['heavy', 35], ['camdrone', 39], ['flag', 41]] }],
       ['gondola', 36, { put: [['alpha', 3], ['dog', 15, 7], ['grenadier', 20, 7], ['sniper', 32], ['flag', 34]] }],
-      ['billboard', 40, { put: [intelAt(4, 10), ['medic', 9, 13], ['preacher', 12, 7], ['target', 20, 10, { skin: 'radio' }], ['guru', 22, 7], ['brute', 26, 13], ['cage', 30, 10], ['mortar', 34, 13], ['flag', 39, 13]] }]],
+      ['billboard', 40, { text: 'BUY MY PILLS', put: [intelAt(4, 10), ['medic', 9, 13], ['preacher', 12, 7], ['target', 20, 10, { skin: 'radio' }], ['guru', 22, 7], ['brute', 26, 13], ['cage', 30, 10], ['mortar', 34, 13], ['flag', 39, 13]] }]],
       { kind: 'rooftop', boss: 'director', extra: { name: 'THE INFLUENCER', sub: 'Ten million followers. Zero sources.', hpMul: 1.4 } }) },
   { name: 'JUICE PIPELINE', sub: 'Wipe the shipping servers, scrap the Zestinator', theme: 'grove', cages: 3, pad: [231, 16],
     brief: 'The Citrus Citadel drinks from one pipeline that runs out of the orange groves. Wipe the two shipping servers that plan the megadose deliveries, run the pipeline over the juice canyon and scrap the Zestinator, the walking juicer that guards the last bridge. The pressure valves blow; ride them.',
     debrief: 'The pipeline is dry and the last bridge is ours. Nothing stands between the bros and the Citrus Citadel.',
     objectives: [{ id: 'server', text: 'Wipe the shipping servers', need: 2, req: true }, { id: 'boss', text: 'Scrap the Zestinator', req: true }, { id: 'cage', text: 'Free the scientists', need: 3 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
     intel: ['Orchard memo: pick them, juice them, call it medicine.', 'Delivery plan: 900 tonnes of vitamin C a day. Kidneys: not consulted.', 'Guard rota: the Zestinator holds the bridge. The King holds a grudge.'],
-    build: pieces([['camp', 20, { sign: 'AN ORANGE AN HOUR', decor: 'orange' }],
-      ['grove', 40, { put: [['flagbearer', 5], ['dog', 8], ['shield', 15], ['target', 18, 0, { skin: 'server' }], ['grenadier', 23], ['cage', 31], ['bomber', 34], intelAt(36), ['flag', 39]] }],
+    build: pieces([['camp', 20, { sign: 'PULP IS MEDICINE', decor: 'orange' }],
+      ['grove', 40, { steps: [16, 16, 15, 14, 13, 13, 14, 15, 16, 15, 14, 16], stacks: [6, 22], put: [['flagbearer', 4], ['dog', 9], ['shield', 13], ['target', 17, 0, { skin: 'server' }], ['grenadier', 25], ['cage', 30], ['bomber', 33], intelAt(36), ['flag', 39]] }],
       ['assembly', 36, { roof: true, put: [['dronecaller', 8, 12], ['barrel', 10, 12], ['target', 16, 5, { skin: 'server' }], ['heavy', 22, 5], ['cage', 25, 5], ['flamer', 30, 12], ['flag', 35, 12]] }],
       ['pipeline', 40, { put: [['sapper', 8], ['sniper', 16], ['jetpack', 22], ['rocketeer', 28], intelAt(31), ['flag', 38]] }],
-      ['depot', 40, { put: [['knight', 8, 6], intelAt(10), ['heavy', 21, 6], ['target', 22, 0, { skin: 'server' }], ['brute', 27, 6], ['cage', 33, 6], ['mortar', 35, 6], ['flag', 39, 6]] }]],
+      ['depot', 40, { put: [['knight', 9, 6], intelAt(12), ['heavy', 20, 6], ['target', 23, 0, { skin: 'server' }], ['brute', 28, 6], ['cage', 34, 6], ['mortar', 36, 6], ['flag', 39, 6]] }]],
       { kind: 'bridge', boss: 'boss', extra: { name: 'THE ZESTINATOR', sub: 'Peels steel. Squeezes bros.', hpMul: 1.6 } }) },
 ];
 LEVELS.splice(LEVELS.length - 1, 0, ...LAST_LEVELS); // and the Citadel is still the finale

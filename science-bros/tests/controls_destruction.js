@@ -29,8 +29,8 @@ check('a bullet passes through a rolling bro', S.P.alive);
 run(40); check('dash has a cooldown', S.P.dcool <= 0);
 
 // wall jump: jump while touching a wall kicks you away from it
-lone(); S.P.inv = 1e9; S.P.x = 106 * T - 10.6; S.P.y = 14 * T; S.P.vy = 0; run(1);
-S.P.x = 106 * T - 10.6; S.P.vy = 30; S.pressed.jump = true; run(1);
+lone(); S.P.inv = 1e9; S.P.x = 91 * T - 10.6; S.P.y = 14 * T; S.P.vy = 0; run(1); // the Remedy Lab's crate door
+S.P.x = 91 * T - 10.6; S.P.vy = 30; S.pressed.jump = true; run(1);
 check('wall jump kicks away from the wall', S.P.vx < -150 && S.P.vy < -200, 'vx ' + S.P.vx.toFixed(0) + ' vy ' + S.P.vy.toFixed(0));
 
 // ground pound: slam from the air breaks the floor and digs through soft blocks
@@ -47,18 +47,18 @@ check('ground pound throws nearby quacks', g.dead || g.vy < 0 || g.kx !== 0);
 lone(); S.P.x = 2 * T; S.P.inv = 1e9;
 S.explode(12 * T, 16 * T, 34, 6, 'p', 4);
 check('blast throws block lumps', S.bodies.some((b) => b.kind === 'block'));
-let wall0 = 0; for (let c = 54; c <= 56; c++) for (let r = 13; r <= 15; r++) wall0 += S.bgAt(c, r) ? 1 : 0;
-S.explode(55 * T + 8, 14 * T + 8, 34, 6, 'p', 4);
-let wall1 = 0; for (let c = 54; c <= 56; c++) for (let r = 13; r <= 15; r++) wall1 += S.bgAt(c, r) ? 1 : 0;
-check('blast holes the bunker back wall', wall0 === 9 && wall1 <= 4, wall0 + ' -> ' + wall1 + ' wall tiles');
+let wall0 = 0; for (let c = 99; c <= 101; c++) for (let r = 13; r <= 15; r++) wall0 += S.bgAt(c, r) ? 1 : 0;
+S.explode(100 * T + 8, 14 * T + 8, 34, 6, 'p', 4);
+let wall1 = 0; for (let c = 99; c <= 101; c++) for (let r = 13; r <= 15; r++) wall1 += S.bgAt(c, r) ? 1 : 0;
+check('blast holes the lab back wall', wall0 === 9 && wall1 <= 4, wall0 + ' -> ' + wall1 + ' wall tiles');
 
-// fire creeps along a crate bridge
+// fire creeps along the crate planks over the tide pools
 lone(); S.P.x = 2 * T; S.P.inv = 1e9;
-S.ignite(82 * T + 8, 15 * T, 1, 0); S.ignite(95 * T + 8, 15 * T, 1, 0); // light two crates
+S.ignite(68 * T + 8, 15 * T, 1, 0); S.ignite(80 * T + 8, 15 * T, 1, 0); // light two crates
 let burnt = 0; for (let i = 0; i < 900; i++) { run(1); }
-for (let c = 77; c <= 100; c++) if (!solid(c, 16)) burnt++;
+for (let c = 67; c <= 81; c++) if (!solid(c, 16)) burnt++;
 check('fire spreads along the crates and burns them away', burnt >= 3, burnt + ' crates gone from 2 fires');
-check('steel piles survive the fire', solid(80, 17) && solid(84, 17));
+check('steel piles survive the fire', solid(68, 17) && solid(80, 17));
 
 // airstrike pickup carpet-bombs ahead
 lone(); S.P.x = 4 * T; S.P.y = 16 * T - 15.01; S.P.face = 1; S.P.inv = 1e9; run(2);
