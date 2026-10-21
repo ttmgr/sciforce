@@ -29,7 +29,7 @@ const flat = (n = 0) => { S.startLevel(n); S.endCeasefire(); step(); for (let c 
 // ---- the default is normal and 100%, and plays as before
 check('the default difficulty is NORMAL and the density 100%', S.DIFFS[S.difficulty()].name === 'NORMAL' && S.density() === 1);
 for (const n of [0, 5, 11, 17, 18, S.nLevels - 1]) { // the ramp keeps its 18-mission spacing (n / 17, the Citadel at 1); missions 18 and 19 set their own place on it
-  S.reset(); S.startLevel(n); const L = S.levelDef(n), p = n === S.nLevels - 1 ? 1 : L.ramp !== undefined ? L.ramp : n / 17, d = S.diff;
+  S.reset(); S.startLevel(n); const L = S.levelDef(n), p = n === S.nLevels - 1 ? 1 : L.ramp !== undefined ? L.ramp : S.seedN(n) / 17, d = S.diff; // seedN: its place in the 18-mission campaign
   check('level ' + (n + 1) + ' at the default: the numbers are the campaign ramp', Math.abs(d.react - (1 - p) * 0.5) < 1e-9 && Math.abs(d.fire - (0.65 + 0.35 * p)) < 1e-9 && Math.abs(d.bossHp - (0.65 + 0.35 * p)) < 1e-9 && d.shot === 1 && d.pace === 1 && d.drop === 0);
 }
 S.reset(); check('a new game starts with 3 bros at the default', S.lives === 3);
@@ -57,7 +57,7 @@ level(0, 3, 6); check('the 10 s ceasefire still opens the level', Math.abs(S.cea
   S.setDensity(6, false); S.startRandom(4242, true); check('and none in the first 24 columns at 300%', quacks().every((e) => e.x >= 24 * T));
   const w = []; for (const k of [0, 3, 6]) { S.setDensity(k, false); S.reset(); S.startMode('siege'); for (let i = 0; i < 60 * 20 && S.siege.wave < 1; i++) { S.P.inv = 1e9; run(1); } w.push(S.siege.queue.length); }
   S.startMode('campaign'); check('Lab Siege: wave 1 holds more quacks with the density (25/100/300%)', inc(w), w.join(' < '));
-  const a = []; let early2 = true; for (const k of [0, 3, 6]) { S.setDensity(k, false); S.reset(); S.startLevel(8); S.endCeasefire(); S.P.x = 30 * T; step(); S.forceEvent('ambush'); a.push(S.ev().paras.length); if (S.ev().paras.some((p) => p.x < 20 * T)) early2 = false; }
+  const a = []; let early2 = true; for (const k of [0, 3, 6]) { S.setDensity(k, false); S.reset(); S.startLevel(Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i)).indexOf(S.ROUND5[8])); S.endCeasefire(); S.P.x = 30 * T; step(); S.forceEvent('ambush'); a.push(S.ev().paras.length); if (S.ev().paras.some((p) => p.x < 20 * T)) early2 = false; }
   check('ambush paratroopers: more with the density (25/100/300%)', inc(a), a.join(' < '));
   check('and none of them drops into the first 20 columns', early2);
   S.setDensity(3, false); S.setDifficulty(1, false);

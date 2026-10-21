@@ -1,6 +1,6 @@
 // Headless checks for the two missions added before the Citadel: Aura Megamall (a crystal shopping mall) and Pox Party
-// Volcano (an anti-vax lair). The campaign has 20 missions and the Citadel is still last; the older 18 missions, random
-// maps and bonus modes build exactly as on commit 7fd836a; the two new themes exist, differ from every other theme and
+// Volcano (an anti-vax lair). The campaign has 25 missions (round 6 added five more, see tests/maps_r6.js) and the
+// Citadel is still last; the 20 missions before round 6, random maps and bonus modes build exactly as on commit fd15d43; the two new themes exist, differ from every other theme and
 // never come up on a random map; each new mission builds the same twice, starts safe, has nothing floating or in a
 // wall, keeps every cage, intel file, target and the boss arena within reach, has an underground part and a stretch
 // with its forks and detours, and a bot crosses it; the threat climbs from the Juice Pipeline through both to the
@@ -27,20 +27,20 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'];
 const LW = S.LW, LH = S.LH, GH = S.GH, N = S.nLevels, STEEL = 3, LADDER = 7;
-const NEW = ['AURA MEGAMALL', 'POX PARTY VOLCANO'], NEW_TH = ['mall', 'volcano'];
+const NEW = ['AURA MEGAMALL', 'POX PARTY VOLCANO'], NEW_TH = ['mall', 'volcano'], R6 = ['RAW MILK RANCH', 'MAGNET FUNLAND', 'SPIRIT BOX MANOR', 'ANCIENT ALIEN TEMPLE', 'TINFOIL HAT BUNKER']; // R6: the round 6 missions (tests/maps_r6.js)
 const idx = NEW.map((name) => Array.from({ length: N }, (_, i) => S.levelDef(i).name).indexOf(name));
 
-// ---- 1. the older missions, random maps and bonus modes are what they were on commit 7fd836a
+// ---- 1. the 20 missions before round 6, random maps and bonus modes are what they were on commit fd15d43
 // (a hash of the tiles, quacks, decoration, devices, scenery and the event plan, ramp on, NORMAL at 100%)
 const fnv = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
 const snap = () => fnv(Array.from(S.tilesNow()).join('')) + '.' + fnv(S.ents.map((e) => e.type + Math.round(e.x) + ',' + Math.round(e.y) + ',' + Math.round(e.hp || 0)).join(';')) + '.' + fnv(S.decor().map((d) => d.kind + d.c + ',' + d.r).join(';')) + '.' + fnv(S.devs.map((d) => d.kind + d.x0 + ',' + d.x1).join(';')) + '.' + fnv(JSON.stringify(Object.values(S.fancy()).map((l) => l.map((o) => o.k + o.c + ',' + o.r + ',' + o.v)))) + '.' + (S.evPlan() ? S.evPlan().name + Math.round(S.evPlan().col) : '-');
-const BASE = { missions: { 'PLACEBO ISLAND': 'tehlcx.11qo6xl.bukp0k.5v08oe.1qb45kv.-', 'DETOX DESERT': 'xjccmv.1qgs0a9.5rpcg4.ig2pho.6om4ca.-', 'CRYO SUMMIT': 'az9a3p.5fpaic.ce098m.1iwvvnu.z5uymb.airstrike278', 'DILUTION PLANT': 'q1ra6b.1hf2ly8.ue8055.3t9ljz.12w5kof.ambush469', 'FLAT EARTH STATION': '1oz5x2a.1gntjyw.j7muo6.f8hwaa.isrvbr.blackout50', 'CHEMTRAIL AIRFIELD': '1vcclqu.wzao8l.1f8xray.qb3g59.1a9lekr.-', 'QUARTZ CAVERNS': '10vld3p.f6c0dg.nzz8c.1kzrtz.14gclwr.-', 'MIASMA MARSH': 'mwh5zx.ftfy4m.1vk29x.xr4fhf.1pg9qbv.-', 'ZODIAC OBSERVATORY': '1xqhfsq.1ooa584.xzu6k0.o3ac7y.1rm6hkk.-', 'PERPETUAL MOTION WORKS': '1jsxb1h.bdexhb.hd8wcm.1iaxobi.b8tjyf.-', 'CROP CIRCLE FIELDS': '1dt95ph.14jlee6.1vlv0lc.ltj4fx.c7p6gw.oppenbro358', 'PYRAMID POWER PLANT': 'prxnes.1ej7e4l.1jgms4q.1p5uwav.1eylix9.golden246', 'HOMEOPATHIC HOT SPRINGS': '1g8ini9.b57p1y.x394rp.ldts36.107rjzi.blackout200', 'LEY LINE LIGHTHOUSE': 'glr6ok.smmeid.1tf5ow3.7rakhq.t08kzo.airstrike191', 'STRUCTURED WATER WORKS': 'mkv1f4.19ajfp1.piu7r2.1c0kww3.ii1ekq.airstrike281', 'NEON WELLNESS DISTRICT': '1ob9szv.owheng.2hb5hk.mozpxh.1pvess.-', 'JUICE PIPELINE': '144938x.cvv7zo.cn75wd.olwt5o.196fvan.airstrike390', 'CITRUS CITADEL': 'zy6al1.1hgzxy8.1o4j2f5.3ubg1v.oemhxm.supply273' },
+const BASE = { missions: { 'PLACEBO ISLAND': 'tehlcx.11qo6xl.bukp0k.5v08oe.1qb45kv.-', 'DETOX DESERT': 'xjccmv.1qgs0a9.5rpcg4.ig2pho.6om4ca.-', 'CRYO SUMMIT': 'az9a3p.5fpaic.ce098m.1iwvvnu.z5uymb.airstrike278', 'DILUTION PLANT': 'q1ra6b.1hf2ly8.ue8055.3t9ljz.12w5kof.ambush469', 'FLAT EARTH STATION': '1oz5x2a.1gntjyw.j7muo6.f8hwaa.isrvbr.blackout50', 'CHEMTRAIL AIRFIELD': '1vcclqu.wzao8l.1f8xray.qb3g59.1a9lekr.-', 'QUARTZ CAVERNS': '10vld3p.f6c0dg.nzz8c.1kzrtz.14gclwr.-', 'MIASMA MARSH': 'mwh5zx.ftfy4m.1vk29x.xr4fhf.1pg9qbv.-', 'ZODIAC OBSERVATORY': '1xqhfsq.1ooa584.xzu6k0.o3ac7y.1rm6hkk.-', 'PERPETUAL MOTION WORKS': '1jsxb1h.bdexhb.hd8wcm.1iaxobi.b8tjyf.-', 'CROP CIRCLE FIELDS': '1dt95ph.14jlee6.1vlv0lc.ltj4fx.c7p6gw.oppenbro358', 'PYRAMID POWER PLANT': 'prxnes.1ej7e4l.1jgms4q.1p5uwav.1eylix9.golden246', 'HOMEOPATHIC HOT SPRINGS': '1g8ini9.b57p1y.x394rp.ldts36.107rjzi.blackout200', 'LEY LINE LIGHTHOUSE': 'glr6ok.smmeid.1tf5ow3.7rakhq.t08kzo.airstrike191', 'STRUCTURED WATER WORKS': 'mkv1f4.19ajfp1.piu7r2.1c0kww3.ii1ekq.airstrike281', 'NEON WELLNESS DISTRICT': '1ob9szv.owheng.2hb5hk.mozpxh.1pvess.-', 'JUICE PIPELINE': '144938x.cvv7zo.cn75wd.olwt5o.196fvan.airstrike390', 'AURA MEGAMALL': '19zm957.1df9v29.3zodcz.1fa2g8u.jkfw6x.ambush86', 'POX PARTY VOLCANO': '1tgojgm.xqwr2d.ca9u89.zuq0fl.1sg7zjc.oppenbro322', 'CITRUS CITADEL': 'zy6al1.1hgzxy8.1o4j2f5.3ubg1v.oemhxm.supply273' },
   random: { 1: 'moon.LIVE-STREAMED CRATER.p762ui.bev3x5.xjglwb.mr3gy2.mzrh2w.-', 7: 'island.DILUTED ISLAND.z4z5es.cxx7mk.1nyhct0.1e51c3x.1d75cwp.-', 42: 'moon.BLOCKCHAIN CRATER.6lr60s.1oegjsm.1a313cr.v0rfgh.119kzul.-', 999: 'grove.MAGNET GROVES.lkiefg.xcti00.1l2tbdj.189y3rr.oxi78r.-', 4242: 'rust.CHEMTRAIL YARD.13c019w.1biqrj1.1kv3kz2.9x3p04.1p8tm5q.-', 77777: 'citrus.DETOX CITADEL.1rdub0h.1ctwqhm.qpbnq6.fx5g2g.1tp7ruk.-' },
-  modes: { 'moon': 'h6ri5y.g3p1pa.1j6sbgt.31d53p.18ot0cr.-', 'siege': 'h7v8f6.11dh7u8.w9h7fo.ztntfp.hmmzzg.-', 'rush': 'k7dsdq.17a5lx9.209rs4.76ecrz.1qeahli.-' } }; // taken on 90c4d7d (round 5 wit and tuning merged), the head before the two missions
+  modes: { 'moon': 'h6ri5y.g3p1pa.1j6sbgt.31d53p.18ot0cr.-', 'siege': 'h7v8f6.11dh7u8.w9h7fo.ztntfp.hmmzzg.-', 'rush': 'k7dsdq.17a5lx9.209rs4.76ecrz.1qeahli.-' } }; // taken on fd15d43 (round 5 done), the head before the five missions of round 6, with the snap above
 {
   const changed = [];
-  for (let l = 0; l < N; l++) { const name = S.levelDef(l).name; if (NEW.includes(name)) continue; S.reset(); S.startLevel(l); if (snap() !== BASE.missions[name]) changed.push(name); }
-  check('the 18 older missions build exactly as on 90c4d7d, before the new missions (Citadel included)', !changed.length && Object.keys(BASE.missions).every((n) => Array.from({ length: N }, (_, i) => S.levelDef(i).name).includes(n)), changed.join(', '));
+  for (let l = 0; l < N; l++) { const name = S.levelDef(l).name; if (R6.includes(name)) continue; S.reset(); S.startLevel(l); if (snap() !== BASE.missions[name]) changed.push(name); }
+  check('the 20 missions before round 6 build exactly as on fd15d43 (mall, volcano and Citadel included)', !changed.length && Object.keys(BASE.missions).every((n) => Array.from({ length: N }, (_, i) => S.levelDef(i).name).includes(n)), changed.join(', '));
   const rnd = []; for (const seed of Object.keys(BASE.random)) { S.reset(); S.startRandom(+seed, true); if (S.levelDef(S.RANDOM).theme + '.' + S.levelDef(S.RANDOM).name + '.' + snap() !== BASE.random[seed]) rnd.push(seed); }
   check('random missions are unchanged (6 seeds: theme, name, tiles, quacks, decoration)', !rnd.length, rnd.join(', '));
   const md = []; for (const m of ['moon', 'siege', 'rush']) { S.reset(); S.startMode(m); if (snap() !== BASE.modes[m]) md.push(m); }
@@ -50,10 +50,10 @@ const BASE = { missions: { 'PLACEBO ISLAND': 'tehlcx.11qo6xl.bukp0k.5v08oe.1qb45
   check('the two new themes never come up on a random map (400 seeds)', seen === 0, seen + ' maps');
 }
 
-// ---- 2. the campaign: 20 missions, the two new ones right before the Citadel, which stays last
-check('the campaign has 20 missions', N === 20, N);
+// ---- 2. the campaign: 25 missions, the mall and the volcano right before the Citadel, which stays last
+check('the campaign has 25 missions', N === 25, N);
 check('the Citadel is still the last mission', S.levelDef(N - 1).name === 'CITRUS CITADEL');
-check('the mall and the volcano are missions 18 and 19, right before the Citadel', idx[0] === N - 3 && idx[1] === N - 2, idx.map((i) => i + 1).join(', '));
+check('the mall and the volcano are missions 23 and 24, right before the Citadel', idx[0] === N - 3 && idx[1] === N - 2, idx.map((i) => i + 1).join(', '));
 check('Lab Siege and the Moon Base still follow the campaign', S.levelDef(S.SIEGE).name === 'LAB SIEGE' && S.levelDef(S.MOON).name === 'MOON BASE');
 check('Boss Rush still ends with King Citrus in the Citadel', S.RUSH[S.RUSH.length - 1][0] === N - 1 && S.RUSH[S.RUSH.length - 1][2] === 'citrus');
 

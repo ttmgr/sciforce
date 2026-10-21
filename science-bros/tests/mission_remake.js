@@ -91,8 +91,8 @@ const reach = () => {
 };
 const THREAT = S.THREAT, FLY = ['jetpack', 'camdrone', 'drone', 'icicle', 'flag', 'dronecaller', ...BOSSES];
 
-check('the campaign has 20 missions, 18 of them remade (the Citadel is still last)', N === 20 && OLD.length === 18 && S.levelDef(N - 1).name === 'CITRUS CITADEL', N);
-const remade = (i) => (i === OLD.length - 1 ? N - 1 : i); // the fingerprint's mission: the Citadel moved from 18th to last
+check('the campaign has 25 missions, 18 of them remade (the Citadel is still last)', N === 25 && OLD.length === 18 && S.levelDef(N - 1).name === 'CITRUS CITADEL', N);
+const remade = (i) => Array.from({ length: N }, (_, k) => S.levelDef(k)).indexOf(S.ROUND5[i === OLD.length - 1 ? 19 : i]); // the fingerprint's mission, by its place among the 20 before round 6: the Citadel moved from 18th to last
 
 // ---- 1. the remake: missions 1-7 changed a lot, 8-18 changed some
 // "changed" for a column: its 22 tiles hash differently from before (columns next to an underground zone are left out). "kept" for a spawn or a decoration: the same type at
@@ -153,9 +153,9 @@ for (let l = 0; l < N; l++) {
 }
 
 // ---- 5. a bot that runs right, jumps and fires (invulnerable, as Einstein) gets through the base of missions 1-7
-for (let l = 0; l < 7; l++) {
-  const tag = (l + 1) + ' ' + S.levelDef(l).name;
-  reseed(4242 + l); S.startLevel(l); S.endCeasefire(); S.P.bro = S.BRO.einstein; const goal = S.cutAt() - 4; let far = 0, i = 0;
+for (let k = 0; k < 7; k++) {
+  const l = remade(k), tag = (l + 1) + ' ' + S.levelDef(l).name;
+  reseed(4242 + k); S.startLevel(l); S.endCeasefire(); S.P.bro = S.BRO.einstein; const goal = S.cutAt() - 4; let far = 0, i = 0;
   for (; i < 60 * 90 && far < goal; i++) {
     const stuck = i % 120 < 30;
     if (i % 25 === 0) S.pressed.jump = true;

@@ -32,7 +32,7 @@ const barkCount = S.QUACK_BARKS.spot.length + S.QUACK_BARKS.hit.length + S.QUACK
 check('quack barks: 40 generic plus 12 for special types', barkCount === 52, barkCount);
 const bros = S.BROS.map((b) => b.id);
 check('every bro has a kill shout, a special line and a respawn line', bros.every((id) => S.BRO_LINES[id] && S.BRO_LINES[id].k && S.BRO_LINES[id].s && S.BRO_LINES[id].r) && Object.keys(S.BRO_LINES).length === bros.length, bros.length + ' bros, ' + Object.keys(S.BRO_LINES).length + ' entries');
-check('radio chatter has 16 lines, event radio has 3 extra lines per event, 28 tips, 60 level signs', S.RADIO_CHATTER.length === 16 && Object.keys(S.EVENT_EXTRA).length === 7 && Object.values(S.EVENT_EXTRA).every((a) => a.length === 3) && S.PAUSE_TIPS.length === 28 && Object.values(S.WIT_SIGNS).flat().length === 60);
+check('radio chatter has 16 lines, event radio has 3 extra lines per event, 28 tips, 75 level signs (3 for each of the 25 missions)', S.RADIO_CHATTER.length === 16 && Object.keys(S.EVENT_EXTRA).length === 7 && Object.values(S.EVENT_EXTRA).every((a) => a.length === 3) && S.PAUSE_TIPS.length === 28 && Object.values(S.WIT_SIGNS).flat().length === 75);
 check('every campaign mission has its three signs', Array.from({ length: N }, (_, l) => S.levelDef(l).name).every((n) => (S.WIT_SIGNS[n] || []).length === 3));
 check('every event has extra radio lines', Object.keys(S.EVENT_RADIO).every((k) => S.EVENT_EXTRA[k]));
 
@@ -91,7 +91,7 @@ for (let l = 0; l < N; l++) {
     if (!solid || !open || all.some((o) => o !== g && Math.abs(o.c - g.c) < 9 && o.kind === 'sign' && want.includes(o.text)) || S.spawnsNow().some((s) => Math.abs(s.c - g.c) < 3)) clash.push(S.levelDef(l).name + ' col ' + g.c);
   }
 }
-check('at least two of the three extra signs are placed in every mission', !miss.length, miss.join(', ') + '; ' + placed + ' of 54 placed');
+check('at least two of the three extra signs are placed in every mission', !miss.length, miss.join(', ') + '; ' + placed + ' of ' + 3 * N + ' placed');
 check('extra signs stand on solid ground with the whole board in open air, 9 columns apart, away from spawns', !clash.length, clash.join(', '));
 S.reset();
 S.startLevel(0);

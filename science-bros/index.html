@@ -106,7 +106,7 @@ button.bro.ghost:hover, button.bro.ghost:focus-visible, button.bro.ghost.open { 
 <div class="wrap" id="wrap">
   <header>
     <h1 id="title">Science Bros</h1>
-    <div class="lvl" id="sub">War on the Anti-Science League · 20 missions · 3 bonus modes</div>
+    <div class="lvl" id="sub">War on the Anti-Science League · 25 missions · 3 bonus modes</div>
   </header>
 
   <div class="stage" id="stage">
@@ -552,6 +552,23 @@ const THEMES = {
   volcano: { sky: ['#0c0708', '#3a1c14', '#8a4c22'], stars: false, orb: 'volcano', hill: '#2c1a18', city: '#170c0c', cityKind: 'lair', hills: 'cones', win: ['#ff5a1a', '#ffd040'], beam: '#ff8a40',
     dirt: ['#2e2832', '#3a323e', '#221c26', '#4a4252'], top: ['#55261a', '#ff7a2a'], dust: '#6a5a5a', ambient: 0.5, dark: '#0a0204', ashfall: true, acid: ['#8a1606', '#ff5a10', '#ffd040'], campaign: true,
     brick: { mortar: '#6a240c', tones: ['#2e2a30', '#363038', '#28242c', '#3a343e'], lit: '#4c4652', lit2: '#5a5460', shade: '#1e1a22', crack: '#ff7a2a', dark: '#1c181f', dark2: '#141116', hole: '#ff5a10', tone: '#302a34', patch: '#5a5460' } },
+  // five more campaign-only themes (round 6): a raw milk ranch at sunrise, a magnet theme park at sunset, a haunted manor
+  // under a full moon, a jungle temple in the haze and a tinfoil bunker in a stormy pine wood
+  dairy: { sky: ['#4a7ab8', '#9cc8e0', '#ffe2b0'], stars: false, orb: 'dawn', hill: '#6a9a4a', city: '#8a4a3a', cityKind: 'barns', hills: 'pasture', win: ['#ffe08a', '#ffffff'], beam: '#fff4d0',
+    dirt: ['#6a4a2e', '#7a5636', '#5a3e26', '#8a6440'], top: ['#3f8a3a', '#a8d860'], dust: '#d8c8a0', ambient: 0.06, dark: '#101a10', pollen: true, acid: ['#cfc6a8', '#f4eedc', '#ffffff'], campaign: true,
+    brick: { mortar: '#4a1410', tones: ['#a83228', '#9a2c24', '#b4382c', '#922a22'], lit: '#c8503c', lit2: '#e06a50', shade: '#6a1e18', crack: '#3a0e0a', dark: '#7a221c', dark2: '#5a1812', hole: '#2a0a08', tone: '#a83228', patch: '#e8e0d0' } },
+  park: { sky: ['#2a1450', '#a03a78', '#ffb070'], stars: false, orb: 'ferris', hill: '#3a1e4a', city: '#24122e', cityKind: 'rides', hills: 'coaster', win: ['#ffd84a', '#ff5a8a'], beam: '#ffe0f0',
+    dirt: ['#5a4a3a', '#66544a', '#4a3c30', '#76624e'], top: ['#b88a40', '#f2cc70'], dust: '#e8c890', ambient: 0.22, dark: '#12081c', funfair: true, acid: ['#141420', '#30304a', '#7a7aa8'], campaign: true,
+    brick: { mortar: '#f4eadc', tones: ['#d8323c', '#f4eadc', '#d8323c', '#f4eadc'], lit: '#ff6a6a', lit2: '#ffffff', shade: '#9a1e28', crack: '#5a0e14', dark: '#a82830', dark2: '#7a1a20', hole: '#3a0a10', tone: '#d8323c', patch: '#ffffff' } },
+  manor: { sky: ['#0a0816', '#241a3e', '#4a4a6e'], stars: true, orb: 'fullmoon', hill: '#1e1830', city: '#141024', cityKind: 'gothic', hills: 'graves', win: ['#e8d070', '#7af0a0'], beam: '#c8ffd8',
+    dirt: ['#2e2a2a', '#3a3434', '#242020', '#463e3c'], top: ['#3a4a2e', '#6a7a4a'], dust: '#7a7a80', ambient: 0.46, dark: '#020208', mist: true, acid: ['#1a5a3a', '#4af0a0', '#d0ffe8'], campaign: true,
+    brick: { mortar: '#16121e', tones: ['#3e3848', '#443e4e', '#38323f', '#4a4454'], lit: '#5a5468', lit2: '#6a6478', shade: '#2a2432', crack: '#0e0a14', dark: '#2e2836', dark2: '#221e28', hole: '#0a0810', tone: '#3e3848', patch: '#5a5468' } },
+  jungle: { sky: ['#0e3a3a', '#3a8a6a', '#d8f0b0'], stars: false, orb: 'haze', hill: '#1e5a32', city: '#123e22', cityKind: 'temples', hills: 'canopy', win: ['#f2e27a', '#7af0d0'], beam: '#f0ffd0',
+    dirt: ['#4a3a24', '#56442a', '#3e301c', '#625032'], top: ['#2a7a2a', '#6ad040'], dust: '#a8b880', ambient: 0.3, dark: '#021008', drip: true, acid: ['#1a5a4a', '#3ab09a', '#b0f0e0'], campaign: true,
+    brick: { mortar: '#3a4430', tones: ['#7a7a5e', '#6e7056', '#848468', '#727258'], lit: '#5a8a3a', lit2: '#7ab04a', shade: '#4a4a38', crack: '#2a3020', dark: '#5a5a44', dark2: '#4a4a38', hole: '#22281a', tone: '#7a7a5e', patch: '#6aa040' } },
+  foil: { sky: ['#060c14', '#1a3440', '#3e6670'], stars: false, orb: 'tower5g', hill: '#142a2c', city: '#0c1c20', cityKind: 'bunkers', hills: 'pines', win: ['#ff3a3a', '#8af0ff'], beam: '#d8f0ff',
+    dirt: ['#36322e', '#423c36', '#2a2622', '#4e4740'], top: ['#2a3a2a', '#4a5e3e'], dust: '#8a9090', ambient: 0.42, dark: '#010406', foilwind: true, acid: ['#5a6070', '#b8c0d0', '#ffffff'], campaign: true,
+    brick: { mortar: '#6a707e', tones: ['#c8ccd6', '#b8bcc8', '#d8dce4', '#aeb2be'], lit: '#ffffff', lit2: '#ffffff', shade: '#8a8e9a', crack: '#5a5e6a', dark: '#9a9eaa', dark2: '#8a8e9a', hole: '#4a4e5a', tone: '#c8ccd6', patch: '#eef0f4' } },
 };
 // extra looks per theme: grass blades on top of the earth, cloud colour (none underground), what floats in the air
 const LOOK = {
@@ -560,6 +577,8 @@ const LOOK = {
   astro: { cloud: '#2a3a7a' }, rust: { cloud: '#5a3a2a', motes: 'dust' }, moon: {}, plant: { cloud: '#3a3a34', motes: 'dust' }, snow: { cloud: '#3a5072' },
   sewer: { motes: 'fly' }, city: { cloud: '#3a2a5a' }, grove: { grass: 1, cloud: '#fff4e0', motes: 'fly' },
   mall: { motes: 'aroma' }, volcano: { cloud: '#3a2622', motes: 'cinder' },
+  dairy: { grass: 1, cloud: '#ffffff', motes: 'midge' }, park: { cloud: '#ff9ab0', motes: 'popcorn' }, manor: { cloud: '#2a2a3e', motes: 'wisp' },
+  jungle: { grass: 1, cloud: '#c8e8c0', motes: 'leaves' }, foil: { cloud: '#1a2a30', motes: 'signal' },
 };
 for (const k in THEMES) { THEMES[k].look = LOOK[k] || {}; THEMES[k].name = k; }
 const mixHex = (a, b, k) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), ch = (sh) => Math.round(((pa >> sh) & 255) * (1 - k) + ((pb >> sh) & 255) * k); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; };
@@ -1119,6 +1138,296 @@ function buildVolcano(H) {
   fill(229, 0, 230, 17, STEEL); fill(231, 15, 235, 17, STEEL);
   sp('engine', 220, 0, { ax0: 182, ax1: 228, trig: 186, final: true, gate: [229, 230, 0, 14], name: 'THE IMMUNITY FORGE', sub: 'Shakes sulfur into fake vaccines. Skips every trial.', hpMul: 1.3 });
   dc('sign', 183, { text: 'NATURAL IMMUNITY' });
+}
+// ---- round 6: five more missions built by hand, each with a theme of its own and an underground part in its base, spread
+// over the campaign: a raw milk ranch, a magnet theme park, a haunted manor, a jungle temple and a tinfoil bunker
+function buildRanch(H) {
+  const { fill, ground, sp, bgFill, dc, lamp } = H;
+  // 1. The farm gate: flat pasture, hay bales, a cow that does not care
+  ground(0, 28, 16); fill(17, 15, 18, 15, CRATE);
+  sp('guncrate', 6); sp('itemcrate', 9); sp('ammo', 12); sp('grunt', 22); sp('dog', 24); sp('detox', 27);
+  dc('sign', 3, { text: 'RAW MILK RANCH' }); dc('cow', 13); dc('sandbags', 21); dc('pine', 26);
+
+  // 2. The big red barn: stalls below, a hayloft above, a crate door in, an open door out, ladders up the loft and the roof
+  ground(29, 66, 16);
+  fill(31, 5, 62, 15, BRICK); fill(33, 11, 60, 15, EMPTY); fill(33, 6, 60, 8, EMPTY);
+  fill(31, 13, 31, 15, CRATE); fill(32, 13, 32, 15, EMPTY); fill(61, 11, 62, 15, EMPTY);
+  fill(46, 9, 46, 15, LADDER); fill(57, 5, 57, 8, LADDER); fill(54, 5, 56, 5, STEEL); fill(58, 5, 59, 5, STEEL); fill(47, 9, 48, 9, STEEL); // ladders through the floors; girders hold the loft and the roof either side of them
+  bgFill(32, 6, 60, 15, BG_BRICK);
+  sp('shield', 36, 11); sp('target', 40, 11, { skin: 'vat' }); sp('grunt', 43, 11); sp('medic', 50, 11); sp('cage', 53, 11); sp('alarm', 58, 11);
+  sp('pickup', 35, 6, { item: 'intel' }); sp('grunt', 41, 6); sp('dog', 51, 6);
+  sp('sniper', 44, 0); sp('turret', 36, 0);
+  lamp(38, 10); lamp(52, 10); lamp(40, 5); lamp(50, 5);
+  dc('plaque', 46, { r: 10, text: 'MILKING STALLS' }); dc('neon', 46, { from: 0, text: 'FRESH FROM COW' });
+  sp('flag', 65);
+
+  // 3. The milk lagoon: a pond of raw milk, hay islands on steel piles, a wooden jetty overhead with a rotten span
+  ground(67, 70, 16); ground(95, 98, 16);
+  fill(71, 21, 94, 21, STEEL); fill(71, 17, 94, 20, ACID);
+  for (const a of [71, 77, 83, 89]) { fill(a, 16, a + 3, 16, BRICK); fill(a + 1, 17, a + 1, 20, STEEL); } // islands four wide, two-wide gaps
+  fill(71, 11, 94, 11, CRATE); for (const k of [71, 82, 94]) fill(k, 11, k, 11, STEEL); H.crumble(84, 11, 87, 11); fill(70, 11, 70, 15, LADDER); fill(95, 11, 95, 15, LADDER);
+  sp('pickup', 74, 12, { item: 'intel' }); sp('jetpack', 78); sp('grunt', 80, 12); sp('target', 85, 12, { skin: 'vat' }); sp('bomber', 91, 12); sp('cage', 90, 0); sp('flamer', 97);
+  dc('sign', 67, { text: 'UNPASTEURISED' }); dc('cow', 96);
+  sp('flag', 98);
+
+  // 4. Silo hill: terraces up to the pasture on top, a silo with a ladder, a milk vat on its roof
+  ground(99, 104, 16); ground(105, 108, 14); ground(109, 128, 12); ground(129, 134, 14);
+  fill(115, 3, 118, 11, BRICK); fill(114, 3, 114, 11, LADDER); fill(115, 3, 116, 3, STEEL);
+  sp('strike', 102); sp('grunt', 107); sp('target', 117, 0, { skin: 'vat' }); sp('cage', 111); sp('rocketeer', 121); sp('dog', 124); sp('grenadier', 127); sp('ammo', 133);
+  dc('cow', 110); dc('sign', 120, { text: 'HAPPY COWS ONLY' }); dc('pine', 126);
+
+  // 5. The cheese cave: a ladder shaft down to a cellar under the pasture, a lift back up
+  ground(135, 158, 16);
+  { const R = rngOf(2020); ugZone(135, 157, 'cavern'); const spots = ugTunnel(H, 136, 156, 30, 'cavern', R, [140, 141, 155, 156]);
+    ugShaft(H, 140, 16, 30, 'ladder', false); ugShaft(H, 155, 16, 30, 'lift', true);
+    ugStock(H, spots, 30, { R, Q: R, foes: ['grunt', 'dog', 'shield', 'detox'], n: 3, cage: true }); }
+  sp('grenadier', 146); sp('shield', 151);
+  dc('sign', 137, { text: 'CHEESE CAVE', from: 14 }); dc('cow', 149);
+
+  // 6. The milking shed: walk through, or climb to its roof; the last intel before the parlour
+  ground(159, 177, 16);
+  fill(161, 9, 172, 15, BRICK); fill(163, 11, 170, 15, EMPTY); fill(161, 13, 161, 15, CRATE); fill(162, 13, 162, 15, EMPTY); fill(171, 12, 172, 15, EMPTY);
+  fill(169, 9, 169, 15, LADDER); fill(164, 9, 165, 9, STEEL); fill(170, 9, 171, 9, STEEL);
+  bgFill(162, 11, 171, 15, BG_BRICK);
+  sp('mechsuit', 159); sp('pickup', 166, 11, { item: 'intel' }); sp('grunt', 164, 13); sp('turret', 166, 0); sp('grenadier', 174);
+  lamp(166, 10); dc('plaque', 166, { r: 10, text: 'MILK SHED' });
+  sp('flag', 175);
+
+  // 7. The milking parlour: hay over steel, two brick troughs, the exit behind a gate
+  fill(178, 16, 223, 17, DIRT); fill(178, 18, 223, 21, STEEL);
+  fill(190, 14, 190, 15, BRICK); fill(205, 14, 205, 15, BRICK);
+  fill(224, 4, 225, 21, STEEL); fill(226, 16, 235, 21, STEEL); sp('ammo', 198);
+  sp('tank', 212, 0, { ax0: 179, ax1: 223, trig: 183, final: true, gate: [224, 225, 4, 15], name: 'THE CREAM CRUSHER', sub: 'A churn on tracks. Never pasteurised, never stops.', hpMul: 1.1 });
+  dc('sign', 181, { text: 'MILKING PARLOUR' }); dc('cow', 229); dc('pine', 233);
+}
+function buildFunland(H) {
+  const { fill, ground, sp, bgFill, dc, lamp, belt } = H;
+  // 1. The ticket plaza: flat, balloons, a turnstile of crates
+  ground(0, 26, 16); fill(16, 15, 16, 15, CRATE);
+  sp('guncrate', 6); sp('itemcrate', 9); sp('ammo', 12); sp('grunt', 22); sp('dog', 24); sp('streamer', 26);
+  dc('sign', 3, { text: 'MAGNET FUNLAND' }); dc('balloons', 11); dc('palm', 19); dc('balloons', 25);
+
+  // 2. The funhouse: a travelator on the ground floor, a belt running back along the upper floor, a magnet tower on the roof
+  ground(27, 64, 16);
+  fill(29, 6, 60, 15, BRICK); fill(31, 11, 58, 15, EMPTY); fill(31, 7, 58, 9, EMPTY);
+  fill(29, 13, 29, 15, CRATE); fill(30, 13, 30, 15, EMPTY); fill(59, 12, 60, 15, EMPTY);
+  belt(36, 48, 16, 1, 50); belt(31, 54, 10, -1, 40); fill(57, 10, 57, 15, LADDER); fill(33, 6, 33, 9, LADDER); fill(34, 6, 35, 6, STEEL); fill(58, 6, 58, 6, STEEL);
+  bgFill(30, 7, 59, 15, BG_BRICK);
+  sp('shield', 34, 11); sp('grunt', 40, 11); sp('cage', 45, 11); sp('medic', 50, 11); sp('jumper', 54, 11);
+  sp('pickup', 37, 7, { item: 'intel' }); sp('pinboard', 44, 7); sp('grunt', 50, 7);
+  sp('target', 46, 0, { skin: 'radio' }); sp('turret', 39, 0); sp('alarm', 62);
+  lamp(38, 10); lamp(50, 10); lamp(42, 6); lamp(52, 6);
+  dc('plaque', 44, { r: 10, text: 'HALL OF MIRRORS' }); dc('neon', 52, { from: 0, text: 'FEEL THE PULL' });
+  sp('flag', 64);
+
+  // 3. The ferrofluid lagoon: teacups on steel piles, a coaster track overhead that carries you across
+  ground(65, 68, 16); ground(97, 100, 16);
+  fill(69, 21, 96, 21, STEEL); fill(69, 17, 96, 20, ACID);
+  for (const a of [69, 75, 81, 87, 93]) { fill(a, 16, a + 2, 16, BRICK); fill(a + 1, 17, a + 1, 20, STEEL); } // teacups three wide, three-wide gaps
+  belt(69, 96, 11, 1, 60); fill(68, 11, 68, 15, LADDER); fill(97, 11, 97, 15, LADDER);
+  sp('jetpack', 77); sp('grunt', 82, 12); sp('pickup', 84, 0, { item: 'intel' }); sp('cage', 88, 12); sp('sniper', 90, 0); sp('bomber', 94, 12); sp('spring', 99);
+  dc('sign', 65, { text: 'MAGNETIC SPA' }); dc('balloons', 99);
+  sp('flag', 100);
+
+  // 4. The drop tower and the game stalls: climb the lattice, or ride the car, to the second magnet tower
+  ground(101, 134, 16);
+  fill(112, 5, 112, 11, STEEL); fill(119, 5, 119, 11, STEEL); fill(112, 5, 119, 5, STEEL); fill(115, 5, 117, 5, EMPTY); fill(113, 5, 113, 15, LADDER); H.lift(115, 16, 3, 0, -11); // legs on an arch you walk under, the car rides up into the deck
+  fill(124, 12, 129, 12, BRICK); fill(124, 13, 124, 15, STEEL); fill(129, 13, 129, 15, STEEL); fill(125, 14, 128, 15, CRATE); bgFill(125, 13, 128, 13, BG_BRICK); // a stall: a crate counter under a striped awning
+  sp('strike', 102); sp('grunt', 110); sp('target', 118, 0, { skin: 'radio' }); sp('rocketeer', 114, 0); sp('heavy', 122); sp('streamer', 126, 0); sp('alpha', 131); sp('ammo', 133);
+  dc('plaque', 126, { r: 12, text: 'WIN A MAGNET' }); dc('balloons', 121);
+
+  // 5. Down to the service tunnels: a ladder shaft, a sewer under the park, a lift back up
+  ground(135, 158, 16);
+  { const R = rngOf(2121); ugZone(135, 157, 'sewer'); const spots = ugTunnel(H, 136, 156, 30, 'sewer', R, [140, 141, 155, 156]);
+    ugShaft(H, 140, 16, 30, 'ladder', false); ugShaft(H, 155, 16, 30, 'lift', true);
+    ugStock(H, spots, 30, { R, Q: R, foes: ['grunt', 'shield', 'jumper', 'streamer'], n: 3, cage: true }); }
+  sp('grenadier', 146); sp('dog', 151);
+  dc('sign', 137, { text: 'STAFF ONLY', from: 14 }); dc('balloons', 148);
+
+  // 6. The glass maze: a glass roof on steel ends over low glass partitions, the last magnet tower on its roof
+  ground(159, 177, 16);
+  fill(162, 9, 172, 9, ICE); fill(162, 9, 162, 9, STEEL); fill(172, 9, 172, 9, STEEL); fill(165, 14, 165, 15, ICE); fill(168, 15, 168, 15, ICE); fill(173, 9, 173, 15, LADDER);
+  bgFill(163, 10, 171, 15, BG_BRICK);
+  sp('mechsuit', 160); sp('cage', 163, 10); sp('pickup', 170, 10, { item: 'intel' }); sp('knight', 167, 13); sp('target', 166, 0, { skin: 'radio' }); sp('turret', 170, 0); sp('grenadier', 175);
+  lamp(165, 9); dc('sign', 160, { text: 'GLASS MAZE' });
+  sp('flag', 175);
+
+  // 7. The big top: a ring with two lattice towers, a lift and crate stands, the exit behind a gate
+  ground(176, 235, 16);
+  for (const k of [180, 222]) { fill(k, 6, k + 1, 15, LADDER); fill(k - 1, 6, k + 2, 6, STEEL); }
+  H.lift(187, 16, 3, 0, -6); fill(208, 11, 212, 11, STEEL); fill(210, 12, 210, 15, LADDER);
+  for (const [k0, k1, r] of [[196, 197, 14], [215, 217, 15]]) fill(k0, r, k1, 15, CRATE);
+  fill(226, 0, 227, 15, STEEL); sp('ammo', 201);
+  sp('director', 200, 0, { ax0: 178, ax1: 224, trig: 184, final: true, gate: [226, 227, 0, 15], name: 'THE RINGMASTER', sub: 'Sells magnet bracelets that cure gravity. Bows a lot.', hpMul: 1.2 });
+  dc('sign', 185, { text: 'BIG TOP TONIGHT' }); dc('balloons', 230); dc('balloons', 234);
+}
+function buildManor(H) {
+  const { fill, ground, sp, bgFill, dc, lamp } = H;
+  // 1. The cemetery gate: flat ground, the first graves
+  ground(0, 26, 16);
+  sp('guncrate', 6); sp('itemcrate', 9); sp('ammo', 12); sp('grunt', 22); sp('dog', 24); sp('guru', 26);
+  dc('sign', 3, { text: 'SPIRIT BOX MANOR' }); dc('grave', 14); dc('grave', 18); dc('pine', 20);
+
+  // 2. The graveyard: a crypt with a server rack inside and a ladder to its roof
+  ground(27, 33, 15); ground(34, 56, 16);
+  fill(42, 10, 50, 15, BRICK); fill(44, 12, 48, 15, EMPTY); fill(42, 13, 43, 15, CRATE); fill(49, 13, 50, 15, CRATE); fill(41, 10, 41, 15, LADDER); fill(45, 10, 47, 10, STEEL);
+  bgFill(44, 12, 48, 15, BG_BRICK);
+  sp('preacher', 36); sp('grunt', 39); sp('target', 46, 12, { skin: 'server' }); sp('pickup', 46, 0, { item: 'intel' }); sp('medic', 53); sp('alarm', 55);
+  lamp(46, 11); dc('grave', 30); dc('grave', 37); dc('grave', 52); dc('sign', 28, { text: 'REST IN PEACE' }); dc('plaque', 46, { r: 11, text: 'FAMILY CRYPT' });
+  sp('flag', 56);
+
+  // 3. The manor house: three floors with glass windows, a crate door in, ladders up one side and down the other
+  ground(57, 100, 16);
+  fill(60, 2, 96, 15, BRICK); fill(62, 12, 94, 15, EMPTY); fill(62, 8, 94, 10, EMPTY); fill(62, 4, 94, 6, EMPTY);
+  fill(60, 13, 60, 15, CRATE); fill(61, 13, 61, 15, EMPTY); fill(95, 12, 96, 15, EMPTY);
+  fill(60, 8, 60, 9, ICE); fill(96, 8, 96, 9, ICE); fill(60, 4, 60, 5, ICE); fill(96, 4, 96, 5, ICE);
+  fill(70, 11, 70, 15, LADDER); fill(88, 7, 88, 10, LADDER); fill(77, 2, 79, 2, STEEL); fill(71, 11, 72, 11, STEEL); fill(89, 7, 90, 7, STEEL);
+  bgFill(61, 4, 95, 15, BG_BRICK);
+  sp('shield', 65, 12); sp('grunt', 75, 12); sp('streamer', 82, 12); sp('cage', 92, 12);
+  sp('heavy', 66, 8); sp('target', 78, 8, { skin: 'server' }); sp('pinboard', 84, 8);
+  sp('pickup', 64, 4, { item: 'intel' }); sp('guru', 75, 4); sp('grunt', 90, 4);
+  sp('sniper', 82, 0);
+  lamp(66, 11); lamp(80, 11); lamp(90, 11); lamp(68, 7); lamp(82, 7); lamp(74, 3); lamp(86, 3);
+  dc('plaque', 78, { r: 11, text: 'GHOST TOURS' }); dc('neon', 78, { from: 0, text: 'EVP LIVE 9PM' });
+  sp('flag', 100);
+
+  // 4. The hedge garden and the chapel: low hedges to hop, a bell tower with a cage on top
+  ground(101, 134, 16);
+  fill(106, 14, 108, 15, DIRT); fill(114, 13, 116, 15, DIRT); fill(121, 14, 123, 15, DIRT);
+  fill(127, 5, 130, 15, BRICK); fill(127, 12, 130, 15, EMPTY); fill(127, 11, 130, 11, STEEL); fill(126, 5, 126, 15, LADDER); fill(128, 5, 129, 5, STEEL);
+  bgFill(127, 12, 130, 15, BG_BRICK);
+  sp('camdrone', 104); sp('grunt', 111); sp('jumper', 118); sp('flamer', 120); sp('rocketeer', 124); sp('cage', 129, 0); sp('mortar', 133);
+  dc('grave', 110); dc('grave', 119); dc('sign', 102, { text: 'HEDGE MAZE' }); dc('pine', 132);
+
+  // 5. The catacombs: a ladder shaft down to a cavern under the garden, a lift back up
+  ground(135, 158, 16);
+  { const R = rngOf(2222); ugZone(135, 157, 'cavern'); const spots = ugTunnel(H, 136, 156, 30, 'cavern', R, [140, 141, 155, 156]);
+    ugShaft(H, 140, 16, 30, 'ladder', false); ugShaft(H, 155, 16, 30, 'lift', true);
+    ugStock(H, spots, 30, { R, Q: R, foes: ['grunt', 'guru', 'pinboard', 'shield'], n: 3, cage: true }); }
+  sp('grenadier', 146); sp('streamer', 151);
+  dc('sign', 137, { text: 'CATACOMBS', from: 14 }); dc('grave', 149);
+
+  // 6. The ruined chapel walls: two broken walls with arches under steel lintels, turrets on top
+  ground(159, 177, 16);
+  fill(163, 7, 165, 15, BRICK); fill(163, 13, 165, 15, EMPTY); fill(163, 12, 165, 12, STEEL); fill(162, 7, 162, 15, LADDER);
+  fill(170, 9, 172, 15, BRICK); fill(170, 13, 172, 15, EMPTY); fill(170, 12, 172, 12, STEEL); fill(169, 9, 169, 15, LADDER);
+  sp('mechsuit', 160); sp('turret', 164, 0); sp('cage', 167); sp('knight', 168); sp('pickup', 171, 0, { item: 'intel' }); sp('grenadier', 174);
+  dc('grave', 175); sp('flag', 175);
+
+  // 7. The family plot: lookouts on ladder legs, tombstones for cover, the exit behind a gate
+  ground(176, 235, 16);
+  for (const k of [188, 212]) { fill(k, 10, k + 3, 10, STEEL); fill(k, 11, k, 15, LADDER); fill(k + 3, 11, k + 3, 15, LADDER); }
+  fill(197, 14, 197, 15, BRICK); fill(204, 14, 204, 15, BRICK); sp('ammo', 200);
+  fill(226, 0, 227, 15, STEEL);
+  sp('kopter', 205, 0, { ax0: 178, ax1: 224, trig: 180, final: true, gate: [226, 227, 0, 15], name: 'THE POLTERCOPTER', sub: 'Haunts the graveyard. Runs on ghost stories.', hpMul: 1.3 });
+  dc('sign', 181, { text: 'NO TRESPASSING' }); dc('grave', 193); dc('grave', 216); dc('grave', 230);
+}
+function buildTemple(H) {
+  const { fill, ground, sp, bgFill, dc, lamp } = H;
+  // 1. The river landing: flat bank, a stone head, the tour sign
+  ground(0, 26, 16);
+  sp('guncrate', 6); sp('itemcrate', 9); sp('ammo', 12); sp('grunt', 22); sp('dog', 24); sp('yogi', 26);
+  dc('sign', 3, { text: 'ALIENS BUILT THIS' }); dc('idol', 14); dc('palm', 19, { lean: -1 }); dc('palm', 25);
+
+  // 2. The step pyramid: climb the terraces over its top, or take the ladders down into the tomb under it
+  ground(27, 30, 16); ground(31, 34, 14, BRICK); ground(35, 38, 12, BRICK); ground(39, 52, 9, BRICK); ground(53, 56, 12, BRICK); ground(57, 60, 14, BRICK); ground(61, 66, 16);
+  fill(39, 12, 52, 15, EMPTY); fill(38, 12, 38, 15, LADDER); fill(53, 12, 53, 15, LADDER); bgFill(39, 12, 52, 15, BG_BRICK); fill(39, 11, 52, 11, STEEL); // a steel beam holds the stones over the tomb
+  sp('grunt', 33); sp('target', 44, 12, { skin: 'vat' }); sp('miner', 41, 12); sp('pickup', 50, 12, { item: 'intel' });
+  sp('cage', 41, 0); sp('guru', 44, 0); sp('target', 47, 0, { skin: 'vat' }); sp('sniper', 51, 0); sp('rocketeer', 58); sp('alarm', 63);
+  lamp(42, 11); lamp(49, 11); dc('plaque', 45, { r: 11, text: 'TOMB OF PROOF' }); dc('neon', 45, { from: 0, text: 'NOT HUMAN MADE' });
+  sp('flag', 66);
+
+  // 3. The jungle river: carved stones of every size on steel piles across the water
+  ground(67, 70, 16); ground(94, 98, 16);
+  fill(71, 21, 93, 21, STEEL); fill(71, 17, 93, 20, ACID);
+  for (const [a, w] of [[71, 5], [77, 4], [82, 5], [88, 5]]) { fill(a, 16, a + w - 1, 16, BRICK); fill(a, 17, a + w - 1, 17, STEEL); fill(a + 1, 18, a + 1, 20, STEEL); } // each stone sits on a steel raft: shot to rubble, the raft still holds a foot
+  sp('pickup', 73, 12, { item: 'intel' }); sp('yogi', 79); sp('grunt', 84, 12); sp('grunt', 90, 12); sp('flamer', 97);
+  dc('sign', 67, { text: 'RIVER OF TRUTH' }); dc('palm', 96, { lean: -1 });
+  sp('flag', 98);
+
+  // 4. The ruined city: broken columns, a stone lintel with a crystal vat on it, a stone head
+  ground(99, 134, 16);
+  fill(106, 10, 107, 15, BRICK); fill(118, 8, 119, 15, BRICK); fill(106, 9, 119, 9, BRICK); fill(105, 9, 105, 15, LADDER); fill(111, 9, 112, 9, STEEL);
+  sp('strike', 102); sp('grunt', 110); sp('target', 113, 0, { skin: 'vat' }); sp('heavy', 114, 10); sp('rocketeer', 122); sp('cage', 124); sp('sniper', 118, 0); sp('yogi', 132);
+  dc('idol', 109); dc('sign', 121, { text: 'NO SOURCES INSIDE' }); dc('palm', 126);
+
+  // 5. The dig site: a ladder shaft down to a mine under the ruins, a lift back up
+  ground(135, 158, 16);
+  { const R = rngOf(2323); ugZone(135, 157, 'mine'); const spots = ugTunnel(H, 136, 156, 30, 'mine', R, [140, 141, 155, 156]);
+    ugShaft(H, 140, 16, 30, 'ladder', false); ugShaft(H, 155, 16, 30, 'lift', true);
+    ugStock(H, spots, 30, { R, Q: R, foes: ['grunt', 'miner', 'yogi', 'shield'], n: 3, cage: true }); }
+  sp('grenadier', 146); sp('brute', 151);
+  dc('sign', 137, { text: 'DIG SITE', from: 14 }); dc('idol', 149);
+
+  // 6. The temple gate: two pillars with doorways under steel lintels, ladders up the near side, turrets on top
+  ground(159, 177, 16);
+  fill(163, 5, 165, 15, BRICK); fill(163, 13, 165, 15, EMPTY); fill(163, 12, 165, 12, STEEL); fill(162, 5, 162, 15, LADDER);
+  fill(171, 7, 173, 15, BRICK); fill(171, 13, 173, 15, EMPTY); fill(171, 12, 173, 12, STEEL); fill(170, 7, 170, 15, LADDER);
+  sp('guncrate', 159); sp('turret', 164, 0); sp('pickup', 167, 0, { item: 'intel' }); sp('knight', 168); sp('cage', 172, 0); sp('grenadier', 175);
+  dc('idol', 167); sp('flag', 176);
+
+  // 7. The sun court: a steel floor, stone altars for cover, a ledge to climb, the exit behind a gate
+  fill(178, 16, 225, 17, DIRT); fill(178, 18, 235, 21, STEEL); fill(226, 16, 235, 17, STEEL);
+  fill(188, 14, 188, 15, BRICK); fill(200, 15, 201, 15, BRICK); fill(212, 14, 212, 15, BRICK); fill(193, 11, 196, 11, STEEL); fill(192, 11, 192, 15, LADDER);
+  fill(226, 4, 227, 15, STEEL); sp('ammo', 198);
+  sp('boss', 205, 0, { ax0: 179, ax1: 224, trig: 183, final: true, gate: [226, 227, 4, 15], name: 'THE ANCIENT ASTRONAUT', sub: 'A statue of an alien. Carved by people. Obviously.', hpMul: 1.4 });
+  dc('sign', 181, { text: 'SUN COURT' }); dc('idol', 230); dc('palm', 233);
+}
+function buildBunker(H) {
+  const { fill, ground, sp, bgFill, dc, lamp, vent } = H;
+  // 1. The clearing in the pines: flat, the no-signal sign, a foil-wrapped jammer
+  ground(0, 26, 16);
+  sp('guncrate', 6); sp('itemcrate', 9); sp('ammo', 12); sp('grunt', 22); sp('dog', 24); sp('pinboard', 26);
+  dc('sign', 3, { text: 'NO SIGNAL ZONE' }); dc('pine', 13); dc('jammer', 17); dc('pine', 20);
+
+  // 2. The outer bunker: one long room under a thick roof, a crate door in, an open door out, a jammer mast on the roof
+  ground(27, 62, 16);
+  fill(31, 9, 58, 15, BRICK); fill(33, 12, 56, 15, EMPTY); fill(31, 13, 31, 15, CRATE); fill(32, 13, 32, 15, EMPTY); fill(57, 12, 58, 15, EMPTY);
+  fill(44, 9, 45, 9, STEEL); fill(59, 9, 59, 15, LADDER);
+  bgFill(32, 12, 57, 15, BG_BRICK);
+  sp('shield', 36, 12); sp('grunt', 40, 12); sp('cage', 44, 12); sp('medic', 48, 12); sp('sapper', 52, 12); sp('pickup', 55, 12, { item: 'intel' });
+  sp('target', 50, 0, { skin: 'radio' }); sp('sniper', 38, 0); sp('turret', 46, 0);
+  lamp(38, 11); lamp(46, 11); lamp(53, 11);
+  dc('plaque', 44, { r: 11, text: 'PANIC ROOM' }); dc('neon', 41, { from: 0, text: 'NO 5G NO PROBLEM' });
+  sp('flag', 62);
+
+  // 3. The trench line: dips to duck into, a mined strip, a fake phone mast with a deck at the top
+  ground(63, 100, 16);
+  fill(68, 16, 73, 17, EMPTY); fill(80, 16, 84, 17, EMPTY); fill(92, 16, 96, 17, EMPTY); bgFill(68, 16, 73, 17, BG_EARTH); bgFill(80, 16, 84, 17, BG_EARTH); bgFill(92, 16, 96, 17, BG_EARTH);
+  fill(87, 5, 87, 15, LADDER); fill(86, 5, 86, 11, STEEL); fill(88, 5, 89, 5, STEEL); // the mast: a lattice leg over an arch, a deck at the top
+  sp('minelayer', 66); sp('grunt', 70); sp('cage', 72); sp('mine', 76); sp('jetpack', 78); sp('heavy', 82); sp('target', 88, 0, { skin: 'radio' }); sp('dronecaller', 90); sp('pickup', 94, 0, { item: 'intel' }); sp('rocketeer', 98);
+  dc('sandbags', 66); dc('sandbags', 78); dc('sign', 85, { text: 'FAKE MAST' }); dc('jammer', 90);
+  sp('flag', 100);
+
+  // 4. The ridge: terraces up to a plateau with a jammer tower, a dugout under the crest with ladders down into it
+  ground(101, 104, 16); ground(105, 108, 14); ground(109, 112, 12); ground(113, 128, 9); ground(129, 132, 12); ground(133, 134, 14);
+  fill(113, 12, 128, 15, EMPTY); bgFill(113, 12, 128, 15, BG_EARTH); fill(112, 12, 112, 15, LADDER); fill(129, 12, 129, 15, LADDER);
+  fill(119, 5, 121, 8, BRICK); fill(118, 5, 118, 8, LADDER); fill(119, 5, 119, 5, STEEL);
+  sp('strike', 103); sp('grunt', 107); sp('knight', 115, 12); sp('cage', 124, 12); sp('target', 120, 0, { skin: 'radio' }); sp('sniper', 114, 0); sp('grenadier', 126, 0); sp('mortar', 132); sp('ammo', 134);
+  dc('pine', 110); dc('jammer', 125, { from: 0 }); dc('sign', 102, { text: 'HIGH GROUND' });
+
+  // 5. Down into the bunker: a ladder shaft to the shelter under the ridge, a lift back up
+  ground(135, 158, 16);
+  { const R = rngOf(2424); ugZone(135, 157, 'bunker'); const spots = ugTunnel(H, 136, 156, 30, 'bunker', R, [140, 141, 155, 156]);
+    ugShaft(H, 140, 16, 30, 'ladder', false); ugShaft(H, 155, 16, 30, 'lift', true);
+    ugStock(H, spots, 30, { R, Q: R, foes: ['grunt', 'sapper', 'pinboard', 'shield'], n: 3, cage: true }); }
+  sp('grenadier', 146); sp('dronecaller', 151);
+  dc('sign', 137, { text: 'SHELTER B', from: 14 }); dc('pine', 149);
+
+  // 6. The blast doors: two foil-clad towers, climb over or shoot through the crate doors under their steel lintels
+  ground(159, 180, 16);
+  fill(163, 7, 165, 15, BRICK); fill(162, 7, 162, 15, LADDER); fill(171, 9, 173, 15, BRICK); fill(170, 9, 170, 15, LADDER);
+  for (const k of [163, 171]) { fill(k, 12, k + 2, 12, STEEL); fill(k, 13, k + 2, 15, CRATE); }
+  sp('guncrate', 160); sp('turret', 164, 0); sp('pickup', 167, 0, { item: 'intel' }); sp('knight', 168); sp('turret', 172, 0); sp('cage', 175); sp('grenadier', 177);
+  dc('sandbags', 159); dc('sign', 167, { text: 'BLAST DOORS' }); sp('flag', 177);
+
+  // 7. The press room: grit over steel, two vents, a gantry with a platform and a ladder, the exit behind a gate
+  fill(181, 15, 230, 17, DIRT); fill(181, 18, 235, 21, STEEL);
+  fill(188, 11, 191, 11, STEEL); fill(187, 11, 187, 14, LADDER); fill(213, 9, 228, 9, STEEL); fill(212, 9, 212, 14, LADDER);
+  vent(201, 15, 7, { col: '#c8d0e0' }); vent(215, 15, 5, { col: '#c8d0e0' });
+  fill(229, 0, 230, 17, STEEL); fill(231, 15, 235, 17, STEEL);
+  sp('engine', 220, 0, { ax0: 182, ax1: 228, trig: 186, final: true, gate: [229, 230, 0, 14], name: 'THE FOIL PRESS', sub: 'Stamps out tinfoil hats. Blocks nothing at all.', hpMul: 1.3 });
+  dc('sign', 183, { text: 'HAT FACTORY' });
 }
 // the campaign: Operation Infinite Dilution. Each level has a briefing, objectives (required ones gate the
 // chopper), three intel files that tell the story, a debrief, and a spot on the world map.
@@ -1775,18 +2084,18 @@ Object.assign(SEG, {
   },
 });
 const NEW_PIECES = { // widths the pieces look right at, and the themes they fit (the stretch picks from these)
-  freight: { w: [32, 40], themes: ['desert', 'rust', 'plant', 'grove', 'citrus', 'sky', 'edge'] },
-  scaffold: { w: [30, 40], themes: ['city', 'rust', 'plant', 'sky', 'moon', 'astro', 'mall'] },
-  canopy: { w: [30, 42], themes: ['island', 'swamp', 'grove', 'citrus', 'sky'] },
-  shipdeck: { w: [30, 40], themes: ['island', 'swamp', 'edge', 'sewer'] },
-  castle: { w: [34, 42], themes: ['edge', 'citrus', 'snow', 'island', 'moon', 'astro', 'volcano'] },
-  mine: { w: [36, 44], themes: ['cave', 'desert', 'rust', 'astro', 'moon', 'snow', 'volcano'] },
+  freight: { w: [32, 40], themes: ['desert', 'rust', 'plant', 'grove', 'citrus', 'sky', 'edge', 'dairy'] },
+  scaffold: { w: [30, 40], themes: ['city', 'rust', 'plant', 'sky', 'moon', 'astro', 'mall', 'park', 'foil'] },
+  canopy: { w: [30, 42], themes: ['island', 'swamp', 'grove', 'citrus', 'sky', 'jungle', 'manor'] },
+  shipdeck: { w: [30, 40], themes: ['island', 'swamp', 'edge', 'sewer', 'jungle'] },
+  castle: { w: [34, 42], themes: ['edge', 'citrus', 'snow', 'island', 'moon', 'astro', 'volcano', 'manor'] },
+  mine: { w: [36, 44], themes: ['cave', 'desert', 'rust', 'astro', 'moon', 'snow', 'volcano', 'jungle', 'foil'] },
   icecave: { w: [32, 44], themes: ['snow', 'cave', 'edge', 'moon', 'astro'] },
   magma: { w: [30, 40], themes: ['citrus', 'grove', 'rust', 'plant', 'cave', 'desert', 'volcano'] },
-  junction: { w: [30, 40], themes: ['sewer', 'swamp', 'city', 'plant', 'cave'] },
-  radar: { w: [34, 44], themes: ['sky', 'astro', 'edge', 'desert', 'moon', 'city', 'snow'] },
-  market: { w: [36, 44], themes: ['city', 'desert', 'citrus', 'grove', 'island', 'sewer', 'mall'] },
-  watertower: { w: [28, 40], themes: ['desert', 'rust', 'plant', 'grove', 'swamp', 'sky', 'city', 'island', 'mall'] },
+  junction: { w: [30, 40], themes: ['sewer', 'swamp', 'city', 'plant', 'cave', 'park', 'manor'] },
+  radar: { w: [34, 44], themes: ['sky', 'astro', 'edge', 'desert', 'moon', 'city', 'snow', 'foil', 'dairy'] },
+  market: { w: [36, 44], themes: ['city', 'desert', 'citrus', 'grove', 'island', 'sewer', 'mall', 'park', 'dairy'] },
+  watertower: { w: [28, 40], themes: ['desert', 'rust', 'plant', 'grove', 'swamp', 'sky', 'city', 'island', 'mall', 'dairy', 'park', 'foil'] },
 };
 Object.assign(ARENA, {
   span(H, o) { // a collapsing span: a steel deck over a dry gorge, with two plank walkways high above that give way when you cross them
@@ -1990,6 +2299,39 @@ LEVELS.splice(LEVELS.length - 1, 0, ...LATE_LEVELS); // the Citadel stays the fi
 // the route on the world map: hand-placed stops on three landmasses, the Citadel on its own island at the end
 const WM_SPOTS = [[26, 186], [76, 166], [52, 104], [104, 132], [150, 98], [152, 162], [194, 188], [214, 140], [198, 96], [252, 120], [298, 170], [338, 190], [324, 110], [366, 90], [382, 146], [416, 110], [414, 182], [452, 192], [450, 142], [462, 92]];
 LEVELS.forEach((L, i) => { L.map = WM_SPOTS[i] ? WM_SPOTS[i].slice() : [26 + Math.round(i * 428 / (LEVELS.length - 1)), 150]; });
+// round 6: five more missions spread over the campaign, each right after a mission whose story leads on to it. Every
+// older mission keeps its seed (seedN: its place among the 20 missions before them) and its LONG_MAPS row, so it builds
+// exactly as before; ramp puts each new one between its neighbours on the difficulty ramp. map: its stop on the world map.
+LEVELS.forEach((L, i) => { if (L.seedN === undefined) L.seedN = i; });
+const ROUND5 = LEVELS.slice(); // the 20 missions before round 6, in their old order (Boss Rush still counts on them)
+const R6_LEVELS = [ // [the mission it follows, its LONG_MAPS row, the mission]
+  ['FLAT EARTH STATION', [2, 3], { name: 'RAW MILK RANCH', sub: 'Tip over the milk vats, stop the Cream Crusher', theme: 'dairy', build: buildRanch, cages: 4, pad: [230, 16], seedN: 20, ramp: 0.265, map: [174, 130],
+    brief: 'The zeppelin log names a dairy where the League sells raw milk as medicine: unpasteurised, untested and twelve dollars a glass, with free germs on the side. Tip over the three raw milk vats, free our people from the barn and the cheese cave, and stop the Cream Crusher, a butter churn on tank tracks.',
+    debrief: 'The vats are empty and the cows are fine. The milk money paid for spray planes at an airfield down the coast.',
+    objectives: [{ id: 'vat', text: 'Tip over the raw milk vats', need: 3, req: true }, { id: 'boss', text: 'Stop the Cream Crusher', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Price list: raw milk, 12 dollars. Pasteurised milk: also milk, 2 dollars.', 'Vet report: the cows are healthy. The milk is not. Heat it, please.', 'Order: 40 spray planes, paid in cheese, for an airfield down the coast.'] }],
+  ['MIASMA MARSH', [3, 2], { name: 'MAGNET FUNLAND', sub: 'Topple the magnet towers, stop the Ringmaster', theme: 'park', build: buildFunland, cages: 4, pad: [231, 16], seedN: 21, ramp: 0.44, map: [236, 84],
+    brief: 'On the road to the observatory the League runs a theme park where every ticket comes with a magnet bracelet that "realigns your energy". Magnets stick to fridges, not to illness. Topple the three magnet towers, free our people from the funhouse and the tunnels, and stop the Ringmaster before the night show.',
+    debrief: 'The park is closed and the bracelets are in a skip. The Ringmaster was booked to read horoscopes at the Zodiac Observatory.',
+    objectives: [{ id: 'radio', text: 'Topple the magnet towers', need: 3, req: true }, { id: 'boss', text: 'Stop the Ringmaster', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Ticket: one ride, one magnet bracelet, one realigned aura. No refunds.', 'Lab test: bracelet against no bracelet. Same result. Test shredded.', 'Booking: the Ringmaster, guest star, Zodiac Observatory, Leo season.'] }],
+  ['PERPETUAL MOTION WORKS', [3, 3], { name: 'SPIRIT BOX MANOR', sub: 'Wipe the ghost servers, bring down the Poltercopter', theme: 'manor', build: buildManor, cages: 4, pad: [231, 16], seedN: 22, ramp: 0.56, map: [260, 158],
+    brief: 'Some of the investors hid in a haunted manor, where the League sells ghost tours and "spirit boxes": gadgets that turn radio static into messages from the dead. Static is static. Wipe the two servers that hold the ghost recordings, free our people from the house and the catacombs, and bring down the Poltercopter.',
+    debrief: 'The ghosts were a radio and a bedsheet. The tour money went to a farm where League farmers flatten wheat into circles.',
+    objectives: [{ id: 'server', text: 'Wipe the ghost servers', need: 2, req: true }, { id: 'boss', text: 'Bring down the Poltercopter', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Recording 12: the ghost says "buy a second spirit box". Very convincing.', 'Tour script: dim the lights, play static, sell the gadget at the exit.', 'Invoice: 300 glow sticks and a ghost suit, for a farm with crop circles.'] }],
+  ['PYRAMID POWER PLANT', [3, 3], { name: 'ANCIENT ALIEN TEMPLE', sub: 'Smash the crystal vats, topple the Ancient Astronaut', theme: 'jungle', build: buildTemple, cages: 4, pad: [231, 16], seedN: 23, ramp: 0.676, map: [334, 150],
+    brief: 'The pyramid bills point up the mountain, but its "alien blueprints" came from a jungle temple where the League says aliens did the building, because people surely could not. People could. Smash the three crystal vats, free our people from the tomb and the dig site, and topple the Ancient Astronaut, a statue that walks.',
+    debrief: 'The statue is gravel. Its donations were wired to the hot spring spa up in the mountains, just as the pyramid bills said.',
+    objectives: [{ id: 'vat', text: 'Smash the crystal vats', need: 3, req: true }, { id: 'boss', text: 'Topple the Ancient Astronaut', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Guide book: who built this? Aliens. Who wrote this book? Also aliens.', 'Dig note: found chisels, ramps and a workers town. Hid them. Said aliens.', 'Bank transfer: donations to Hot Springs Wellness, up the mountain.'] }],
+  ['NEON WELLNESS DISTRICT', [3, 3], { name: 'TINFOIL HAT BUNKER', sub: 'Topple the jammer masts, shut down the Foil Press', theme: 'foil', build: buildBunker, cages: 4, pad: [233, 15], seedN: 24, ramp: 0.912, map: [376, 184],
+    brief: 'Before the groves, one more stop: the Influencer sold an anti-5G pendant, made in a bunker in the pines where the League hides from phone masts. Radio waves are not poison and the pendant blocks nothing. Topple the three jammer masts, free our people from the bunker and the trenches, and shut down the Foil Press.',
+    debrief: 'The press is scrap and the hats are recycling. Every pendant was shipped to the orange groves that feed the Citadel.',
+    objectives: [{ id: 'radio', text: 'Topple the jammer masts', need: 3, req: true }, { id: 'boss', text: 'Shut down the Foil Press', req: true }, { id: 'cage', text: 'Free the scientists', need: 4 }, { id: 'intel', text: 'Find the intel files', need: 3 }],
+    intel: ['Pendant box: blocks 5G, 4G, radio, light and common sense.', 'Lab test: pendant under a phone. Signal: full bars. Test hidden.', 'Shipping: 9,000 pendants to the orange groves, for the Citadel.'] }],
+];
+for (const [after, long, L] of R6_LEVELS) { const i = LEVELS.findIndex((o) => o.name === after) + 1; LEVELS.splice(i, 0, L); LONG_MAPS.splice(i, 0, long); } // the Citadel stays the finale, now mission 25
 // levels outside the campaign: Lab Siege (horde) and the bonus Moon Base
 const EXTRA = [
   { name: 'LAB SIEGE', sub: 'Hold the lab. Waves never stop.', theme: 'island', build: buildSiege, cages: 0, pad: [30, 16], objectives: [], ceasefire: 4 },
@@ -2476,6 +2818,31 @@ const STORY = {
     mid: [['goon', 'This eruption is brought to you by Pure Ash: one hundred percent natural lung coating.'], ['live', 'Chat, I am at a pox party! My spots are spreading. Must be the detox!']],
     boss: [['quack', 'The Immunity Forge! It shakes sulfur into vaccines. No trials. No side effects. No effects.']],
     win: [['hq', 'Forge down. Its last crate of fake vaccine was addressed to the Citrus Citadel.'], ['quack', 'Fine! Come to the Citadel, Peer Review. The King is... ready. Mostly.']] },
+  'RAW MILK RANCH': { intercept: ['quack', 'Raw milk, straight from the cow! Germs are just friends you have not met!'],
+    start: [['hq', 'Raw milk sold as medicine. Pasteur fixed this in 1864. Heat it up, bro.'], ['hq', 'Our people are in the barn and down in the cheese cave.']],
+    mid: [['goon', 'This barn is sponsored by Udder Truth: milk the way germs like it!'], ['live', 'Chat, I drank the raw milk! I feel... alive? No. Lying down now.']],
+    boss: [['quack', 'Cream Crusher, churn them into butter! Unpasteurised butter!']],
+    win: [['hq', 'Churn stopped. The milk money bought spray planes at an airfield.'], ['hq', 'Grant update: Reviewer 2 asks if we tried boiling the problem.']] },
+  'MAGNET FUNLAND': { intercept: ['quack', 'Step right up! Magnets cure it all! Except fridges. Fridges are fine.'],
+    start: [['hq', 'A magnet bracelet does nothing. The rides are real, though. Mind the belts.'], ['hq', 'Our people are in the funhouse and down in the service tunnels.']],
+    mid: [['goon', 'This loop is sponsored by StickyAura: stick it to your doctor!'], ['live', 'Chat, my bracelet pulled me onto the coaster! ...It was the queue.']],
+    boss: [['quack', 'Ladies, gentlemen and bros: the Ringmaster! Hold on to your keys!']],
+    win: [['hq', 'Show over. The Ringmaster was booked at the Zodiac Observatory.']] },
+  'SPIRIT BOX MANOR': { intercept: ['quack', 'The spirits have spoken! They said: spirit boxes, 99 dollars!'],
+    start: [['hq', 'A spirit box flicks through radio stations. The ghosts are the gaps.'], ['hq', 'Our people are in the house and the catacombs. Mind the graves.']],
+    mid: [['goon', 'Tonight is sponsored by SpookCast: hear the dead, cancel any time!'], ['live', 'Chat, a ghost just said my name! ...It was the bro. With a rocket.']],
+    boss: [['quack', 'The Poltercopter! It haunts the sky! Mostly with rotors!']],
+    win: [['hq', 'Copter down. The ghost tour money went to a farm with crop circles.']] },
+  'ANCIENT ALIEN TEMPLE': { intercept: ['quack', 'Ancient people? Building things? No. It was aliens. Obviously.'],
+    start: [['hq', 'People built these temples, with ramps, rope and a lot of hard work.'], ['hq', 'Give them the credit. Then free ours from the tomb and the dig site.']],
+    mid: [['goon', 'This tomb is brought to you by StarGod Tours: aliens or your money back!'], ['live', 'Chat, I found an alien carving! It is a bro. He is shooting at me.']],
+    boss: [['quack', 'Rise, Ancient Astronaut! Carved by aliens! Signed by a sculptor!']],
+    win: [['hq', 'Statue down. The donations went to the hot spring spa up the mountain.'], ['hq', 'Grant update: Reviewer 2 says aliens would have cited their sources.']] },
+  'TINFOIL HAT BUNKER': { intercept: ['quack', 'They beam thoughts into your teeth! Foil hats: two for one!'],
+    start: [['hq', 'Phone masts send radio waves. So does every car radio since 1930.'], ['hq', 'Stay low in the trenches. Those masts are jammers, not phones.']],
+    mid: [['goon', 'This bunker is sponsored by FoilFort: protection from nothing at all!'], ['live', 'Chat, no signal in the bunker! The pendant WORKS! ...Oh. Bunker.']],
+    boss: [['quack', 'Start the Foil Press! One hat per head! Two for the big heads!']],
+    win: [['hq', 'Press down. The pendants went to the orange groves. We are close.']] },
   'CITRUS CITADEL': { intercept: ['citrus', 'Come to my Citadel, bros. I am the Big Orange. I am fully ripe. I am NOT a robot.'],
     start: [['hq', 'This is it: the League capital. Free our last scientists and end this.'], ['placebo', 'You will never reach the King! The rally is in the way! It is a very big rally!']],
     mid: [['quack', 'Citrus! Stand up straight! Wave! Smile! ...Why are you not waving?'], ['live', 'Chat, front row at the Alpha Fruit rally! The King sounds kind of... beepy?']],
@@ -2577,6 +2944,9 @@ const PAUSE_TIPS = [
 ];
 const WIT_SIGNS = {
   'AURA MEGAMALL': ['HEALING: SOLD OUT', 'GLUTEN-FREE ROCKS', 'NO REFUNDS ON KARMA'], 'POX PARTY VOLCANO': ['IMMUNITY: DIY KIT', 'LAVA IS NATURAL TOO', 'HERD OF ONE'],
+  'RAW MILK RANCH': ['GERMS INCLUDED', 'HEAT IS A HOAX', 'MOO MEANS NO'], 'MAGNET FUNLAND': ['NO REFUNDS ON AURAS', 'RIDE AT OWN RISK', 'FRIDGE MAGNETS ONLY'],
+  'SPIRIT BOX MANOR': ['GHOSTS: NOT FOUND', 'STATIC IS STATIC', 'BOO IS NOT DATA'], 'ANCIENT ALIEN TEMPLE': ['HUMANS BUILT THIS', 'RAMPS: ALSO HUMAN', 'ALIENS: NO EVIDENCE'],
+  'TINFOIL HAT BUNKER': ['WAVES: NOT POISON', 'FOIL: FOR COOKING', 'FULL BARS HERE'],
   'PLACEBO ISLAND': ['FEEL BETTER SOON', 'SUGAR 2 FOR 1', 'CURE IN YOUR MIND'], 'DETOX DESERT': ['TOXINS: NONE FOUND', 'CLEANSE OR ELSE', 'WATER: ALSO WATER'],
   'CRYO SUMMIT': ['FROZEN ASSETS', 'PLEASE DO NOT THAW', 'SNAKE OIL: 40% OFF'], 'DILUTION PLANT': ['WEAKER IS BETTER', 'ZERO INGREDIENTS', 'THE WATER REMEMBERS'],
   'FLAT EARTH STATION': ['EDGE: 3 KM', 'PLUMB LINE: SKEWED', 'GLOBE-FREE ZONE'], 'CITRUS CITADEL': ['VITAMIN C FIXES ALL', 'SQUEEZE THE TRUTH', 'FRESH-SQUEEZED LIES'],
@@ -2823,7 +3193,8 @@ let bossMul = 1;
 // vents and cracked ground lead down to mines, bunkers, sewers, acid caverns and buried labs, and back up again.
 // Inside a zone the camera follows you down; anywhere else, falling below row 21 is still falling off the map.
 const GH = 22, UG_KINDS = ['mine', 'bunker', 'sewer', 'cavern', 'lab'];
-const UG_BY_THEME = { cave: ['cavern', 'mine'], sewer: ['sewer', 'sewer', 'cavern'], rust: ['bunker', 'sewer', 'mine'], plant: ['lab', 'sewer'], city: ['sewer', 'bunker'], astro: ['lab', 'bunker'], moon: ['lab', 'bunker'], desert: ['cavern', 'lab', 'mine'], snow: ['cavern', 'bunker'], citrus: ['bunker', 'lab'], mall: ['bunker', 'lab'], volcano: ['cavern', 'mine'] };
+const UG_BY_THEME = { cave: ['cavern', 'mine'], sewer: ['sewer', 'sewer', 'cavern'], rust: ['bunker', 'sewer', 'mine'], plant: ['lab', 'sewer'], city: ['sewer', 'bunker'], astro: ['lab', 'bunker'], moon: ['lab', 'bunker'], desert: ['cavern', 'lab', 'mine'], snow: ['cavern', 'bunker'], citrus: ['bunker', 'lab'], mall: ['bunker', 'lab'], volcano: ['cavern', 'mine'],
+  dairy: ['cavern', 'bunker'], park: ['sewer', 'lab'], manor: ['cavern', 'lab'], jungle: ['cavern', 'mine'], foil: ['bunker', 'bunker', 'lab'] };
 const UG_SIGN = { mine: ['MINE 7', 'DIG SITE', 'ORE SHAFT'], bunker: ['BUNKER', 'SHELTER', 'NO ENTRY'], sewer: ['SEWER', 'DRAINS', 'OUTFLOW'], cavern: ['CAVES', 'GROTTO', 'KEEP OUT'], lab: ['SECRET LAB', 'LAB B2', 'R AND D'] };
 const deep = new Uint8Array(LW), ugDug = new Uint8Array(LW); // columns of a zone (camera and fall line); columns that have their earth already
 let ugZones = [], ugOf = null; // the zones of the level built last, and its tile array (a new array means a new level)
@@ -2911,11 +3282,11 @@ function ugGen(H, R, x, spots, F, kind, qs, objective, cage) { // stock a random
 }
 // a campaign stretch gets two or three detours under the ground (LONG_MAPS), spread along it: down a shaft, through a
 // tunnel, up another. A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
-const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant
+const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant (by seedN, their place in the 18-mission campaign)
 function underStretch(H, n) {
   const want = longOf(n)[1], R = rngOf(4099 + seedN(n) * 977), c0 = cutAt + 8, end = cutAt + stretchW - 6, W = Math.floor((end - c0) / want);
   for (let i = 0, prev = 0; i < want; i++) { const b = ugDetour(H, n, Math.max(c0 + i * W, prev + 14), end - 24, end, R); if (b > 0) prev = b; } // each starts at its share of the stretch, or the first good spot after it
-  if (UG_MISSIONS.includes(n)) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + n * 131));
+  if (UG_MISSIONS.includes(seedN(n))) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + seedN(n) * 131));
 }
 function ugDetour(H, n, lo, aMax, hi, R) { // a = the entry shaft between lo and aMax, b = the exit shaft before hi
   const busy = (k) => spawns.some((o) => !THREAT[o.type] && Math.abs(o.c - k - 0.5) < 2.5) || devs.some((d) => d.kind !== 'wind' && d.x1 > (k - 2) * T && d.x0 < (k + 4) * T); // a quack over a shaft just starts at its foot
@@ -2931,7 +3302,7 @@ function ugDetour(H, n, lo, aMax, hi, R) { // a = the entry shaft between lo and
   ugZone(a - L - 1, b + 1, kind);
   const spots = ugTunnel(H, a - L, b, F, kind, R, [a, a + 1, b - 1, b]);
   ugShaft(H, a, sa, F, down, false); ugShaft(H, b - 1, sb, F, up, true);
-  ugStock(H, spots, F, { R, Q: R, foes: STRETCH_FOES, n: 2 + (seedN(n) % 3), cage: n >= 4 });
+  ugStock(H, spots, F, { R, Q: R, foes: STRETCH_FOES, n: 2 + (seedN(n) % 3), cage: seedN(n) >= 4 });
   return b;
 }
 function drawUnder() { // dark rock behind everything under row 21; it only shows where nothing else is drawn
@@ -3268,7 +3639,7 @@ function startAmbience() {
   if (!AC || !theme) return;
   try {
     if (amb) { amb.src.stop(); amb = null; }
-    const kind = theme.rain ? 'rain' : theme.name === 'plant' || theme.name === 'rust' || theme.name === 'mall' ? 'hum' : theme.name === 'cave' || theme.name === 'sewer' ? 'cave' : theme.name === 'moon' ? null : 'wind';
+    const kind = theme.rain ? 'rain' : theme.name === 'plant' || theme.name === 'rust' || theme.name === 'mall' || theme.name === 'park' ? 'hum' : theme.name === 'cave' || theme.name === 'sewer' || theme.name === 'manor' ? 'cave' : theme.name === 'moon' ? null : 'wind';
     if (!kind) return;
     const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
     src.buffer = noiseBuf; src.loop = true;
@@ -3659,7 +4030,7 @@ function updateSiege(dt) {
   }
 }
 // ---- Boss Rush: every boss in a row against the clock
-const RUSH = [[0, 179, 'boss'], [1, 85, 'kopter'], [1, 178, 'crawler'], [2, 179, 'tank'], [3, 183, 'engine'], [4, 167, 'blimp'], [5, 178, 'kopter'], [6, 179, 'crawler'], [7, 178, 'tank'], [8, 178, 'boss'], [9, 178, 'director'], [10, 178, 'blimp'], [11, 179, 'crawler'], [12, 178, 'tank'], [13, 178, 'kopter'], [14, 179, 'crawler'], [15, 178, 'director'], [16, 178, 'boss'], [LEVELS.length - 1, 181, 'citrus']];
+const RUSH = [[0, 179, 'boss'], [1, 85, 'kopter'], [1, 178, 'crawler'], [2, 179, 'tank'], [3, 183, 'engine'], [4, 167, 'blimp'], [5, 178, 'kopter'], [6, 179, 'crawler'], [7, 178, 'tank'], [8, 178, 'boss'], [9, 178, 'director'], [10, 178, 'blimp'], [11, 179, 'crawler'], [12, 178, 'tank'], [13, 178, 'kopter'], [14, 179, 'crawler'], [15, 178, 'director'], [16, 178, 'boss'], [19, 181, 'citrus']].map(([l, c, type]) => [LEVELS.indexOf(ROUND5[l]), c, type]); // by their place among the 20 missions before round 6, so the rush is the same
 const rush = { i: 0, t: 0, nextT: 0, best: 0 };
 try { rush.best = +localStorage.getItem('sciencebros.rush') || 0; } catch (e) { /* storage blocked */ }
 function loadRush(i) {
@@ -5001,7 +5372,7 @@ let ev = null, evPlan = null, evClock = 0, evLog = [];
 const evRoll = (n, k) => { const v = Math.sin(seedN(n) * 91.73 + k * 13.37 + 7.1) * 43758.5453; return v - Math.floor(v); };
 function resetEvents(n) {
   nukes = []; quake = 0; whiteT = 0; ashT = 0; ev = null; evClock = 0; evPlan = null;
-  if (mode !== 'campaign' || n < 2 || n >= LEVELS.length || evRoll(n, 0) > 0.3 + 0.6 * campaignDiff(n).p) return;
+  if (mode !== 'campaign' || n >= LEVELS.length || seedN(n) < 2 || evRoll(n, 0) > 0.3 + 0.6 * campaignDiff(n).p) return;
   const pool = EVENTS.filter((k) => (k !== 'meteor' || ['edge', 'astro', 'moon'].includes(theme.name)) && (k !== 'blackout' || theme.ambient >= 0.3));
   const B = ents.find((e) => BOSS[e.type] && e.ax0 !== undefined), end = B ? B.ax0 - 20 : playW - 50;
   evPlan = { name: pool[Math.floor(evRoll(n, 1) * pool.length)], col: 30 + evRoll(n, 2) * Math.max(10, end - 40), minT: 8, maxT: 75 };
@@ -7312,7 +7683,7 @@ function updateProps(dt) {
   }
 }
 // signs, bushes and trees do not just stand there: shots knock them down (hp by kind; others fall in one hit)
-const DECOR_HP = { sign: 1, cactus: 1, pine: 2, palm: 3, sandbags: 3, snowman: 2, scarecrow: 2, orange: 2, neon: 1, crystal: 2, cart: 2, cauldron: 2 };
+const DECOR_HP = { sign: 1, cactus: 1, pine: 2, palm: 3, sandbags: 3, snowman: 2, scarecrow: 2, orange: 2, neon: 1, crystal: 2, cart: 2, cauldron: 2, balloons: 1, grave: 2, idol: 4, jammer: 1 };
 let decorCols = null, decorFor = null, decorN = 0;
 function shootDecor(x, y, d8 = 1) {
   if (decorFor !== decor || decorN !== decor.length) { decorFor = decor; decorN = decor.length; decorCols = new Map(); for (const d of decor) if (DECOR_HP[d.kind]) { let a = decorCols.get(d.c); if (!a) decorCols.set(d.c, (a = [])); a.push(d); } }
@@ -7326,7 +7697,7 @@ function shootDecor(x, y, d8 = 1) {
 }
 function topple(d) {
   const x = d.c * T + 8, y = d.kind === 'plaque' ? d.r * T + 8 : d.r * T - 8;
-  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'], scarecrow: ['#8e2b3c', '#d9b45a', '#5a4226'], orange: ['#2f6a2a', '#ff9a2a', '#5a3a22'], cart: ['#c8ccd8', '#e78ac3', '#b3a6ff'], cauldron: ['#1b1d2e', '#9ad84a', '#ff7a2a'], neon: ['#ff4fa3', '#4ff0ff', '#25223a'] }[d.kind];
+  const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'], scarecrow: ['#8e2b3c', '#d9b45a', '#5a4226'], orange: ['#2f6a2a', '#ff9a2a', '#5a3a22'], cart: ['#c8ccd8', '#e78ac3', '#b3a6ff'], cauldron: ['#1b1d2e', '#9ad84a', '#ff7a2a'], cow: ['#f4f0e6', '#25223a', '#f2b8c0'], balloons: ['#ff5a8a', '#ffd84a', '#68eedc'], grave: ['#5a5468', '#7a7488', '#4a6a3a'], idol: ['#5a5a44', '#7a7a5e', '#5a8a3a'], jammer: ['#c8ccd6', '#5c6480', '#ff3a3a'], neon: ['#ff4fa3', '#4ff0ff', '#25223a'] }[d.kind];
   const n = d.kind === 'palm' ? 16 : 9;
   for (let i = 0; i < n; i++) chunk(x + rand(-6, 6), y - (d.kind === 'palm' ? rand(0, 40) : rand(0, 8)), rand(-140, 140), rand(-220, -40), cols[i % cols.length], i < 3 ? 4 + i : 0);
   dust(x, y + 6, d.kind === 'palm' ? 4 : 3, 60);
@@ -7441,6 +7812,34 @@ function drawBackground(t) {
     ctx.stroke(); ctx.lineWidth = 1;
     ctx.strokeStyle = mixHex(th.city, th.sky[2], 0.3); ctx.beginPath(); for (const y of [18, 42]) { ctx.moveTo(0, y + top); ctx.lineTo(VW, y + top); } ctx.stroke();
     ctx.globalAlpha = 0.1; ctx.fillStyle = '#ffffff'; const gx = ((t * 18 - ox) % (VW + 80) + VW + 80) % (VW + 80) - 40; ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx + 14, 0); ctx.lineTo(gx - 10, low); ctx.lineTo(gx - 24, low); ctx.fill(); ctx.globalAlpha = 1;
+  } else if (th.orb === 'dawn') { // the ranch at sunrise: a big pale sun low over the pasture, soft rays fanning up
+    const sx = 130 - cam.x * 0.02, sy = 150 - cam.y * 0.05;
+    ctx.fillStyle = '#fff4d0'; for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.32 + Math.sin(t * 0.2) * 0.03; ctx.globalAlpha = 0.08; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + Math.cos(a - 0.06) * 280, sy + Math.sin(a - 0.06) * 280); ctx.lineTo(sx + Math.cos(a + 0.06) * 280, sy + Math.sin(a + 0.06) * 280); ctx.fill(); }
+    ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.arc(sx, sy, 52, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.fillStyle = '#fff8e4'; ctx.beginPath(); ctx.arc(sx, sy, 32, 0, 7); ctx.fill();
+  } else if (th.orb === 'ferris') { // the funfair at sunset: the low sun, and a giant wheel turning with lit gondolas
+    const fx = 330 - cam.x * 0.03, fy = 104 - cam.y * 0.04, R = 70, a0 = t * 0.12;
+    ctx.fillStyle = '#ffd8a0'; ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.arc(110 - cam.x * 0.02, 152 - cam.y * 0.05, 30, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = th.city; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(fx, fy, R, 0, 7); ctx.moveTo(fx + R * 0.62, fy); ctx.arc(fx, fy, R * 0.62, 0, 7);
+    for (let k = 0; k < 12; k++) { const a = a0 + k * Math.PI / 6; ctx.moveTo(fx, fy); ctx.lineTo(fx + Math.cos(a) * R, fy + Math.sin(a) * R); }
+    ctx.moveTo(fx, fy); ctx.lineTo(fx - 44, fy + 140); ctx.moveTo(fx, fy); ctx.lineTo(fx + 44, fy + 140); ctx.stroke(); ctx.lineWidth = 1;
+    for (let k = 0; k < 12; k++) { const a = a0 + k * Math.PI / 6, gx = fx + Math.cos(a) * R, gy = fy + Math.sin(a) * R; ctx.fillStyle = th.city; ctx.fillRect(gx - 4, gy, 8, 6); ctx.fillStyle = th.win[k & 1]; ctx.globalAlpha = Math.sin(t * 3 + k) > -0.6 ? 0.9 : 0.3; ctx.fillRect(gx - 2, gy + 1, 4, 2); ctx.globalAlpha = 1; }
+  } else if (th.orb === 'fullmoon') { // a huge full moon with a green halo, bats crossing it
+    const mx = 360 - cam.x * 0.02, my = 62 - cam.y * 0.04;
+    ctx.fillStyle = '#c8ffd8'; for (const [r, a] of [[64, 0.05], [44, 0.08]]) { ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(mx, my, r, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#f4f0d8'; ctx.beginPath(); ctx.arc(mx, my, 27, 0, 7); ctx.fill(); ctx.fillStyle = '#d8d2b4'; for (const [dx, dy, r] of [[-8, -6, 5], [7, 4, 6], [-3, 11, 3], [11, -9, 3]]) { ctx.beginPath(); ctx.arc(mx + dx, my + dy, r, 0, 7); ctx.fill(); }
+    ctx.fillStyle = '#0a0812'; for (let k = 0; k < 4; k++) { const p = (t * 0.05 + k * 0.27) % 1, bx = -20 + p * (VW + 40), by = my - 24 + k * 14 + Math.sin(t * 2 + k * 3) * 8, w = Math.sin(t * 14 + k) > 0 ? 3 : 1; ctx.fillRect(bx - 4, by - w, 3, w); ctx.fillRect(bx + 1, by - w, 3, w); ctx.fillRect(bx - 1, by - 1, 2, 2); }
+  } else if (th.orb === 'haze') { // the jungle: a white sun in the steam, light shafts slanting down through the canopy
+    const sx = 300 - cam.x * 0.02, sy = 34 - cam.y * 0.04;
+    ctx.fillStyle = '#f8ffe0'; for (const [r, a] of [[72, 0.08], [44, 0.14], [24, 0.55]]) { ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill(); }
+    for (let k = 0; k < 5; k++) { const x = ((k * 110 - cam.x * 0.08) % (VW + 120) + VW + 120) % (VW + 120) - 60; ctx.globalAlpha = 0.05 + Math.max(0, Math.sin(t * 0.4 + k * 1.7)) * 0.05; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 26, 0); ctx.lineTo(x + 86, VH); ctx.lineTo(x + 40, VH); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  } else if (th.orb === 'tower5g') { // the bunker's nightmare: a phone mast on the far hill, red lights blinking, rings of signal rolling out
+    const mx = 320 - cam.x * 0.03, base = 196 - cam.y * 0.05, top = base - 150;
+    ctx.strokeStyle = th.win[1]; for (let k = 0; k < 3; k++) { const p = (t * 0.35 + k / 3) % 1; ctx.globalAlpha = 0.28 * (1 - p); ctx.beginPath(); ctx.arc(mx, top + 8, 10 + p * 170, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke(); }
+    ctx.globalAlpha = 1; ctx.strokeStyle = '#1e3036'; ctx.beginPath(); ctx.moveTo(mx - 22, base); ctx.lineTo(mx - 3, top); ctx.lineTo(mx + 3, top); ctx.lineTo(mx + 22, base);
+    for (let y = top + 12; y < base; y += 12) { const hw = 3 + (y - top) / (base - top) * 19; ctx.moveTo(mx - hw, y); ctx.lineTo(mx + hw, y + 12); ctx.moveTo(mx + hw, y); ctx.lineTo(mx - hw, y + 12); }
+    ctx.stroke(); ctx.fillStyle = '#1e3036'; for (const s of [-1, 1]) ctx.fillRect(mx + s * 7 - 2, top + 4, 4, 16);
+    ctx.fillStyle = Math.sin(t * 3) > 0 ? '#ff3a3a' : '#5a1010'; ctx.fillRect(mx - 1, top - 4, 3, 3); ctx.fillRect(mx - 13, top + 64, 2, 2); ctx.fillRect(mx + 12, top + 64, 2, 2);
   } else if (th.orb === 'none') { /* underground: no sky */
   } else if (th.orb === 'moon') {
     ctx.fillStyle = '#e8eef8'; ctx.beginPath(); ctx.arc(390 - cam.x * 0.02, 46, 16, 0, 7); ctx.fill();
@@ -7483,9 +7882,18 @@ function drawBackground(t) {
     if (th.hills === 'cones') { const u = ((wx / 90) % 2 + 2) % 2; ctx.lineTo(x, y0 + 30 - Math.min(1 - Math.abs(u - 1), 0.8) * (52 + Math.sin(Math.floor(wx / 180) * 1.9) * 14)); } // flat-topped cones: craters
     else if (th.hills === 'peaks') { const u = ((wx / 64) % 2 + 2) % 2; ctx.lineTo(x, y0 + 26 - (1 - Math.abs(u - 1)) * (44 + Math.sin(Math.floor(wx / 128) * 2.7) * 14)); }
     else if (th.hills === 'dunes') ctx.lineTo(x, y0 + 12 + Math.sin(wx * 0.007) * 18 + Math.sin(wx * 0.019 + 1) * 5);
+    else if (th.hills === 'pasture') ctx.lineTo(x, y0 + 14 + Math.sin(wx * 0.006) * 14 + Math.sin(wx * 0.017 + 2) * 4); // long gentle meadows
+    else if (th.hills === 'canopy') ctx.lineTo(x, y0 - 8 - Math.abs(Math.sin(wx * 0.045)) * 16 - Math.abs(Math.sin(wx * 0.11 + 1)) * 6); // the bumpy top of the rainforest
+    else if (th.hills === 'pines') { const u = ((wx / 12) % 2 + 2) % 2; ctx.lineTo(x, y0 + 8 - (1 - Math.abs(u - 1)) * (18 + Math.sin(Math.floor(wx / 24) * 3.1) * 7)); } // a ragged line of pine tops
     else ctx.lineTo(x, y0 + Math.sin(wx * 0.013) * 22 + Math.sin(wx * 0.031) * 9);
   }
   ctx.lineTo(VW, VH); ctx.fill();
+  if (th.hills === 'coaster') { // a roller coaster across the far hills: a track on trestles, a train of cars running along it
+    const off = cam.x * 0.24, y0 = 150 - cam.y * 0.17, ty = (x) => y0 - 26 - Math.sin((x + off) * 0.018) * 22 - Math.max(0, Math.sin((x + off) * 0.006)) * 26;
+    ctx.strokeStyle = th.city; ctx.beginPath(); for (let x = -((off) % 16); x <= VW; x += 16) { ctx.moveTo(x, ty(x)); ctx.lineTo(x, VH); } ctx.stroke();
+    ctx.lineWidth = 2; ctx.beginPath(); for (let x = 0; x <= VW; x += 4) (x ? ctx.lineTo(x, ty(x)) : ctx.moveTo(x, ty(x))); ctx.stroke(); ctx.lineWidth = 1;
+    const cx0 = ((t * 70) % (VW + 200)) - 100; for (let k = 0; k < 4; k++) { const x = cx0 - k * 9; ctx.fillStyle = th.city; ctx.fillRect(x - 3, ty(x) - 5, 7, 5); ctx.fillStyle = th.win[k & 1]; ctx.fillRect(x - 2, ty(x) - 4, 2, 1); }
+  }
   if (th.hills === 'gallery') drawGallery(t); // the mall's balconies cover the hills
   if (th.hills === 'sea') { // the sea out to the horizon, with glints that drift
     const sy = 152 - cam.y * 0.22;
@@ -7499,6 +7907,14 @@ function drawBackground(t) {
     for (let x = 0; x <= VW; x += 6) ctx.lineTo(x, ridge(x));
     ctx.lineTo(VW, VH); ctx.fill();
     ctx.fillStyle = th.hills === 'cones' ? th.acid[1] : mixHex(th.hill, th.sky[2], 0.25); ctx.globalAlpha = th.hills === 'cones' ? 0.55 : 1; for (let x = 0; x <= VW; x += 2) ctx.fillRect(x, Math.round(ridge(x)), 2, 1); ctx.globalAlpha = 1;
+    if (th.hills === 'pasture' || th.hills === 'graves') { // a fence along the meadow ridge; headstones and crosses on the cemetery hill
+      const off = cam.x * 0.32, sp = th.hills === 'pasture' ? 14 : 22; ctx.fillStyle = near;
+      for (let x = -(off % sp); x <= VW; x += sp) {
+        const y = Math.round(ridge(x)), k = Math.floor((x + off) / sp);
+        if (th.hills === 'pasture') { ctx.fillRect(x, y - 7, 2, 7); ctx.fillRect(x, y - 6, sp, 1); ctx.fillRect(x, y - 3, sp, 1); }
+        else if (k % 3 === 0) { ctx.fillRect(x - 1, y - 9, 3, 9); ctx.fillRect(x - 3, y - 7, 7, 2); } else if (k % 3 === 1) { ctx.fillRect(x - 3, y - 6, 7, 6); ctx.beginPath(); ctx.arc(x + 0.5, y - 6, 3.5, Math.PI, 0); ctx.fill(); }
+      }
+    }
   }
   // searchlights sweeping the sky
   ctx.fillStyle = th.beam;
@@ -7610,6 +8026,37 @@ function drawBackground(t) {
         else if (L.dome) { const h = L.h; ctx.beginPath(); ctx.moveTo(xx - 8, base + 60); ctx.lineTo(xx + 4, base - h); ctx.lineTo(xx + L.w - 4, base - h * 0.85); ctx.lineTo(xx + L.w + 8, base + 60); ctx.fill(); ctx.fillStyle = th.acid[1]; ctx.fillRect(mx - 2, base - h * 0.9, 4, h * 0.9 + 60); ctx.fillStyle = th.acid[2]; for (let k = 0; k < 4; k++) ctx.fillRect(mx - 1, base - h * 0.9 + ((t * 30 + k * h * 0.25) % (h * 0.9)), 2, 4); ctx.globalAlpha = 0.25; ctx.fillStyle = th.acid[1]; ctx.beginPath(); ctx.arc(mx, base + 6, 16, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
         else if (L.ant) { ctx.fillRect(mx - 5, base - L.h * 1.1, 10, L.h * 1.1 + 60); ctx.fillRect(mx - 8, base - L.h * 1.1, 16, 4); ctx.globalAlpha = 0.25; ctx.fillStyle = '#c8b860'; for (let k = 0; k < 4; k++) { const p = (t * 0.25 + k / 4 + L.x * 0.01) % 1; ctx.beginPath(); ctx.arc(mx + p * 14, base - L.h * 1.1 - 6 - p * 40, 4 + p * 8, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; }
         else for (let k = 0; k < 4; k++) { const cw = L.w / 4, ch = L.h * (0.45 + ((k * 37 + (L.x | 0)) % 5) * 0.12); ctx.fillStyle = th.city; ctx.fillRect(xx + k * cw, base - ch, cw - 1, ch + 60); ctx.fillStyle = th.hill; ctx.fillRect(xx + k * cw, base - ch, cw - 1, 2); }
+        continue;
+      }
+      if (th.cityKind === 'barns') { // red barns with white trim, round-topped silos, a windpump turning
+        if (L.dome) { ctx.fillRect(mx - 6, base - L.h * 1.1, 12, L.h * 1.1 + 60); ctx.beginPath(); ctx.arc(mx, base - L.h * 1.1, 6, Math.PI, 0); ctx.fill(); ctx.fillStyle = th.hill; ctx.fillRect(mx - 6, base - L.h * 0.8, 12, 2); ctx.fillRect(mx - 6, base - L.h * 0.5, 12, 2); }
+        else if (L.ant) { ctx.fillRect(mx - 1, base - L.h * 1.2, 2, L.h * 1.2 + 60); ctx.save(); ctx.translate(mx, base - L.h * 1.2); ctx.rotate(t * 1.5 + L.x); for (let k = 0; k < 8; k++) { ctx.rotate(0.785); ctx.fillRect(0, -1, 10, 2); } ctx.restore(); }
+        else { const by = base - L.h * 0.55; ctx.beginPath(); ctx.moveTo(xx - 3, by); ctx.lineTo(xx + L.w * 0.22, by - L.h * 0.3); ctx.lineTo(xx + L.w * 0.78, by - L.h * 0.3); ctx.lineTo(xx + L.w + 3, by); ctx.lineTo(xx + L.w, base + 60); ctx.lineTo(xx, base + 60); ctx.fill(); ctx.strokeStyle = th.win[1]; ctx.globalAlpha = 0.45; ctx.strokeRect(mx - 6.5, by + 6.5, 13, 14); ctx.beginPath(); ctx.moveTo(mx - 6, by + 7); ctx.lineTo(mx + 6, by + 20); ctx.moveTo(mx + 6, by + 7); ctx.lineTo(mx - 6, by + 20); ctx.stroke(); ctx.globalAlpha = 1; }
+        continue;
+      }
+      if (th.cityKind === 'rides') { // a drop tower with a falling car, striped big-top tents, a looping track
+        if (L.dome && L.ant) { const h = L.h * 1.5; ctx.fillRect(mx - 3, base - h, 6, h + 60); const cy = base - h + 6 + ((Math.sin(t * 0.8 + L.x) * 0.5 + 0.5) ** 3) * (h - 20); ctx.fillStyle = th.win[0]; ctx.fillRect(mx - 7, cy, 14, 6); ctx.fillStyle = Math.sin(t * 6) > 0 ? th.win[1] : th.city; ctx.fillRect(mx - 1, base - h - 4, 2, 3); }
+        else if (L.dome) { const h = L.h * 0.7, w2 = L.w + 8; ctx.beginPath(); ctx.moveTo(xx - 4, base); ctx.lineTo(mx, base - h); ctx.lineTo(xx + L.w + 4, base); ctx.fill(); ctx.fillRect(xx - 4, base, w2, 60); ctx.globalAlpha = 0.3; ctx.fillStyle = th.win[1]; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(mx, base - h); ctx.lineTo(xx - 4 + k * w2 / 4, base); ctx.lineTo(xx - 4 + (k + 0.5) * w2 / 4, base); ctx.fill(); } ctx.globalAlpha = 1; ctx.fillStyle = th.win[0]; ctx.fillRect(mx, base - h - 6, 1, 6); ctx.fillRect(mx + 1, base - h - 6, 4, 2); }
+        else if (L.ant) { const r = L.w * 0.5, cy = base - L.h * 0.5 - r; ctx.strokeStyle = th.city; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(mx, cy, r, 0, 7); ctx.stroke(); ctx.lineWidth = 1; ctx.fillRect(mx - r - 1, cy, 3, base - cy + 60); ctx.fillRect(mx + r - 2, cy, 3, base - cy + 60); }
+        else { ctx.fillRect(xx, base - L.h * 0.3, L.w, L.h + 60); ctx.globalAlpha = 0.55; for (let k = 0; k < L.w; k += 6) { ctx.fillStyle = (k / 6) % 2 ? th.win[1] : '#f4eadc'; ctx.fillRect(xx + k, base - L.h * 0.3 - 4, Math.min(6, L.w - k), 4); } ctx.globalAlpha = 1; }
+        continue;
+      }
+      if (th.cityKind === 'gothic') { // a crooked mansion with spires and a few lit windows, a church spire, bare trees
+        if (L.dome && L.ant) { const h = L.h * 1.2; ctx.fillRect(xx, base - h * 0.6, L.w, h + 60); for (const k of [0, L.w - 10]) { ctx.fillRect(xx + k, base - h, 10, h); ctx.beginPath(); ctx.moveTo(xx + k - 2, base - h); ctx.lineTo(xx + k + 5, base - h - 18); ctx.lineTo(xx + k + 12, base - h); ctx.fill(); } ctx.fillStyle = th.win[0]; for (let wy = base - h * 0.5; wy < base - 6; wy += 10) for (let wx = xx + 4; wx < xx + L.w - 4; wx += 8) if (((wx * 7 + wy * 13) | 0) % 3 === 0) { ctx.globalAlpha = 0.45 + Math.sin(t * 2 + wx) * 0.2; ctx.fillRect(wx, wy, 3, 5); } ctx.globalAlpha = 1; }
+        else if (L.dome) { const h = L.h * 1.3; ctx.fillRect(mx - 4, base - h, 8, h + 60); ctx.beginPath(); ctx.moveTo(mx - 6, base - h); ctx.lineTo(mx, base - h - 26); ctx.lineTo(mx + 6, base - h); ctx.fill(); ctx.fillRect(mx - 1, base - h - 34, 2, 8); ctx.fillRect(mx - 3, base - h - 31, 6, 2); }
+        else { ctx.strokeStyle = th.city; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx, base + 60); ctx.lineTo(mx, base - L.h * 0.7); for (const k of [-1, 1]) { ctx.moveTo(mx, base - L.h * 0.45); ctx.lineTo(mx + k * 14, base - L.h * 0.8); ctx.lineTo(mx + k * 20, base - L.h * 0.78); ctx.moveTo(mx, base - L.h * 0.62); ctx.lineTo(mx + k * 8, base - L.h * 0.95); } ctx.stroke(); ctx.lineWidth = 1; }
+        continue;
+      }
+      if (th.cityKind === 'temples') { // stepped temples in the canopy with a shrine on top, stone heads, a waterfall
+        if (L.dome) { const steps = 5, sw = L.w * 1.6, sh = L.h * 0.18; for (let k = 0; k < steps; k++) ctx.fillRect(mx - sw / 2 + k * sw * 0.08, base - (k + 1) * sh, sw - k * sw * 0.16, sh + 1 + (k ? 0 : 60)); ctx.fillRect(mx - 6, base - steps * sh - 10, 12, 10); ctx.fillStyle = th.hill; ctx.fillRect(mx - 2, base - steps * sh, 4, steps * sh); ctx.fillStyle = th.win[0]; ctx.globalAlpha = 0.55; ctx.fillRect(mx - 2, base - steps * sh - 7, 4, 4); ctx.globalAlpha = 1; }
+        else if (L.ant) { const h = L.h * 0.6; ctx.fillRect(mx - 8, base - h, 16, h + 60); ctx.fillRect(mx - 9, base - h - 4, 18, 6); ctx.fillStyle = th.hill; ctx.fillRect(mx - 5, base - h + 6, 3, 2); ctx.fillRect(mx + 2, base - h + 6, 3, 2); ctx.fillRect(mx - 3, base - h + 13, 6, 2); }
+        else { ctx.fillRect(xx, base - L.h * 0.9, L.w, L.h + 60); ctx.fillStyle = th.acid[2]; ctx.globalAlpha = 0.3; ctx.fillRect(mx - 2, base - L.h * 0.9, 4, L.h * 0.9 + 60); ctx.globalAlpha = 0.6; for (let k = 0; k < 4; k++) ctx.fillRect(mx - 1, base - L.h * 0.9 + ((t * 40 + k * 20 + L.x) % (L.h * 0.9)), 2, 3); ctx.globalAlpha = 1; }
+        continue;
+      }
+      if (th.cityKind === 'bunkers') { // pine woods, foil-wrapped bunker domes, a lattice mast with a blinking light
+        if (L.dome) { const dy = base - L.h * 0.3; ctx.beginPath(); ctx.arc(mx, dy, L.w / 2, Math.PI, 0); ctx.fill(); ctx.fillRect(xx, dy, L.w, L.h + 60); ctx.globalAlpha = 0.35; ctx.fillStyle = '#c8ccd6'; for (let k = 0; k < 5; k++) ctx.fillRect(mx - L.w / 2 + 3 + k * L.w / 5, dy - L.w * 0.3 + Math.abs(k - 2) * 4, 3, 2); ctx.globalAlpha = 1; }
+        else if (L.ant) { const h = L.h * 1.4; ctx.strokeStyle = th.city; ctx.beginPath(); ctx.moveTo(mx - 8, base + 60); ctx.lineTo(mx, base - h); ctx.lineTo(mx + 8, base + 60); for (let y = base - h + 10; y < base; y += 10) { const hw = (y - base + h) / h * 8; ctx.moveTo(mx - hw, y); ctx.lineTo(mx + hw, y + 10); } ctx.stroke(); ctx.fillStyle = Math.sin(t * 3 + L.x) > 0 ? th.win[0] : th.city; ctx.fillRect(mx - 1, base - h - 3, 3, 3); }
+        else for (let k = 0; k < 3; k++) { const px = xx + k * L.w / 2, ph = L.h * (0.6 + 0.2 * (k % 2)); ctx.fillStyle = th.city; ctx.beginPath(); ctx.moveTo(px - 10, base + 60); ctx.lineTo(px, base - ph); ctx.lineTo(px + 10, base + 60); ctx.fill(); }
         continue;
       }
       if (th.cityKind === 'towers') { // castle towers with battlements
@@ -7848,6 +8295,30 @@ function drawDecor(t) {
       ctx.fillStyle = '#1b1d2e'; ctx.beginPath(); ctx.arc(x, y - 9, 7, 0, Math.PI); ctx.fill(); ctx.fillRect(x - 8, y - 10, 16, 2); ctx.fillRect(x - 6, y - 4, 1, 4); ctx.fillRect(x + 5, y - 4, 1, 4);
       ctx.fillStyle = '#9ad84a'; ctx.fillRect(x - 6, y - 11, 12, 1); for (let k = 0; k < 3; k++) { const b = (t * 1.5 + k * 0.37 + d.seed) % 1; ctx.fillRect(x - 4 + k * 4, y - 12 - Math.round(b * 2), 2, 1); }
       ctx.globalAlpha = 0.22; ctx.fillStyle = '#c8e8a0'; for (let k = 0; k < 3; k++) { const b = (t * 0.5 + k / 3 + d.seed) % 1; ctx.beginPath(); ctx.arc(x + Math.sin(t + k) * 3, y - 14 - b * 14, 2 + b * 3, 0, 7); ctx.fill(); } ctx.globalAlpha = 1;
+    } else if (d.kind === 'cow') { // a black and white cow grazing; now and then it lifts its head and flicks its tail
+      const up = Math.sin(t * 0.7 + d.seed * 3) > 0.6, f = d.seed > 5 ? -1 : 1, X = (a) => x + a * f;
+      ctx.fillStyle = '#25223a'; for (const a of [-7, -4, 4, 7]) ctx.fillRect(Math.min(X(a), X(a + 1)), y - 5, 2, 5);
+      ctx.fillStyle = '#f4f0e6'; ctx.fillRect(x - 9, y - 13, 18, 8); ctx.fillStyle = '#25223a'; ctx.fillRect(Math.min(X(-6), X(-2)), y - 12, 4, 4); ctx.fillRect(Math.min(X(2), X(5)), y - 10, 3, 3); ctx.fillRect(x - 9, y - 6, 18, 1);
+      ctx.fillStyle = '#f2b8c0'; ctx.fillRect(Math.min(X(-1), X(2)), y - 6, 3, 2); // the udder
+      const hx = X(up ? 10 : 11), hy = up ? y - 16 : y - 9; ctx.fillStyle = '#f4f0e6'; ctx.fillRect(Math.min(hx, X(up ? 15 : 16)), hy, 5, 5); ctx.fillStyle = '#25223a'; ctx.fillRect(Math.min(X(up ? 11 : 12), X(up ? 12 : 13)), hy - 1, 1, 2); ctx.fillStyle = '#f2b8c0'; ctx.fillRect(Math.min(X(up ? 13 : 14), X(up ? 15 : 16)), hy + 3, 2, 2);
+      ctx.fillStyle = '#25223a'; ctx.fillRect(X(-10) - (f < 0 ? 1 : 0), y - 12 + Math.round(Math.sin(t * 3 + d.seed)), 1, 6);
+    } else if (d.kind === 'balloons') { // a bunch of balloons on strings tied to a post, bobbing
+      ctx.fillStyle = '#8b93ad'; ctx.fillRect(x - 1, y - 8, 2, 8);
+      for (let k = 0; k < 4; k++) { const bx = x - 6 + k * 4 + Math.round(Math.sin(t * 1.4 + k + d.seed) * 2), by = y - 26 - (k % 2) * 6 + Math.round(Math.sin(t * 2 + k) * 1.5); ctx.strokeStyle = '#c8ccd8'; ctx.beginPath(); ctx.moveTo(x + 0.5, y - 8); ctx.lineTo(bx + 0.5, by + 4); ctx.stroke(); ctx.fillStyle = ['#ff5a8a', '#ffd84a', '#68eedc', '#b48af0'][(k + Math.floor(d.seed)) % 4]; ctx.beginPath(); ctx.ellipse(bx, by, 3, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#ffffff88'; ctx.fillRect(bx - 1, by - 2, 1, 1); }
+    } else if (d.kind === 'grave') { // a leaning headstone with a cross or a rounded top, moss at its foot
+      ctx.save(); ctx.translate(x, y); ctx.rotate((d.seed - 5) * 0.03);
+      if (d.seed > 6) { ctx.fillStyle = '#5a5468'; ctx.fillRect(-1, -14, 3, 14); ctx.fillRect(-4, -11, 9, 3); ctx.fillStyle = '#7a7488'; ctx.fillRect(-1, -14, 1, 14); }
+      else { ctx.fillStyle = '#5a5468'; ctx.fillRect(-5, -10, 10, 10); ctx.beginPath(); ctx.arc(0, -10, 5, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#3e3848'; ctx.fillRect(-3, -9, 6, 1); ctx.fillRect(-3, -6, 6, 1); ctx.fillStyle = '#7a7488'; ctx.fillRect(-5, -10, 1, 10); }
+      ctx.fillStyle = '#4a6a3a'; ctx.fillRect(-6, -2, 12, 2); ctx.restore();
+    } else if (d.kind === 'idol') { // a big carved stone head, moss on its brow, eyes that glow faintly
+      ctx.fillStyle = '#5a5a44'; ctx.fillRect(x - 9, y - 26, 18, 26); ctx.fillStyle = '#7a7a5e'; ctx.fillRect(x - 9, y - 26, 18, 2); ctx.fillRect(x - 9, y - 26, 2, 26);
+      ctx.fillStyle = '#3e3e2c'; ctx.fillRect(x - 6, y - 18, 4, 2); ctx.fillRect(x + 2, y - 18, 4, 2); ctx.fillRect(x - 2, y - 15, 3, 6); ctx.fillRect(x - 5, y - 6, 10, 2); ctx.fillRect(x - 11, y - 20, 2, 9); ctx.fillRect(x + 9, y - 20, 2, 9);
+      ctx.globalAlpha = 0.4 + Math.sin(t * 1.5 + d.seed) * 0.25; ctx.fillStyle = '#7af0d0'; ctx.fillRect(x - 5, y - 18, 2, 1); ctx.fillRect(x + 3, y - 18, 2, 1); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#5a8a3a'; ctx.fillRect(x - 9, y - 27, 7, 2); ctx.fillRect(x + 3, y - 27, 5, 1); ctx.fillRect(x + 6, y - 25, 1, 4);
+    } else if (d.kind === 'jammer') { // a foil-wrapped antenna on a tripod, its tip blinking red
+      ctx.strokeStyle = '#5c6480'; ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x, y - 12); ctx.lineTo(x + 6, y); ctx.moveTo(x + 0.5, y); ctx.lineTo(x + 0.5, y - 12); ctx.stroke();
+      ctx.fillStyle = '#c8ccd6'; ctx.fillRect(x - 3, y - 22, 6, 10); ctx.fillStyle = '#eef0f4'; ctx.fillRect(x - 3, y - 22, 2, 10); ctx.fillStyle = '#8a8e9a'; ctx.fillRect(x + 1, y - 19, 2, 2); ctx.fillRect(x - 2, y - 15, 2, 1);
+      ctx.fillStyle = '#8b93ad'; ctx.fillRect(x, y - 30, 1, 8); ctx.fillStyle = Math.sin(t * 4 + d.seed) > 0 ? '#ff3a3a' : '#5a1010'; ctx.fillRect(x - 1, y - 32, 3, 2);
     } else if (d.kind === 'sandbags') {
       for (let k = 0; k < 5; k++) { const bx = x - 12 + (k % 3) * 8 + (k > 2 ? 4 : 0), by = y - (k > 2 ? 10 : 5); ctx.fillStyle = '#8b7a55'; ctx.fillRect(bx, by, 8, 5); ctx.fillStyle = '#6e6043'; ctx.fillRect(bx, by + 4, 8, 1); ctx.fillRect(bx + 3, by + 1, 1, 2); }
     }
@@ -8345,14 +8816,14 @@ const mark = (n = 1) => { bossMarks += n; };
 function bossSkin(b) {
   const key = b.type + '|' + (b.bossName || ''); let s = BOSS_SKIN.get(key); if (s) return s;
   const n = (b.bossName || '').toUpperCase(), has = (w) => n.includes(w);
-  if (b.type === 'boss') s = has('ZODIAC') ? { v: 'zodiac', half: ['#1e2a5a', '#2f4a9a', '#6a8ad8'], label: 'LEO' } : has('ZEST') ? { v: 'zest', half: ['#a8501a', '#f28a1a', '#ffb04a'], label: 'ZEST' } : has('PILLBOT') ? { v: 'pill', half: ['#8e2b3c', '#d9534f', '#ff8a7a'], label: 'PILL' } : has('GRIFT') ? { v: 'grift', half: ['#2f5a2a', '#3f8a3a', '#a6d854'], label: '$$$' } : has('WALKER') ? { v: 'walker', half: ['#3d4560', '#5c6480', '#8b93ad'], label: '30C' } : { v: 'base', half: ['#4a4580', '#7570b3', '#a6a2e0'], label: '30C' };
-  else if (b.type === 'kopter') s = has('CHEMTRAIL') ? { v: 'chem', pal: ['#6a7080', '#b4bed0', '#e6eef5', '#8fd3ff', '#8b93ad'], label: 'TAP H2O' } : has('ASTRAL') ? { v: 'astral', pal: ['#1e2a5a', '#2f4a9a', '#6a8ad8', '#e78ac3', '#25306a'], label: 'VIBES' } : has('HYPE') ? { v: 'hype', pal: ['#7a2a5a', '#c8508e', '#ffb0dc', '#8fd3ff', '#8e2b5c'], label: 'HYPE' } : has('GYRO') ? { v: 'gyro', pal: ['#7a4a1a', '#c97a2a', '#f2a24c', '#f2c94c', '#8a5a2a'], label: 'GYRO' } : { v: 'base', pal: ['#4a3d78', '#7570b3', '#a6a2e0', '#a6d854', '#5a4a8c'], label: 'DETOX' };
+  if (b.type === 'boss') s = has('ASTRONAUT') ? { v: 'idol', half: ['#4a4a38', '#7a7a5e', '#a8a888'], label: 'ALIENS' } : has('ZODIAC') ? { v: 'zodiac', half: ['#1e2a5a', '#2f4a9a', '#6a8ad8'], label: 'LEO' } : has('ZEST') ? { v: 'zest', half: ['#a8501a', '#f28a1a', '#ffb04a'], label: 'ZEST' } : has('PILLBOT') ? { v: 'pill', half: ['#8e2b3c', '#d9534f', '#ff8a7a'], label: 'PILL' } : has('GRIFT') ? { v: 'grift', half: ['#2f5a2a', '#3f8a3a', '#a6d854'], label: '$$$' } : has('WALKER') ? { v: 'walker', half: ['#3d4560', '#5c6480', '#8b93ad'], label: '30C' } : { v: 'base', half: ['#4a4580', '#7570b3', '#a6a2e0'], label: '30C' };
+  else if (b.type === 'kopter') s = has('POLTER') ? { v: 'polter', pal: ['#2a4a3a', '#5a9a7a', '#b0f0d0', '#e8fff0', '#3a6a52'], label: 'BOO' } : has('CHEMTRAIL') ? { v: 'chem', pal: ['#6a7080', '#b4bed0', '#e6eef5', '#8fd3ff', '#8b93ad'], label: 'TAP H2O' } : has('ASTRAL') ? { v: 'astral', pal: ['#1e2a5a', '#2f4a9a', '#6a8ad8', '#e78ac3', '#25306a'], label: 'VIBES' } : has('HYPE') ? { v: 'hype', pal: ['#7a2a5a', '#c8508e', '#ffb0dc', '#8fd3ff', '#8e2b5c'], label: 'HYPE' } : has('GYRO') ? { v: 'gyro', pal: ['#7a4a1a', '#c97a2a', '#f2a24c', '#f2c94c', '#8a5a2a'], label: 'GYRO' } : { v: 'base', pal: ['#4a3d78', '#7570b3', '#a6a2e0', '#a6d854', '#5a4a8c'], label: 'DETOX' };
   else if (b.type === 'crawler') s = has('QUARTZ') ? { v: 'quartz', seg: ['#8a6a9a', '#a888b8', '#5a3a6a', '#d8b8e8'], head: '#a070b0', xt: ['#ffd0f0', '#ffffff', '#e78ac3'], tag: '$999', crown: 5 } : has('SCARAB') ? { v: 'scarab', seg: ['#2a4a2a', '#3a5a2a', '#1a2a1a', '#6a8a3a'], head: '#2f5a2a', xt: ['#c9a227', '#f2c94c', '#8a6a1a'], tag: 'DUNG', crown: 0 } : has('SLUDGE') ? { v: 'sludge', seg: ['#3a5a2a', '#4a6a2a', '#22381a', '#7a9a3a'], head: '#4f7a2f', xt: ['#a6d854', '#7bc043', '#d8ff8a'], tag: 'PURE', crown: 3 } : has('SERPENT') ? { v: 'serpent', seg: ['#2a4a5a', '#3a6070', '#1a2a38', '#6a9aaa'], head: '#3a6a7a', xt: ['#8fd3ff', '#bfe9ff', '#66c2a5'], tag: '$99', crown: 3 } : { v: 'base', seg: ['#6a3d7a', '#7d4a8e', '#4a2a58', '#a070b0'], head: '#8e5aa0', xt: ['#e78ac3', '#b3a6ff', '#fff6c2'], tag: '$99', crown: 3 };
-  else if (b.type === 'tank') s = has('MIASMA') ? { v: 'miasma', hull: ['#2a3a1a', '#4a5a2a', '#7a8a3a'], tur: '#3a4a22', sign: 'MIASMA', smoke: '#7a9a3a', flag: '#a6d854' } : has('STEAMROLLER') ? { v: 'roller', hull: ['#5a4a1a', '#8a6a1a', '#c9a227'], tur: '#6a5a1a', sign: 'ROLLER', smoke: '#5c5870', flag: '#d9534f' } : has('STEAM') ? { v: 'steam', hull: ['#5a3418', '#a8682a', '#e0a860'], tur: '#7a4a1a', sign: 'STEAM', smoke: '#e6e2f0', flag: '#8fd3ff' } : has('HYPE TRAIN') ? { v: 'train', hull: ['#5a1a2a', '#8e2b3c', '#d9534f'], tur: '#6a1a2a', sign: 'HYPE', smoke: '#5c5870', flag: '#f2c94c' } : { v: 'base', hull: ['#2f3a24', '#4b5a3a', '#6f8452'], tur: '#3a4a2c', sign: 'SNAKE OIL', smoke: '#5c5870', flag: '#c9a227' };
+  else if (b.type === 'tank') s = has('CREAM') ? { v: 'cream', hull: ['#a8a090', '#e8e2d0', '#ffffff'], tur: '#d8d0bc', sign: 'RAW MILK', smoke: '#f4eedc', flag: '#3f8a3a' } : has('MIASMA') ? { v: 'miasma', hull: ['#2a3a1a', '#4a5a2a', '#7a8a3a'], tur: '#3a4a22', sign: 'MIASMA', smoke: '#7a9a3a', flag: '#a6d854' } : has('STEAMROLLER') ? { v: 'roller', hull: ['#5a4a1a', '#8a6a1a', '#c9a227'], tur: '#6a5a1a', sign: 'ROLLER', smoke: '#5c5870', flag: '#d9534f' } : has('STEAM') ? { v: 'steam', hull: ['#5a3418', '#a8682a', '#e0a860'], tur: '#7a4a1a', sign: 'STEAM', smoke: '#e6e2f0', flag: '#8fd3ff' } : has('HYPE TRAIN') ? { v: 'train', hull: ['#5a1a2a', '#8e2b3c', '#d9534f'], tur: '#6a1a2a', sign: 'HYPE', smoke: '#5c5870', flag: '#f2c94c' } : { v: 'base', hull: ['#2f3a24', '#4b5a3a', '#6f8452'], tur: '#3a4a2c', sign: 'SNAKE OIL', smoke: '#5c5870', flag: '#c9a227' };
   else if (b.type === 'blimp') s = has('UFO') ? { v: 'ufo', label: 'TOTALLY REAL' } : has('DIFFUSER') ? { v: 'diffuser', label: 'PURE AROMA' } : has('BALLOON') ? { v: 'balloon', label: 'FLAT EARTH' } : { v: 'base', label: 'FLAT EARTH' };
   else if (b.type === 'citrus') s = has('LEMON') ? { v: 'lemon', pal: ['#b8901a', '#f2d24c', '#fff09a', '#d8b83a'], sash: 'SOUR' } : has('GRAPEFRUIT') ? { v: 'grape', pal: ['#b83a3a', '#f27a5a', '#ffb09a', '#d86050'], sash: 'BITTER' } : has('TANGERINE') ? { v: 'tang', pal: ['#a8401a', '#e8601a', '#ff9a4a', '#c8541a'], sash: 'MEGA C' } : { v: 'base', pal: ['#c0601a', '#f28a1a', '#ffb04a', '#d8701a'], sash: 'MEGA C' };
-  else if (b.type === 'director') s = has('INFLUENCER') || has('STREAMER') ? { v: 'phone', label: 'LIVE' } : has('PITCHMAN') ? { v: 'pitch', label: 'TAKE 99', sign: 'PRE-ORDER NOW' } : { v: 'base', label: 'TAKE 99', sign: 'MOON SET B' };
-  else s = has('FORGE') ? { v: 'forge', sign: 'IMMUNITY: DIY', liq: ['#e8601a', '#ffb04a'] } : { v: has('SHAKER') ? 'shaker' : 'base', sign: has('SHAKER') ? 'SHAKE X1000' : 'DILUTE 10^60' }; // the forge: molten core
+  else if (b.type === 'director') s = has('RINGMASTER') ? { v: 'ring', label: 'MAGNETS', sign: 'NO REFUNDS' } : has('INFLUENCER') || has('STREAMER') ? { v: 'phone', label: 'LIVE' } : has('PITCHMAN') ? { v: 'pitch', label: 'TAKE 99', sign: 'PRE-ORDER NOW' } : { v: 'base', label: 'TAKE 99', sign: 'MOON SET B' };
+  else s = has('FOIL PRESS') ? { v: 'press', sign: 'HATS 5 FOR 1', liq: ['#8a8e9a', '#e8ecf2'] } : has('FORGE') ? { v: 'forge', sign: 'IMMUNITY: DIY', liq: ['#e8601a', '#ffb04a'] } : { v: has('SHAKER') ? 'shaker' : 'base', sign: has('SHAKER') ? 'SHAKE X1000' : 'DILUTE 10^60' }; // the forge: molten core
   BOSS_SKIN.set(key, s); return s;
 }
 // a tiny 3x5 pixel font for labels and signs on the bosses, painted once into a small canvas and cached
@@ -8483,6 +8954,7 @@ function drawMech(b, t) {
   ctx.fillStyle = C(half[2]); ctx.fillRect(bx + 3, by - 15, 7, 2); ctx.fillRect(bx + 10, by - 13, 3, 2);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(bx - 13, by - 11, 2, 7); ctx.fillRect(bx - 11, by - 14, 4, 2);
   if (S.v === 'zodiac') { ctx.fillStyle = '#fff6c2'; for (const [sx, sy] of [[5, -8], [11, -2], [7, 6], [13, 9], [3, 12]]) ctx.fillRect(bx + sx, by + sy, 1, 1); }
+  if (S.v === 'idol') { ctx.fillStyle = '#3e3e2c'; for (const [sx, sy] of [[4, -10], [9, -4], [5, 2], [11, 7], [6, 11]]) { ctx.fillRect(bx + sx, by + sy, 3, 1); ctx.fillRect(bx + sx + 1, by + sy - 1, 1, 3); } ctx.fillStyle = '#5a8a3a'; ctx.fillRect(bx + 1, by - 18, 9, 3); ctx.fillRect(bx + 12, by - 15, 4, 2); ctx.fillRect(bx + 3, by - 15, 2, 4); } // carved glyphs, moss on top
   if (S.v === 'zest') { ctx.fillStyle = '#d8701a'; for (let k = 0; k < 10; k++) ctx.fillRect(bx + 2 + Math.round(fhash(k, 4) * 13), by - 12 + Math.round(fhash(k, 5) * 24), 1, 1); }
   ctx.restore();
   // the seam down the middle, with bolts; it glows as the core overheats in the death sequence
@@ -8548,6 +9020,7 @@ function drawKopter(b, t) {
   ctx.fillStyle = C(Pl[2]); ctx.fillRect(-20, -9, 30, 2);
   ctx.fillStyle = C(Pl[3]); ctx.fillRect(-26, 1, 52, 2);
   if (S.v === 'astral') { ctx.fillStyle = '#fff6c2'; for (const [sx, sy] of [[-18, -4], [-8, -6], [-2, 6], [-14, 7], [4, -3]]) ctx.fillRect(sx, sy, 1, 1); }
+  if (S.v === 'polter') { ctx.globalAlpha = 0.45; ctx.fillStyle = '#e8fff0'; for (let k = 0; k < 4; k++) ctx.fillRect(-34 - k * 6, -4 + Math.round(Math.sin(t * 4 + k) * 2), 7, 10 - k * 2); ctx.globalAlpha = 1; ctx.fillStyle = '#0d0b18'; ctx.fillRect(-12, -5, 3, 4); ctx.fillRect(-5, -5, 3, 4); ctx.fillRect(-10, 0, 6, 2); } // a bedsheet ghost face and a trailing sheet
   ctx.save(); ctx.scale(dir, 1); micro(S.label, dir * -8, -7, Pl[0] === '#6a7080' ? '#3d4560' : '#e6e2f0'); ctx.restore();
   bossCracks(-24, -9, 30, 18, W, 21, '#0d0b18', 5);
   ctx.restore();
@@ -8679,6 +9152,7 @@ function drawTank(b, t) {
   ctx.fillStyle = C(H[1]); ctx.beginPath(); ctx.moveTo(X(2), y + 8); ctx.lineTo(X(w - 9), y + 8); ctx.lineTo(X(w - 1), y + 13); ctx.lineTo(X(w - 1), y + 17); ctx.lineTo(X(2), y + 17); ctx.fill();
   ctx.fillStyle = C(H[2]); ctx.fillRect(Math.min(X(2), X(w - 9)), y + 8, w - 11, 1);
   ctx.fillStyle = C(H[0]); ctx.fillRect(x + 2, y + 15, w - 4, 2);
+  if (S.v === 'cream') { ctx.fillStyle = C('#25223a'); for (const [a, b2, ww] of [[6, 9, 7], [24, 11, 9], [44, 9, 6]]) ctx.fillRect(Math.min(X(a), X(a + ww)), y + b2, ww, 4); } // cow patches
   if (S.v === 'train') { ctx.fillStyle = ol; ctx.beginPath(); ctx.moveTo(X(w - 2), y + 18); ctx.lineTo(X(w + 5), y + 30); ctx.lineTo(X(w - 6), y + 30); ctx.fill(); ctx.fillStyle = '#c9a227'; for (let k = 0; k < 3; k++) ctx.fillRect(X(w - 4 + k * 2) - (F > 0 ? 0 : 1), y + 21 + k * 2, 1, 9 - k * 2); } // cowcatcher
   // the sign, and its satire
   ctx.fillStyle = ol; ctx.fillRect(x + 9, y + 9, w - 18, 7); ctx.fillStyle = C('#c9a227'); ctx.fillRect(x + 10, y + 10, w - 20, 5); ctx.fillStyle = '#f2c94c'; ctx.fillRect(x + 10, y + 10, w - 20, 1);
@@ -8772,6 +9246,7 @@ function drawEngine(b, t) {
   if (W > 0.5) { mark(); ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(BX + 40.5, BY + 4); ctx.lineTo(BX + 36.5, BY + 10); ctx.lineTo(BX + 42.5, BY + 15); ctx.stroke(); }
   ctx.fillStyle = exposed && Math.floor(t * (quake ? 12 : 4)) % 2 ? '#ff3a2a' : '#5a1a1a'; ctx.fillRect(BX + 2 * T - 2, BY - 4, 4, 3);
   micro(S.sign, BX + 2 * T, BY + 2 * T - 9, '#f2c94c');
+  if (S.v === 'press') { const f = (t * 0.6) % 1; ctx.fillStyle = '#e8ecf2'; ctx.beginPath(); ctx.moveTo(BX + 6, BY - 2 - f * 4); ctx.lineTo(BX + 12, BY - 12 - f * 4); ctx.lineTo(BX + 18, BY - 2 - f * 4); ctx.fill(); ctx.fillStyle = '#8a8e9a'; ctx.fillRect(BX + 9, BY - 7 - f * 4, 2, 1); ctx.fillRect(BX + 13, BY - 5 - f * 4, 2, 1); } // a fresh tinfoil hat on the booth roof
   // the stabiliser vats: glass tanks with brass caps, a label, bubbles; they crack and leak as they take hits
   b.vats.forEach((v, i) => {
     const vx = Math.round(v.x), vy = Math.round(v.y);
@@ -8987,7 +9462,7 @@ function drawDirector(b, t) {
   } else {
     // camera body, shaded, with a label; film reels on top that turn faster as it locks on
     ctx.fillStyle = ol; ctx.fillRect(x - 1, y - 1, b.w + 2, b.h + 2);
-    ctx.fillStyle = C('#3d3d46'); ctx.fillRect(x, y, b.w, b.h); ctx.fillStyle = C('#5c5c6a'); ctx.fillRect(x, y, b.w, 2); ctx.fillRect(x, y, 2, b.h); ctx.fillStyle = C('#2a2a32'); ctx.fillRect(x, y + b.h - 5, b.w, 5);
+    ctx.fillStyle = C(S.v === 'ring' ? '#a82830' : '#3d3d46'); ctx.fillRect(x, y, b.w, b.h); if (S.v === 'ring') { ctx.fillStyle = C('#f4eadc'); for (let k = 2; k < b.w; k += 6) ctx.fillRect(x + k, y, 3, b.h - 5); ctx.fillStyle = ol; ctx.fillRect(x + b.w / 2 - 5, y - 13, 10, 9); ctx.fillRect(x + b.w / 2 - 8, y - 5, 16, 2); ctx.fillStyle = '#d8323c'; ctx.fillRect(x + b.w / 2 - 5, y - 7, 10, 2); } // the ringmaster's stripes and top hat ctx.fillStyle = C('#5c5c6a'); ctx.fillRect(x, y, b.w, 2); ctx.fillRect(x, y, 2, b.h); ctx.fillStyle = C('#2a2a32'); ctx.fillRect(x, y + b.h - 5, b.w, 5);
     micro(S.label, x + b.w / 2, y + b.h - 10, '#e6e2f0', '#25223a');
     const ra = t * (lit ? 12 : 3);
     for (const rx of [x + 8, x + 22]) {
@@ -9399,7 +9874,7 @@ function drawScreen(t) {
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
     text('TIP: ' + PAUSE_TIPS[Math.floor(t / 8) % PAUSE_TIPS.length], VW / 2, 119, 8, '#8da0cb', 'center');
-    text('20 MISSIONS · 3 MODES · ' + BROS.length + ' BROS · 22 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('25 MISSIONS · 3 MODES · ' + BROS.length + ' BROS · 27 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     const per = Math.ceil(BROS.length / 2); // the roster in two rows, the second one offset half a step
     BROS.forEach((b, i) => { const r = Math.floor(i / per), x = Math.round(VW / 2 - per * 9.5 + (i % per) * 19 + r * 9.5); drawRigAt(b.rig, x + 6, 132 + r * 18, 1, { leg: 'stand', fr: 0, bob: Math.floor(t * 2 + i * 0.37) % 2 }, false); }); // outlined, breathing
@@ -9505,8 +9980,8 @@ function wrap(str, n) { // split a sentence into lines of at most n characters
   return out;
 }
 // world map: land drawn once to a canvas; sea, fog, route, stops and the plane drawn on top each frame
-const WM_ACTS = [[0, 3, 'ACT I', 'THE PLACEBO EFFECT'], [4, 9, 'ACT II', 'THE PODCAST'], [10, LEVELS.length - 2, 'ACT III', 'FOLLOW THE MONEY'], [LEVELS.length - 1, LEVELS.length - 1, 'FINALE', '']];
-const wmAct = (i) => (i >= LEVELS.length - 1 ? 3 : i <= 3 ? 0 : i <= 9 ? 1 : 2);
+const WM_ACTS = ACTS.map(([name, num, title], k) => [LEVELS.findIndex((L) => L.name === name), k + 1 < ACTS.length ? LEVELS.findIndex((L) => L.name === ACTS[k + 1][0]) - 1 : LEVELS.length - 1, num, num === 'FINALE' ? '' : title]); // first and last mission of each act, by name
+const wmAct = (i) => WM_ACTS.findIndex(([a, b]) => i >= a && i <= b);
 const WM_PAL = { // beach, ground, high ground, cliff
   island: ['#e8d49a', '#4f9a4a', '#3d7f3c', '#2b4f2e'], desert: ['#f0dca6', '#d9b36a', '#c99a50', '#8a6234'], snow: ['#9fb0c4', '#b8c6d8', '#ccd8e6', '#6a7a92'],
   plant: ['#b9b08a', '#6f8a5a', '#5c7448', '#3a4a33'], edge: ['#d8c99a', '#7fa35a', '#6b8f4a', '#4a5a3a'], sky: ['#d8cc90', '#8fbf5a', '#78a84a', '#4a6a32'],
@@ -9514,6 +9989,8 @@ const WM_PAL = { // beach, ground, high ground, cliff
   rust: ['#b89a72', '#8a6a4a', '#7a5a3c', '#4a3226'], sewer: ['#a8a8a0', '#6f7d7a', '#5d6a68', '#3a4240'], city: ['#b0aca0', '#5a6070', '#4a5060', '#2e3240'],
   grove: ['#e0cc8a', '#3f8a3a', '#2f7230', '#24462a'], citrus: ['#e8c07a', '#c8742e', '#a85a22', '#5a2e14'],
   mall: ['#ecd6e6', '#c69ac2', '#b082b2', '#6a4a7a'], volcano: ['#5a4a46', '#3c3236', '#2c2428', '#1a1418'],
+  dairy: ['#e8dca0', '#7ab84a', '#68a63e', '#3e6a2a'], park: ['#f0d8a0', '#c8a050', '#b08a40', '#6a4a2a'], manor: ['#8a8890', '#4a4a3a', '#3e3e30', '#24241c'],
+  jungle: ['#d8cc90', '#2f8a3a', '#25782f', '#1a4a22'], foil: ['#a8aab0', '#3e5240', '#334434', '#1e2a20'],
 };
 function wmKind(L) { // what to draw at a stop: by theme, with a few missions picked out by name
   const n = L.name || '';
@@ -9521,7 +9998,7 @@ function wmKind(L) { // what to draw at a stop: by theme, with a few missions pi
   if (/CROP/.test(n)) return 'crops';
   if (/LIGHTHOUSE/.test(n)) return 'lighthouse';
   if (/SPRING/.test(n)) return 'springs';
-  return { island: 'palms', desert: 'dunes', snow: 'peaks', plant: 'factory', edge: 'dish', sky: 'airfield', cave: 'cave', swamp: 'swamp', astro: 'observatory', rust: 'gears', sewer: 'tanks', city: 'city', grove: 'grove', citrus: 'citadel', mall: 'mall', volcano: 'volcano' }[L.theme] || 'palms';
+  return { island: 'palms', desert: 'dunes', snow: 'peaks', plant: 'factory', edge: 'dish', sky: 'airfield', cave: 'cave', swamp: 'swamp', astro: 'observatory', rust: 'gears', sewer: 'tanks', city: 'city', grove: 'grove', citrus: 'citadel', mall: 'mall', volcano: 'volcano', dairy: 'barn', park: 'ferris', manor: 'manor', jungle: 'temple', foil: 'bunker' }[L.theme] || 'palms';
 }
 const wmHash = (x, y) => { let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) % 1000 / 999; };
 function wmNoise(x, y) { // smooth value noise, 0..1
@@ -9654,6 +10131,24 @@ function wmDecor(g, k, x, y) { // the still part of a stop's landmark, drawn int
     for (let j = 0; j < 12; j++) { const w = 6 + j * 2; R(j < 2 ? '#3a3036' : '#2a2226', -(w >> 1), -16 + j, w, 1); }
     R('#ff5a10', -3, -16, 6, 1); R('#ffd040', -1, -16, 2, 1); R('#ff5a10', 2, -14, 1, 4); R('#ff5a10', -4, -12, 1, 3);
   }
+  if (k === 'barn') { // a red barn with a white cross on its door, a silo, a fenced paddock
+    R('#a83228', -12, -9, 12, 8); for (let j = 0; j < 4; j++) R('#7a221c', -13 + j, -10 - j, 14 - j * 2, 1); R('#e8e0d0', -8, -6, 4, 5); R('#a83228', -7, -5, 2, 3);
+    R('#c8c0b0', 2, -15, 5, 14); R('#e8e4dc', 2, -16, 5, 1); R('#9a9488', 6, -15, 1, 14); R('#e8dcc0', 9, -3, 7, 1); R('#e8dcc0', 9, -1, 7, 1); for (let j = 0; j < 3; j++) R('#c8b890', 9 + j * 3, -4, 1, 4); R('#f4f0e6', 11, -7, 3, 2); R('#25223a', 12, -7, 1, 1);
+  }
+  if (k === 'ferris') { R('#6a4a2a', -14, -2, 28, 2); R('#d8323c', 6, -8, 8, 6); R('#f4eadc', 7, -8, 2, 6); R('#f4eadc', 11, -8, 2, 6); R('#d8323c', 5, -9, 10, 1); R('#5a3a22', -6, -9, 1, 7); R('#5a3a22', 0, -9, 1, 7); } // the wheel's legs and a striped tent; the wheel turns in wmAnim
+  if (k === 'manor') { // a dark manor with a spire, a graveyard in front
+    R('#3e3848', -10, -11, 16, 10); R('#2a2432', -10, -12, 16, 1); for (let j = 0; j < 5; j++) R('#2a2432', -9 + j, -13 - j, 14 - j * 2, 1); R('#3e3848', 4, -19, 3, 8); R('#2a2432', 5, -21, 1, 2);
+    for (const a of [-12, 8, 12]) { R('#8a8890', a, -4, 2, 3); R('#8a8890', a - 1, -3, 4, 1); }
+  }
+  if (k === 'temple') { // a stepped temple with a shrine on top, jungle trees either side
+    for (let j = 0; j < 5; j++) R(j % 2 ? '#7a7a5e' : '#848468', -10 + j * 2, -3 - j * 3, 20 - j * 4, 3); R('#5a5a44', -2, -19, 4, 3); R('#3e3e2c', -1, -15, 2, 13);
+    for (const a of [-15, 12]) { R('#5a3a22', a + 1, -6, 1, 4); R('#2f8a3a', a - 1, -11, 5, 5); R('#4aa848', a, -12, 3, 2); }
+  }
+  if (k === 'bunker') { // a foil-wrapped bunker dome in the pines; the mast blinks in wmAnim
+    for (let j = 0; j < 6; j++) { const hw = Math.round(Math.sqrt(36 - j * j) * 1.4); R(j % 2 ? '#c8ccd6' : '#e8ecf2', -hw, -2 - j, hw * 2, 1); } R('#8a8e9a', -9, -1, 18, 1); R('#25223a', -2, -4, 4, 3);
+    for (const a of [-14, -11, 10, 13]) { R('#1e3a28', a, -8, 3, 6); R('#1e3a28', a + 1, -10, 1, 2); }
+    R('#8b93ad', 4, -16, 1, 11); R('#8b93ad', 2, -10, 5, 1);
+  }
   if (k === 'grove') {
     R('#9aa3b8', -14, -1, 30, 2); for (let j = 0; j < 4; j++) R('#6f7d7a', -11 + j * 8, -2, 2, 4);
     for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) { const a = -12 + c * 7 + r * 3, b = -12 + r * 6; R('#6a4a2a', a, b + 2, 1, 2); R('#2f7a30', a - 2, b - 2, 5, 4); R('#3f9a3a', a - 1, b - 3, 3, 1); R('#f28c28', a - 1, b - 1, 1, 1); R('#f28c28', a + 1, b, 1, 1); }
@@ -9691,6 +10186,10 @@ function wmAnim(g, k, x, y, t, night, free) { // the moving part of a stop's lan
   }
   if (k === 'volcano') { wmPuffs(g, x - 1, y - 18, t, '#5a4a48', 4); if (Math.sin(t * 2.3) > 0.4) R('#ffd040', -1, -18, 2, 1); }
   if (k === 'mall') R(Math.sin(t * 5) > -0.5 ? '#ff86cc' : '#8a3a78', -3, -11, 6, 1); // the sign over the door
+  if (k === 'ferris') { const cx = x - 3, cy = y - 16; g.strokeStyle = '#5a3a22'; g.beginPath(); g.arc(cx, cy, 7, 0, 7); g.stroke(); for (let j = 0; j < 6; j++) { const a = t * 0.8 + j * 1.047; R(['#ff5a8a', '#ffd84a', '#68eedc'][j % 3], Math.round(cx - x + Math.cos(a) * 7) - 1, Math.round(cy - y + Math.sin(a) * 7), 2, 2); } }
+  if (k === 'manor') { g.globalAlpha = 0.4 + night * 0.5 + Math.sin(t * 2.7) * 0.15; R('#e8d070', -6, -8, 2, 2); R('#e8d070', 0, -8, 2, 2); g.globalAlpha = 1; if (Math.sin(t * 1.1) > 0.5) R('#7af0a0', 9, -9 + Math.round(Math.sin(t * 3) * 2), 2, 2); } // lit windows, a wisp over the graves
+  if (k === 'temple') { g.globalAlpha = 0.3 + Math.max(0, Math.sin(t * 1.6)) * 0.5; R('#7af0d0', -1, -18, 2, 1); g.globalAlpha = 1; }
+  if (k === 'bunker') R(Math.sin(t * 4) > 0 ? '#ff3a3a' : '#5a1010', 4, -17, 1, 1);
   if (k === 'cave') { const j = Math.floor(t * 1.5) % 3, [a, b] = [[-8, -6], [6, -4], [3, -10]][j]; if ((t * 1.5) % 1 < 0.5) { R('#ffffff', a, b - 3, 1, 3); R('#ffffff', a - 1, b - 2, 3, 1); } }
   if (k === 'swamp') {
     g.globalAlpha = 0.3; R('#c8d8b0', Math.round(-15 + Math.sin(t * 0.5) * 3), -7, 12, 1); R('#c8d8b0', Math.round(-4 + Math.sin(t * 0.4 + 1) * 3), -3, 14, 1); g.globalAlpha = 1;
@@ -10106,6 +10605,9 @@ const LIFE = {
   city: { plants: ['weed', 'tuft'], critters: ['rat', 'bird', 'bird'], bird: ['#5c5c6c', '#8a8a9a'] },
   grove: { plants: ['tuft', 'flower', 'bush', 'fern', 'flower'], vines: 0.05, critters: ['bird', 'butterfly', 'butterfly', 'lizard'], bird: ['#f2c94c', '#e8862a'] },
   mall: { plants: ['flower', 'tuft'], critters: ['bird', 'rat'], bird: ['#8a8a9a', '#c8c8d8'] }, volcano: { plants: ['weed'], critters: ['lizard', 'bat', 'lizard'] },
+  dairy: { plants: ['tuft', 'flower', 'tuft', 'flower', 'bush'], critters: ['bird', 'butterfly', 'bird', 'butterfly'], bird: ['#25223a', '#5c5c6c'] }, park: { plants: ['tuft', 'flower'], critters: ['bird', 'rat', 'bird'], bird: ['#5c6480', '#8b93ad'] },
+  manor: { plants: ['weed', 'mushroom', 'tuft'], vines: 0.12, critters: ['bat', 'rat', 'bat'] }, jungle: { plants: ['fern', 'fern', 'bush', 'flower', 'tuft'], vines: 0.22, critters: ['bird', 'butterfly', 'lizard', 'butterfly'], bird: ['#d9534f', '#2f8a3a'] },
+  foil: { plants: ['shrub', 'tuft'], critters: ['rat', 'bird'], bird: ['#16161f', '#3a3a4a'] },
 };
 const PLANT_H = { tuft: 8, fern: 11, flower: 10, bush: 10, shrub: 8, reed: 18, mushroom: 7, weed: 6 };
 const FLOWER_COL = ['#e78ac3', '#f2c94c', '#8fd3ff', '#ffffff', '#ff6a4a'];
@@ -10338,7 +10840,7 @@ function drawMotes(t) {
   const W = VW * 1.4;
   for (const [mx, my, ph, z] of MOTES) {
     const x = ((mx - cam.x * z * 0.6 + Math.sin(t * 0.5 + ph) * 20 + (kind === 'dust' ? t * 14 * z : 0)) % W + W) % W - VW * 0.2;
-    const y = ((my - cam.y * z * 0.6 + Math.cos(t * 0.7 + ph) * 12 - (kind === 'ember' ? t * 18 * z : kind === 'cinder' ? t * 34 * z : kind === 'aroma' ? t * 7 * z : 0)) % VH + VH) % VH;
+    const y = ((my - cam.y * z * 0.6 + Math.cos(t * 0.7 + ph) * 12 - (kind === 'ember' ? t * 18 * z : kind === 'cinder' ? t * 34 * z : kind === 'aroma' ? t * 7 * z : kind === 'wisp' ? t * 5 * z : kind === 'leaves' ? -t * 14 * z : kind === 'popcorn' ? -t * 9 * z : 0)) % VH + VH) % VH;
     if (kind === 'fly') {
       const a = Math.max(0, Math.sin(t * 2.2 + ph * 3)); if (a < 0.05) continue;
       ctx.globalAlpha = a * 0.25; ctx.fillStyle = '#d9f27a'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
@@ -10346,6 +10848,11 @@ function drawMotes(t) {
     } else if (kind === 'ember') { ctx.globalAlpha = 0.5 + Math.sin(t * 8 + ph) * 0.4; ctx.fillStyle = Math.sin(ph * 9) > 0 ? '#ffb04a' : '#ff6a2a'; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); }
     else if (kind === 'aroma') { ctx.globalAlpha = 0.07 + Math.max(0, Math.sin(t * 0.8 + ph * 2)) * 0.12; ctx.fillStyle = Math.sin(ph * 7) > 0 ? '#e8b8ff' : '#ffc8e8'; ctx.beginPath(); ctx.arc(x, y, 2 + z * 2.5, 0, 7); ctx.fill(); } // drifting puffs of scented oil
     else if (kind === 'cinder') { ctx.globalAlpha = 0.6 + Math.sin(t * 11 + ph) * 0.35; ctx.fillStyle = Math.sin(ph * 9) > 0.3 ? '#ffd040' : '#ff5a10'; ctx.fillRect(Math.round(x), Math.round(y), z > 1 ? 2 : 1, z > 1 ? 2 : 1); }
+    else if (kind === 'midge') { const s = Math.sin(t * 9 + ph * 5); ctx.globalAlpha = 0.6; ctx.fillStyle = '#2a2a1a'; ctx.fillRect(Math.round(x + s * 2), Math.round(y), 1, 1); ctx.fillRect(Math.round(x - s * 3 + 3), Math.round(y + 2), 1, 1); ctx.fillRect(Math.round(x + s * 1.5 - 2), Math.round(y + 4), 1, 1); } // a little swarm of midges
+    else if (kind === 'popcorn') { ctx.globalAlpha = 0.85; ctx.fillStyle = '#fff6d0'; ctx.fillRect(Math.round(x), Math.round(y), 2, 2); ctx.fillStyle = '#f2c94c'; ctx.fillRect(Math.round(x) + 1, Math.round(y) + 1, 1, 1); }
+    else if (kind === 'wisp') { const a = 0.15 + Math.max(0, Math.sin(t * 1.3 + ph * 2)) * 0.4; ctx.globalAlpha = a * 0.35; ctx.fillStyle = '#7af0a0'; ctx.beginPath(); ctx.arc(x, y, 4 + z * 2, 0, 7); ctx.fill(); ctx.globalAlpha = a; ctx.fillStyle = '#d0ffe8'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2); } // will-o'-the-wisps
+    else if (kind === 'leaves') { const s = Math.sin(t * 2 + ph * 3); ctx.globalAlpha = 0.8; ctx.fillStyle = Math.sin(ph * 7) > 0 ? '#3a8a2a' : '#7ac040'; ctx.fillRect(Math.round(x + s * 4), Math.round(y), s > 0 ? 3 : 2, s > 0 ? 1 : 2); }
+    else if (kind === 'signal') { if (Math.sin(t * 7 + ph * 11) < 0.5) continue; ctx.globalAlpha = 0.85; ctx.fillStyle = Math.sin(ph * 5) > 0 ? '#8af0ff' : '#ffffff'; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); ctx.fillRect(Math.round(x) - 1, Math.round(y) + 1, 3, 1); } // stray sparks of static
     else { ctx.globalAlpha = 0.25 * z; ctx.fillStyle = theme.dust; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); }
   }
   ctx.globalAlpha = 1;
@@ -10423,6 +10930,45 @@ function drawWeather(t) {
     }
     const pulse = 0.05 + Math.max(0, Math.sin(t * 0.9)) * 0.06; ctx.fillStyle = theme.acid[1];
     for (let k = 0; k < 3; k++) { ctx.globalAlpha = pulse * (3 - k) / 3; ctx.fillRect(0, VH - 14 - k * 14, VW, 14); }
+    ctx.globalAlpha = 1;
+  } else if (theme.pollen) { // the ranch: dandelion fluff and hay dust drifting on the morning breeze
+    for (let i = 0; i < 70; i++) {
+      const d = DROPS[i]; d[0] += (14 + wind * 0.2) * d[2] * dt; d[1] += (Math.sin(t * 1.4 + i) * 6 + 3) * dt;
+      if (d[0] > VW + 4) { d[0] = -4; d[1] = Math.random() * VH; } if (d[1] > VH) d[1] = -4;
+      ctx.globalAlpha = 0.55; ctx.fillStyle = i % 3 ? '#ffffff' : '#f2d890';
+      if (i % 3) { ctx.fillRect(d[0], d[1], 2, 2); ctx.fillRect(d[0] - 1, d[1] + 1, 1, 1); ctx.fillRect(d[0] + 2, d[1] + 1, 1, 1); } else ctx.fillRect(d[0], d[1], 3, 1);
+    }
+    ctx.globalAlpha = 1;
+  } else if (theme.funfair) { // the funfair: confetti fluttering down, a lost balloon now and then drifting up
+    const cols = ['#ff5a8a', '#ffd84a', '#68eedc', '#b48af0', '#ffffff'];
+    for (let i = 0; i < 80; i++) {
+      const d = DROPS[i]; d[1] += 22 * d[2] * dt; d[0] += Math.sin(t * 2.3 + i) * 16 * dt;
+      if (d[1] > VH) { d[1] = -4; d[0] = Math.random() * VW; }
+      ctx.globalAlpha = 0.75; ctx.fillStyle = cols[i % 5]; const fl = Math.sin(t * 8 + i * 1.3) > 0; ctx.fillRect(d[0], d[1], fl ? 2 : 1, fl ? 1 : 2);
+    }
+    for (let k = 0; k < 2; k++) { const p = (t * 0.04 + k * 0.5) % 1, bx = ((k * 211 + 60 - cam.x * 0.1) % VW + VW) % VW + Math.sin(t + k) * 8, by = VH + 10 - p * (VH + 40); ctx.globalAlpha = 0.8; ctx.fillStyle = cols[k]; ctx.beginPath(); ctx.ellipse(bx, by, 4, 5, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(bx, by + 5); ctx.lineTo(bx + Math.sin(t * 3 + k) * 2, by + 14); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  } else if (theme.mist) { // the manor: ground fog rolling along in bands, thickest low down
+    for (let k = 0; k < 4; k++) {
+      const y = VH - 18 - k * 16 - cam.y * 0.05, sh = ((t * (6 + k * 3) - cam.x * (0.3 + k * 0.1)) % 240 + 240) % 240;
+      ctx.globalAlpha = 0.07 - k * 0.012; ctx.fillStyle = '#c8d8d0';
+      for (let x = -240 + sh; x < VW + 240; x += 240) { ctx.beginPath(); ctx.ellipse(x, y, 130, 12 + k * 2, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(x + 120, y + 6, 90, 10, 0, 0, 7); ctx.fill(); }
+    }
+    ctx.globalAlpha = 1;
+  } else if (theme.drip) { // the jungle: fat drops falling from the canopy, a fine haze of steam
+    for (let i = 0; i < 40; i++) {
+      const d = DROPS[i]; d[1] += 150 * d[2] * dt;
+      if (d[1] > VH) { d[1] = -10 - Math.random() * 60; d[0] = Math.random() * VW; }
+      ctx.globalAlpha = 0.45; ctx.fillStyle = '#d0f0e0'; ctx.fillRect(d[0], d[1], 1, 3); ctx.fillRect(d[0] - 0.5, d[1] + 2, 2, 1);
+    }
+    ctx.globalAlpha = 0.05 + Math.sin(t * 0.3) * 0.02; ctx.fillStyle = '#e8ffe8'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1;
+  } else if (theme.foilwind) { // the bunker woods: a storm wind full of glinting foil scraps, and far lightning now and then
+    for (let i = 0; i < 60; i++) {
+      const d = DROPS[i]; d[0] -= (90 + wind) * d[2] * dt; d[1] += Math.sin(t * 3 + i) * 20 * dt + 10 * dt;
+      if (d[0] < -6) { d[0] = VW + 6; d[1] = Math.random() * VH; } if (d[1] > VH) d[1] = -4;
+      const gl = Math.sin(t * 9 + i * 2.1); ctx.globalAlpha = gl > 0.7 ? 0.95 : 0.4; ctx.fillStyle = gl > 0.7 ? '#ffffff' : '#a8b0c0'; ctx.fillRect(d[0], d[1], 2, gl > 0 ? 1 : 2);
+    }
+    const f = (t % 9) / 9; if (f < 0.03) { ctx.globalAlpha = (0.03 - f) * 6; ctx.fillStyle = '#b8c8ff'; ctx.fillRect(0, 0, VW, VH); }
     ctx.globalAlpha = 1;
   }
 }
@@ -10668,6 +11214,9 @@ const FPAL = { // leaf, stone and wood colours that fit each theme
   sewer: { leaf: ['#2a5a3a', '#4a8a4a'], stone: ['#3a4a44', '#5a6a60'] }, city: { leaf: ['#2a5a3a', '#4a8a4a'], stone: ['#4a4a6a', '#7a7aa0'] },
   grove: { leaf: ['#3f7f2a', '#6faf3a'], stone: ['#7a6a4a', '#a89a6a'] },
   mall: { leaf: ['#2f8a6a', '#5fcfa0'], stone: ['#c8a8c8', '#ecd8ec'], wood: ['#c8a880', '#e8cca0'], metal: ['#b8b8cc', '#eceefa'] }, volcano: { leaf: ['#3a3628', '#5a5038'], stone: ['#2a2430', '#4a4050'], wood: ['#3a2418', '#5a3a22'], metal: ['#4a4448', '#6a6268'] },
+  dairy: { leaf: ['#3f8a3a', '#7ac04a'], stone: ['#8a8070', '#b0a890'], wood: ['#7a4a2a', '#a8703a'] }, park: { leaf: ['#2f7a4a', '#4fa86a'], stone: ['#8a6a5a', '#b8988a'], metal: ['#d8323c', '#f4eadc'] },
+  manor: { leaf: ['#2a3a2a', '#3e523a'], stone: ['#3e3848', '#5a5468'], wood: ['#2a2018', '#3e3024'], metal: ['#3a3a44', '#5a5a66'] }, jungle: { leaf: ['#1f6a2a', '#4aa840'], stone: ['#6e7056', '#8a8c6a'], wood: ['#4a3420', '#6a4a2a'] },
+  foil: { leaf: ['#1e3a28', '#2e5038'], stone: ['#4a4e56', '#6a6e78'], metal: ['#a8aebc', '#e8ecf2'] },
 };
 const fpal = (th) => Object.assign({ wood: ['#5a4226', '#7a5c36'], metal: ['#6f7c96', '#93a0b8'], dk: '#25223a', acc: th.win, th }, FPAL[th.name] || FPAL.island);
 // ---- block looks: variants 4..11 of every block get a detail drawn over the plain base
@@ -10735,7 +11284,7 @@ buildTiles = function (th) { // the base blocks, then 8 more looks of each (deta
 const _drawTiles = drawTiles;
 drawTiles = function (t) { _drawTiles(t); fancyEdges(); };
 function fancyEdges() {
-  const [c0, c1, r0, r1] = viewTiles(), nm = theme.name, tp = theme.top, dd = theme.dirt, iceish = nm === 'snow' || nm === 'edge', mech = nm === 'sewer' || nm === 'plant' || nm === 'city' || nm === 'rust' || nm === 'mall', stony = nm === 'cave' || nm === 'moon' || nm === 'astro' || nm === 'desert' || nm === 'volcano';
+  const [c0, c1, r0, r1] = viewTiles(), nm = theme.name, tp = theme.top, dd = theme.dirt, iceish = nm === 'snow' || nm === 'edge', mech = nm === 'sewer' || nm === 'plant' || nm === 'city' || nm === 'rust' || nm === 'mall' || nm === 'park' || nm === 'foil', stony = nm === 'cave' || nm === 'moon' || nm === 'astro' || nm === 'desert' || nm === 'volcano' || nm === 'manor' || nm === 'jungle';
   const R = (col, x, y, w, h) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
     const v = tiles[r * LW + c];
@@ -10809,6 +11358,11 @@ const FK = {
   reeds: { W: 14, H: 20, th: 'swamp sewer island', wt: 2, f(g, v, P, R) { for (let k = 0; k < 5; k++) { const x = 2 + k * 2.4, h = 10 + ((fhash(v, k, 6) * 9) | 0); g.strokeStyle = P.leaf[k & 1]; g.beginPath(); g.moveTo(x, 20); g.quadraticCurveTo(x + (k - 2) * 0.8, 20 - h * 0.6, x + (k - 2) * 1.4, 20 - h); g.stroke(); if (k & 1) R('#5a3a22', Math.round(x + (k - 2) * 1.4) - 1, 20 - h - 2, 2, 4); } } },
   lamppost: { W: 8, H: 38, th: 'city island sky rust plant grove mall', wt: 1, glow: [4, 54, '#f2c94c', 0.8], f(g, v, P, R) { R('#3a4256', 3, 4, 2, 34); R('#3a4256', 1, 36, 6, 2); R('#3a4256', 3, 3, 5, 2); R('#fff6c2', 5, 5, 3, 2); R('#f2c94c', 4, 4, 5, 1); R('#5c6480', 3, 4, 1, 34); } },
   bench: { W: 22, H: 11, th: 'city grove sky island snow mall', wt: 1, f(g, v, P, R) { R(P.wood[1], 1, 4, 20, 2); R(P.wood[0], 1, 6, 20, 1); R(P.wood[1], 1, 0, 20, 2); R('#3a4256', 3, 6, 2, 5); R('#3a4256', 17, 6, 2, 5); R('#3a4256', 1, 0, 1, 7); R('#3a4256', 20, 0, 1, 7); if (P.th.name === 'snow') R('#e8f0fa', 1, 3, 20, 1); } },
+  churn: { W: 14, H: 16, th: 'dairy', wt: 2.5, f(g, v, P, R) { for (const [x, h] of v & 1 ? [[1, 14], [8, 12]] : [[4, 15]]) { R('#b8bcc4', x, 16 - h, 6, h); R('#e8ecf2', x + 1, 16 - h, 1, h); R('#8a8e9a', x + 5, 16 - h, 1, h); R('#8a8e9a', x - 1, 16 - h + 3, 8, 1); R('#5c6480', x + 1, 16 - h - 2, 4, 2); R('#8a8e9a', x, 16 - h + 8, 6, 1); } } },
+  carousel: { W: 18, H: 30, th: 'park', wt: 2, f(g, v, P, R) { R('#f2c94c', 8, 0, 2, 30); R('#fff6c2', 8, 0, 1, 30); const c = ['#f4eadc', '#d8323c', '#68eedc'][v % 3]; R(c, 3, 12, 12, 6); R(c, 13, 8, 4, 6); R('#25223a', 15, 9, 1, 1); R(c, 4, 18, 2, 5); R(c, 12, 18, 2, 5); R('#f2c94c', 5, 11, 8, 2); R('#8a3a78', 1, 13, 3, 2); R('#6a4a2a', 4, 28, 10, 2); } },
+  tombs: { W: 26, H: 14, th: 'manor', wt: 2.5, f(g, v, P, R) { for (const [x, h] of [[2, 10], [11, 13], [19, 8]]) { R(P.stone[0], x, 14 - h, 6, h); R(P.stone[1], x, 14 - h, 1, h); R(P.stone[1], x, 14 - h, 6, 1); R('#16121e', x + 2, 14 - h + 3, 2, 1); } if (v & 1) { R(P.stone[0], 12, 0, 2, 4); R(P.stone[0], 10, 1, 6, 1); } R('#3e523a', 0, 12, 26, 2); } },
+  stele: { W: 12, H: 26, th: 'jungle', wt: 2.5, f(g, v, P, R) { R(P.stone[0], 1, 2, 10, 24); R(P.stone[1], 1, 2, 10, 1); R(P.stone[1], 1, 2, 1, 24); for (let y = 5; y < 23; y += 4) { R('#3e3e2c', 3, y, 2, 2); R('#3e3e2c', 7, y + 1, 2, 2); } fdisc(g, '#3e3e2c', 6, 8, 2); R(P.leaf[1], 1, 1, 5, 2); R(P.leaf[0], 8, 2, 3, 1); R(P.leaf[0], 10, 3, 1, 6); } },
+  foildish: { W: 20, H: 18, th: 'foil', wt: 2.5, f(g, v, P, R) { R('#5c6480', 9, 8, 2, 10); R('#5c6480', 5, 16, 10, 2); g.fillStyle = P.metal[1]; g.beginPath(); g.ellipse(10, 7, 9, 5, -0.4, Math.PI * 0.9, Math.PI * 1.9); g.fill(); g.fillStyle = P.metal[0]; for (let k = 0; k < 4; k++) R(P.metal[0], 4 + k * 3, 3 + (k & 1), 2, 1); R('#5c6480', 10, 1, 1, 6); R('#ff3a3a', 10, 0, 1, 1); } },
   planter: { W: 16, H: 26, th: 'mall', wt: 2.5, f(g, v, P, R) { R('#e8e4f0', 3, 18, 10, 8); R('#ffffff', 3, 18, 10, 1); R('#c8c0d8', 11, 19, 2, 7); g.lineWidth = 2; for (let k = 0; k < 5; k++) { g.strokeStyle = P.leaf[(k + v) & 1]; g.beginPath(); g.moveTo(8, 18); g.quadraticCurveTo(8 + (k - 2) * 2, 8, 8 + (k - 2) * 4, 2 + (k & 1) * 4); g.stroke(); } g.lineWidth = 1; } }, // a potted palm in a white pot
   fumarole: { W: 18, H: 10, th: 'volcano', wt: 2.5, glow: [6, 26, '#ff7a2a', 0.5], f(g, v, P, R) { g.fillStyle = P.stone[0]; g.beginPath(); g.moveTo(0, 10); g.lineTo(6, 3); g.lineTo(12, 3); g.lineTo(18, 10); g.fill(); R(P.stone[1], 6, 3, 6, 1); R('#ff7a2a', 7, 4, 4, 2); R('#ffd040', 8, 4, 2, 1); R('#1a1014', 4 + (v & 1) * 8, 8, 3, 1); } }, // a vent mound glowing in its throat
   trash: { W: 10, H: 12, th: 'city sewer plant rust mall', wt: 1.5, f(g, v, P, R) { R('#5c6480', 1, 3, 8, 9); R('#8da0cb', 1, 3, 8, 1); R('#3a4256', 0, 1, 10, 2); R('#3a4256', 4, 0, 2, 1); R('#3a4256', 3, 5, 1, 6); R('#3a4256', 6, 5, 1, 6); if (v & 1) { R('#e6e2f0', 2, 0, 3, 2); } } },
@@ -10830,12 +11384,12 @@ const WK = {
 };
 // ---- hanging decor: grows down from a ceiling tile (len px tall)
 const HK = {
-  vine: { th: 'island swamp grove sky citrus edge sewer plant', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { const x = 2 + k * 3, l = len - 3 - ((fhash(v, k, 2) * 8) | 0); R(P.leaf[0], x, 0, 1, l); for (let y = 3; y < l; y += 4) R(P.leaf[(y >> 2) & 1], x + ((y >> 2) & 1 ? -1 : 1), y, 2, 2); R(P.leaf[1], x, l, 1, 2); } } },
+  vine: { th: 'island swamp grove sky citrus edge sewer plant jungle manor', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { const x = 2 + k * 3, l = len - 3 - ((fhash(v, k, 2) * 8) | 0); R(P.leaf[0], x, 0, 1, l); for (let y = 3; y < l; y += 4) R(P.leaf[(y >> 2) & 1], x + ((y >> 2) & 1 ? -1 : 1), y, 2, 2); R(P.leaf[1], x, l, 1, 2); } } },
   icicle: { th: 'snow edge', f(g, len, v, P, R) { for (const [x, l] of [[1, 0.6], [4, 1], [7, 0.45]]) for (let y = 0; y < len * l; y++) R(y < 3 ? '#e8f8ff' : '#9fd0ee', x + (y > len * l * 0.55 ? 1 : 0), y, y > len * l * 0.55 ? 1 : 3 - (y > len * l * 0.3 ? 1 : 0), 1); } },
   stalac: { th: 'cave moon astro desert volcano', f(g, len, v, P, R) { for (const [x, l] of [[0, 0.55], [3, 1], [7, 0.7]]) for (let y = 0; y < len * l; y++) R(y % 5 ? P.stone[0] : P.stone[1], x + (y > len * l * 0.5 ? 1 : 0), y, Math.max(1, 4 - ((y * 5 / (len * l)) | 0)), 1); } },
-  chain: { th: 'rust plant city astro sewer volcano', f(g, len, v, P, R) { for (let y = 0; y < len; y += 3) { R(y % 6 ? '#5c6480' : '#8a8a9a', 4, y, 2, 2); R('#3a4256', 5, y + 1, 1, 2); } R('#8a8a9a', 3, len - 3, 4, 3); } },
-  cables: { th: 'city plant astro rust sewer', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = ['#25223a', '#8e2b3c', '#2c6fb0'][(k + v) % 3]; g.beginPath(); g.moveTo(2 + k * 2, 0); g.quadraticCurveTo(k * 3 + (v & 1) * 3, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } R('#5c6480', 1, 0, 7, 2); } },
-  roots: { th: 'island citrus grove sky desert swamp', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = k & 1 ? '#7a5232' : '#5a3a22'; g.beginPath(); g.moveTo(2 + k * 3, 0); g.quadraticCurveTo(k * 3 + (v & 3) - 1, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } } },
+  chain: { th: 'rust plant city astro sewer volcano foil park', f(g, len, v, P, R) { for (let y = 0; y < len; y += 3) { R(y % 6 ? '#5c6480' : '#8a8a9a', 4, y, 2, 2); R('#3a4256', 5, y + 1, 1, 2); } R('#8a8a9a', 3, len - 3, 4, 3); } },
+  cables: { th: 'city plant astro rust sewer foil park', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = ['#25223a', '#8e2b3c', '#2c6fb0'][(k + v) % 3]; g.beginPath(); g.moveTo(2 + k * 2, 0); g.quadraticCurveTo(k * 3 + (v & 1) * 3, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } R('#5c6480', 1, 0, 7, 2); } },
+  roots: { th: 'island citrus grove sky desert swamp jungle dairy', f(g, len, v, P, R) { for (let k = 0; k < 3; k++) { g.strokeStyle = k & 1 ? '#7a5232' : '#5a3a22'; g.beginPath(); g.moveTo(2 + k * 3, 0); g.quadraticCurveTo(k * 3 + (v & 3) - 1, len / 2, 3 + k * 2, len - 1 - k * 2); g.stroke(); } } },
 };
 // ---- dark buildings behind the playfield. B: a body tone, a lit edge, a shadow tone and a window tone drawn from the theme
 const BK = {
@@ -10854,7 +11408,8 @@ const BK = {
   silo: { sizes: [[26, 72]], f(g, w, h, v, B, R) { for (const [x, ww, hh] of [[1, 11, h], [w - 12, 11, h - 12]]) { R(B.a, x, h - hh, ww, hh); R(B.c, x + ww - 3, h - hh, 3, hh); R(B.b, x, h - hh, 1, hh); fdisc(g, B.a, x + ww / 2, h - hh, ww / 2); R(B.c, x, h - hh + 14, ww, 2); R(B.c, x, h - hh + 30, ww, 2); } R(B.a, 6, 14, 14, 3); } },
   bpipe: { sizes: [[16, 8]], f(g, w, h, v, B, R) { R(B.a, 0, 1, w, 6); R(B.b, 0, 1, w, 1); R(B.c, 0, 6, w, 1); } },
 };
-const BKT = { island: ['ruin', 'tower', 'hut', 'tank', 'tree'], desert: ['ruin', 'spire', 'tower', 'wall'], edge: ['tower', 'mast', 'tank', 'dome'], citrus: ['wall', 'tower', 'tree', 'ruin'], sky: ['silo', 'tank', 'mast', 'hut', 'tree'], cave: ['spire', 'spire', 'ruin'], swamp: ['tree', 'hut', 'ruin', 'tree'], astro: ['mast', 'dome', 'tower', 'pylon'], rust: ['stack', 'tank', 'mast', 'blocks', 'pylon'], moon: ['dome', 'mast', 'tank'], plant: ['stack', 'tank', 'pylon', 'blocks'], snow: ['spire', 'tree', 'tower', 'hut'], sewer: ['tank', 'stack', 'blocks'], city: ['blocks', 'blocks', 'tower', 'mast', 'blocks'], grove: ['tree', 'hut', 'wall', 'tower', 'tree'], mall: ['dome', 'blocks', 'dome'], volcano: ['spire', 'stack', 'spire', 'ruin'] };
+const BKT = { island: ['ruin', 'tower', 'hut', 'tank', 'tree'], desert: ['ruin', 'spire', 'tower', 'wall'], edge: ['tower', 'mast', 'tank', 'dome'], citrus: ['wall', 'tower', 'tree', 'ruin'], sky: ['silo', 'tank', 'mast', 'hut', 'tree'], cave: ['spire', 'spire', 'ruin'], swamp: ['tree', 'hut', 'ruin', 'tree'], astro: ['mast', 'dome', 'tower', 'pylon'], rust: ['stack', 'tank', 'mast', 'blocks', 'pylon'], moon: ['dome', 'mast', 'tank'], plant: ['stack', 'tank', 'pylon', 'blocks'], snow: ['spire', 'tree', 'tower', 'hut'], sewer: ['tank', 'stack', 'blocks'], city: ['blocks', 'blocks', 'tower', 'mast', 'blocks'], grove: ['tree', 'hut', 'wall', 'tower', 'tree'], mall: ['dome', 'blocks', 'dome'], volcano: ['spire', 'stack', 'spire', 'ruin'],
+  dairy: ['silo', 'hut', 'tree', 'silo'], park: ['mast', 'dome', 'tower', 'tank'], manor: ['tower', 'ruin', 'tree', 'spire'], jungle: ['tree', 'ruin', 'tree', 'spire'], foil: ['dome', 'mast', 'tree', 'pylon'] };
 // ---- landmarks: big set dressings the random generator places now and then (layer 0 behind the playfield, 1 on the ground)
 const LK = {
   statue: { W: 44, H: 104, n: 3, rows: 7, layer: 0, f(g, w, h, v, B, R) { R(B.a, 4, h - 14, w - 8, 14); R(B.b, 4, h - 14, w - 8, 2); R(B.c, 8, h - 8, w - 16, 2); R(B.a, 12, h - 40, 8, 26); R(B.a, w - 20, h - 40, 8, 26); R(B.a, 10, h - 70, w - 20, 34); R(B.b, 10, h - 70, 2, 34); R(B.c, w - 16, h - 70, 6, 34); R(B.a, w - 14, h - 90, 6, 24); R(B.a, w - 18, h - 96, 3, 10); fdisc(g, B.a, w / 2, h - 78, 8); R(B.b, w / 2 - 8, h - 82, 2, 6); R(B.w, w - 20, h - 104, 7, 8); R(B.b, w - 19, h - 108, 5, 5); R(B.a, 4, h - 66, 8, 22); R(B.c, 14, h - 50, 2, 8); } },
@@ -11060,7 +11615,7 @@ try { page = pageUI(); } catch (e) { console.warn('page ui', e); }
 if (window.__SB_TEST__) Object.assign(window.__SB__, { page: () => page }); // page hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
-if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, OLD_STRETCH, stretchW: () => stretchW, playW: () => playW, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, stretchPlan: () => stretchPlan }); // longer maps hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, OLD_STRETCH, stretchW: () => stretchW, playW: () => playW, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, seedN, ROUND5, UG_BY_THEME, stretchPlan: () => stretchPlan }); // longer maps hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { genLevel, startRandom, newSeed, SEG_META, ARENA_META, ARENA_DEFAULT, GEN_ARENA, GEN_SEG, RANDOM_FOES, GEN_DIFF, RANDOM, TITLE_MENU, pauseItems, genSeed: () => genSeed, setGenDiff(k) { genDiffKey = k; }, genDiffKey: () => genDiffKey, setUrlSeed(v) { urlSeed = v; } }); // random map hooks
 if (window.__SB_TEST__) Object.defineProperties(window.__SB__, Object.getOwnPropertyDescriptors({ STORY, CAST, ACTS, actOf, EPILOGUE, say, get radioQ() { return radioQ; }, get radioCur() { return radioCur; }, set mapT(v) { mapT = v; } })); // live getters, not copies
 if (window.__SB_TEST__) Object.assign(window.__SB__, { drawWorldMap, setLevel(n) { level = n; }, get reached() { return reached; }, mapPlane: () => wmAt(wmF < 0 ? level : wmF).slice(0, 2), wmKind }); // world map hooks
