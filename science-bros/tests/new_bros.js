@@ -62,7 +62,7 @@ for (const id of NEW) {
   flat(id); const q = quack(44); let i = 0; for (; i < 300 && !q.dead; i++) { calm(q); step({ fire: true, right: S.P.x < q.x - 14 }); S.P.inv = 1e9; }
   check(id + ': the weapon kills a quack that walks toward it', q.dead, i + ' frames');
 }
-{ flat('semmelweis'); const q = quack(38, { hp: 60, max: 60 }); calm(q); step({ fire: true }); let stunned = 0; for (let i = 0; i < 90; i++) { calm(q); step(); if (q.stun > stunned) stunned = q.stun; }
+{ flat('semmelweis'); const q = quack(35, { hp: 60, max: 60 }); let stunned = 0; for (let i = 0; i < 90; i++) { calm(q); step({ fire: i < 40 }); if (q.stun > stunned) stunned = q.stun; } // close range, holding fire: at 8 tiles most bubbles drift over his head (random wobble phase)
   check('Semmelweis: a soap bubble traps a quack (stunned) and pops', stunned > 0.5 && !S.bullets.some((b) => b.kind === 'bubble' && b.owner === 'p' && b.x > q.x - 4 && b.x < q.x + 4 && b.y > q.y && b.y < q.y + q.h), stunned.toFixed(2) + ' s'); }
 { flat('semmelweis'); step({ fire: true }); run(40); const bs = S.bullets.filter((b) => b.kind === 'bubble'); check('Semmelweis: bubbles drift upward and slow down', bs.length >= 1 && bs.every((b) => b.vy < 0 && Math.abs(b.vx) < 150), bs.map((b) => b.vx.toFixed(0) + ',' + b.vy.toFixed(0)).join(' ')); }
 { flat('torricelli'); const q = quack(41, { hp: 60, max: 60 }); calm(q); step({ fire: true }); let drops = 0, k = 0; for (; k < 90 && !drops; k++) { calm(q); step(); drops = S.bullets.filter((b) => b.kind === 'mdrop').length; }
