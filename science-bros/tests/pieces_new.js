@@ -62,7 +62,7 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const th = S.levelDef(l).theme, fit = kinds.filter((k) => S.NEW_PIECES[k].themes.includes(th));
   check(S.levelDef(l).name + ': the stretch uses new pieces that fit the ' + th + ' theme', cur.size >= 1 && [...cur].every((k) => fit.includes(k)), [...cur].join(', '));
   cur.forEach((k) => used.add(k));
-  check(S.levelDef(l).name + ': the boss arena is still in place', S.isStretched() && S.boss && S.boss.ax0 >= S.cutAt() + S.STRETCH);
+  check(S.levelDef(l).name + ': the boss arena is still in place', S.isStretched() && S.boss && S.boss.ax0 >= S.cutAt() + S.stretchW());
 }
 for (const k of kinds) S.SEG[k] = orig[k];
 check('every new piece turns up in some mission', used.size === kinds.length, used.size + ' of ' + kinds.length + ' used; missing ' + kinds.filter((k) => !used.has(k)).join(', '));

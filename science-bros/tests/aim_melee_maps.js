@@ -112,12 +112,12 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const L = S.levelDef(l), tag = L.name;
   S.startLevel(l); S.endCeasefire(); step();
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
-  const cut = S.cutAt(), inGap = (e) => e.x >= cut * T && e.x < (cut + S.STRETCH) * T;
+  const cut = S.cutAt(), inGap = (e) => e.x >= cut * T && e.x < (cut + S.stretchW()) * T;
   const foes = S.ents.filter((e) => inGap(e) && !e.dead && !['flag', 'ammo', 'icicle'].includes(e.type) && !BOSSES.includes(e.type)).length;
   const flags = S.ents.filter((e) => inGap(e) && e.type === 'flag').length;
-  check(tag + ': the boss arena starts ' + S.STRETCH + ' columns later', S.isStretched() && B.ax0 >= cut + S.STRETCH && B.trig >= cut + S.STRETCH, 'ax0 ' + B.ax0 + ' trig ' + B.trig);
+  check(tag + ': the boss arena starts ' + S.stretchW() + ' columns later', S.isStretched() && B.ax0 >= cut + S.stretchW() && B.trig >= cut + S.stretchW(), 'ax0 ' + B.ax0 + ' trig ' + B.trig);
   check(tag + ': the new stretch has quacks and four checkpoint flags', foes >= 5 && flags === 4, foes + ' quacks, ' + flags + ' flags');
-  check(tag + ': the extraction pad moved with the arena', S.padOf()[0] === S.levelDef(l).pad[0] + S.STRETCH);
+  check(tag + ': the extraction pad moved with the arena', S.padOf()[0] === S.levelDef(l).pad[0] + S.stretchW());
   // a bot that runs right and jumps gets from the end of the old path through the stretch into the arena (invulnerable)
   S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag') e.dead = true; });
   S.P.bro = S.BRO.einstein; S.P.x = (cut - 4) * T; S.P.y = 2 * T; S.P.vy = 0; let far = 0;

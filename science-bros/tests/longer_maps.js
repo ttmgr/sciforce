@@ -2,7 +2,9 @@
 // its boss arena, the stretch has more sections, forks (a high road over a low road) and more underground detours
 // than before, the boss arena sits where arenaCol() puts it and a bot reaches it, both roads of a fork can be walked,
 // the start stays safe, nothing floats or sits in a wall, missions keep the same quacks every time, and a big fight
-// at INSANE / 300% still costs under 3 ms a frame while every mission builds fast.
+// at INSANE / 300% still costs under 3 ms a frame while every mission builds fast. Only the 18 campaign missions are long:
+// random missions, the Moon Base, Lab Siege and Boss Rush keep the 140-column stretch and the 376-column map, and nobody
+// (bro, camera, bullets) gets past column 376 there.
 // Usage: node science-bros/tests/longer_maps.js science-bros/index.html
 const fs = require('fs'), vm = require('vm');
 const src = fs.readFileSync(process.argv[2], 'utf8').split('<script>')[1].split('</script>')[0];
@@ -126,6 +128,43 @@ check('the full map draws the 560-column level', (() => { try { S.keys.map = tru
   let ms = 99, n = 0, bn = 0; for (let r = 0; r < 5; r++) { const f = fight(3, 6); if (f[0] < ms) [ms, n, bn] = f; } // the best of 5, so a busy machine does not fail it
   check('a fight at INSANE / 300% on the longer map (' + n + ' quacks in the level, ' + bn + ' in 30 columns) costs under 3 ms a frame', ms < 3, ms.toFixed(2) + ' ms');
   S.setDifficulty(1, false); S.setDensity(3, false);
+}
+
+// ---- 6. only the 18 campaign missions are long: random missions and the bonus modes keep the 140-column stretch and
+// the 376-column map, with the arena and pad where they were before the longer maps (commit 4cc9ccc)
+const OLD_W = 376, OLD_RANDOM = { 1: [318, 371], 2: [319, 369], 7: [318, 371], 42: [318, 371], 123: [318, 371], 999: [318, 371], 4242: [319, 369], 77777: [318, 371] }; // seed: [arena ax0, pad column] on 4cc9ccc
+const edge = (tag, walk = true) => { // run right at the end of the map: the bro, the camera and the bullets stay inside the old width (walk false: solid steel there, only the view counts)
+  S.endCeasefire(); step(); S.P.bro = S.BRO.einstein; S.setLives(99); clear();
+  S.P.x = (OLD_W - 8) * T; S.P.y = 2 * T; S.P.vx = S.P.vy = 0; let px = 0, cx = 0, bx = 0;
+  for (let i = 0; i < 240; i++) { S.P.inv = 1e9; S.P.alive = true; step({ right: true, fire: i % 6 < 3, jump: i % 30 < 10 }); px = Math.max(px, S.P.x + S.P.w); cx = Math.max(cx, S.cam.x + 480); for (const b of S.bullets) bx = Math.max(bx, b.x); }
+  let wall = true; for (let r = 0; r < LH; r++) if (S.tileAt(OLD_W, r) !== STEEL || S.tileAt(LW - 1, r) !== STEEL) wall = false;
+  let drew = true; try { S.render(1); S.keys.map = true; S.render(1); S.keys.map = false; } catch (err) { drew = false; console.log(err); }
+  const ok = (!walk || px >= (OLD_W - 1) * T) && px <= OLD_W * T && cx <= OLD_W * T && bx <= OLD_W * T + 50 && wall && drew; // it does reach the end
+  return [ok, tag + ': bro to ' + (px / T).toFixed(1) + ', view to ' + (cx / T).toFixed(1) + ', bullets to ' + (bx / T).toFixed(1) + (wall ? '' : ', no wall') + (drew ? '' : ', draw failed')];
+};
+{
+  let camp = 0; for (let l = 0; l < NL; l++) { S.reset(); S.startLevel(l); if (S.stretchW() === S.STRETCH && S.playW() === LW) camp++; }
+  check('the campaign keeps the 324-column stretch and the 560-column map', S.STRETCH === 324 && S.OLD_STRETCH === 140 && camp === NL, camp + ' of ' + NL);
+  const bad6 = [], edges = []; let n6 = 0;
+  for (const dk of Object.keys(S.GEN_DIFF)) for (const d of [0, 1, 2, 3]) for (const seed of Object.keys(OLD_RANDOM)) {
+    S.setDifficulty(d, false); S.setGenDiff(dk); S.reset(); S.startRandom(+seed, true); n6++;
+    const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final), [ax0, pc] = OLD_RANDOM[seed];
+    if (S.stretchW() !== 140 || S.playW() !== OLD_W || !B || B.ax0 !== ax0 || B.ax1 >= OLD_W || S.padOf()[0] !== pc) bad6.push(dk + '/' + d + '/' + seed + ': width ' + S.playW() + ', ax0 ' + (B && B.ax0) + ', pad ' + S.padOf()[0]);
+    if (d === 3 && seed % 2) edges.push(edge('random ' + dk + '/' + seed));
+  }
+  S.setDifficulty(1, false); S.setGenDiff('normal');
+  check('random missions: 376 columns, the arena and pad where they were before (' + n6 + ' maps, every difficulty)', !bad6.length, bad6.slice(0, 6).join('; '));
+  check('random missions: the bro, the camera and the bullets never get past column 376', edges.length >= 6 && edges.every((e) => e[0]), edges.filter((e) => !e[0] || e === edges[0]).map((e) => e[1]).join('; '));
+  S.reset(); S.startMode('moon'); const M6 = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
+  check('Moon Base: 376 columns, the arena from column 318 and the pad at 370 as before', S.playW() === OLD_W && S.stretchW() === 140 && M6.ax0 === 318 && S.padOf()[0] === 370, 'width ' + S.playW() + ', ax0 ' + M6.ax0 + ', pad ' + S.padOf());
+  const em = edge('moon'); check('Moon Base: nobody gets past column 376', em[0], em[1]);
+  S.reset(); S.startMode('siege');
+  check('Lab Siege: 376 columns and the pad at 30 as before', S.playW() === OLD_W && !S.isStretched() && S.padOf()[0] === 30, 'width ' + S.playW() + ', pad ' + S.padOf());
+  const es = edge('siege', false); check('Lab Siege: the view stops at column 376 (all steel past column 60)', es[0], es[1]);
+  S.reset(); S.startMode('rush');
+  check('Boss Rush: 376 columns, the first boss fight starts at column 319 as before', S.playW() === OLD_W && Math.floor(S.P.x / T) === 319, 'width ' + S.playW() + ', bro at ' + Math.floor(S.P.x / T));
+  S.reset(); S.startMode('campaign'); S.startLevel(0);
+  check('back in the campaign the map is long again', S.playW() === LW && S.stretchW() === S.STRETCH);
 }
 
 console.log(fails ? fails + ' check(s) failed' : 'all longer maps checks passed');
