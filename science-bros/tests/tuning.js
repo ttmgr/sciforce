@@ -86,15 +86,16 @@ const OLD = [38, 43, 46, 46, 51, 51, 49, 48, 50, 53, 54, 60, 57, 60, 67, 64, 63,
 S = boot(); // a fresh game that loads the saved NORMAL / 100%
 check('the saved 100% setting is loaded', S.density() === 1 && S.DIFFS[S.difficulty()].name === 'NORMAL');
 const cnt = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); cnt.push(quacks().length); }
-const same = cnt.filter((c, l) => l < OLD.length - 1 || l === S.nLevels - 1); // the missions 7fd836a also had: the first 17 and the Citadel (the two new ones sit between)
+const old = (k) => Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i)).indexOf(S.ROUND5[k]); // a mission by its place among the 20 before round 6 (five more sit between them now)
+const same = OLD.map((_, i) => cnt[old(i === OLD.length - 1 ? 19 : i)]); // the missions 7fd836a also had: the first 17 and the Citadel
 const ratio = same.reduce((a, b) => a + b) / OLD.reduce((a, b) => a + b), per = same.map((c, i) => c / OLD[i]);
 console.log('(quacks per mission now ' + cnt.join(' ') + '; before ' + OLD.join(' ') + '; ratio ' + ratio.toFixed(3) + ')');
 check('NORMAL / 100% holds about 1.5x the quacks of before (1.4 to 1.6 over the campaign)', ratio >= 1.4 && ratio <= 1.6, ratio.toFixed(3));
 check('and every mission got between 1.3x and 1.7x', per.every((r) => r >= 1.3 && r <= 1.7), per.map((r) => r.toFixed(2)).join(' '));
 { const threat = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); threat.push(quacks().reduce((a, e) => a + W[e.type], 0)); }
   let dips = 0; for (let l = 1; l < S.nLevels; l++) if (threat[l] < threat[l - 1] - 6) dips++;
-  check('the difficulty curve still climbs from the first mission to the finale', dips === 0 && threat[0] === Math.min(...threat) && threat[17] >= Math.max(...threat) - 6, threat.map((x) => x.toFixed(0)).join(' ')); }
-S.setDensity(0, false); { const n = []; for (const l of [0, 8, 17]) { S.reset(); S.startLevel(l); n.push(quacks().length); } S.setDensity(3, false); const m = []; for (const l of [0, 8, 17]) { S.reset(); S.startLevel(l); m.push(quacks().length); }
+  check('the difficulty curve still climbs from the first mission to the finale', dips === 0 && threat[0] === Math.min(...threat) && threat[S.nLevels - 1] >= Math.max(...threat) - 6, threat.map((x) => x.toFixed(0)).join(' ')); }
+S.setDensity(0, false); { const n = []; for (const l of [0, 8, 17].map(old)) { S.reset(); S.startLevel(l); n.push(quacks().length); } S.setDensity(3, false); const m = []; for (const l of [0, 8, 17].map(old)) { S.reset(); S.startLevel(l); m.push(quacks().length); }
   check('the density setting still scales on top of the new base (25% holds fewer than 100%)', n.every((v, i) => v < m[i]), n.join(',') + ' vs ' + m.join(',')); }
 // safe start and fair placement at every density, on every mission
 { const bad = { ceasefire: [], near: [], wall: [], shots: [] };
@@ -105,7 +106,7 @@ S.setDensity(0, false); { const n = []; for (const l of [0, 8, 17]) { S.reset();
     if (quacks().some((e) => e.x < 20 * T)) bad.near.push(tag);
     if (quacks().some(inWall)) bad.wall.push(tag);
   }
-  for (const l of [0, 8, 17]) { S.setDensity(6, false); S.reset(); S.startLevel(l); S.P.inv = 1e9; let fired = 0; for (let i = 0; i < 580; i++) { step(); fired += S.bullets.filter((b) => b.owner === 'e').length; } if (fired) bad.shots.push('L' + (l + 1) + ':' + fired); }
+  for (const l of [0, 8, 17].map(old)) { S.setDensity(6, false); S.reset(); S.startLevel(l); S.P.inv = 1e9; let fired = 0; for (let i = 0; i < 580; i++) { step(); fired += S.bullets.filter((b) => b.owner === 'e').length; } if (fired) bad.shots.push('L' + (l + 1) + ':' + fired); }
   check('safe start: a 10 s ceasefire at 100% and 300%, on all 18 missions', !bad.ceasefire.length, bad.ceasefire.join(' '));
   check('safe start: no quack within 20 tiles of the start at 100% and 300%', !bad.near.length, bad.near.join(' '));
   check('nothing spawns inside a wall at 100% and 300%', !bad.wall.length, bad.wall.join(' '));
@@ -115,7 +116,7 @@ S.setDensity(3, false);
 // ---- 4. frame budget: INSANE, 300% of the new base, the last mission, the busiest 30 columns, firing and blowing things up
 {
   const fight = () => {
-    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(17); S.P.bro = S.BRO.einstein; S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
+    S.setDifficulty(3, false); S.setDensity(6, false); S.reset(); S.startLevel(old(17)); S.P.bro = S.BRO.einstein; S.endCeasefire(); S.P.alt = { kind: 'minigun', ammo: 99999 };
     const q = quacks(), n = q.length; let best = 24, bn = 0;
     for (let c = 24; c < 330; c += 4) { const k = q.filter((e) => e.x >= c * T && e.x < (c + 30) * T).length; if (k > bn) { bn = k; best = c; } }
     const near = q.find((e) => e.x >= best * T); S.P.x = best * T; S.P.y = near.y - 40; S.cam.x = Math.max(0, best * T - 60);

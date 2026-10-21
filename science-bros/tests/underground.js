@@ -59,7 +59,8 @@ check('every mission and mode: earth down to a steel bedrock at row 39 under the
 check('every mission and mode: nothing floats at the start', !bad.float.length && S.checkCollapse() === 0, bad.float.join(' '));
 check('every mission and mode: nothing spawns inside a wall, no decoration floats or stands behind the underground', !bad.wall.length, bad.wall.join(' '));
 check('several campaign stretches get an underground detour', stretchZones.length >= 8, stretchZones.length + ' missions: ' + stretchZones.join(','));
-check('four missions also go underground in their main part, past the middle (Zodiac, Pyramid, and the hand-made mall and volcano)', mainZones.join(',') === '9,12,18,19' && [8, 11, 17, 18].every((l) => (S.startLevel(l), S.ugZones().every((o) => o.c0 > 90))), mainZones.join(','));
+{ const main = ['ZODIAC OBSERVATORY', 'PYRAMID POWER PLANT', 'RAW MILK RANCH', 'MAGNET FUNLAND', 'SPIRIT BOX MANOR', 'ANCIENT ALIEN TEMPLE', 'TINFOIL HAT BUNKER', 'AURA MEGAMALL', 'POX PARTY VOLCANO'].map((n) => Array.from({ length: NL }, (_, i) => S.levelDef(i).name).indexOf(n)).sort((a, b) => a - b);
+  check('nine missions also go underground in their main part, past the middle (Zodiac, Pyramid, and the seven hand-made ones: mall, volcano and the five of round 6)', mainZones.join(',') === main.map((l) => l + 1).join(',') && main.every((l) => (S.startLevel(l), S.ugZones().every((o) => o.c0 > 90))), mainZones.join(',')); }
 
 // ---- 2. what is down there, in the campaign stretches
 let stretchFoes = 0, stretchLoot = 0, stretchCages = 0, shafts = 0;

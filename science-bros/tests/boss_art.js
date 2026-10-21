@@ -22,13 +22,13 @@ const run = (n, keys = {}) => { for (let i = 0; i < n; i++) step(keys); };
 let fails = 0, passes = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (ok) passes++; else fails++; };
 
-const LEVEL = { boss: 0, kopter: 1, crawler: 1, tank: 2, engine: 3, blimp: 4, citrus: S.nLevels - 1, director: 9 }; // the Citadel is always the last mission
+const LEVEL = { boss: 0, kopter: 1, crawler: 1, tank: 2, engine: 3, blimp: 4, citrus: S.nLevels - 1, director: Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i).name).indexOf('PERPETUAL MOTION WORKS') }; // the Citadel is always the last mission
 const TYPES = Object.keys(LEVEL);
 // boss names in the campaign, the strongholds and the random-map word lists (a random map puts a place word in front)
-const NAMES = { boss: ['', 'ZODIAC MECH', 'THE ZESTINATOR', 'ISLAND PILLBOT', 'ISLAND GRIFTBOT', 'ISLAND WALKER', 'ISLAND MECH'], kopter: ['', 'CHEMTRAIL COPTER', 'ASTRAL KOPTER', 'DUNES HYPECOPTER', 'DUNES GYROCOPTER', 'DUNES KOPTER'],
-  crawler: ['', 'QUARTZ QUEEN', 'SAND SCARAB', 'SLUDGE SERPENT', 'OASIS SERPENT', 'OASIS SCARAB', 'OASIS WORM'], tank: ['', 'MIASMA MACHINE', 'STEAM TANK', 'PEAKS STEAMROLLER', 'PEAKS HYPE TRAIN', 'PEAKS TANK'],
-  engine: ['', 'PLANT SHAKER', 'PLANT ENGINE', 'THE IMMUNITY FORGE'], blimp: ['', 'UFO HOAX BALLOON', 'FARM BALLOON', 'FARM ZEPPELIN', 'THE GRAND DIFFUSER'], citrus: ['', 'ORCHARD GRAPEFRUIT', 'ORCHARD LEMON LORD', 'ORCHARD TANGERINE'],
-  director: ['', 'THE PITCHMAN', 'THE INFLUENCER', 'CITY STREAMER', 'CITY DIRECTOR', 'CITY PITCHMAN', 'CITY INFLUENCER'] };
+const NAMES = { boss: ['', 'ZODIAC MECH', 'THE ZESTINATOR', 'THE ANCIENT ASTRONAUT', 'ISLAND PILLBOT', 'ISLAND GRIFTBOT', 'ISLAND WALKER', 'ISLAND MECH'], kopter: ['', 'CHEMTRAIL COPTER', 'ASTRAL KOPTER', 'THE POLTERCOPTER', 'DUNES HYPECOPTER', 'DUNES GYROCOPTER', 'DUNES KOPTER'],
+  crawler: ['', 'QUARTZ QUEEN', 'SAND SCARAB', 'SLUDGE SERPENT', 'OASIS SERPENT', 'OASIS SCARAB', 'OASIS WORM'], tank: ['', 'MIASMA MACHINE', 'STEAM TANK', 'THE CREAM CRUSHER', 'PEAKS STEAMROLLER', 'PEAKS HYPE TRAIN', 'PEAKS TANK'],
+  engine: ['', 'PLANT SHAKER', 'PLANT ENGINE', 'THE IMMUNITY FORGE', 'THE FOIL PRESS'], blimp: ['', 'UFO HOAX BALLOON', 'FARM BALLOON', 'FARM ZEPPELIN', 'THE GRAND DIFFUSER'], citrus: ['', 'ORCHARD GRAPEFRUIT', 'ORCHARD LEMON LORD', 'ORCHARD TANGERINE'],
+  director: ['', 'THE PITCHMAN', 'THE INFLUENCER', 'THE RINGMASTER', 'CITY STREAMER', 'CITY DIRECTOR', 'CITY PITCHMAN', 'CITY INFLUENCER'] };
 const BASE = ['', 'ISLAND MECH', 'DUNES KOPTER', 'OASIS WORM', 'PEAKS TANK', 'PLANT ENGINE', 'FARM ZEPPELIN', 'CITY DIRECTOR'];
 // the boss in its own fight, awake, the player standing in the arena and unhurt
 const fight = (type, name) => {

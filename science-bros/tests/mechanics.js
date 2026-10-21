@@ -16,6 +16,7 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const N = S.nLevels, STRONG = []; for (let l = 5; l < N - 1; l++) if (S.levelDef(l).build.segs) STRONG.push(l); // every mission between Flat Earth Station and the Citadel built from pieces (the hand-made mall and volcano have tests/new_maps.js)
 // a mission with every quack gone and an unkillable bro standing at column c, row r (feet on top of row r)
+const old = (k) => Array.from({ length: N }, (_, i) => S.levelDef(i)).indexOf(S.ROUND5[k]); // a mission by its place among the 20 before round 6
 const lone = (l) => { S.startLevel(l); S.endCeasefire(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag' && e.type !== 'icicle' && !e.final) e.dead = true; }); run(1); S.P.inv = 1e9; };
 const stand = (c, r) => { S.P.x = c * T + 3; S.P.y = r * T - 15.01; S.P.vx = 0; S.P.vy = 0; S.cam.x = Math.max(0, S.P.x - 240); };
 const dev = (kind, test = () => true) => S.devs.find((d) => d.kind === kind && test(d));
@@ -51,7 +52,7 @@ for (const l of [N - 4, N - 3, N - 2]) {
 }
 
 // ---- conveyor belts carry a bro and a barrel
-lone(9);
+lone(old(9));
 const belt = dev('belt', (d) => d.r === 16 && d.dir === 1);
 stand(belt.c0 + 2, 16); let x0 = S.P.x; run(60);
 check('a conveyor belt carries a bro standing on it', S.P.x - x0 > 30, ((S.P.x - x0) / T).toFixed(1) + ' tiles in 1 s');
@@ -59,7 +60,7 @@ const barrel = S.makeEnt({ type: 'barrel', c: belt.c0 + 6, from: 12 }); S.ents.p
 check('it carries a barrel too', barrel.x - x0 > 30, ((barrel.x - x0) / T).toFixed(1) + ' tiles');
 
 // ---- wind: calm, then a gust that pushes the bro and bends the shots
-lone(5);
+lone(old(5));
 const wind = dev('wind');
 stand((wind.x0 / T) + 20, 16); wind.t = 0; wind.pow = 0; x0 = S.P.x; run(30);
 check('in the calm the wind does not push', Math.abs(S.P.x - x0) < 2, (S.P.x - x0).toFixed(1));
@@ -70,7 +71,7 @@ check('a gust bends the quacks\' shots', (shot.x - sx) * wind.dir > 5, (shot.x -
 check('the wind shows streaks before a gust', (wind.t = 3.5, run(1), wind.warn === true));
 
 // ---- steam vents: a hiss, then a blast that throws the bro high
-lone(12);
+lone(old(12));
 const vent = dev('vent', (d) => d.r === 16);
 stand(vent.c, 16); S.P.x = vent.c * T + 3; vent.t = 1.9; run(2);
 check('a vent warns before it blows', vent.st === 1, 'state ' + vent.st);
@@ -78,19 +79,19 @@ let y0 = S.P.y, top = y0; for (let i = 0; i < 90; i++) { run(1); top = Math.min(
 check('a vent throws the bro up several tiles', y0 - top > 5 * T, ((y0 - top) / T).toFixed(1) + ' tiles');
 
 // ---- lifts: a freight lift carries a bro up, a mine cart carries one across
-lone(5);
+lone(old(5));
 const lift = dev('lift', (d) => d.ax === d.bx);
 S.P.x = lift.x + 4; S.P.y = lift.y - 15.01; S.P.vy = 0; S.cam.x = Math.max(0, S.P.x - 240); y0 = S.P.y; run(240);
 check('a lift carries the bro up', y0 - S.P.y > 5 * T && Math.abs(S.P.y + S.P.h - lift.y) < 2, ((y0 - S.P.y) / T).toFixed(1) + ' tiles');
-lone(6);
+lone(old(6));
 const cart = dev('lift', (d) => d.ay === d.by);
 cart.s = 0; cart.dir = 1; cart.wait = 0; run(1); S.P.x = cart.x + 8; S.P.y = cart.y - 15.01; S.P.vy = 0; S.cam.x = Math.max(0, S.P.x - 240); x0 = S.P.x; run(150);
 check('a mine cart carries the bro across', S.P.x - x0 > 4 * T && S.P.alive, ((S.P.x - x0) / T).toFixed(1) + ' tiles');
-lone(5); const far = dev('lift', (d) => d.ax === d.bx); stand(3, 16); S.cam.x = 0; run(120);
+lone(old(5)); const far = dev('lift', (d) => d.ax === d.bx); stand(3, 16); S.cam.x = 0; run(120);
 check('a lift far off screen does no work', far.s === 0 && far.wait > 0);
 
 // ---- the flood: acid rises to the red line once you are in, holds, then drains
-lone(14);
+lone(old(14));
 const flood = dev('flood');
 const acidIn = () => { let n = 0; for (let c = flood.c0; c <= flood.c1; c++) for (let r = flood.top; r < 21; r++) if (S.tileAt(c, r) === ACID) n++; return n; };
 check('the cistern starts dry', acidIn() === 0 && flood.state === 'idle');
@@ -101,24 +102,24 @@ check('the acid rises up to the red line', flood.state === 'hold' && S.tileAt(fl
 check('a bro above the red line stays dry', S.P.alive);
 for (let i = 0; i < 60 * 14 && acidIn() > 0; i++) run(1);
 check('then it drains away again', acidIn() === 0, acidIn() + ' acid tiles left');
-lone(14); stand(flood.c0 + 10, 20); S.P.inv = 1e9; for (let i = 0; i < 60 * 8 && S.P.alive; i++) run(1);
+lone(old(14)); stand(flood.c0 + 10, 20); S.P.inv = 1e9; for (let i = 0; i < 60 * 8 && S.P.alive; i++) run(1);
 check('a bro left on the cistern floor is caught by the acid', !S.P.alive);
 
 // ---- anti-gravity: jumps float much higher inside the field
 const jump = () => { const y = S.P.y; let hi = y; S.pressed.jump = true; for (let i = 0; i < 150; i++) { run(1, { jump: i < 25 }); hi = Math.min(hi, S.P.y); } return (y - hi) / T; };
-lone(8); stand(10, 16); run(5); const outside = jump();
+lone(old(8)); stand(10, 16); run(5); const outside = jump();
 const grav = dev('grav', (d) => d.x1 - d.x0 > 20 * T), gc = Math.floor(grav.x0 / T) + 11; stand(gc, 16); S.P.x = gc * T + 3; run(5); // between the decks
 const inField = S.P.x > grav.x0 && S.P.x < grav.x1, inside = jump();
 check('a jump in an anti-gravity field floats far higher', inField && inside > outside * 1.6, outside.toFixed(1) + ' tiles outside, ' + inside.toFixed(1) + ' inside');
 
 // ---- cracked floors give way a moment after you step on them; stalactites drop when you pass under
-lone(6);
+lone(old(6));
 let cc = -1; for (let c = 20; c < 176 && cc < 0; c++) if (S.crumbly(c, 16) && S.tileAt(c, 16)) cc = c;
 stand(cc, 16); S.P.x = cc * T + 3; run(10);
 check('a cracked plank still holds for a moment', S.tileAt(cc, 16) !== 0);
 run(60);
 check('then it gives way', S.tileAt(cc, 16) === 0);
-lone(6);
+lone(old(6));
 const rock = S.ents.find((e) => e.type === 'icicle' && e.rock);
 check('the caverns have stalactites', !!rock);
 stand(Math.floor((rock.x + 3) / T), Math.floor((rock.y + 60) / T) + 1); S.P.x = rock.x - 2; S.P.y = S.surf(Math.floor(rock.x / T), Math.floor(rock.y / T) + 1) * T - 15.01; run(20);

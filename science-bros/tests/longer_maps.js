@@ -30,7 +30,8 @@ const solid = (v) => v !== 0 && v !== 5 && v !== 7;
 const quacks = () => S.ents.filter((e) => S.THREAT[e.type] && !e.dead);
 const OLD_ZONES = [1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0]; // underground zones per mission at 376 columns (commit 78b2cd6); missions 18 and 19 came later with one zone of their own in the base
 const ownSeg = (l) => (S.levelDef(l).build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44);
-const oldSections = (l) => { const segs = ownSeg(l), own = segs.length ? segs[l % segs.length] : null; return Math.max(1, Math.round((140 - (own ? own[1] : 0)) / 32)) + (own ? 1 : 0); }; // the 140-column stretch's piece count
+const oldZones = (l) => { const k = S.ROUND5.indexOf(S.levelDef(l)); return k >= 0 ? OLD_ZONES[k] : 0; }; // by a mission's place among the 20 before round 6 (the five of round 6 had none)
+const oldSections = (l) => { const segs = ownSeg(l), own = segs.length ? segs[S.seedN(l) % segs.length] : null; return Math.max(1, Math.round((140 - (own ? own[1] : 0)) / 32)) + (own ? 1 : 0); }; // the 140-column stretch's piece count
 const inWall = () => S.ents.filter((e) => !BOSSES.includes(e.type) && e.type !== 'icicle' && e.type !== 'drone' && e.type !== 'flag' && [1, 2, 3, 4, 6].includes(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h / 2) / T))));
 const floating = () => { // loose blocks (brick, crate, ice) with nothing holding them, the way the game checks it
   const N = LW * LH, at = (i) => S.tileAt(i % LW, Math.floor(i / LW)), loose = (v) => v === 2 || v === 4 || v === 6, seen = new Uint8Array(N), q = [];
@@ -54,7 +55,7 @@ for (let l = 0; l < NL; l++) {
   if (c !== cut + S.STRETCH) bad.plan.push(tag + ':ends at ' + c);
   const forks = plan.filter((p) => p[0] === 'fork'), zones = S.ugZones().filter((z) => z.c0 >= cut - 10 && z.c1 <= cut + S.STRETCH + 2);
   totalSec += plan.length; oldSec += oldSections(l); totalZones += S.ugZones().length; totalForks += forks.length;
-  if (plan.length < oldSections(l) + 4 || forks.length !== wantF || zones.length !== wantZ || S.ugZones().length <= OLD_ZONES[l]) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + wantF + ' forks, ' + zones.length + '/' + wantZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
+  if (plan.length < oldSections(l) + 4 || forks.length !== wantF || zones.length !== wantZ || S.ugZones().length <= oldZones(l)) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + wantF + ' forks, ' + zones.length + '/' + wantZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
   for (const [, f0, w] of forks) { // a steel high road at row 10 with a ladder at each end, and the low road open under it
     const a = f0 + 6, b = f0 + w - 7, m = (a + b) >> 1; let ok = b - a >= 15;
     for (let k = a; k <= b; k++) { if (S.tileAt(k, 10) !== STEEL || solid(S.tileAt(k, 7)) || (k !== m && solid(S.tileAt(k, 9)))) ok = false; for (let r = 11; r <= 14; r++) if (solid(S.tileAt(k, r))) ok = false; if (!solid(S.tileAt(k, 16))) ok = false; }
