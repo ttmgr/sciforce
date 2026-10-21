@@ -147,6 +147,10 @@ const HEADS = {
   goodall:  ['...hhhhh....', '..hhhhhhh...', 'hhhssssss...', 'h.hsssses...', 'h..ssssss...', '...sssss....'],
   jemison:  ['...hhhh.....', '..hhhhhhh...', '..hhsssss...', '..hsssses...', '...ssssss...', '...sssss....'],
   oppenheimer: ['...hhhhh....', '..hwwwwwh...', 'hhhhhhhhhh..', '...sssses.m.', '...ssssgggm.', '....ssss....'],
+  semmelweis: ['..hhhhhh....', '.hhhhhhhh...', '.hhssssss...', '..hsssses...', '..mmmmmm....', '...ssss.....'],
+  torricelli: ['...hhhhh....', '..hhhhhhh...', 'hhhssssss...', 'h.hsssses...', '...ssssss...', '...sssss....'],
+  volta:    ['..wwwwww....', '.wwwwwwww...', '.wwssssss...', '..wsssses...', '..ssssss....', '...ssss.....'],
+  gauss:    ['...hhhhh....', '.hhhhhhhhh..', '.hssssssh...', '..hsssses...', '...ssssss...', '...sssss....'],
   anning: ['..gggggg....', '.gggggggg...', 'ghhssssss...', 'ghhsssses...', 'g.hssssss...', '...sssss....'],
   vesalius: ['...hhhhh....', '..hhhhhhh...', '..hssssss...', '..hsssses...', '..mmssssm...', '...mmmm.....'],
   hooke: ['..wwwwww....', '.wwwwwwww...', 'wwwssssss...', 'wwwsssses...', 'ww.ssssss...', 'w...ssss....'],
@@ -258,6 +262,14 @@ const BROS = [
     pal: { h: '#1f1715', s: '#8a5a3c', e: '#1b1d2e', c: '#e8873a', t: '#e6e2f0', p: '#5a3a26', b: '#25211a' } },
   { id: 'oppenheimer', name: 'Robert Oppenbro', weapon: 'Neutron pistol', wdesc: 'fast neutron bolts that leave a short blue radiation glow where they hit', special: 'Trinity', sdesc: 'lobs an atomic device ahead: get out of the red ring before it goes off. One per life', formula: 'Trinity test, 16 July 1945', gun: '#8fd3ff',
     pal: { h: '#8a7a62', w: '#3a2e24', s: '#f0d0b0', e: '#1b1d2e', g: '#6a4a2a', m: '#3a2618', c: '#8a7a5a', t: '#e9eef6', p: '#4a4232', b: '#25211a' } },
+  { id: 'semmelweis', name: 'Ignaz Semmelbro', weapon: 'Soap bubbles', wdesc: 'slow bubbles that drift up and trap a quack for a moment', special: 'Hand wash', sdesc: 'six huge bubbles float out ahead and trap what they touch', formula: 'chlorinated lime, 1847', gun: '#bfe9ff',
+    pal: { h: '#6a4a30', m: '#6a4a30', s: '#f0c9a4', e: '#1b1d2e', c: '#e9eef6', t: '#8fd3ff', p: '#3a3550', b: '#25283a' } },
+  { id: 'torricelli', name: 'Evangelista Torricelbro', weapon: 'Mercury blobs', wdesc: 'a heavy lobbed blob that splits into three poisonous bouncing droplets', special: 'Barometer', sdesc: 'mercury rains from the sky all across the screen', formula: 'P = rho g h', gun: '#b4bed0',
+    pal: { h: '#3a2a20', s: '#efc9a6', e: '#1b1d2e', c: '#5a4632', t: '#c9a227', p: '#3a3326', b: '#25211a' } },
+  { id: 'volta', name: 'Alessandro Voltbro', weapon: 'Voltaic pile', wdesc: 'sparks that hit harder each time they hit the same quack', special: 'Overcharge', sdesc: 'for 6 s you fire twice as fast and every spark hits at full charge', formula: 'zinc, copper, brine, 1800', gun: '#f2c94c',
+    pal: { w: '#d6d6dc', s: '#f0c9a4', e: '#1b1d2e', c: '#8e2b3c', t: '#f2c94c', p: '#2a2e42', b: '#15161f' } },
+  { id: 'gauss', name: 'Carl Gaussbro', weapon: 'Coil rifle', wdesc: 'a slug that speeds up through three coils: weak up close, hard at range', special: 'Sum of 1 to 100', sdesc: 'twenty fast slugs in a second, each one hitting harder than the last', formula: '1 + 2 + ... + 100 = 5050', gun: '#8da0cb',
+    pal: { h: '#3a2a20', s: '#f0c9a4', e: '#1b1d2e', c: '#2a3a5a', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
   // melee bros: the fire button swings at what is in reach (see swing)
   { id: 'anning', name: 'Mary Anbro', weapon: 'Fossil hammer', wdesc: 'slow, heavy swings that crush quacks and smash blocks', special: 'Mass extinction', sdesc: 'a meteor slams down a few tiles ahead', formula: 'Ichthyosaurus, Lyme Regis, 1811', gun: '#b4bed0', melee: true,
     pal: { h: '#5a3a26', g: '#3a2a4a', s: '#f2d2b8', e: '#1b1d2e', c: '#6a4a3a', t: '#e6e2d0', p: '#3a3326', b: '#25211a' } },
@@ -2292,7 +2304,7 @@ const P_FX = { well: 1, hole: 1, sun: 1, heat: 1, rad: 1, jet: 1 }; // effects o
 // tunnel (punch, and the block above goes too: a hole a bro fits through), burn (only what burns or melts; stone is
 // just scorched), eat (eats into the earth around it), fork (the arc jumps to two neighbours), quake (cracks only),
 // none (passes through).
-const MAT = { all: [1, 1, 1, 1], soft: [1, 0.4, 1, 1], stone: [0.8, 1.6, 1, 1.2], wood: [0, 0, 1, 0], fire: [0, 0, 2.5, 2], acid: [2.5, 0.35, 1.2, 1], glass: [0.5, 0.5, 1.5, 2.5], demo: [1, 1.5, 1.2, 1], sound: [0, 0, 0.3, 3] };
+const MAT = { all: [1, 1, 1, 1], soft: [1, 0.4, 1, 1], stone: [0.8, 1.6, 1, 1.2], wood: [0, 0, 1, 0], fire: [0, 0, 2.5, 2], acid: [2.5, 0.35, 1.2, 1], glass: [0.5, 0.5, 1.5, 2.5], demo: [1, 1.5, 1.2, 1], sound: [0, 0, 0.3, 3], suds: [0.2, 0, 0.8, 2.5] };
 const MI = [0, 0, 1, 0, 2, 0, 3, 0]; // tile type -> its column in MAT
 const DESTRUCT = {
   // light, quick shots only chip
@@ -2322,6 +2334,8 @@ const DESTRUCT = {
   vial: { p: 1, r: 1, shape: 'round', m: 'acid' }, bigvial: { p: 1, r: 1.1, shape: 'round', m: 'acid' }, elemU: { p: 1, r: 1, shape: 'round', m: 'acid' },
   apple: { p: 1.1, r: 1, shape: 'round', s: 0.4 }, calc: { p: 1, r: 1, shape: 'round' }, fission: { p: 0.9, r: 1, shape: 'round' }, torp: { p: 1, r: 1, shape: 'round' },
   elemNa: { p: 1, r: 1, shape: 'round' }, elemHe: { p: 0.8, r: 1, shape: 'round' }, plasma2: { p: 1, r: 1, shape: 'round' },
+  bubble: { p: 0.3, shape: 'chip', m: 'suds' }, merc: { p: 1, shape: 'punch', m: 'stone' }, mdrop: { p: 0.35, shape: 'chip', m: 'stone' },
+  volt: { p: 0.5, shape: 'fork', m: 'stone' }, gauss: { p: 1.2, shape: 'line', n: 3, m: 'stone' },
   tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo', s: 0.5 }, rocket: { p: 1.3, r: 1.2, shape: 'round', s: 0.45 }, bomb: { p: 1.2, r: 1.2, shape: 'round', s: 0.5 }, // s: steel power. Only these heavy weapons dent steel (10 hp); the bedrock row and boss arenas never give
 };
 const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot
@@ -2353,7 +2367,7 @@ function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
 // Weak weapons hit bosses harder: the player's damage to a boss (and its parts) is multiplied while that bro's main
 // weapon fires and by the shots it fired. Tuned with tests/weapons_bosses.js so every bro deals at least about 60%
 // of the median boss damage per second; the strongest weapons are left as they were.
-const BOSS_MUL = { goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1 };
+const BOSS_MUL = { semmelweis: 2, volta: 1.5, torricelli: 1.3, goodall: 2, fleming: 1.65, hypatia: 1.35, wegener: 1.45, meitner: 1.5, davinci: 1.2, feynman: 1.25, sagan: 1.1 };
 let bossMul = 1;
 
 // ---------------------------------------------------------------- underground
@@ -3799,6 +3813,10 @@ const GUNFX = {
   goodall: { flash: 'ring', c: ['#ffffff', '#e6d2b0'], kick: 0.5 },
   jemison: { flash: 'ring', c: ['#ffffff', '#e78ac3'], eject: 'vent', heat: 0.15, idle: 'flicker' },
   oppenheimer: { flash: 'glow', c: ['#ffffff', '#8fd3ff'], eject: 'vent', heat: 0.07, idle: 'flicker' },
+  semmelweis: { flash: 'mist', c: ['#ffffff', '#bfe9ff'], idle: 'drip' },
+  torricelli: { flash: 'puff', c: ['#ffffff', '#b4bed0'], kick: 2, idle: 'drip', charge: 1 },
+  volta: { flash: 'spark', c: ['#ffffff', '#f2c94c'], eject: 'vent', heat: 0.08, idle: 'spark' },
+  gauss: { flash: 'ring', c: ['#ffffff', '#8da0cb'], eject: 'vent', heat: 0.1, kick: 2, idle: 'flicker' },
   alt_shotgun: { flash: 'cone', c: ['#ffffff', '#f29e4c'], heat: 0.25, kick: 3, shake: 2 },
   alt_rocket: { flash: 'puff', c: ['#fff6c2', '#f29e4c'], heat: 0.3, kick: 3, shake: 2, charge: 1 },
   alt_minigun: { flash: 'star', c: ['#fff6c2', '#f2c94c'], eject: 'brass', heat: 0.03 },
@@ -3937,6 +3955,10 @@ function fireWeapon() {
       for (let k = 0; k < 2; k++) { const l = rand(0.42, 0.5); bullets.push({ x: gx, y: gy, vx: f * rand(230, 260) + P.vx * 0.3, vy: rand(-20, 10), grav: -40, owner: 'p', dmg: 0.22, tdmg: 0.15, life: l, max: l, kind: 'flame', pierce: 99, burn: 1, hitR: 2, lit: Math.random() < 0.3 }); }
       P.cool = 0.06; if (Math.random() < 0.35) sfx('flame'); break;
     case 'goodall': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 250, vy: 0, owner: 'p', dmg: 0.9, tdmg: 0, life: 0.55, kind: 'hoot', pierce: 99, stun: 0.2, knock: 140, hitR: 3 }); P.cool = 0.26; sfx('hoot'); break;
+    case 'semmelweis': for (const k of [0, 1]) bullets.push({ x: gx, y: gy - k * 2, vx: f * (150 + k * 40), vy: -10 - k * 25, grav: -45, owner: 'p', dmg: 0.6, tdmg: 0, life: 1.3, kind: 'bubble', stun: 1.4, hitR: 4, ph: rand(0, 6) }); P.cool = 0.3; sfx('splash'); break;
+    case 'torricelli': bullets.push({ x: gx, y: gy - 2, vx: f * 300 + P.vx * 0.3, vy: -90, grav: 650, owner: 'p', dmg: 1.6, tdmg: 1, life: 2, kind: 'merc', poison: 1.5, knock: 100, hitR: 2 }); P.cool = 0.4; P.recoil = 2; sfx('throw'); break;
+    case 'volta': bullets.push({ x: gx, y: gy, vx: f * 520, vy: rand(-8, 8), owner: 'p', dmg: 0.55, tdmg: 0.45, life: 0.5, kind: 'volt', full: P.volt > 0 }); P.cool = 0.1; P.recoil = 1; sfx('zap'); break;
+    case 'gauss': bullets.push({ x: gx, y: gy, sx: gx, vx: f * 180, vy: 0, owner: 'p', dmg: 1, tdmg: 0.5, life: 0.75, kind: 'gauss', pierce: 1, stage: 0 }); P.cool = 0.22; P.recoil = 2; sfx('shot'); break;
     case 'anning': swing(26, 5, 300, 3, '#e6e2d0'); P.cool = 0.45; shake = Math.min(10, shake + 1.5); break;
     case 'vesalius': swing(20, 1.4, 90, 0.4, '#ffffff'); P.cool = 0.13; break;
     case 'hooke': swing(44, 2.6, 520, 0.8, '#d9534f', true); P.cool = 0.32; break;
@@ -3951,6 +3973,7 @@ function fireWeapon() {
   aimShots(n0, f);
   for (let i = n0; i < bullets.length; i++) bullets[i].bm = bossMul; bossMul = 1;
   if (slowT > 0) P.cool *= 0.6; // dilated time: you shoot faster
+  if (P.volt > 0 && P.bro.id === 'volta') P.cool *= 0.5; // Overcharge
   if (P.bro.id !== 'hopper' && !P.bro.melee) gunFeel(GUNFX[P.bro.id], f, gx, gy); // Hopper's three rounds each flash on their own
 }
 // a melee swing: hits everything in reach ahead (or above, when you aim up), knocks riot shields away, cuts enemy
@@ -4225,6 +4248,10 @@ function useSpecial() {
       for (const e of ents) if (isQuack(e) && !e.dead && Math.abs(center(e)[0] - (cam.x + VW / 2)) < VW / 2 + 10) { e.zeroG = 5; e.stun = Math.max(e.stun || 0, 5); e.vy = -rand(70, 120); e.kx += rand(-40, 40); }
       P.zeroG = 5; fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#e78ac3' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 260, t: 0.5, max: 0.5 }); sfx('zerog'); break;
     case 'oppenheimer': throwNuke(f); break;
+    case 'semmelweis': for (let k = 0; k < 6; k++) bullets.push({ x: gx, y: gy - 4, vx: f * (70 + k * 22), vy: -30 + k * 14, grav: -25, owner: 'p', dmg: 2, tdmg: 0, life: 2.4, kind: 'bubble', big: 1, stun: 2.5, hitR: 8, ph: k }); sfx('splash'); break;
+    case 'torricelli': for (let k = 0; k < 8; k++) setTimeoutGame(() => { bullets.push({ x: cam.x + 12 + (k + rand(0.1, 0.9)) * (VW - 24) / 8, y: cam.y - 6, vx: rand(-20, 20), vy: 380, owner: 'p', dmg: 3, tdmg: 1, life: 2, kind: 'merc', poison: 1.5, knock: 100, hitR: 3, rain: 1 }); }, k * 0.06); break;
+    case 'volta': P.volt = 6; fx.push({ kind: 'screen', t: 0.2, max: 0.2, col: '#f2c94c' }); fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 120, t: 0.4, max: 0.4 }); break;
+    case 'gauss': for (let k = 1; k <= 20; k++) setTimeoutGame(() => { if (!P.alive) return; const ff = P.face, n = bullets.length, sx = P.x + (ff > 0 ? P.w + 2 : -2); bullets.push({ x: sx, y: P.y + 8, sx, vx: ff * 520, vy: rand(-5, 5), owner: 'p', dmg: 0.35 * k, tdmg: 0.6, life: 0.7, kind: 'gauss', pierce: 2, stage: 3, fixed: 1, knock: 30 }); aimShots(n, ff); sfx('shot'); }, k * 0.05); break;
     case 'anning': { // mass extinction: a meteor comes down a few tiles ahead; a red mark shows where
       const tx = clamp(P.x + 5 + f * 90, 8, LW * T - 8);
       fx.push({ kind: 'marker', x: tx, y: P.y + P.h, t: 1, max: 1 });
@@ -4870,7 +4897,7 @@ function updatePlayer(dt) {
   P.inv -= dt; P.anim += dt; P.punch -= dt; P.mcool -= dt; P.dcool -= dt; P.wlock -= dt; P.boardCool = (P.boardCool || 0) - dt;
   if (P.mech) { updateMechSuit(dt); return; }
   P.flip = Math.max(0, (P.flip || 0) - dt); P.aimT = Math.max(0, (P.aimT || 0) - dt);
-  P.cage = Math.max(0, (P.cage || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
+  P.cage = Math.max(0, (P.cage || 0) - dt); P.volt = Math.max(0, (P.volt || 0) - dt); P.zeroG = Math.max(0, (P.zeroG || 0) - dt);
   P.shield = Math.max(0, (P.shield || 0) - dt); P.over = Math.max(0, (P.over || 0) - dt); P.jet = Math.max(0, (P.jet || 0) - dt);
   if (P.jet > 0 && keys.jump && !P.onGround && P.coy <= 0 && !P.ladder) { // jetpack thrust
     P.vy = Math.max(P.vy - 2300 * dt, -170);
@@ -6579,7 +6606,9 @@ function burst(b, x, y, own) {
 }
 // a player bullet hits something: damage plus whatever the weapon adds (poison, sickness, a stun)
 function bulletHit(b, e) {
-  hitEnemy(e, b.dmg, Math.sign(b.vx) * (b.knock || 90), b.how);
+  let dm = b.dmg;
+  if (b.kind === 'volt') { const st = b.full ? 5 : Math.min(5, (e.voltT > lifeT ? e.volt : 0) + 1); e.volt = st; e.voltT = lifeT + 1.2; dm *= 1 + 0.3 * (st - 1); if (st >= 4) part(b.x, b.y, rand(-60, 60), rand(-60, 0), '#f2c94c', 0.2, 1, 0, 'spark'); } // each hit on the same quack within 1.2 s charges the pile further
+  hitEnemy(e, dm, Math.sign(b.vx) * (b.knock || 90), b.how);
   if (b.poison && !e.dead) e.poison = Math.min(6, (e.poison || 0) + b.poison);
   if (b.sick && isQuack(e) && !e.dead) e.sick = Math.max(e.sick || 0, b.sick);
   if (b.stun && isQuack(e) && !e.dead && !(b.kind === 'hoot' && e.hootT > lifeT)) { e.stun = Math.max(e.stun || 0, b.stun); if (b.kind === 'hoot') e.hootT = lifeT + 1; } // the pant-hoot stuns a quack at most once a second, so it never locks a row of them
@@ -6595,7 +6624,7 @@ function hitSpark(x, y, e) {
 }
 // what a shot leaves where it hits a block: sparks off steel, dust and clods off earth, chips off brick, splinters off
 // crates, shards off ice; energy shots pop in their own colour and leave a scorch mark, bullets leave a hole
-const BCOL = { photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff' };
+const BCOL = { photon: '#d8e2ff', hawk: '#b3a6ff', qwave: '#e78ac3', dot: '#8fd3ff', parity: '#8fd3ff', bit: '#66c2a5', red: '#ff6a4a', leap: '#8fd3ff', plasma: '#e78ac3', hoot: '#e6d2b0', star: '#fff6c2', enigma: '#66c2a5', elem: '#f2c94c', xtal: '#b3a6ff', alpha: '#f2c94c', card: '#e6e2f0', neutron: '#8fd3ff', volt: '#f2c94c', gauss: '#8da0cb', mdrop: '#b4bed0', merc: '#b4bed0', bubble: '#bfe9ff' };
 function impact(b, v) {
   const x = b.x, y = b.y, d = -Math.sign(b.vx) || 1, col = BCOL[b.kind];
   if (b.kind === 'flame') { if (v === CRATE && Math.random() < 0.15) ignite(x, y - 8, 1, 2); return; } // the torch lights crates
@@ -6653,6 +6682,12 @@ function updateBullets(dt, edt) {
       for (const [, v] of partsNear(b.x, b.y, 230)) { const dx = (v.x + v.w / 2 - b.x) * s; if (dx > 0 && dx < best) { best = dx; ty = v.y + v.h / 2; } }
       b.vy = ty === null ? b.vy * 0.9 : clamp((ty - b.y) * 6, -170, 170);
       if (Math.random() < 0.6) part(b.x - s * 6, b.y, -s * rand(10, 40), rand(-10, 10), '#bfe9ff', rand(0.2, 0.4), 1);
+    }
+    if (b.kind === 'bubble') { b.ph += d * 5; b.vy += Math.cos(b.ph) * 240 * d; b.vx *= 1 - 0.4 * d; } // drifts, wobbles and slows
+    if (b.kind === 'merc') { b.px = b.x; b.py = b.y; }
+    if (b.kind === 'gauss' && !b.fixed) { // three coils: faster and harder every 16 px of the barrel run
+      const run = Math.hypot(b.x - b.sx, b.y - (b.sy === undefined ? b.y : b.sy)), st = Math.min(3, Math.floor(run / 16));
+      if (st > b.stage) { b.stage = st; const sp = [180, 300, 420, 540][st], l = Math.hypot(b.vx, b.vy) || 1; b.vx *= sp / l; b.vy *= sp / l; b.dmg = [1, 1.5, 2, 2.6][st]; }
     }
     if (b.kind === 'hoot') b.hitR = 3 + Math.hypot(b.x - b.sx, b.y - (b.sy === undefined ? b.y : b.sy)) * 0.07; // the call widens as it rolls out
     if (b.kind === 'flame') { b.hitR = 2 + (1 - b.life / b.max) * 4; b.vx *= 1 - 0.3 * d; if (Math.random() < 0.25) part(b.x, b.y, rand(-15, 15), rand(-50, -20), '', rand(0.15, 0.3), 2, 0, 'fire'); }
@@ -6779,6 +6814,11 @@ function updateBullets(dt, edt) {
         if (b.explode) burst(b, b.x, b.y, 'env'); else killPlayer(b.kind === 'glob' ? 'gib' : 'shot', Math.sign(b.vx));
       }
     }
+  }
+  for (const b of bullets) if (b.dead && b.kind === 'merc' && b.px !== undefined) { // the blob breaks into three droplets that bounce
+    blame = 'p';
+    for (let k = -1; k <= 1; k++) bullets.push({ x: b.px, y: b.py, vx: k * 110 + (b.vx > 0 ? 40 : -40), vy: -170 - Math.abs(k) * 20, grav: 700, owner: 'p', dmg: 0.9, tdmg: 0.4, life: 0.75, kind: 'mdrop', poison: 1, bounce: 2, hitR: 2, bm: b.bm });
+    b.px = undefined; if (!b.rain) sfx('splash');
   }
   blame = 'e'; bossMul = 1;
   bullets = bullets.filter((b) => !b.dead && b.x > -50 && b.x < LW * T + 50 && b.y < LH * T + 50 && b.y > -400);
@@ -7463,6 +7503,10 @@ function drawBroGun(bro, hx, hy, f) {
     case 'anning': ctx.fillStyle = '#7a5c36'; M(0, 0, 6, 1); ctx.fillStyle = bro.gun; M(5, -2, 3, 5); ctx.fillStyle = '#5c6480'; M(7, -2, 1, 5); break; // a rock hammer
     case 'vesalius': ctx.fillStyle = '#5c6480'; M(0, 0, 3, 1); ctx.fillStyle = bro.gun; M(3, -1, 4, 2); M(7, 0, 1, 1); break; // a scalpel
     case 'hooke': ctx.fillStyle = '#b4bed0'; M(0, 0, 2, 1); ctx.fillStyle = bro.gun; M(2, -2, 4, 4); ctx.fillStyle = '#ffffff'; M(3, -2, 1, 1); break; // a boxing glove on a spring
+    case 'semmelweis': ctx.fillStyle = '#e6e2f0'; M(0, -1, 4, 3); ctx.fillStyle = bro.gun; M(4, -2, 3, 4); ctx.fillStyle = '#ffffff'; M(5, -2, 1, 1); break; // a soap dish with a bubble wand
+    case 'torricelli': ctx.fillStyle = '#bfe9ff'; M(0, -2, 2, 5); ctx.fillStyle = '#b4bed0'; M(0, 0, 2, 3); ctx.fillStyle = bro.gun; M(2, -1, 5, 2); break; // a mercury tube
+    case 'volta': ctx.fillStyle = '#c9a227'; M(0, -1, 2, 3); ctx.fillStyle = '#b4bed0'; M(2, -1, 2, 3); ctx.fillStyle = '#c9a227'; M(4, -1, 2, 3); ctx.fillStyle = Math.floor(anim0() * 10) % 2 ? '#fff6c2' : '#f2c94c'; M(6, 0, 1, 1); break; // a stack of discs
+    case 'gauss': ctx.fillStyle = '#5c6480'; M(0, -1, 7, 3); ctx.fillStyle = bro.gun; M(2, -2, 1, 5); M(4, -2, 1, 5); M(6, -2, 1, 5); break; // a barrel with three coils
     case 'oppenheimer': ctx.fillStyle = '#5c6480'; M(0, -1, 6, 3); M(0, 2, 2, 2); ctx.fillStyle = Math.floor(anim0() * 6) % 2 ? '#8fd3ff' : '#bfe9ff'; M(2, 0, 3, 1); ctx.fillStyle = '#3d4560'; M(6, -1, 1, 2); break; // a pistol with a glowing core
     case 'jemison': {
       ctx.fillStyle = '#e6e2f0'; M(0, -1, 6, 3); ctx.fillStyle = bro.gun; M(6, -1, 1, 3); ctx.fillStyle = '#5c6480'; M(1, 0, 3, 1);
@@ -7970,6 +8014,11 @@ function drawBullets() {
       case 'alpha': ctx.fillStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
       case 'red': { const r = 1 + Math.min(4, Math.abs(b.x - b.sx) / 60); ctx.fillStyle = r > 3 ? '#ff3a2a' : '#ff8a6a'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); break; }
       case 'elem': { const col = { Na: '#f2c94c', He: '#e78ac3', Fe: '#8b93ad', Ne: '#ff6a4a', U: '#a6d854' }[b.el]; ctx.fillStyle = col; ctx.fillRect(x - 2, y - 2, 4, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 1, 1); break; }
+      case 'bubble': { const r = b.big ? 8 : 4; ctx.globalAlpha = 0.35; ctx.fillStyle = '#bfe9ff'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - r / 2, y - r / 2, 2, 1); break; }
+      case 'merc': ctx.fillStyle = '#b4bed0'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 2, 1, 1); break;
+      case 'mdrop': ctx.fillStyle = '#8b93ad'; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y - 1, 1, 1); break;
+      case 'volt': ctx.fillStyle = b.full ? '#ffffff' : '#f2c94c'; ctx.fillRect(x - 3, y - 1, 6, 2); ctx.fillStyle = '#fff6c2'; ctx.fillRect(x - 1, y - 1, 2, 2); break;
+      case 'gauss': { const st = b.stage || 0, d = Math.sign(b.vx) || 1; ctx.fillStyle = '#8da0cb'; ctx.fillRect(x - 3 - st, y - 1, 5 + st, 2); ctx.fillStyle = st > 1 ? '#ffffff' : '#c9d4e6'; ctx.fillRect(x + (d > 0 ? 1 : -3), y - 1, 2, 2); break; }
       case 'neutron': ctx.fillStyle = '#8fd3ff'; ctx.fillRect(x - 3, y - 1, 6, 3); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 1, y, 3, 1); break;
       case 'pea': ctx.fillStyle = '#7bc043'; ctx.fillRect(x - 1, y - 1, 3, 3); ctx.fillStyle = '#c9f08f'; ctx.fillRect(x, y - 1, 1, 1); break;
       case 'dart': ctx.fillStyle = '#e9eef6'; ctx.fillRect(x - 3, y, 6, 1); ctx.fillStyle = '#7bc043'; ctx.fillRect(x + (b.vx > 0 ? 2 : -3), y, 2, 1); ctx.fillStyle = '#d9534f'; ctx.fillRect(x - (b.vx > 0 ? 4 : -3), y - 1, 2, 3); break;
@@ -8242,7 +8291,7 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
-    text('18 MISSIONS · 3 MODES · 35 BROS · 20 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
+    text('18 MISSIONS · 3 MODES · 42 BROS · 20 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 209 + (i % 22) * 19; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 130, 12, 16); });
     TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
@@ -9685,5 +9734,6 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { MORE_FOES, GEN_GROUPS, oi
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decorate, FK, WK, HK, BK, LK, BKT, FV, vIdx, fhash, drawFancyBack, drawFancyMid, drawFancyFore, fancyEdges, tilesNow: () => tiles, spawnsNow: () => spawns, spriteCount: () => SPC.size }); // fancier maps hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
 })();
 </script>
