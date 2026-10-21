@@ -2238,6 +2238,22 @@ function damageTile(c, r, d) {
   if (thp[i] <= 0) { breakTile(c, r); return true; }
   return false;
 }
+// Steel above the bedrock row gives way to heavy ordnance only (a weapon's DESTRUCT 's'): 10 hp, never to a plain hit
+// (damageTile still ignores steel). The bedrock row and the boss arenas with their gates stay unbreakable.
+const STEEL_HP = 10;
+function steelHeld(c, r) {
+  if (r >= LH - 1 || c < 0 || c >= LW) return true;
+  for (const e of ents) if (e.ax0 !== undefined && c >= e.ax0 - 1 && c <= Math.max(e.ax1, e.gate ? e.gate[1] : 0) + 1) return true;
+  return false;
+}
+function hitSteel(c, r, d) {
+  if (d <= 0 || tileAt(c, r) !== STEEL || steelHeld(c, r)) return false;
+  const i = r * LW + c;
+  if (thp[i] > 1e8) thp[i] = STEEL_HP;
+  thp[i] -= d; part(c * T + 8, r * T + 8, rand(-60, 60), rand(-90, -20), '#fff6c2', 0.25, 1, G, 'spark');
+  if (thp[i] <= 0) { breakTile(c, r); return true; }
+  return false;
+}
 function breakTile(c, r) {
   const i = r * LW + c, v = tiles[i];
   if (!isSolidT(v)) return;
@@ -2245,12 +2261,14 @@ function breakTile(c, r) {
   cutBy = blame; // whatever this cut brings down is on whoever made it
   if (r + 1 < LH && tiles[i + LW] === DIRT) sproutAt.set(i + LW, lifeT); // the earth under it is bare now: grass sprouts back
   const cols = TILE_COL[v];
-  for (let k = 0; k < 4; k++) chunk(c * T + rand(3, 13), r * T + rand(3, 13), rand(-110, 110), rand(-230, -40), cols[k % 2]);
+  const full = lumpsLeft >= 8; lumpsLeft -= full ? 8 : 3;
+  for (let k = 0; k < (full ? 6 : 3); k++) chunk(c * T + rand(3, 13), r * T + rand(3, 13), rand(-130, 130), rand(-250, -40), cols[k % 2], k < 2 ? 4 + ((Math.random() * 3) | 0) : 0); // six lumps, two of them big
+  if (full) { slab(v, c, r, rand(-90, 90), rand(-200, -70)); if (Math.random() < 0.6) slab(v, c, r, rand(-90, 90), rand(-200, -70)); } // and one or two slabs of the block's own picture
   part(c * T + 8, r * T + 8, rand(-10, 10), rand(-30, -10), '#4b4766', rand(0.4, 0.8), rand(3, 5), 0, 'smoke');
+  dust(c * T + 8, r * T + 8, v === STEEL ? 2 : 3, 50);
   if (blastAt && Math.random() < 0.7) { // a blast throws big lumps of the block outward; they hurt what they hit
     const dx = c * T + 8 - blastAt.x, dy = r * T + 8 - blastAt.y, d = Math.hypot(dx, dy) || 1, sp = rand(200, 380);
-    const img = TILE_IMG[v][(c * 7 + r * 3) & 3], q = (Math.random() * 4) | 0;
-    spriteBody('block', img, c * T + 4 + (q & 1) * 8, r * T + 4 + (q >> 1) * 8, (dx / d) * sp, (dy / d) * sp - 160, { sx: (q & 1) * 8, sy: (q >> 1) * 8, sw: 8, sh: 8, r: 4, bounce: 0.3, fric: 0.55, vr: rand(-18, 18), life: rand(5, 8) });
+    slab(v, c, r, (dx / d) * sp, (dy / d) * sp - 160);
   }
   collapseDirty = true;
 }
@@ -2267,7 +2285,7 @@ const P_FX = { well: 1, hole: 1, sun: 1, heat: 1, rad: 1, jet: 1 }; // effects o
 
 // ---------------------------------------------------------------- weapon destruction
 // How each of the player's weapons breaks blocks, all in one table to tune. Keys: the shot's kind, or the name of a
-// beam, blade or pickup gun. Blocks have 2 hp (earth, ice), 3 (crates) or 6 (brick); steel never breaks.
+// beam, blade or pickup gun. Blocks have 2 hp (earth, ice), 3 (crates) or 6 (brick); steel has 10 and only the weapons with an 's' dent it (never the bedrock row or a boss arena).
 // p: damage to the block hit. m: how hard each material takes it, [earth, brick, crate, ice] (a MAT preset).
 // shape: chip (only that block), punch (the block behind takes half: heavy rounds go through), line (a thin cut
 // n blocks deep, each half as hard), round (a crater from the blast; r scales its reach into blocks, p its power),
@@ -2294,7 +2312,7 @@ const DESTRUCT = {
   xray: { p: 2.2, shape: 'line', n: 2 }, qwave: { p: 0.6, shape: 'line', n: 2 },
   zap: { p: 1.2, shape: 'fork' }, // Tesla's arc scorches a ragged patch
   // the drill and the hammer tunnel
-  drill: { p: 0.55, shape: 'tunnel' }, hammer: { p: 3, shape: 'tunnel' },
+  drill: { p: 0.55, shape: 'tunnel' }, hammer: { p: 3, shape: 'tunnel', s: 0.3 },
   // fire and mould take only what burns or rots; radiation eats earth
   sunbeam: { p: 0.5, shape: 'burn', m: 'fire' }, flame: { p: 0.1, shape: 'burn', m: 'fire' }, spores: { p: 0.25, shape: 'burn', m: 'wood' },
   neutron: { p: 0.5, shape: 'eat', m: 'acid' },
@@ -2302,9 +2320,9 @@ const DESTRUCT = {
   dot: { shape: 'none' }, leap: { shape: 'none' }, pwave: { shape: 'quake' },
   // explosives carve round craters
   vial: { p: 1, r: 1, shape: 'round', m: 'acid' }, bigvial: { p: 1, r: 1.1, shape: 'round', m: 'acid' }, elemU: { p: 1, r: 1, shape: 'round', m: 'acid' },
-  apple: { p: 1.1, r: 1, shape: 'round' }, calc: { p: 1, r: 1, shape: 'round' }, fission: { p: 0.9, r: 1, shape: 'round' }, torp: { p: 1, r: 1, shape: 'round' },
+  apple: { p: 1.1, r: 1, shape: 'round', s: 0.4 }, calc: { p: 1, r: 1, shape: 'round' }, fission: { p: 0.9, r: 1, shape: 'round' }, torp: { p: 1, r: 1, shape: 'round' },
   elemNa: { p: 1, r: 1, shape: 'round' }, elemHe: { p: 0.8, r: 1, shape: 'round' }, plasma2: { p: 1, r: 1, shape: 'round' },
-  tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo' }, rocket: { p: 1.3, r: 1.2, shape: 'round' }, bomb: { p: 1.2, r: 1.2, shape: 'round' },
+  tnt: { p: 2, r: 1.4, shape: 'round', m: 'demo', s: 0.5 }, rocket: { p: 1.3, r: 1.2, shape: 'round', s: 0.45 }, bomb: { p: 1.2, r: 1.2, shape: 'round', s: 0.5 }, // s: steel power. Only these heavy weapons dent steel (10 hp); the bedrock row and boss arenas never give
 };
 const dkey = (b) => (b.kind === 'elem' ? 'elem' + b.el : b.kind); // the table key of a shot
 const NB4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -2312,9 +2330,9 @@ const NB4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 // not in the table). k scales the damage (Hubble's shots grow as they fly).
 function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
   const D = DESTRUCT[key]; if (!D) return damageTile(c, r, dflt * k);
-  const v = tileAt(c, r); if (!isSolidT(v) || v === STEEL) return false;
+  const v = tileAt(c, r); if (!isSolidT(v) || (v === STEEL && !D.s)) return false;
   const mm = MAT[D.m || 'all'], p = (D.p || 0) * k, sx = Math.abs(dx) >= Math.abs(dy) ? Math.sign(dx) : 0, sy = sx ? 0 : Math.sign(dy) || -1, x = c * T + 8, y = r * T + 8;
-  const hit = (cc, rr, q) => { const w = tileAt(cc, rr), h = isSolidT(w) && w !== STEEL ? q * mm[MI[w]] : 0; return h > 0 && damageTile(cc, rr, h); };
+  const hit = (cc, rr, q) => { const w = tileAt(cc, rr); if (w === STEEL) return hitSteel(cc, rr, q * (D.s || 0)); const h = isSolidT(w) ? q * mm[MI[w]] : 0; return h > 0 && damageTile(cc, rr, h); };
   switch (D.shape) {
     case 'none': return false;
     case 'quake': if (Math.random() < 0.3) decal(x + rand(-7, 7), r * T + rand(0, 4), '#1d1a26', 1); return false; // the ripple cracks the ground
@@ -2478,12 +2496,47 @@ function checkCollapse() {
   if (n) sfx('creak');
   return n;
 }
+// back walls of buildings (BG_BRICK) hang on what is under them: a solid tile or a held wall below, and a wall spans a gap one tile wide.
+// Only walls that were held when the level was built can fall. Cut the floor of a building and its back wall breaks off above the hole.
+let bgFirm = null, bgDrop = [], bgQ = null;
+function bgHeld() {
+  const h = new Uint8Array(LW * LH);
+  for (let r = LH - 1; r >= 0; r--) {
+    for (let c = 0; c < LW; c++) { const i = r * LW + c; if (bg[i] === BG_BRICK && (r === LH - 1 || isSolidT(tiles[i + LW]) || h[i + LW])) h[i] = 1; }
+    for (let c = 1; c < LW - 1; c++) { const i = r * LW + c; if (bg[i] === BG_BRICK && !h[i] && h[i - 1] && h[i + 1]) h[i] = 1; }
+  }
+  return h;
+}
+function bgStart() { bgDrop = []; bgQ = new Uint8Array(LW * LH); bgFirm = bgHeld(); }
+function checkBgCollapse() {
+  if (!bgFirm) return;
+  const h = bgHeld(); let n = 0;
+  for (let i = 0; i < LW * LH && n < 160; i++) if (bg[i] === BG_BRICK && bgFirm[i] && !h[i] && !bgQ[i]) { bgQ[i] = 1; bgDrop.push({ i, t: 0.3 + rand(0, 0.4), by: cutBy }); n++; }
+  if (n === 160) collapseDirty = true; // more to come: look again next frame
+}
+function updateBgDrop(dt) {
+  for (let k = bgDrop.length - 1; k >= 0; k--) {
+    const d = bgDrop[k]; d.t -= dt;
+    if (Math.random() < 0.08) part((d.i % LW) * T + rand(0, T), ((d.i / LW) | 0) * T + T, rand(-8, 8), rand(10, 40), '#6b6185', 0.5, 1, G);
+    if (d.t > 0) continue;
+    bgDrop.splice(k, 1); bgQ[d.i] = 0;
+    if (bg[d.i] !== BG_BRICK) continue;
+    const c = d.i % LW, r = (d.i / LW) | 0, x = c * T + 8, ob = blame; blame = d.by; bg[d.i] = 0; miniDirty = true;
+    const q = (Math.random() * 4) | 0, img = BG_IMG[BG_BRICK][(c * 7 + r * 3) & 3];
+    spriteBody('block', img, c * T + 4 + (q & 1) * 8, r * T + 4 + (q >> 1) * 8, rand(-40, 40), rand(-30, 10), { sx: (q & 1) * 8, sy: (q >> 1) * 8, sw: 8, sh: 8, r: 4, bounce: 0.25, fric: 0.5, vr: rand(-14, 14), life: rand(4, 7) });
+    for (let j = 0; j < 3; j++) chunk(c * T + rand(2, 14), r * T + rand(2, 14), rand(-70, 70), rand(-60, 20), TILE_COL[BRICK][j & 1], j ? 0 : 5);
+    dust(x, r * T + 8, 2, 40);
+    for (const e of ents) if (!e.dead && isQuack(e) && !BOSS[e.type] && e.bgHit !== clock && e.x < c * T + T && e.x + e.w > c * T && e.y + e.h > r * T && e.y < r * T + 4 * T) { e.bgHit = clock; hitEnemy(e, 3, 0, 'crush'); } // a piece of wall falling on a quack
+    blame = ob;
+  }
+}
 function updateCollapse(dt) {
-  if (collapseDirty) checkCollapse();
+  if (collapseDirty) { checkCollapse(); checkBgCollapse(); }
+  updateBgDrop(dt);
   for (let k = shakeList.length - 1; k >= 0; k--) {
     const i = shakeList[k], c = i % LW, r = (i / LW) | 0;
     shk[i] -= dt;
-    if (Math.random() < 0.05) part(c * T + rand(0, T), r * T + T, rand(-8, 8), rand(10, 40), '#6b6185', 0.5, 1, G);
+    if (Math.random() < 0.12) part(c * T + rand(0, T), r * T + T, rand(-8, 8), rand(10, 40), '#6b6185', 0.5, 1 + (Math.random() < 0.3), G);
     if (shk[i] > 0) continue;
     shakeList.splice(k, 1); shk[i] = 0;
     if (!isSolidT(tiles[i])) continue;
@@ -2515,6 +2568,8 @@ function updateCollapse(dt) {
       if (f.vy > 90) {
         sfx('thud'); shake = Math.min(10, shake + 1.2);
         for (let k = 0; k < 4; k++) part(f.x + rand(0, T), rl * T + T - 1, rand(-70, 70), rand(-40, -5), '#6b6185', rand(0.3, 0.6), rand(3, 5), 0, 'smoke');
+        dust(f.x + 8, rl * T + T - 2, f.vy > 260 ? 5 : 3, 110, 1.2); // a cloud that rolls out along the ground
+        if (f.vy > 200) for (let k = 0; k < 2; k++) chunk(f.x + rand(2, 14), rl * T + rand(4, 14), rand(-110, 110), rand(-170, -60), TILE_COL[f.v][k], 4 + k);
       }
       continue;
     }
@@ -2527,7 +2582,8 @@ function updateCollapse(dt) {
 function shatter(f) {
   f.dead = true;
   const cols = TILE_COL[f.v];
-  for (let k = 0; k < 5; k++) chunk(f.x + rand(2, 14), f.y + rand(2, 14), rand(-120, 120), rand(-200, -60), cols[k % 2]);
+  for (let k = 0; k < 8; k++) chunk(f.x + rand(2, 14), f.y + rand(2, 14), rand(-140, 140), rand(-220, -60), cols[k % 2], k < 3 ? 4 + (k & 1) + 1 : 0);
+  slab(f.v, f.c, (f.y / T) | 0, rand(-120, 120), rand(-200, -80)); dust(f.x + 8, f.y + 10, 4, 90, 1.1);
   sfx('crumble');
 }
 
@@ -3189,6 +3245,18 @@ function part(x, y, vx, vy, col, life, size, grav = 0, kind = 'p') {
   if (parts.length > 900) parts.shift();
   parts.push({ x, y, vx, vy, col, life, max: life, size, grav, kind });
 }
+// dust clouds for breaking and landing blocks: a budget per frame (dustLeft, refilled each step) and a ceiling on live particles keep a big collapse cheap
+let dustLeft = 40, lumpsLeft = 64; // lumpsLeft: pieces a frame's worth of breaking may throw at full size; once it runs out, blocks throw three lumps and no slabs
+function dust(x, y, n, sp = 60, big = 1) {
+  n = Math.min(n, dustLeft); if (parts.length > 700) n = Math.min(n, 1);
+  dustLeft -= n;
+  for (let i = 0; i < n; i++) part(x + rand(-7, 7), y + rand(-5, 5), rand(-sp, sp), rand(-sp * 0.7, -6), theme.dust, rand(0.5, 1.1), rand(4, 8) * big, 0, 'smoke');
+}
+// a chunky 8x8 slab of a block's own picture that flies off and tumbles (hurts quacks it hits fast, never the player)
+function slab(v, c, r, vx, vy, q = (Math.random() * 4) | 0) {
+  const img = TILE_IMG[v] && TILE_IMG[v][(c * 7 + r * 3) & 3]; if (!img) return;
+  spriteBody('block', img, c * T + 4 + (q & 1) * 8, r * T + 4 + (q >> 1) * 8, vx, vy, { sx: (q & 1) * 8, sy: (q >> 1) * 8, sw: 8, sh: 8, r: 4, bounce: 0.3, fric: 0.55, vr: rand(-18, 18), life: rand(5, 8) });
+}
 
 // ---------------------------------------------------------------- physics bodies
 // Loose things that tumble, bounce and settle: corpses, gibs, block chunks, shell casings, fallen lamps.
@@ -3198,7 +3266,7 @@ function body(o) {
   const b = Object.assign({ vx: 0, vy: 0, rot: 0, vr: 0, r: 2, bounce: 0.35, fric: 0.7, life: 6, rest: false, bleed: 0, acid: 0 }, o);
   b.max = b.life; bodies.push(b); return b;
 }
-const chunk = (x, y, vx, vy, col) => body({ kind: 'chunk', x, y, vx, vy, col, s: 2 + (Math.random() * 3 | 0), r: 1.5, bounce: 0.3, fric: 0.55, vr: rand(-14, 14), life: rand(3, 6) });
+const chunk = (x, y, vx, vy, col, sz = 0) => body({ kind: 'chunk', x, y, vx, vy, col, s: sz || 2 + (Math.random() * 3 | 0), r: sz > 4 ? 2.2 : 1.5, bounce: 0.3, fric: 0.55, vr: rand(-14, 14), life: rand(3, 6) });
 function spriteBody(kind, img, x, y, vx, vy, o = {}) {
   return body(Object.assign({ kind, img, sx: 0, sy: 0, sw: 12, sh: 16, x, y, vx, vy, vr: rand(-12, 12), r: kind === 'corpse' ? 5 : 3, bounce: kind === 'corpse' ? 0.25 : 0.4, fric: 0.6, life: kind === 'corpse' ? 9 : 6 }, o));
 }
@@ -3429,7 +3497,7 @@ function startLevel(n) {
   buildTiles(levelDef(n).look ? Object.assign({}, THEMES[levelDef(n).theme], levelDef(n).look) : THEMES[levelDef(n).theme]); // a level can twist its theme's look
   buildLevel();
   ents = spawns.map(makeEnt); bullets = []; parts = []; fx = []; bodies = []; falling = []; decals = new Map(); hitStop = 0; timers.length = 0; miniDirty = true;
-  shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false; pShk.clear();
+  shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false; pShk.clear(); bgStart();
   boss = ents.find((e) => e.final); chopper = null;
   for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
   radioQ = []; radioCur = null; storyFlag = false;
@@ -3638,7 +3706,7 @@ function explode(x, y, r, dmg, owner, tp, key) {
     blastAt = { x, y };
     for (let rr = r0; rr <= r1; rr++) for (let c = c0; c <= c1; c++) {
       const d = Math.hypot(c * T + 8 - x, rr * T + 8 - y);
-      if (d < rt) damageTile(c, rr, tp * (D.p || 1) * (1.25 - d / rt) * mt[MI[tileAt(c, rr)]]);
+      if (d < rt) { if (tileAt(c, rr) === STEEL) { if (D.s) hitSteel(c, rr, tp * (D.p || 1) * (1.25 - d / rt) * D.s); } else damageTile(c, rr, tp * (D.p || 1) * (1.25 - d / rt) * mt[MI[tileAt(c, rr)]]); }
       if (tileAt(c, rr) === LADDER && d < r * 0.8) { tiles[rr * LW + c] = EMPTY; for (let k = 0; k < 3; k++) chunk(c * T + 8, rr * T + 8, rand(-120, 120), rand(-200, -40), '#7a5c36'); }
       const i = rr * LW + c; // blow holes in the back walls too, so the sky shows through
       if (c >= 0 && c < LW && rr >= 0 && rr < LH && bg[i] && !isSolidT(tiles[i]) && d < r * 0.7 && Math.random() < 0.85) {
@@ -4721,7 +4789,7 @@ function attract(dt) {
 }
 let quiet = false;
 function step(dt) {
-  clock += dt;
+  clock += dt; dustLeft = 40; lumpsLeft = 64;
   if (pressed.mute) muted = !muted;
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
@@ -6639,6 +6707,7 @@ function updateBullets(dt, edt) {
       part(b.x, b.y, rand(-40, 40), rand(-60, 0), '#66c2a5', 0.2, 1);
       continue;
     }
+    if (decor.length) shootDecor(b.x, b.y, Math.sign(b.vx) || 1);
     if (b.bounce > 0 && solidPx(b.x, b.y)) {
       b.bounce--; const px = b.x - b.vx * d, py = b.y - b.vy * d;
       if (b.kind === 'alpha' && b.owner === 'p') wreck('alpha', Math.floor(b.x / T), Math.floor(b.y / T), b.vx, b.vy, 0); // heavy particles knock chips off as they bounce
@@ -6805,11 +6874,25 @@ function updateProps(dt) {
     if (!isSolidT(tileAt(d.c, d.r))) { d.gone = true; topple(d); }
   }
 }
+// signs, bushes and trees do not just stand there: shots knock them down (hp by kind; others fall in one hit)
+const DECOR_HP = { sign: 1, cactus: 1, pine: 2, palm: 3, sandbags: 3, snowman: 2, scarecrow: 2, orange: 2, neon: 1, crystal: 2 };
+let decorCols = null, decorFor = null, decorN = 0;
+function shootDecor(x, y, d8 = 1) {
+  if (decorFor !== decor || decorN !== decor.length) { decorFor = decor; decorN = decor.length; decorCols = new Map(); for (const d of decor) if (DECOR_HP[d.kind]) { let a = decorCols.get(d.c); if (!a) decorCols.set(d.c, (a = [])); a.push(d); } }
+  const a = decorCols.get(Math.floor(x / T)); if (!a) return;
+  for (const d of a) {
+    if (d.gone || y < d.r * T - 16 || y > d.r * T + 1) continue;
+    d.hp = (d.hp || DECOR_HP[d.kind]) - 1; d.kick = d8;
+    if (d.hp > 0) { chunk(d.c * T + 8, d.r * T - 8, rand(-70, 70), rand(-120, -40), '#7a5c36'); continue; }
+    d.gone = true; topple(d);
+  }
+}
 function topple(d) {
   const x = d.c * T + 8, y = d.kind === 'plaque' ? d.r * T + 8 : d.r * T - 8;
   const cols = { palm: ['#6b4f3a', '#2f6a2a', '#4f8f2f'], sign: ['#7a5c36', '#e6e2f0'], plaque: ['#5c6480', '#f2c94c'], sandbags: ['#8b7a55', '#6e6043'], cactus: ['#3f7f4a', '#5fa36a'], crystal: ['#e78ac3', '#b3a6ff'], pine: ['#1f4a3a', '#e8f0fa', '#4a3a2a'], snowman: ['#e8f0fa', '#1b1d2e'], scarecrow: ['#8e2b3c', '#d9b45a', '#5a4226'], orange: ['#2f6a2a', '#ff9a2a', '#5a3a22'], neon: ['#ff4fa3', '#4ff0ff', '#25223a'] }[d.kind];
-  const n = d.kind === 'palm' ? 12 : 6;
-  for (let i = 0; i < n; i++) chunk(x + rand(-6, 6), y - (d.kind === 'palm' ? rand(0, 40) : rand(0, 8)), rand(-120, 120), rand(-200, -40), cols[i % cols.length]);
+  const n = d.kind === 'palm' ? 16 : 9;
+  for (let i = 0; i < n; i++) chunk(x + rand(-6, 6), y - (d.kind === 'palm' ? rand(0, 40) : rand(0, 8)), rand(-140, 140), rand(-220, -40), cols[i % cols.length], i < 3 ? 4 + i : 0);
+  dust(x, y + 6, d.kind === 'palm' ? 4 : 3, 60);
 }
 function updateParticles(dt) {
   for (const p of parts) {
@@ -9595,7 +9678,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { forceEvent: (n) => startE
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fxDepth, fxShafts, fxWater, fxWorld, fxEdge, blastExtras }); // extra visuals hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, STRETCH_KINDS, buildStretch, openRow, isSolidT, BG_BRICK }); // variety pack hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
-if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial }); // weapon destruction, self-kill and boss damage hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial, hitSteel, shootDecor, bgHeld, bgFirm: () => bgFirm, bgDrop: () => bgDrop, parts: () => parts, dust, dustLeft: () => dustLeft, STEEL_HP, setBlame(v) { blame = v; } }); // weapon destruction, self-kill and boss damage hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LEAK, meat, splat, edgeSplat }); // gore hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { GEN_WORDS, HQ_DEATH, BRO_QUIPS, EVENT_RADIO, ENDING, decor: () => decor }); // satire hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { MORE_FOES, GEN_GROUPS, oilSlow, tiles: () => tiles }); // second-round quacks hooks
