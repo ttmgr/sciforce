@@ -1903,7 +1903,8 @@ const GEN_DIFF = { easy: { p: 0.2, hp: 1 }, normal: { p: 0.55, hp: 1.2 }, hard: 
 // small word lists for names, briefings and intel
 const GEN_WORDS = {
   quack: ['HOMEOPATHIC', 'QUANTUM', 'DETOX', 'CRYSTAL', 'ALKALINE', 'AURA', 'CHAKRA', 'MAGNET', 'ASTRAL', 'IONIC', 'MIRACLE', 'MOONLIGHT', 'COLLOIDAL', 'PYRAMID', 'LEY LINE', 'ORGONE', 'VIBE', 'COPPER BRACELET',
-    'BIOHACK', 'BLOCKCHAIN', 'ALPHA', 'AI-POWERED', 'RAW WATER', 'SUNGAZER', 'CHEMTRAIL', 'NFT', 'SPONSORED', 'CLICKBAIT', 'GRINDSET', 'MEGADOSE'],
+    'BIOHACK', 'BLOCKCHAIN', 'ALPHA', 'AI-POWERED', 'RAW WATER', 'SUNGAZER', 'CHEMTRAIL', 'NFT', 'SPONSORED', 'CLICKBAIT', 'GRINDSET', 'MEGADOSE',
+    'DILUTED', 'NEGATIVE ION', 'GLUTEN-FREE', 'SUPERFOOD', 'ZERO-POINT', 'CLEANSE', 'OUTRAGE', 'ARTISANAL', 'FREQUENCY', 'PLACEBO PLUS', 'GUT-FEELING', 'LIVE-STREAMED'],
   place: { island: ['ISLAND', 'LAGOON', 'ATOLL'], desert: ['DESERT', 'OASIS', 'DUNES'], edge: ['COAST', 'CLIFFS', 'HEADLAND'], citrus: ['CITADEL', 'ORCHARD'], sky: ['AIRFIELD', 'FARM', 'PRAIRIE'],
     cave: ['CAVERNS', 'MINES', 'GROTTO'], swamp: ['MARSH', 'BAYOU', 'BOG'], astro: ['OBSERVATORY', 'PEAKS'], rust: ['WORKS', 'FOUNDRY', 'YARD'], moon: ['CRATER', 'MOON BASE'], plant: ['PLANT', 'REFINERY'],
     snow: ['SUMMIT', 'GLACIER', 'SPRINGS'], sewer: ['SEWERS', 'DRAINS'], city: ['DISTRICT', 'PLAZA', 'TOWERS'], grove: ['GROVES', 'VALLEY'] },
@@ -1911,33 +1912,43 @@ const GEN_WORDS = {
   tree: { island: 'palm', desert: 'cactus', cave: 'crystal', snow: 'pine', astro: 'pine', grove: 'orange', sky: 'scarecrow', swamp: 'pine', edge: 'pine', citrus: 'orange' },
   who: ['Dr. Placebo is out on parole and', 'Professor Quackenbush has a new podcast and', 'King Citrus sent his nephew, who', 'A wellness influencer with nine million followers', 'The Anti-Science League', 'A man who did his own research',
     'An alpha-male podcaster who wakes at 4 am', 'A biohacking billionaire who sleeps in a fridge', 'A chatbot guru, always confident and never right,', 'A crypto bro, down 99 percent,',
-    'DYOR Dale, live to his three viewers,', 'A rage-bait news channel', 'A comment section with 4,000 replies'],
+    'DYOR Dale, live to his three viewers,', 'A rage-bait news channel', 'A comment section with 4,000 replies',
+    'A life coach with a rented jet', 'A supplement tycoon who failed biology', 'A retired weatherman turned prophet', 'The League intern, unpaid and unlicensed,', 'A sleep guru who never sleeps and'],
   scheme: ['sells bottled moonlight at 90 dollars a sip.', 'charges crystals with a hair dryer and calls it quantum.', 'says the wifi is giving everyone opinions.', 'has a study with one participant: his cousin.',
     'is diluting the reservoir until it cures everything.', 'sells a cleanse that removes toxins, money and common sense.', 'says gravity is only a theory and ignores it.',
     'has a machine that reads your aura. It is a toaster.', 'sells magnet bracelets to the local hospital.', 'says the moon is a hologram and sells tickets to it.',
     'sells a detox tea that empties your wallet first.', 'says sunlight is breakfast and sells sun-gazing goggles.', 'sells raw water with free bonus parasites.',
     'mints an NFT of every vat and calls it medicine.', 'sells QuackCoin. It goes up. Then it goes away.', 'says vaccines hide microchips, and posts it from a phone that tracks him.',
-    'runs a four-hour podcast on how to drink water.', 'sells a pill that boosts a body part nobody can name.', 'asked a chatbot for a cure and believed the first answer.'],
+    'runs a four-hour podcast on how to drink water.', 'sells a pill that boosts a body part nobody can name.', 'asked a chatbot for a cure and believed the first answer.',
+    'sells the cure for a disease he invented last week.', 'charges 300 dollars to say your water is the wrong shape.', 'sells vitamin shots to people who eat vegetables.', 'dresses a salesman in a lab coat and calls it a study.',
+    'says doctors hide the cure, then sells it to you.', 'sells a book on why books are wrong.', 'measures your aura with a ruler and a stopwatch.', 'sells clinically inspired pills. No clinic was involved.'],
   close: ['Bring evidence. Bring bros.', 'Peer review is watching.', 'Remember: the plural of anecdote is not data.', 'Correlation is not causation, but explosions are.', 'Do not drink anything you find.',
-    'Reviewer 2 is watching. Reviewer 2 is never happy.', 'Do not read the comments.', 'Results not typical. Bros are.', 'This briefing is not sponsored.'],
+    'Reviewer 2 is watching. Reviewer 2 is never happy.', 'Do not read the comments.', 'Results not typical. Bros are.', 'This briefing is not sponsored.',
+    'Cite twice, shoot once.', 'Blind the study, not yourself.', 'Reviewer 2 has already left a comment.', 'Pack snacks. Pack footnotes.'],
   debrief: ['The samples are on their way to a real lab.', 'The nonsense is off the air. For now.', 'Another stronghold of make-believe falls to the scientific method.',
     'HQ ran the numbers: the effect size of the League is zero.', 'The quacks are in custody, asking for a second opinion.',
-    'Grant update: still rejected. The bros did it for free again.', 'The livestream cut out mid-sentence. Science thanks the router.', 'The sponsored posts are down. So is the coin.'],
+    'Grant update: still rejected. The bros did it for free again.', 'The livestream cut out mid-sentence. Science thanks the router.', 'The sponsored posts are down. So is the coin.',
+    'The League lost, and for once the statistics agree.', 'Retraction issued. The quacks demand a correction. Denied.', 'Another study confirms: the quacks are still wrong.', 'Peer Review stamped it: accepted with minor explosions.'],
   intel: ['Receipt: 400 healing crystals, 1 actual doctor (cancelled).', 'Memo: if anyone asks for data, change the subject.', 'Lab note: the control group escaped.', 'Sticky note: the more you dilute it, the stronger it gets.',
     'Email: please stop putting magnets in the coffee machine.', 'Order form: tin-foil hats, 500, extra shiny.', 'Script: say "big pharma" every 30 seconds.', 'Graph: sales go up, evidence goes down. Perfect.',
     'Diary: today I aligned my chakras. Tomorrow: my tyres.', 'Brochure: our water remembers. It remembers being water.', 'Review: five stars, cured my gout and my landlord.',
     'Note: the placebo works better if it costs more.', 'Invoice: 1 essential oil, 1 essential lawyer.', 'Minutes: motion to ignore the data passes unanimously.',
     'Ad read: this crime is sponsored by ToxiFlush Tea.', 'Chat log: the AI says the cure is real. It also says it is a duck.', 'Podcast notes: episode 412, why sleep is a scam (4 h 30 min).',
     'Wallet: 2,000,000 QuackCoin. Value: one sandwich.', 'Comment: I did my own research. Source: my uncle.', 'Badge: League Summit. Free tote bag. No talks.',
-    'Rejection letter, Reviewer 2: the League lacks novelty. And evidence.'],
+    'Rejection letter, Reviewer 2: the League lacks novelty. And evidence.',
+    'Sticky note: ask the AI to write the study. Then cite it.', 'Memo: the testimonial wall is staff. They were paid in tea.', 'Flyer: natural cure. Ingredients: nature, hope, an invoice.', 'Receipt: 90 dollars for a stone. The stone is gravel.',
+    'Draft: our retraction, to be filed under never.', 'Spreadsheet: row 1 hope, row 2 sales, row 3 left blank.', 'Schedule: 4 am cold plunge, 6 am refund requests.', 'Poster: ask me about my study. The poster is the study.'],
   target: { vat: [['placebo', 'detox', 'megadose', 'colloidal silver', 'structured water', 'detox tea', 'raw water'], (x) => 'Smash the ' + x + ' vats'], radio: [['propaganda', '5G panic', 'chemtrail', 'horoscope', 'podcast', 'sponsored post'], (x) => 'Topple the ' + x + ' masts'],
     server: [['testimonial', 'mailing list', 'fake review', 'horoscope', 'NFT', 'QuackCoin', 'comment section'], (x) => 'Wipe the ' + x + ' servers'] },
   boss: { boss: ['MECH', 'WALKER', 'PILLBOT', 'GRIFTBOT'], kopter: ['KOPTER', 'GYROCOPTER', 'HYPECOPTER'], crawler: ['WORM', 'SERPENT', 'SCARAB'], tank: ['TANK', 'STEAMROLLER', 'HYPE TRAIN'], blimp: ['ZEPPELIN', 'BALLOON'],
     director: ['DIRECTOR', 'INFLUENCER', 'PITCHMAN', 'STREAMER'], citrus: ['GRAPEFRUIT', 'LEMON LORD', 'TANGERINE'], engine: ['ENGINE', 'SHAKER'] },
   bossSub: ['Peer reviewed by its mum.', 'Powered by vibes.', 'It read one article.', 'Ninety-nine percent water, one percent rage.', 'Its only data point is itself.', 'Backed by testimonials.',
-    'Sponsored by itself.', 'It did its own research.', 'Now with AI. Still no data.', 'Rejected by Reviewer 2. Twice.', 'Ask your doctor. It did not.'],
-  neon: ['DETOX YOUR WIFI', 'ALIGN YOUR AURA', 'LIKE + SUBSCRIBE', 'TRUST ME BRO', 'BUY QUACKCOIN', 'LINK IN BIO', 'AI-POWERED TEA', 'SUN-GAZE CLUB', 'RAW WATER BAR'],
-  sign: ['BASE CAMP', 'SCIENCE HQ', 'NO QUACKS', 'EVIDENCE ONLY', 'CITE YOUR SOURCES', 'GRANT PENDING', 'REVIEWER 2 WAS HERE'],
+    'Sponsored by itself.', 'It did its own research.', 'Now with AI. Still no data.', 'Rejected by Reviewer 2. Twice.', 'Ask your doctor. It did not.',
+    'Four stars on its own website.', 'A study of one, run by the one.', 'Contains traces of evidence.', 'Trust the process. Skip the proof.', 'Terms and conditions: pay first.', 'Certified by a certificate it printed.', 'Unfalsifiable, unflappable, unlicensed.', 'It cites itself. And a cousin.'],
+  neon: ['DETOX YOUR WIFI', 'ALIGN YOUR AURA', 'LIKE + SUBSCRIBE', 'TRUST ME BRO', 'BUY QUACKCOIN', 'LINK IN BIO', 'AI-POWERED TEA', 'SUN-GAZE CLUB', 'RAW WATER BAR',
+    'DOCTORS HATE ME', 'DETOX YOUR SOUL', 'DO NOT VERIFY', 'WIFI-FREE ZONE', 'SHAKE FOR LUCK', 'ORGANIC IDEAS', 'RESULTS MAY LIE', 'FEEL THE VIBE', 'FREE ENERGY SOON'],
+  sign: ['BASE CAMP', 'SCIENCE HQ', 'NO QUACKS', 'EVIDENCE ONLY', 'CITE YOUR SOURCES', 'GRANT PENDING', 'REVIEWER 2 WAS HERE',
+    'PEER REVIEW AHEAD', 'NO DATA BEYOND', 'MIND THE CONTROLS', 'BLIND TRIALS ONLY', 'P LESS THAN 0.05', 'CITATION NEEDED', 'NULL RESULT ZONE', 'WASH YOUR HANDS', 'CAUTION: FACTS', 'WARRANTY VOID', 'FALSIFIABLE ONLY', 'N=1 CLINIC', 'METHODS AHEAD', 'ERRATUM'],
 };
 // the randomizer's own pieces: each fills columns c..c+w-1 and meets the next with ground at row 16.
 // x collects spots for later: x.ledges (loot ledges), x.high (lookouts for snipers and turrets), x.tree (the theme's tree)
@@ -2251,13 +2262,141 @@ const STORY = {
 const storyOf = (n) => (mode === 'campaign' && LEVELS[n] ? STORY[LEVELS[n].name] : null);
 // things freed bros and HQ say now and then
 const BRO_QUIPS = ['Thanks, bro. That cage had no peer review.', 'Freedom! And my hypothesis was right.', 'Six weeks in there. They fed me only homeopathy.', 'I am back. Point me at the nonsense.', 'They made me watch a crystal healing seminar. Twice.', 'Data or it did not happen. Let us go make some.', 'Finally. My grant was running out.', 'Did anyone bring coffee? No? Fine. Guns, then.',
-  'They played me a four-hour podcast about how to breathe. FOUR HOURS.', 'My cellmate tried to sell me QuackCoin. Every ten minutes.', 'They took my lab coat and gave me a detox tea. Where is the toilet?', 'The guard said he did his own research. On a cereal box.'];
+  'They played me a four-hour podcast about how to breathe. FOUR HOURS.', 'My cellmate tried to sell me QuackCoin. Every ten minutes.', 'They took my lab coat and gave me a detox tea. Where is the toilet?', 'The guard said he did his own research. On a cereal box.',
+  'My cage was labelled organic. That did not make it better.', 'I counted the bars. Forty-one. I wrote a paper on it.', 'They tried to convert me with a seminar. I asked for the data.', 'For the record, I was never convinced.', 'The cell wifi was five bars of pure opinion.', 'Is it still this century? Good. Grants first.', 'Rescued by a peer. The review process works after all.', 'Day 41: the guards still cite nothing. I checked.'];
 const HQ_DEATH = ['We lost a bro. Sending the next one in.', 'That was not in the methods section. Next bro!', 'Replicate the attempt, bros. That is how science works.', 'Bro down. Morale is fine. Science is fine. Next.',
-  'Bro down. Reviewer 2 will call that a limitation of the study.', 'Sample size minus one. Next bro!', 'We will publish that as a negative result. Next bro.'];
+  'Bro down. Reviewer 2 will call that a limitation of the study.', 'Sample size minus one. Next bro!', 'We will publish that as a negative result. Next bro.',
+  'Bro down. Filing it under unexpected results.', 'The data point has left the dataset. Next bro.', 'That bro was an outlier. Do not be an outlier, next bro.', 'We will note it in the limitations. Deploying the next bro.', 'Reviewer 2 asks: was the bro blinded? The next one is.', 'The grant covered one bro. We are over budget. Go.', 'Correlation: you stood there, you died. Next bro.', 'Another bro joins the sample. Mind the controls.'];
+// ---- wit: quack barks, per-bro quips, radio chatter, events, tips and level signs. No Math.random in here: lines are picked
+// by counters, so the seeded random stream (and every seeded test) is untouched
+const QUACK_BARKS = {
+  spot: ['HALT! SCIENCE!', 'WHO LET HIM IN?', 'FAKE NEWS!', 'WAKE THE GURU!', 'HE HAS A STUDY!', 'SOURCE? MY GUT!', 'GET HIS DATA!', 'A SKEPTIC!', 'ALERT! FACTS!', 'HE READS BOOKS!', 'TELL THE PODCAST!', 'NOT THE LAB COAT!', 'DO NOT LOOK AT HIM!', 'OPEN-MINDED, PLEASE!'],
+  hit: ['MY AURA!', 'NOT MY CRYSTAL!', 'I FEEL FINE', 'JUST A SCRATCH', 'ASK MY LAWYER', 'OUCH. ANECDOTE.', 'SIDE EFFECT!', 'I WILL POST THIS', 'THAT WAS RUDE', 'CHEMICALS!', 'IS THAT PEER REVIEW?', 'TOXINS! SO MANY!', 'HEALING CRISIS!'],
+  die: ['I DID MY RESEARCH', 'N=1 FOREVER', 'TELL MY FOLLOWERS', 'RESULTS NOT TYPICAL', 'REFUND ME', 'THE DATA WAS MINE', 'DETOX FAILED', 'SO MUCH FOR VIBES', 'CONFOUNDED...', 'IT WAS THE WIFI', 'FIVE STARS, STILL', 'WHERE IS MY TEA?', 'BIG LAB DID THIS'],
+};
+const TYPE_BARKS = { guru: ['NAMASTE, BRO', 'YOUR CHAKRAS ARE OFF'], preacher: ['TRUST THE PROCESS', 'AMEN, NO PROOF'], medic: ['TAKE A SUGAR PILL', 'SHAKE IT OFF'], sniper: ['I READ THE SCOPE', 'DYOR, BRO'], heavy: ['MORE SUPPLEMENTS!', 'STAND BACK, FACTS'], grenadier: ['ORGANIC EXPLOSIVE!', 'ALL NATURAL BOOM'] };
+const BRO_LINES = {
+  einstein: { k: 'RELATIVELY DEAD', s: 'Time is relative. Your deadline is not.', r: 'Back. Time passes slower for me, apparently.' },
+  curie: { k: 'HALF-LIFE: ZERO', s: 'That glows, bro. Do not lick the vials.', r: 'My notebooks are still radioactive. Wash your hands.' },
+  tesla: { k: 'WIRELESSLY DONE', s: 'I promised free energy. This is the sample.', r: 'Back. Still no funding. Still brilliant.' },
+  newton: { k: 'WHAT GOES UP...', s: 'Every action has an equal and opposite quack.', r: 'An apple fell on me. Again. Fine, let us go.' },
+  franklin: { k: 'PHOTO FINISH', s: 'Photo 51 said it first: it is a helix.', r: 'Credit where due, please. Now, quacks.' },
+  ada: { k: 'RUN-TIME ERROR', s: 'The engine does what we tell it. Unlike you lot.', r: 'Back online. Loop again, bro.' },
+  darwin: { k: 'UNFIT TO SURVIVE', s: 'Selection pressure: applied. Gently, at first.', r: 'Adapt or perish. I adapted. Barely.' },
+  galileo: { k: 'AND YET HE FELL', s: 'And yet it moves. And now it burns.', r: 'Back. Tell the committee I recanted nothing.' },
+  turing: { k: 'HALTING PROBLEM', s: 'Imitation game: they lose. Obviously.', r: 'Restarted. Please pass the crossword.' },
+  johnson: { k: 'TRAJECTORY SOLVED', s: 'Checked by hand. Twice. Standing clear.', r: 'Back at the console. The launch window is open.' },
+  meitner: { k: 'FISSION ACCOMPLISHED', s: 'Splitting atoms. And splitting hairs about credit.', r: 'Back. Somebody else will get the prize, I can feel it.' },
+  archimedes: { k: 'EUREKA, QUACK', s: 'Give me a lever and a place to stand. Done.', r: 'I was in the bath. Where are the quacks?' },
+  mendel: { k: 'RECESSIVE NOW', s: 'Three to one. Count the peas if you doubt me.', r: 'Back in the garden. The peas missed me.' },
+  pasteur: { k: 'PASTEURIZED', s: 'Heat to sixty. Hold. Enjoy the safe milk.', r: 'Back. Wash your hands, boil your milk, take a dart.' },
+  faraday: { k: 'FIELD COLLAPSED', s: 'Nothing gets in. Nothing gets out. Not even bad ideas.', r: 'No formal training, no problem. Let us go.' },
+  hypatia: { k: 'WELL, ACTUALLY', s: 'Rotate the astrolabe, rotate the problem.', r: 'Back. Somebody please guard the library this time.' },
+  feynman: { k: 'NICE DIAGRAM', s: 'All paths at once. One of them hits you.', r: 'Back. Bongos later. Quacks first.' },
+  fleming: { k: 'MOULDY VICTORY', s: 'I left a dish out. Look what grew.', r: 'Back. The lab was messy. That is the point.' },
+  sagan: { k: 'ONE LESS DOT', s: 'Extraordinary claims need extraordinary evidence. Stars incoming.', r: 'We are made of star stuff. I feel less so now.' },
+  wegener: { k: 'DRIFTED APART', s: 'They laughed at moving continents. Now watch.', r: 'Back. Nobody believed me then either.' },
+  hubble: { k: 'REDSHIFTED', s: 'Everything runs away from everything. Even you.', r: 'Back. The universe is expanding. So is my to-do list.' },
+  mendeleev: { k: 'ELEMENT OF SURPRISE', s: 'I left gaps in the table. You are standing in one.', r: 'Back. Sorting the quacks by atomic weight.' },
+  hawking: { k: 'EVENT HORIZON PASSED', s: 'Nothing escapes. Not light, not quacks, not puns.', r: 'Back. I bet the League I would return.' },
+  hopper: { k: 'DEBUGGED', s: 'The first bug was a moth. These are worse.', r: 'Back. Easier to ask forgiveness than permission.' },
+  wu: { k: 'PARITY BROKEN', s: 'Left is not right. I proved it. Ask me again later.', r: 'Back. Credit pending, as usual.' },
+  hodgkin: { k: 'CRYSTAL CLEAR', s: 'Structure first, theories second. Lattice deployed.', r: 'Back. Insulin, penicillin, B12. Now quacks.' },
+  davinci: { k: 'MASTERPIECE', s: 'I drew this in the margin. Do not tell my patron.', r: 'Back. Eleven unfinished projects. This one is next.' },
+  rutherford: { k: 'BACKSCATTERED', s: 'Like firing a shell at tissue paper. It bounced.', r: 'All science is physics or stamp collecting. Quacks.' },
+  nobel: { k: 'GOOD BLAST', s: 'I invented this for mining. Honestly.', r: 'Back. Peace prize pending, bro.' },
+  bohr: { k: 'LEAPT AND LOST', s: 'If it does not shock you, you did not get it.', r: 'Back. Both here and there, until observed.' },
+  lamarr: { k: 'FREQUENCY HOPPED', s: 'Actress and inventor. The signal you cannot jam.', r: 'Back. They liked the face. Now hear the ideas.' },
+  lavoisier: { k: 'OXIDISED', s: 'Nothing is lost, nothing is created. Much is burned.', r: 'Back. Weighing everything. Even the quacks.' },
+  goodall: { k: 'TROOP 1, LEAGUE 0', s: 'My friends from Gombe send their regards.', r: 'Back. Observing quacks quietly. Quietly.' },
+  jemison: { k: 'ZERO-G, ZERO QUACK', s: 'Gravity off. Egos still heavy.', r: 'Back. Space was quieter. Fewer influencers.' },
+  oppenheimer: { k: 'CRITICAL MASS', s: 'Standing very far back. Very, very far.', r: 'Back. Please do not hand me the big one.' },
+  semmelweis: { k: 'WASH YOUR HANDS', s: 'Wash your hands. They did not listen. Bubbles do.', r: 'Back. Clean hands, cleaner conscience.' },
+  torricelli: { k: 'UNDER PRESSURE', s: 'Raining mercury. Do not stand under it. Or in it.', r: 'Back. Nature abhors a vacuum, and a bad day.' },
+  volta: { k: 'SHOCKINGLY DEAD', s: 'A stack of discs and a dream. Let it spark.', r: 'Back. Charged to full. Please do not lick it.' },
+  gauss: { k: 'ADDS UP', s: 'One to one hundred in a second. You are welcome.', r: 'Back. Normally distributed, never average.' },
+  anning: { k: 'SHE SELLS SEASHELLS', s: 'Smashing rocks since 1810. Credit still due.', r: 'Back. A new find: their plan. It is extinct.' },
+  vesalius: { k: 'DISSECTED', s: 'Anatomy lesson, quacks. Pay attention to the cut.', r: 'Back. Cutting-edge science, literally.' },
+  hooke: { k: 'ELASTIC LIMIT', s: 'As the stretch, so the punch. Look it up.', r: 'Back. I named the cell first. Do not forget it.' },
+};
+const RADIO_CHATTER = [
+  ['hq', 'Peer Review here. No news. Just a reminder that our grant is still pending.'], ['hq', 'Reviewer 2 has sent comments on your last firefight. They are long.'],
+  ['hq', 'Reminder: please cite every quack you defeat in your final report.'], ['hq', 'Hydrate, bros. With water. Not with moonlight.'],
+  ['hq', 'Grant update: rejected again. Reason given: insufficient novelty. Have they met the quacks?'], ['hq', 'Reviewer 2 asks why you have no control group. You are the control group.'],
+  ['hq', 'Good news: your mission is accepted with major revisions. Mostly craters.'], ['goon', 'League Radio, the voice you trust. Nine sponsors and zero studies.'],
+  ['goon', 'League Radio: the news is fake but the ads are real. Use code QUACK.'], ['goon', 'This hour is brought to you by ToxiFlush Tea. Results may vary. Results may be tea.'],
+  ['goon', 'League Radio asks: who funds the facts? We are funded by tea.'], ['live', 'Chat, we are live. Three viewers. Three! Smash that like button.'],
+  ['live', 'Chat says the lab coats are a sponsored uniform. Chat is wrong. Check the labels.'], ['quack', 'Quackenbush here. Your science is a trend. Mine is a lifestyle.'],
+  ['quack', 'Remember the League motto: if it sounds nice, it is probably a study.'], ['hq', 'Weather update: partly cloudy with a chance of misinformation.'],
+];
+const EVENT_EXTRA = {
+  oppenbro: [['hq', 'Peer Review: that is Oppenbro. He says he is only here to observe. He lies.'], ['goon', 'League Radio weather alert: a very bright man is walking this way.'], ['hq', 'Oppenbro has a big idea again. Stand back. Further back.']],
+  airstrike: [['goon', 'League Radio: air support is sponsored by ToxiFlush Tea. Detox from above!'], ['quack', 'My jets run on thoughts and prayers. And some actual fuel.'], ['hq', 'Planes inbound. Please do not ask which nonsense is flying them.']],
+  supply: [['hq', 'Supply drop. Reviewer 2 rejected it twice, so it is smaller than hoped.'], ['hq', 'Crates incoming. Peer reviewed, ethically sourced, slightly dented.'], ['goon', 'League Radio: our supplies are free! Shipping is eleven dollars.']],
+  ambush: [['goon', 'League Radio: this ambush is a limited-time offer. Act now, quacks!'], ['quack', 'Surprise! It was in my newsletter. Did nobody read my newsletter?'], ['hq', 'Ambush! Expected, then ignored, like every footnote.']],
+  golden: [['hq', 'A golden quack. Statistically a rare event. Catch him.'], ['goon', 'League Radio: the golden quack is an investment. Do not shoot it.'], ['hq', 'He is made of gold leaf and bad decisions. Go get him.']],
+  meteor: [['hq', 'Meteors! The League blames the stars. We blame the forecast.'], ['quack', 'The cosmos says run. It also says buy. Take cover!'], ['goon', 'League Radio: these meteors are a sign. Of what? Subscribe to find out.']],
+  blackout: [['hq', 'Power is out. Evidence is still true in the dark. Probably.'], ['placebo', 'Darkness cures everything! Lights are only a theory!'], ['goon', 'League Radio: this blackout is brought to you by candles. Buy candles.']],
+};
+const PAUSE_TIPS = [
+  'Correlation is not causation. Neither is this tip.', 'A sample size of one is an anecdote. Two is a podcast.', 'If a cure has no side effects, it probably has no effects.',
+  'Peer review is slow. Rockets are not. Use rockets.', 'Extraordinary claims need extraordinary evidence. Or a bigger gun.', 'The plural of anecdote is not data. It is a testimonial page.',
+  'Natural does not mean safe. Arsenic is natural. So are quacks.', 'Dilute it again. Stronger? No. Now it is water.', 'Absence of evidence is not evidence of a cure.',
+  'Do your own research, in a lab, not a comment section.', 'A p-value of 0.049 is not a personality.', 'Reviewer 2 has comments. Reviewer 2 always has comments.',
+  'Toxins are not found by tea. Tea finds your wallet.', 'Replicate the result. Then replicate the kill.', 'Always cite your sources. Especially the ones you blew up.',
+  'Confidence is not accuracy. Ask any quack.', 'Placebos work on feelings, not on tanks.', 'The control group is behind you. Please cover them.',
+  'Falsify my hypothesis: save your specials for the boss.', 'Sunlight is the best disinfectant. A sun lens is the second best.', 'Hydrate. With water. Not with moonlight.',
+  'Not all heroes wear lab coats. Some also wear bandoliers.', 'Fewer coincidences, more controls.', 'If the map cites no sources, check the legend.',
+  'Every great discovery began as a result someone almost ignored.', 'Blind the study, not yourself. Mind the pit.', 'A theory that explains everything explains nothing.',
+  'Stuck? A hypothesis you can break is a good hypothesis. So is a wall.',
+];
+const WIT_SIGNS = {
+  'PLACEBO ISLAND': ['FEEL BETTER SOON', 'SUGAR 2 FOR 1', 'CURE IN YOUR MIND'], 'DETOX DESERT': ['TOXINS: NONE FOUND', 'CLEANSE OR ELSE', 'WATER: ALSO WATER'],
+  'CRYO SUMMIT': ['FROZEN ASSETS', 'PLEASE DO NOT THAW', 'SNAKE OIL: 40% OFF'], 'DILUTION PLANT': ['WEAKER IS BETTER', 'ZERO INGREDIENTS', 'THE WATER REMEMBERS'],
+  'FLAT EARTH STATION': ['EDGE: 3 KM', 'PLUMB LINE: SKEWED', 'GLOBE-FREE ZONE'], 'CITRUS CITADEL': ['VITAMIN C FIXES ALL', 'SQUEEZE THE TRUTH', 'FRESH-SQUEEZED LIES'],
+  'CHEMTRAIL AIRFIELD': ['CLOUDS: JUST WATER', 'THIS IS A CONTRAIL', 'FLIGHT PATH: LINE'], 'QUARTZ CAVERNS': ['GOOD VIBES: 12 M', 'ROCKS: ONLY ROCKS', 'RESONANCE NOT FOUND'],
+  'MIASMA MARSH': ['MIASMA IS A MYTH', 'GERMS ARE REAL', 'FOUL AIR, FOUL TAKE'], 'ZODIAC OBSERVATORY': ['STARS DO NOT CARE', 'MERCURY IS A PLANET', 'HOROSCOPE: DELAYED'],
+  'PERPETUAL MOTION WORKS': ['FREE ENERGY: SOON', 'INPUT EQUALS OUTPUT', 'LAWS APPLY HERE'], 'CROP CIRCLE FIELDS': ['A PLANK DID THIS', 'MADE BY TWO MEN', 'CIRCLES: HUMAN-MADE'],
+  'PYRAMID POWER PLANT': ['SHARP RAZORS: NO', 'POWER: 0 WATTS', 'PYRAMID NOT INCL.'], 'HOMEOPATHIC HOT SPRINGS': ['DILUTE IN SPRING', 'HOT: 30C, SORRY', 'ONLY WATER INSIDE'],
+  'LEY LINE LIGHTHOUSE': ['LINES ON A MAP', 'NO LEY, NO LINE', 'LIGHT: ALSO LIGHT'], 'STRUCTURED WATER WORKS': ['WATER IS H2O', 'SHAPE: LIQUID', 'HEXAGONS: NOT HERE'],
+  'NEON WELLNESS DISTRICT': ['NEON NOT ORGANIC', 'FIRST AID: A TEA', 'AURAS BY APPT'], 'JUICE PIPELINE': ['PIPE DREAM AHEAD', 'MIND THE PULP', 'EXIT: JUICE ONLY'],
+};
+let barkT = -99, barkN = { spot: 0, hit: 0, die: 0 }, barkGate = { hit: 0, die: 0 }, quipT = -99, quipN = 0, respN = 0, killQuipT = -99, killQuipN = 0, chatterT = 70, chatterN = 0, eventN = 0, tipN = 0;
+function bark(e, kind) { // a short shout over a quack: at most one every 2.4 s, only on screen, hits only every third time and deaths every second
+  if (lifeT < barkT || !isQuack(e) || (e.dead && kind !== 'die') || !onScreen(e)) return;
+  if (kind !== 'spot' && ++barkGate[kind] % (kind === 'hit' ? 3 : 2)) return;
+  const pool = kind === 'spot' && TYPE_BARKS[e.type] ? QUACK_BARKS.spot.concat(TYPE_BARKS[e.type]) : QUACK_BARKS[kind], line = pool[(barkN[kind]++ + e.type.length * 3) % pool.length];
+  barkT = lifeT + 2.4;
+  floatText(clamp(e.x + e.w / 2, cam.x + line.length * 3 + 4, cam.x + VW - line.length * 3 - 4), e.y - 12, line, kind === 'spot' ? '#f2c94c' : kind === 'hit' ? '#e78ac3' : '#a3abd0');
+}
+function broQuip(kind) { // the bro's own line: a shout every tenth kill, the radio line on every other special, both rate limited
+  const q = BRO_LINES[P.bro.id]; if (!q || (mode !== 'campaign' && mode !== 'random')) return;
+  if (kind === 'k') { if (lifeT < killQuipT || ++killQuipN % 10) return; killQuipT = lifeT + 12; floatText(clamp(P.x + 5, cam.x + q.k.length * 3 + 4, cam.x + VW - q.k.length * 3 - 4), P.y - 14, q.k, '#a6d854'); }
+  else if (lifeT >= quipT && ++quipN % 2) { quipT = lifeT + 20; say('bro', q[kind], 0.4); }
+}
+function witSigns(n) { // extra signs on open ground, spread over the first part of a campaign mission (placed by rule, not by hand)
+  const texts = WIT_SIGNS[levelDef(n).name]; if (!texts) return;
+  const fin = spawns.find((s) => s.final), stop = Math.min(playW - 8, fin && fin.ax0 ? fin.ax0 - 4 : playW);
+  const stand = (c) => { for (let r = 8; r < LH - 1; r++) if (isSolidT(tileAt(c, r)) && tileAt(c, r) !== STEEL && [1, 2, 3, 4].every((k) => !isSolidT(tileAt(c, r - k)) && tileAt(c, r - k) !== ACID)) return r; return -1; };
+  const used = decor.filter((d) => d.kind === 'sign' || d.kind === 'plaque').map((d) => d.c);
+  texts.forEach((txt, i) => {
+    const want = Math.floor(stop * (0.2 + i * 0.25));
+    for (let off = 0; off < 60; off++) for (const c of off ? [want + off, want - off] : [want]) {
+      const r = stand(c), half = Math.ceil((txt.length * 6 + 6) / 32); // the board is wider than the post: it needs open air on both sides
+      if (c - half < 2 || c + half >= stop || r < 0) continue;
+      let clear = true; for (let k = c - half; k <= c + half; k++) if (isSolidT(tileAt(k, r - 1)) || isSolidT(tileAt(k, r - 2))) clear = false;
+      if (!clear) continue;
+      if (used.some((u) => Math.abs(u - c) < 9) || spawns.some((s) => Math.abs(s.c - c) < 3)) continue;
+      decor.push({ kind: 'sign', c, r, seed: 3 + i, text: txt, from: 0 }); used.push(c); return;
+    }
+  });
+}
 // the radio: one message at a time in a box above the boss bar, with a portrait and the line typed out
 let radioQ = [], radioCur = null, storyFlag = false;
 function say(who, line, delay = 0) { if (radioQ.length < 8) radioQ.push({ who, line, delay }); }
 function updateRadio(dt) {
+  chatterT -= dt; // now and then, when the air is quiet, HQ or the League chats
+  if (chatterT <= 0 && mode === 'campaign' && !radioCur && !radioQ.length && P.alive) { chatterT = 100; const c = RADIO_CHATTER[(chatterN++ + level * 3) % RADIO_CHATTER.length]; say(c[0], c[1]); }
   if (radioCur) { radioCur.t += dt; if (radioCur.t > radioCur.dur) radioCur = null; }
   if (!radioCur && radioQ.length) { const m = radioQ[0]; m.delay -= dt; if (m.delay <= 0) { radioQ.shift(); radioCur = Object.assign(m, { t: 0, dur: 2.4 + m.line.length * 0.05 }); sfx('radio'); } }
 }
@@ -3227,12 +3366,12 @@ function applyDifficulty(n) {
 let grace = 0; // after a respawn: a few seconds before the quacks pick up the new bro
 // ---- trophies: unlocked once, kept in this browser; counters add up across every game you play
 const ACH = [
-  ['first', 'DEBUNKED', 'Defeat a quack'], ['combo10', 'GOING VIRAL', 'Reach a x10 combo'], ['demo', 'DESTRUCTIVE TESTING', 'Break 500 blocks'],
-  ['pound', 'GROUND POUNDER', 'Land 25 ground pounds'], ['mech', 'MECH PILOT', 'Defeat 25 quacks from a mech'], ['rescue', 'BROS BEFORE QUACKS', 'Free 10 scientists'],
-  ['intel', 'LITERATURE REVIEW', 'Find 15 intel files'], ['flawless', 'NO SIDE EFFECTS', 'Finish a mission without losing a bro'], ['speed', 'FAST-TRACK REVIEW', 'Finish a mission in under 3 minutes'],
-  ['campaign', 'SCIENCE WINS', 'Beat the campaign'], ['allbros', 'FULL ROSTER', 'Free every bro in one campaign run'], ['siege5', 'HOLD THE LINE', 'Reach wave 5 in Lab Siege'],
-  ['siege15', 'LAST LAB STANDING', 'Reach wave 15 in Lab Siege'], ['rush', 'REJECT THEM ALL', 'Clear the Boss Rush'], ['moon', 'IT WAS REAL', 'Clear the Moon Base'],
-  ['pyro', 'HOT TAKES', 'Set 30 quacks on fire'], ['strike', 'CALL IT IN', 'Call 5 airstrikes'], ['guns', 'BORROWED GUNS', 'Defeat 50 quacks with pickup guns'], ['drones', 'CONTENT MODERATOR', 'Down 10 camera drones'],
+  ['first', 'DEBUNKED', 'Defeat a quack. Cite the source.'], ['combo10', 'GOING VIRAL', 'Reach a x10 combo. Share responsibly.'], ['demo', 'DESTRUCTIVE TESTING', 'Break 500 blocks. For science.'],
+  ['pound', 'GROUND POUNDER', 'Land 25 ground pounds'], ['mech', 'MECH PILOT', 'Defeat 25 quacks from a mech'], ['rescue', 'BROS BEFORE QUACKS', 'Free 10 scientists. Tenure pending.'],
+  ['intel', 'LITERATURE REVIEW', 'Find 15 intel files. Cite them all.'], ['flawless', 'NO SIDE EFFECTS', 'Finish a mission without losing a bro'], ['speed', 'FAST-TRACK REVIEW', 'Finish a mission in under 3 minutes'],
+  ['campaign', 'SCIENCE WINS', 'Beat the campaign. Peer reviewed.'], ['allbros', 'FULL ROSTER', 'Free every bro in one campaign run'], ['siege5', 'HOLD THE LINE', 'Reach wave 5 in Lab Siege'],
+  ['siege15', 'LAST LAB STANDING', 'Reach wave 15 in Lab Siege'], ['rush', 'REJECT THEM ALL', 'Clear the Boss Rush. Zero revisions.'], ['moon', 'IT WAS REAL', 'Clear the Moon Base. It happened.'],
+  ['pyro', 'HOT TAKES', 'Set 30 quacks on fire'], ['strike', 'CALL IT IN', 'Call 5 airstrikes. Form filed.'], ['guns', 'BORROWED GUNS', 'Defeat 50 quacks with pickup guns'], ['drones', 'CONTENT MODERATOR', 'Down 10 camera drones. Demonetised.'],
 ];
 let trophies = {}, career = { blocks: 0, pounds: 0, mech: 0, rescues: 0, intel: 0, burns: 0, strikes: 0, guns: 0, drones: 0 }, toast = null, careerT = 0;
 try { trophies = JSON.parse(localStorage.getItem('sciencebros.trophies') || '{}'); Object.assign(career, JSON.parse(localStorage.getItem('sciencebros.career') || '{}')); } catch (e) { /* storage blocked */ }
@@ -3592,7 +3731,7 @@ function startLevel(n) {
   shk = new Float32Array(LW * LH); shakeList = []; collapseDirty = false; pShk.clear(); bgStart();
   boss = ents.find((e) => e.final); chopper = null;
   for (const c of ents) if (c.type === 'cage') c.bro = null; // who is inside is picked when the cage opens
-  radioQ = []; radioCur = null; storyFlag = false;
+  radioQ = []; radioCur = null; storyFlag = false; chatterT = 70; barkT = quipT = killQuipT = -99;
   { const st = storyOf(n); if (st) st.start.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 2.6)); } // the radio opens the mission
   applyDifficulty(n);
   seedLife(); startAmbience();
@@ -3643,6 +3782,7 @@ function hitEnemy(e, dmg, kx = 0, how = 'shot') {
   if (isQuack(e) && !e.aware) { e.aware = true; e.react = 0.3; e.face = P.x > e.x ? 1 : -1; }
   if ((isQuack(e) || e.type === 'dog') && how === 'shot') { const [cx, cy] = center(e); bleed(cx - Math.sign(kx) * 3, cy - 2, 3, kx * 0.6); }
   if (LEAK[e.type] && how === 'shot') leak(e, kx, 3);
+  if (e.hp > 0) bark(e, 'hit');
   if (e.hp <= 0) killEnemy(e, how);
 }
 function dropShield(e, dir) {
@@ -3682,6 +3822,7 @@ function killEnemy(e, how = 'shot') {
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
   if (diff.drop && isQuack(e) && Math.random() < diff.drop) spawnPickup(cx, cy); // easier: a dead quack sometimes drops a special
   addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
+  if (isQuack(e)) { bark(e, 'die'); broQuip('k'); }
   if (e.type === 'heavy' || e.type === 'brute') bigKill(cx, cy);
   if (e.type === 'bomber') { gibs(RIG.bomber.still[0], cx, cy, 0, -60); explode(cx, cy, 36, 5, blamed(e), 3); return; }
   if (e.type === 'camdrone') { career.drones++; leak(e, 0, 12); explode(cx, cy, 30, 5, blamed(e), 2); for (let i = 0; i < 6; i++) chunk(cx, cy, rand(-160, 160), rand(-200, -40), ['#3d3d46', '#8b93ad', '#ff3a2a'][i % 3]); return; }
@@ -4251,7 +4392,7 @@ function useSpecial() {
   P.spec--; sfx('special'); shake += 3;
   const f = P.face, gx = P.x + (f > 0 ? P.w + 2 : -2), gy = P.y + 8;
   const b = P.bro;
-  showBanner(b.special.toUpperCase(), b.formula, 1.6);
+  showBanner(b.special.toUpperCase(), b.formula, 1.6); broQuip('s');
   switch (b.id) {
     case 'einstein': slowT = 5; fx.push({ kind: 'shock', x: P.x + 5, y: P.y + 8, r: 260, t: 0.5, max: 0.5 }); fx.push({ kind: 'screen', t: 0.25, max: 0.25, col: '#8fd3ff' }); break;
     case 'curie': bullets.push({ x: gx, y: gy - 2, vx: f * 210, vy: -240, grav: 700, owner: 'p', dmg: 25, life: 3, kind: 'bigvial', explode: 70, tp: 5 }); break;
@@ -4487,6 +4628,7 @@ function respawn() {
   const pool = unlocked.length > 1 ? unlocked.filter((id) => id !== P.bro.id) : unlocked; // any unlocked bro but the one who just died
   const bro = BRO[pool[(Math.random() * pool.length) | 0]];
   P = newPlayer(checkpoint.x, checkpoint.y, bro);
+  if (BRO_LINES[bro.id] && (mode === 'campaign' || mode === 'random') && ++respN % 2 === 0) say('bro', BRO_LINES[bro.id].r, 2.2);
   // the next bro parachutes in over the checkpoint, from as high as the open sky allows
   const c = Math.floor((P.x + 5) / T);
   let r = Math.floor(P.y / T); for (let k = 0; k < 9 && r > 1 && !isSolidT(tileAt(c, r - 1)); k++) r--;
@@ -4637,7 +4779,7 @@ const EVENT_RADIO = { oppenbro: ['hq', 'Incoming: Robert Oppenbro. He brought th
 function startEvent(name) {
   ev = { name, t: 0 };
   EV_START[name](ev);
-  if (mode === 'campaign' && EVENT_RADIO[name]) say(EVENT_RADIO[name][0], EVENT_RADIO[name][1], 0.3);
+  if (mode === 'campaign' && EVENT_RADIO[name]) { const all = [EVENT_RADIO[name]].concat(EVENT_EXTRA[name] || []), pick = all[eventN++ % all.length]; say(pick[0], pick[1], 0.3); }
   return ev;
 }
 // the top of the open air over column c at the bro's height (row 0 under open sky, else the row under the roof)
@@ -4945,7 +5087,7 @@ function step(dt) {
     attract(dt);
     return;
   }
-  if (pressed.pause) { paused = !paused; menuSel = 0; }
+  if (pressed.pause) { paused = !paused; menuSel = 0; if (paused) tipN++; }
   if (paused) { pauseMenu(); return; }
   if (hitStop > 0) { // a few frames of freeze sell big hits; keep presses made during it
     hitStop -= dt;
@@ -5388,7 +5530,7 @@ function updateQuack(e, dt) {
   let walk = 0;
   if (sees) {
     e.lost = 0;
-    if (!e.aware) { e.aware = true; e.react = Math.max(0.2, (e.type === 'heavy' ? 0.4 : 0.6) + diff.react); if (e.onGround && e.type !== 'heavy') e.vy = -110; sfx('alert'); alertNearby(e); }
+    if (!e.aware) { e.aware = true; e.react = Math.max(0.2, (e.type === 'heavy' ? 0.4 : 0.6) + diff.react); if (e.onGround && e.type !== 'heavy') e.vy = -110; sfx('alert'); alertNearby(e); bark(e, 'spot'); }
     e.face = P.x > e.x ? 1 : -1;
     e.react -= dt; e.cool -= dt * diff.fire; // early missions: slower trigger fingers
     if (e.react <= 0) walk = quackAttack(e, dt);
@@ -5568,7 +5710,7 @@ function flyJetpack(e, dt) {
   const [ex, ey] = center(e), [px, py] = center(P), sees = P.alive && ((ceasefire <= 0 && grace <= 0) || e.provoked) && onScreen(e) && Math.abs(px - ex) < 210 && Math.abs(py - ey) < 140 && los(ex, ey, px, py);
   let want = 0;
   if (sees) {
-    if (!e.aware) { e.aware = true; e.react = 0.5; sfx('alert'); alertNearby(e); }
+    if (!e.aware) { e.aware = true; e.react = 0.5; sfx('alert'); alertNearby(e); bark(e, 'spot'); }
     e.face = px > ex ? 1 : -1; e.react -= dt; e.cool -= dt;
     want = Math.abs(px - ex) < 90 ? -e.face * 60 : Math.abs(px - ex) > 160 ? e.face * 60 : 0;
     if (e.react <= 0 && e.cool <= 0) { const a = Math.atan2(py - ey, px - ex); pill(ex + e.face * 6, ey, Math.cos(a) * 170, Math.sin(a) * 170); e.cool = rand(0.9, 1.4); e.atk = 0.15; }
@@ -8383,6 +8525,7 @@ function drawHud(t) {
   if (paused) { // pause menu: up/down to choose, fire or Enter to switch
     ctx.fillStyle = 'rgba(11,14,31,0.75)'; ctx.fillRect(0, 0, VW, VH);
     text('PAUSED', VW / 2, 62, 16, '#e7eaf6', 'center');
+    ctx.fillStyle = 'rgba(11,14,31,0.9)'; ctx.fillRect(0, 36, VW, 11); text('TIP: ' + PAUSE_TIPS[tipN % PAUSE_TIPS.length], VW / 2, 44, 8, '#8da0cb', 'center');
     if (mode === 'random') text('RANDOM MAP · SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase(), VW / 2, 75, 8, '#f2c94c', 'center');
     pauseItems().forEach(([label, key], i) => {
       const y = 88 + i * 13, sel = i === menuSel;
@@ -8411,6 +8554,7 @@ function drawScreen(t) {
   if (state === 'brief') { drawBriefing(t); return; }
   if (state === 'title') {
     text('SCIENCE BROS', VW / 2, 82, 32, '#a6d854', 'center');
+    text('TIP: ' + PAUSE_TIPS[Math.floor(t / 8) % PAUSE_TIPS.length], VW / 2, 119, 8, '#8da0cb', 'center');
     text('18 MISSIONS · 3 MODES · 42 BROS · 20 BOSSES · 7 EVENTS · 19 TROPHIES', VW / 2, 104, 8, '#8da0cb', 'center');
     if (hiScore) text('BEST CAMPAIGN RUN ' + hiScore, VW / 2, 154, 8, '#f2c94c', 'center');
     BROS.forEach((b, i) => { const x = VW / 2 - 209 + (i % 22) * 19; ctx.drawImage(b.spr[Math.floor(t * 4 + i) % 2 ? 1 : 2][0], x, 130, 12, 16); });
@@ -9943,7 +10087,7 @@ function decorate() {
   fancy = F;
 }
 const _buildLevel = buildLevel;
-buildLevel = function () { _buildLevel(); decorate(); }; // every level, campaign, stretch or random, is dressed once it is built
+buildLevel = function () { _buildLevel(); if (mode === 'campaign') witSigns(level); decorate(); }; // every level, campaign, stretch or random, is dressed once it is built
 // ---- drawing. Only what is on screen is touched; sprites are drawn once per theme and reused.
 const fspan = (arr, lo, hi, fn) => { let a = 0, b = arr.length; while (a < b) { const m = (a + b) >> 1; if (arr[m].c < lo) a = m + 1; else b = m; } for (; a < arr.length && arr[a].c <= hi; a++) fn(arr[a]); };
 const fview = () => [Math.floor(cam.x / T) - 14, Math.floor((cam.x + VW) / T) + 3];
@@ -10044,6 +10188,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial, hitSteel, shootDecor, bgHeld, bgFirm: () => bgFirm, bgDrop: () => bgDrop, parts: () => parts, dust, dustLeft: () => dustLeft, STEEL_HP, setBlame(v) { blame = v; }, ONCE, givePickup, spawnPickup }); // weapon destruction, self-kill and boss damage hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LEAK, meat, splat, edgeSplat }); // gore hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { GEN_WORDS, HQ_DEATH, BRO_QUIPS, EVENT_RADIO, ENDING, decor: () => decor }); // satire hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { QUACK_BARKS, TYPE_BARKS, BRO_LINES, RADIO_CHATTER, EVENT_EXTRA, PAUSE_TIPS, WIT_SIGNS, bark, broQuip, setState(v) { state = v; }, resetWit() { barkT = quipT = killQuipT = -99; barkGate.hit = barkGate.die = killQuipN = quipN = respN = 0; } }); // wit hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { MORE_FOES, GEN_GROUPS, oilSlow, tiles: () => tiles }); // second-round quacks hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decorate, FK, WK, HK, BK, LK, BKT, FV, vIdx, fhash, drawFancyBack, drawFancyMid, drawFancyFore, fancyEdges, tilesNow: () => tiles, spawnsNow: () => spawns, spriteCount: () => SPC.size }); // fancier maps hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks

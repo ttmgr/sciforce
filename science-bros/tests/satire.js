@@ -80,7 +80,7 @@ check('the epilogue closes the gags', ['DYOR DALE', 'REVIEWER 2', 'PROF. PEER RE
 const places = new Set([...Object.values(W.place).flat(), ...W.anyPlace]);
 const seen = { who: new Set(), scheme: new Set(), close: new Set(), quack: new Set() };
 let badName = [], badBrief = [], badIntel = [], badSub = [];
-const SEEDS = 300;
+const SEEDS = 600;
 for (let s = 1; s <= SEEDS; s++) {
   const L = S.genLevel(s * 7919);
   const q = W.quack.find((w) => L.name.startsWith(w + ' ') && places.has(L.name.slice(w.length + 1)));
