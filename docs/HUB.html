@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sciforce · project hub</title>
+<style>
+  :root {
+    --air: #2471A3; --water: #1F8A70; --thesis: #B5651D;
+    --bg: #FFFFFF; --bg-soft: #F4F4F2;
+    --ink: #1A1A1A; --muted: #6B6B6B;
+    --border: #E5E5E5; --border-2: #D5D5D5;
+    --ok: #2D8659; --warn: #B5651D; --fail: #A6402A; --dim: #B0B0B0;
+    --accent-default: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 32px 60px; }
+  section.fullwidth { margin-top: 64px; padding: 36px 32px 80px;
+    border-top: 1px solid var(--border); background: var(--bg-soft); }
+  section.fullwidth > h2.section { max-width: 1280px; margin: 0 auto 4px;
+    font-size: 22px; }
+  section.fullwidth > p.hint { max-width: 1280px; margin: 0 auto 22px; }
+  section.fullwidth > .graph-embed,
+  section.fullwidth > .auto-graph-wrap { max-width: 1600px; margin: 0 auto; }
+  .mono, code { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+  a { color: var(--air); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .dim { color: var(--dim); }
+
+  /* ── HERO ───────────────────────────────────────────────── */
+  .hero { border: 1px solid var(--border); border-left: 6px solid var(--accent);
+    padding: 28px 32px; background: var(--bg-soft);
+    display: grid; grid-template-columns: 1fr auto; gap: 36px; align-items: start; }
+  .hero-main { min-width: 0; }
+  .hero .eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); }
+  .hero h1 { font-size: 38px; font-weight: 700; margin: 0 0 8px;
+    letter-spacing: -0.02em; line-height: 1.05; color: var(--ink); }
+  .hero .oneliner { font-size: 18px; line-height: 1.45; color: var(--ink);
+    margin: 0 0 18px; max-width: 60ch; }
+  .hero .oneliner em { color: var(--muted); font-size: 15px; }
+  .hero .status-line { margin: 0 0 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hero .pill { display: inline-block; padding: 5px 14px; color: white;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.14em; border-radius: 2px; }
+  .hero .reason { font-size: 14px; color: var(--muted); }
+  .hero .next { margin: 0; font-size: 15px; color: var(--ink);
+    padding: 10px 14px; background: white;
+    border: 1px dashed var(--border-2); border-left: 3px solid var(--accent-default); }
+  .hero .next-tag { color: var(--accent-default); font-weight: 700; letter-spacing: 0.08em; margin-right: 8px; }
+  .hero-meta { font-size: 12.5px; color: var(--muted); text-align: right;
+    line-height: 1.7; white-space: nowrap; }
+  .hero-meta strong { color: var(--ink); font-weight: 600; }
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; padding: 22px 22px; }
+    .hero-meta { text-align: left; }
+    .hero h1 { font-size: 30px; }
+  }
+
+  /* ── HEALTH ROW ─────────────────────────────────────────── */
+  .health-row { display: flex; flex-wrap: wrap; gap: 0;
+    margin: 10px 0 0; padding: 10px 14px;
+    background: white; border: 1px solid var(--border);
+    font-size: 12.5px; }
+  .health-cell { padding: 2px 14px; border-right: 1px solid var(--border);
+    color: var(--muted); }
+  .health-cell:last-child { border-right: 0; }
+  .health-ok { color: var(--ok); }
+  .health-ok span, .health-warn { color: var(--warn); }
+  .health-fail { color: var(--fail); }
+  .health-dim { color: var(--dim); }
+
+  /* ── COMPASS ────────────────────────────────────────────── */
+  .compass { margin: 16px 0 0; padding: 12px 16px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-left: 3px solid var(--water);
+    font-size: 13.5px; color: var(--ink); line-height: 1.6; }
+  .compass strong { color: var(--ink); }
+  .compass em { color: var(--muted); font-style: italic; }
+  .compass a { color: var(--air); font-family: "JetBrains Mono", monospace;
+    font-size: 12.5px; }
+
+  /* ── NAV STRIP (sticky) ─────────────────────────────────── */
+  nav.strip { position: sticky; top: 0; z-index: 10;
+    display: flex; flex-wrap: wrap; gap: 4px; margin: 28px 0 36px;
+    padding: 10px 4px; background: var(--bg);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    font-size: 13px; align-items: center; }
+  nav.strip a { color: var(--muted); padding: 5px 12px; border-radius: 3px; }
+  nav.strip a:hover { color: var(--air); background: var(--bg-soft); text-decoration: none; }
+  nav.strip a.cta { margin-left: auto; color: var(--air); font-weight: 600; }
+
+  /* ── SECTIONS ──────────────────────────────────────────── */
+  h2.section { font-size: 20px; font-weight: 600; color: var(--ink);
+    margin: 56px 0 4px; letter-spacing: -0.01em; }
+  p.hint { color: var(--muted); font-size: 13.5px; line-height: 1.55;
+    margin: 0 0 18px; max-width: 78ch; }
+  p.hint code { background: var(--bg-soft); padding: 1px 6px;
+    font-size: 12.5px; color: var(--ink); }
+  /* legacy support — old curated sections may still use these */
+  h2.section .id { color: var(--air); }
+  .section-note { color: var(--muted); letter-spacing: 0; text-transform: none;
+    font-weight: normal; font-family: Inter, sans-serif; font-size: 13px; }
+
+  .prose { font-size: 15px; line-height: 1.6; }
+  .prose p { margin: 0 0 12px; }
+  .prose ul, .prose ol { margin: 0 0 14px; padding-left: 22px; }
+  .prose li { margin: 4px 0; }
+  .prose h3, .prose h4 { font-size: 14px; margin: 18px 0 6px;
+    font-family: "JetBrains Mono", monospace; color: var(--ink); }
+  .prose code { background: var(--bg-soft); padding: 1px 6px;
+    font-size: 13.5px; color: var(--ink); }
+  .prose a { color: var(--air); }
+
+  /* curated markdown tables */
+  .md-table-wrap { overflow-x: auto; margin: 0 0 14px; }
+  table.md-table { width: 100%; border-collapse: collapse;
+    font-size: 13.5px; font-family: "JetBrains Mono", monospace; }
+  table.md-table th, table.md-table td { padding: 8px 12px;
+    border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  table.md-table thead th { background: var(--bg-soft); color: var(--ink);
+    font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11.5px; }
+  table.md-table tr:hover td { background: var(--bg-soft); }
+
+  /* ── PICKUP ─────────────────────────────────────────────── */
+  .pickup-card { border: 1px solid var(--border); border-left: 4px solid var(--water);
+    background: white; padding: 16px 20px; }
+  .pickup-src { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .pickup-text { font-size: 15px; line-height: 1.6; margin: 0; color: var(--ink); }
+
+  /* ── LOOSE ENDS ─────────────────────────────────────────── */
+  .loose-grid { display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .loose-panel { border: 1px solid var(--border); background: white;
+    padding: 14px 16px; }
+  .loose-head { font-size: 12px; letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 4px;
+    display: flex; align-items: baseline; justify-content: space-between; }
+  .loose-count { font-size: 17px; font-weight: 700; }
+  .loose-sub { font-size: 12px; color: var(--muted); margin: 0 0 10px;
+    line-height: 1.45; }
+  .loose-list { margin: 0; padding: 0; list-style: none; font-size: 12.5px;
+    font-family: "JetBrains Mono", monospace; line-height: 1.7; }
+  .loose-list li { padding: 3px 0; border-bottom: 1px dashed var(--border);
+    word-break: break-all; }
+  .loose-list li:last-child { border-bottom: 0; }
+  .loose-list li.more { color: var(--muted); font-style: italic; border: 0; }
+  .loose-status { display: inline-block; min-width: 28px; padding: 1px 5px;
+    background: var(--bg-soft); color: var(--warn); font-size: 11.5px; margin-right: 4px; }
+  .loose-list .todo-text { color: var(--muted); font-family: Inter, sans-serif;
+    font-size: 12.5px; }
+  .loose-list code { background: transparent; color: var(--ink); padding: 0; }
+  .loose-panel .empty { font-size: 13px; }
+
+  /* ── WAVES + GRAPH ──────────────────────────────────────── */
+  .flow-frame { border: 1px solid var(--border);
+    background: linear-gradient(var(--bg-soft) 1px, transparent 1px) 0 0 / 100% 14px,
+                linear-gradient(90deg, var(--bg-soft) 1px, transparent 1px) 0 0 / 14px 100%,
+                var(--bg);
+    background-blend-mode: multiply; padding: 22px 12px 18px; overflow-x: auto; }
+  .flow-frame svg { display: block; width: 100%; min-width: 940px; height: auto; }
+  .waves-table { margin-top: 14px; }
+  .graph-embed { position: relative; border: 1px solid var(--border);
+    background: var(--bg-soft); border-radius: 4px; overflow: hidden; }
+  .graph-embed iframe { display: block; width: 100%; height: 78vh; min-height: 600px;
+    border: 0; background: white; }
+  .graph-embed .open-full { position: absolute; top: 10px; right: 14px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--air);
+    background: white; padding: 5px 10px; border: 1px solid var(--border);
+    border-radius: 3px; z-index: 2; text-decoration: none; }
+  .graph-embed .open-full:hover { background: var(--bg); }
+
+  /* ── DIRECTORY MAP TILES ────────────────────────────────── */
+  .dir-grid { display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px; }
+  .dir-tile { border: 1px solid var(--border);
+    border-top: 4px solid var(--tile-accent, var(--muted));
+    background: white; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.15s, background 0.15s; }
+  .dir-tile:hover { background: var(--bg-soft); border-color: var(--tile-accent); }
+  .dir-tile-name { font-size: 15px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.01em; word-break: break-all; }
+  .dir-tile-stats { display: flex; justify-content: space-between;
+    font-size: 12.5px; color: var(--muted); }
+  .dir-tile-kind { color: var(--tile-accent); font-weight: 600; letter-spacing: 0.02em; }
+  .dir-tile-count { color: var(--muted); }
+  .dir-tile-age { font-size: 11.5px; color: var(--muted); }
+
+  /* ── GRAPH PLACEHOLDER ──────────────────────────────────── */
+  .graph-placeholder { border: 1px dashed var(--border-2);
+    background: var(--bg-soft); padding: 22px 26px; }
+  .graph-placeholder p { margin: 0 0 12px; font-size: 14.5px; }
+  .graph-placeholder pre { background: white; border: 1px solid var(--border);
+    padding: 14px 16px; font-size: 12.5px; line-height: 1.55;
+    overflow-x: auto; margin: 12px 0; color: var(--ink); }
+
+  /* ── CARDS ──────────────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }
+  .card { border: 1px solid var(--border); padding: 14px 16px 15px;
+    background: white; transition: border-color 0.15s, background 0.15s; }
+  .card:hover { border-color: var(--air); background: var(--bg-soft); }
+  .card .id { font-family: "JetBrains Mono", monospace; font-size: 13.5px;
+    font-weight: 600; color: var(--air); letter-spacing: -0.01em; }
+  .card .id.cn { color: var(--water); }
+  .card .id.sc { color: var(--thesis); }
+  .card .id.pp { color: #5A5A5A; }
+  .card .path { font-family: "JetBrains Mono", monospace; font-size: 12.5px;
+    color: var(--ink); margin-top: 5px; word-break: break-all; }
+  .card .meta-line { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .card .extras { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .card .desc { font-size: 13.5px; color: var(--ink); margin-top: 8px; line-height: 1.5; }
+  .card .missing { color: var(--fail); font-weight: 600; }
+  .card .external { color: var(--muted); font-style: italic; }
+
+  /* ── GUARDRAIL CARDS ────────────────────────────────────── */
+  /* Colour-coded left border by kind so the eye can scan categories: */
+  /* orange = blocks the action; blue = test catches it; green = rules/runbook; grey = config. */
+  .guardrail-legend { display: flex; flex-wrap: wrap; gap: 16px;
+    margin: 6px 0 18px; font-size: 12.5px; color: var(--muted); }
+  .guardrail-legend .dot { display: inline-block; width: 9px; height: 9px;
+    border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .guardrail-grid { display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .guardrail-card { border: 1px solid var(--border); background: white;
+    padding: 14px 16px 12px; border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s;
+    border-left-width: 4px; }
+  .guardrail-card:hover { background: var(--bg-soft); }
+  .guardrail-card.k-block   { border-left-color: #C25A1D; }
+  .guardrail-card.k-test    { border-left-color: var(--air); }
+  .guardrail-card.k-config  { border-left-color: var(--dim); }
+  .guardrail-card.k-runbook { border-left-color: var(--water); }
+  .guardrail-card.k-rules   { border-left-color: var(--water); }
+  .guardrail-card .title { font-weight: 600; color: var(--ink);
+    font-size: 14.5px; letter-spacing: -0.005em; }
+  .guardrail-card .path { font-size: 11.5px; color: var(--air);
+    margin-top: 4px; word-break: break-all; }
+  .guardrail-card .path a { color: var(--air); }
+  .guardrail-card .protects { font-size: 13px; color: var(--ink);
+    margin-top: 8px; line-height: 1.5; }
+  .guardrail-card .when { font-size: 11.5px; color: var(--muted);
+    margin-top: 6px; font-style: italic; }
+  .guardrail-card .when::before { content: "When: "; font-style: normal;
+    text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px;
+    color: var(--muted); margin-right: 4px; }
+
+  /* ── DOC LISTS / TOUCH LISTS ────────────────────────────── */
+  .touch-list, .doc-list { margin: 8px 0 0; padding: 0; list-style: none; }
+  .touch-list li, .doc-list li { padding: 6px 0; font-size: 14.5px;
+    border-bottom: 1px dashed var(--border); }
+  .touch-list li:last-child, .doc-list li:last-child { border-bottom: 0; }
+  .touch-list code, .doc-list code { color: var(--air); background: var(--bg-soft);
+    padding: 1px 6px; font-size: 13px; }
+  .doc-list .note { color: var(--muted); font-family: Inter, sans-serif; font-size: 13px; }
+
+  #superseded { opacity: 0.65; }
+  #superseded:hover { opacity: 1; }
+  .empty { color: var(--muted); font-style: italic; }
+
+  footer { max-width: 1080px; margin: 40px auto 0;
+    padding: 22px 32px 32px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer code { background: var(--bg-soft); padding: 1px 5px; color: var(--ink); }
+  @media (max-width: 720px) {
+    .wrap { padding: 20px 18px 40px; }
+    section.fullwidth { padding: 24px 18px 60px; }
+    footer { padding: 22px 18px 30px; }
+    .health-row { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  
+  <header class="hero" style="--accent:#2D8659">
+    <div class="hero-main">
+      <p class="eyebrow">Dashboard for sciforce</p>
+      <h1>sciforce</h1>
+      <p class="oneliner">Broforce-style run-and-gun platformer: an 18-mission campaign against the Anti-Science League that gets harder mission by mission, three bonus modes (Lab Siege, Boss Rush, Moon Base), 19 trophies,…</p>
+      <p class="status-line">
+        <span class="pill" style="background:#2D8659">ACTIVE</span>
+        <span class="reason mono">last commit 5 h ago · 6 uncommitted</span>
+      </p>
+      <p class="next mono"><span class="next-tag">NEXT →</span> finish or roll back 6 uncommitted files</p>
+    </div>
+    <div class="hero-meta mono">
+      <div>branch <strong>feature/aim-melee-random-maps</strong></div>
+      <div>2026-10-21 05:35</div>
+      <div class="dim">scripts/build_hub.py</div>
+    </div>
+  </header>
+
+  <div class="health-row mono"><span class="health-cell health-ok">●&nbsp;README</span><span class="health-cell health-ok">●&nbsp;CLAUDE.md</span><span class="health-cell health-ok">●&nbsp;CONTEXT.md</span><span class="health-cell health-warn">◐&nbsp;git: 6 dirty</span><span class="health-cell health-ok">●&nbsp;remote synced</span><span class="health-cell health-ok">●&nbsp;scripts/ (1)</span><span class="health-cell health-ok">●&nbsp;canonical OK</span></div>
+
+  <p class="compass">
+    <strong>How to read this page:</strong>
+    the card at the top says what this project <em>is</em> and where you left off ·
+    the coloured row shows what's healthy and what isn't ·
+    <a href="#loose_ends">Loose ends</a> lists what's still open ·
+    <a href="#waves">Phases of work</a> is the timeline ·
+    <a href="#map">Folder map</a> is the folder layout ·
+    <a href="#canonical">Important files</a> are the source-of-truth files ·
+    everything below that is reference.
+    The interactive <a href="#graph">Code map</a> lives at the very bottom of the page.
+  </p>
+
+  <nav class="strip">
+    <a href="#status">Status</a>
+    <a href="#guardrails">Guardrails</a>
+    <a href="#pickup">Where we left off</a>
+    <a href="#loose_ends">Loose ends</a>
+    <a href="#waves">Phases</a>
+    <a href="#map">Folder map</a>
+    <a href="#canonical">Important files</a>
+    <a href="#concepts">Glossary</a>
+    <a href="#scripts">Scripts</a>
+    <a href="#decisions">Decisions</a>
+    <a href="#plans">Plans</a>
+    <a href="#collaborators">People</a>
+    <a href="#activity">Recent activity</a>
+    <a href="#superseded">Archived</a>
+    
+  </nav>
+
+  
+  <section id="status">
+        <h2 class="section">Status</h2>
+    <p class="hint">A one-glance verdict on whether this project is alive, paused, or shelved. Pulled from a curated status line where possible, otherwise inferred from how recent the last commit is (a repo that hasn't moved in six months gets flagged DORMANT). Read this first to decide if it's even worth digging in.</p>
+    <div class="prose"><p>The project is currently <strong>ACTIVE</strong> — last commit 5 h ago · 6 uncommitted.</p><p style="margin-top:14px">From here you can:</p><ul class="touch-list"><li>See which files hold the current source of truth → <a href="#canonical">Important files</a></li><li>Look up project-specific words → <a href="#concepts">Glossary</a></li><li>Run a script to refresh something → <a href="#scripts">Scripts</a></li><li>Read why decisions were made → <a href="#decisions">Decisions</a></li><li>See what's been retired → <a href="#superseded">Archived</a></li></ul></div>
+  </section>
+
+  
+  <section id="guardrails">
+        <h2 class="section">Guardrails</h2>
+    <p class="hint">The safety nets that stop accidents — pre-commit hooks, CI workflows, check-/verify-/lint- scripts, policy tests, secret-scan configs, ops runbooks, and the NEVER/ALWAYS rulebook in CLAUDE.md. Each card shows the file the check lives in and when it runs. If one of these fails, fix the underlying problem; don't bypass the check with --no-verify or by deleting the test.</p>
+    <div class="guardrail-legend mono">
+      <span><span class="dot" style="background:#C25A1D"></span>Blocks the action</span>
+      <span><span class="dot" style="background:var(--air)"></span>Test catches it</span>
+      <span><span class="dot" style="background:var(--water)"></span>Rules &amp; runbooks</span>
+      <span><span class="dot" style="background:var(--dim)"></span>Configuration</span>
+    </div>
+    <p class="empty">No guardrails auto-detected. Common patterns: <code>.husky/*</code>, <code>.github/workflows/*</code>, <code>scripts/check-*.sh</code>, policy tests like <code>rls.test.ts</code>, and a NEVER/ALWAYS section in <code>CLAUDE.md</code>. Add curated ones via <code>hub.yaml</code> → <code>guardrails:</code> or a <code>## :guardrails</code> table in <code>HUB.md</code>.</p>
+  </section>
+
+  
+  <section id="pickup">
+        <h2 class="section">Where we left off</h2>
+    <p class="hint">Where the last working session ended, lifted verbatim from the most recent handover note (CHECKPOINT.md, SESSION.md, or HANDOVER.md). Think of it as a sticky note from past-you to present-you — usually the fastest way back into the work without re-reading everything.</p>
+    <div class="pickup-card">
+      <div class="pickup-src mono">from <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/HANDOVER.md">HANDOVER.md</a>
+        <span class="dim">· modified 0 min ago</span></div>
+      <p class="pickup-text">Three rounds of work are done on branch `feature/aim-melee-random-maps` and are open as PR #2 (https://github.com/ttmgr/sciforce/pull/2), not yet merged into main. Round 1 added aiming, walking backwards while shooting, 3 melee bros, longer maps and random bros. Round 2 added weapon-based destruction, the random map generator, more quacks, mech exit and boss damage fixes. Round 3 added underground levels (40 rows), fancier maps, more gore, 8 more quacks, difficulty and density settings and…</p>
+    </div>
+  </section>
+
+  
+  <section id="loose_ends">
+        <h2 class="section">Loose ends</h2>
+    <p class="hint">Everything that's mid-air right now in your local working copy and git history. Uncommitted edits, commits sitting locally that nobody else can see yet, TODO and FIXME notes scattered in the code, and any files with 'draft' or 'wip' in the name. If you want to leave a clean slate before stepping away, this is the to-do list.</p>
+    <div class="loose-grid"><div class="loose-panel"><div class="loose-head mono">UNCOMMITTED <span class="loose-count" style="color:#B5651D">6</span></div><p class="loose-sub">Files you changed but haven&#39;t committed yet. Finish them or roll them back before you forget.</p><ul class="loose-list"><li><code class="loose-status">M</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/.gitignore">.gitignore</a></li><li><code class="loose-status">??</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/CONTEXT.md">CONTEXT.md</a></li><li><code class="loose-status">??</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/HANDOVER.md">HANDOVER.md</a></li><li><code class="loose-status">??</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/LEARNINGS.md">LEARNINGS.md</a></li><li><code class="loose-status">??</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/docs/">docs/</a></li><li><code class="loose-status">??</code> <a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/scripts/">scripts/</a></li></ul></div><div class="loose-panel"><div class="loose-head mono">UNPUSHED <span class="loose-count" style="color:#2D8659">0</span></div><p class="loose-sub">Commits sitting on your laptop that haven&#39;t reached the remote. A `git push` away from being shared.</p><p class="empty">remote synced</p></div><div class="loose-panel"><div class="loose-head mono">TODO / FIXME <span class="loose-count" style="color:#2D8659">0</span></div><p class="loose-sub">Notes you (or someone) left in the code for later. Each one is a small unfinished thing.</p><p class="empty">none</p></div><div class="loose-panel"><div class="loose-head mono">DRAFTS (7d) <span class="loose-count" style="color:#2D8659">0</span></div><p class="loose-sub">Files whose name contains &#39;draft&#39;, &#39;wip&#39;, or &#39;scratch&#39; and were touched in the last week. Likely in-progress.</p><p class="empty">none recent</p></div></div>
+  </section>
+
+
+  <section id="waves">
+        <h2 class="section">Phases of work</h2>
+    <p class="hint">A horizontal timeline of the phases this project has moved through, with each circle sized by how busy that phase was. Useful for spotting whether you're in a flurry of work or a quiet stretch, and for remembering what big chunks of effort came before (e.g. an early 'data ingestion' phase, then a later 'paper writing' phase). The newest phase is highlighted.</p>
+    <div class="flow-frame"><svg viewBox="0 0 1080 150" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" style="font-family:'JetBrains Mono','SF Mono',Menlo,monospace;">
+<line x1="40" y1="65" x2="1040" y2="65" stroke="#D5D5D5" stroke-width="1"/>
+<text x="540" y="33" text-anchor="middle" font-size="11" fill="#6B6B6B">oct 2026</text>
+<circle cx="540" cy="65" r="24" fill="#2D8659"/>
+<text x="540" y="70" text-anchor="middle" fill="white" font-size="12" font-weight="700">W1</text>
+<text x="540" y="113" text-anchor="middle" font-size="10.5" fill="#6B6B6B">62 commits</text>
+</svg></div>
+    
+  </section>
+
+  
+  <section id="map">
+        <h2 class="section">Folder map</h2>
+    <p class="hint">A directory-level overview of the repo, one tile per top-level folder. Tiles are colour-coded by what's mostly inside (code, docs, data, figures) and show file counts plus when the folder was last touched, newest first. Good for getting the lay of the land in three seconds.</p>
+    <div class="dir-grid"><div class="dir-tile" style="--tile-accent:#B5651D"><div class="dir-tile-name mono">docs/</div><div class="dir-tile-stats"><span class="dir-tile-kind">docs</span><span class="dir-tile-count mono">1 file</span></div><div class="dir-tile-age mono">touched 0 min ago</div></div><div class="dir-tile" style="--tile-accent:#2471A3"><div class="dir-tile-name mono">scripts/</div><div class="dir-tile-stats"><span class="dir-tile-kind">code</span><span class="dir-tile-count mono">1 file</span></div><div class="dir-tile-age mono">touched 0 min ago</div></div><div class="dir-tile" style="--tile-accent:#2471A3"><div class="dir-tile-name mono">science-bros/</div><div class="dir-tile-stats"><span class="dir-tile-kind">code</span><span class="dir-tile-count mono">35 files</span></div><div class="dir-tile-age mono">touched 5 h ago</div></div></div>
+  </section>
+
+
+  <section id="canonical">
+        <h2 class="section">Important files</h2>
+    <p class="hint">The official source-of-truth files for this project. If anything else in the repo disagrees with these, these win — everything not listed here is historical, draft, or auxiliary and can be ignored. Each card shows the file's age and warns if it's gone missing from disk.</p>
+    <div class="grid"><div class="card"><div class="id">:README</div><div class="path"><a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/README.md">README.md</a></div><div class="meta-line mono">modified 5 h ago</div><div class="desc">Project README — first-read entry point.</div></div><div class="card"><div class="id">:CLAUDE.md</div><div class="path"><a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/CLAUDE.md">CLAUDE.md</a></div><div class="meta-line mono">modified 0 min ago</div><div class="desc">Agent rules + project conventions.</div></div><div class="card"><div class="id">:CONTEXT.md</div><div class="path"><a href="vscode://file//Users/ttreska57/Documents/sciforce/sciforce/CONTEXT.md">CONTEXT.md</a></div><div class="meta-line mono">modified 0 min ago</div><div class="desc">Domain vocabulary.</div></div></div>
+  </section>
+
+  <section id="concepts">
+        <h2 class="section">Glossary</h2>
+    <p class="hint">A small glossary of project-specific terms that keep showing up in commits, memos, and code (things like 'dual_threshold' or 'competitive_mapping'). Each entry pairs the term with a short definition so you don't have to reverse-engineer the meaning from context months down the line.</p>
+    <div class="grid"><div class="card"><div class="id cn">:bro</div><div class="desc">a playable scientist (38 in all, 3 of them melee bros). A new run starts with <code>START_BROS</code> (10) random bros; the rest are unlocked by freeing them from cages. After a death the next bro is random, never the one who…</div></div><div class="card"><div class="id cn">:quack</div><div class="desc">any enemy. Bosses are separate and have their own wake-up rule.</div></div><div class="card"><div class="id cn">:T</div><div class="desc">tile size in pixels (16). A level is <code>LW</code> x <code>LH</code> tiles (376 x 40).</div></div><div class="card"><div class="id cn">:GH</div><div class="desc">ground height row (22). Rows 0-21 are the classic surface level; rows 22-38 are earth and row 39 is steel bedrock, filled by <code>deepen()</code>.</div></div><div class="card"><div class="id cn">:stretch</div><div class="desc">the extra 140 columns (<code>STRETCH</code>) inserted before each boss arena. Levels are built 236 wide, then <code>slideArena()</code> moves the arena right from <code>cutAt</code> and <code>buildStretch()</code> fills the gap. Hard-coded arena columns must…</div></div><div class="card"><div class="id cn">:underground zone</div><div class="desc">a mine, bunker, sewer, cavern or lab (<code>UG_KINDS</code>) below row 22, reached by shaft, ladder, lift or cracked floor.</div></div><div class="card"><div class="id cn">:random mission</div><div class="desc">a map made from scratch by <code>genLevel(seed, diff)</code> from segment and arena tables (<code>SEG_META</code>, <code>ARENA_META</code>). Same seed gives the same tiles; <code>?seed=</code> replays one.</div></div><div class="card"><div class="id cn">:aim</div><div class="desc">holding the aim key keeps the facing fixed so the bro can walk backwards and still shoot forwards; Up tilts the gun. <code>aimShots</code> applies it; weapons in <code>NO_AIM</code> keep their own path.</div></div><div class="card"><div class="id cn">:blame</div><div class="desc">global that records who caused a hit, so the player&#39;s own weapons never kill the player.</div></div><div class="card"><div class="id cn">:DESTRUCT / wreck()</div><div class="desc">per-weapon terrain damage by material (earth, brick, crate, ice, steel).</div></div><div class="card"><div class="id cn">:BOSS_MUL</div><div class="desc">per-weapon damage multiplier against bosses, tuned so every bro can beat every boss.</div></div><div class="card"><div class="id cn">:difficulty / density</div><div class="desc">two separate saved settings. <code>DIFFS</code> (EASY, NORMAL, HARD, INSANE) changes how hard fights are; <code>DENS</code> / <code>densMul</code> (25% to 300%) changes how many quacks spawn. NORMAL at 100% is the original game.</div></div><div class="card"><div class="id cn">:gore</div><div class="desc">setting 0 (off), 1 (on) or 2 (extra). Robots and bosses leak their own colour (<code>LEAK</code>) instead of blood.</div></div><div class="card"><div class="id cn">:test hooks</div><div class="desc"><code>window.__SB_TEST__</code> and <code>window.__SB__</code>, filled by <code>Object.assign</code> lines at the bottom of the script. Values that change must be exposed as functions, not copied values.</div></div></div>
+  </section>
+
+  <section id="scripts">
+        <h2 class="section">Scripts you can run</h2>
+    <p class="hint">The runnable entry points of the repo — Python scripts, npm tasks, Makefile targets — each one paired with what it produces. Treat this as the 'how does anything in here get made' index. If you want to know which command regenerates a given figure or table, start here.</p>
+    <div class="grid"><div class="card"><div class="id sc">:build_hub.py</div><div class="path">scripts/build_hub.py</div></div></div>
+  </section>
+
+  <section id="decisions">
+        <h2 class="section">Decisions</h2>
+    <p class="hint">Architecture Decision Records (ADRs) — one short Markdown file per past design call, kept under docs/adr/. They explain WHY the code looks the way it does, so future-you doesn't undo a deliberate choice by accident. Worth a skim before any refactor that feels obvious.</p>
+    <ul class="doc-list"><li class="empty">No ADRs in docs/adr/.</li></ul>
+  </section>
+
+  <section id="plans">
+        <h2 class="section">Plans</h2>
+    <p class="hint">Implementation plans that are mid-flight, one Markdown file each under docs/plans/. Each plan is a task-by-task breakdown for a feature still being built, with the boxes that are done and the ones still open. Open one to see what's next on the build list.</p>
+    <ul class="doc-list"><li class="empty">No plans in docs/plans/.</li></ul>
+  </section>
+
+  <section id="collaborators">
+        <h2 class="section">People</h2>
+    <p class="hint">Everyone who has touched this repo via git, plus anyone explicitly credited in the curated list. Handy when you need to track down who originally wrote a chunk of code or owns a particular module and your memory is blank.</p>
+    <div class="grid"><div class="card"><div class="id pp">:Tim Reska</div><div class="desc">62 commits</div></div></div>
+  </section>
+
+  <section id="activity">
+        <h2 class="section">Recent activity</h2>
+    <p class="hint">The last eight commits to the repo, newest first, with the author and how long ago each one landed. A quick pulse-check on what's moved recently — useful for catching changes someone else made while you were away.</p>
+    <ul class="doc-list"><li><code>45b6de8</code> Pin Einstein in the enemies test: a new run starts with random bros <span class="note">(6 hours ago)</span></li><li><code>dfdca2f</code> Merge underground maps: 40-row levels, shafts, tunnels and five underground kinds <span class="note">(6 hours ago)</span></li><li><code>1baf339</code> Merge feature/aim-melee-random-maps into the underground branch <span class="note">(6 hours ago)</span></li><li><code>a50eeb4</code> Maps that go underground: 40-row levels, shafts, tunnels, bunkers, sewers, caverns, labs <span class="note">(6 hours ago)</span></li><li><code>3357eee</code> Merge difficulty and enemy density settings <span class="note">(6 hours ago)</span></li><li><code>29d789a</code> Merge fancier maps: tile variants, edges, decoration, back structures, landmarks <span class="note">(6 hours ago)</span></li><li><code>9f01fea</code> Merge eight more quacks and mixed enemy groups <span class="note">(6 hours ago)</span></li><li><code>936842b</code> Merge the real-life satire story pass <span class="note">(6 hours ago)</span></li></ul>
+  </section>
+
+  <section id="superseded">
+        <h2 class="section">Archived</h2>
+    <p class="hint">Folders kept around purely for historical reference — old versions, backups, archived runs (anything matching patterns like _old, _v2, *backup*, or *.archived-*). Dimmed on purpose so it doesn't compete for attention; only dig in here if you specifically need to look at how something used to be.</p>
+    <ul class="doc-list"><li class="empty">Nothing matched common superseded patterns.</li></ul>
+  </section>
+
+</div>
+
+
+<section id="graph" class="fullwidth">
+    <h2 class="section">Code map</h2>
+    <p class="hint">A draggable bubble diagram of the same top-level folders, with lines drawn between folders that depend on each other — for example, a scripts folder linked to the outputs folder it writes into. Useful for spotting which parts of the repo are tightly coupled and which sit on their own. Scroll to zoom, click a circle to focus on what it touches.  Install the curated <code>docs/INDEX.html</code> layer for a richer file-level view.</p>
+    <div class="auto-graph-wrap">
+<style>
+  .auto-graph-wrap { position: relative; width: 100%; height: 720px;
+    border: 1px solid rgba(17,24,39,0.08); border-radius: 10px;
+    background: radial-gradient(ellipse at center, #fff 0%, #fafafa 70%);
+    overflow: hidden; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    color: #111827; }
+  .auto-graph-wrap svg { width: 100%; height: 100%; cursor: grab;
+    user-select: none; display: block; }
+  .auto-graph-wrap svg.dragging { cursor: grabbing; }
+  .auto-graph-wrap .edge { stroke: rgba(17,24,39,0.18); stroke-width: 1; fill: none; }
+  .auto-graph-wrap .edge.hi { stroke: #f59e0b; stroke-width: 2; }
+  .auto-graph-wrap .node circle { stroke: white; stroke-width: 2; cursor: pointer; }
+  .auto-graph-wrap .node.selected circle { stroke: #316D33; stroke-width: 3; }
+  .auto-graph-wrap .node.dim { opacity: 0.18; }
+  .auto-graph-wrap .node text { font: 11px "JetBrains Mono", ui-monospace, monospace;
+    pointer-events: none; fill: #111827; text-anchor: middle;
+    dominant-baseline: hanging; paint-order: stroke;
+    stroke: white; stroke-width: 3; }
+  .auto-graph-wrap .ag-legend { position: absolute; top: 14px; right: 14px; z-index: 5;
+    background: #fff; border: 1px solid rgba(17,24,39,0.08); border-radius: 8px;
+    padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); font-size: 12px; }
+  .auto-graph-wrap .ag-legend .row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .auto-graph-wrap .ag-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .auto-graph-wrap .ag-info { position: absolute; top: 120px; right: 14px; z-index: 5;
+    width: 260px; background: #fff; border: 1px solid rgba(17,24,39,0.08);
+    border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    font-size: 12px; display: none; }
+  .auto-graph-wrap .ag-info.show { display: block; }
+  .auto-graph-wrap .ag-info h3 { margin: 0 0 4px; font-size: 14px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; word-break: break-all; }
+  .auto-graph-wrap .ag-info .badge { display: inline-block; padding: 2px 8px;
+    border-radius: 999px; font-size: 11px; color: white; margin-bottom: 8px; }
+  .auto-graph-wrap .ag-info .meta { color: #6b7280; margin: 0 0 8px; }
+  .auto-graph-wrap .ag-info h4 { margin: 10px 0 4px; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; }
+  .auto-graph-wrap .ag-info .links a { display: inline-block; padding: 3px 8px;
+    margin: 2px 4px 2px 0; background: rgba(37,99,235,0.08); color: #2563EB;
+    border-radius: 6px; cursor: pointer; text-decoration: none;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; }
+  .auto-graph-wrap .ag-info .links a:hover { background: rgba(37,99,235,0.16); }
+  .auto-graph-wrap .ag-info .empty { color: #6b7280; font-style: italic; }
+</style>
+<div class="ag-legend"></div>
+<div class="ag-info"></div>
+<svg viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet"></svg>
+<script>
+(function() {
+  const DATA = {"nodes": [{"name": "docs", "count": 1, "kind": "docs", "age": "0 min ago", "color": "#B5651D", "mtime": 1792553708.5904074}, {"name": "scripts", "count": 1, "kind": "code", "age": "0 min ago", "color": "#2471A3", "mtime": 1792553707.855944}, {"name": "science-bros", "count": 35, "kind": "code", "age": "5 h ago", "color": "#2471A3", "mtime": 1792533029.3887057}], "edges": []};
+  const WRAP = document.currentScript.parentElement;
+  const SVG = WRAP.querySelector("svg");
+  const LEGEND = WRAP.querySelector(".ag-legend");
+  const INFO = WRAP.querySelector(".ag-info");
+  const VBW = 1200, VBH = 720;
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+  }
+
+  const kinds = [];
+  const kindColor = {};
+  for (const n of DATA.nodes) {
+    if (!(n.kind in kindColor)) { kinds.push(n.kind); kindColor[n.kind] = n.color; }
+  }
+  for (const k of kinds) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<span class="dot" style="background:${kindColor[k]}"></span>${escapeHtml(k)}`;
+    LEGEND.appendChild(row);
+  }
+
+  const groupCentroids = {};
+  kinds.forEach((k, i) => {
+    const angle = (i / Math.max(1, kinds.length)) * Math.PI * 2;
+    groupCentroids[k] = { x: Math.cos(angle) * 0.30, y: Math.sin(angle) * 0.30 };
+  });
+
+  const nodes = DATA.nodes.map(n => {
+    const c = groupCentroids[n.kind] || { x: 0, y: 0 };
+    return {
+      name: n.name, count: n.count, kind: n.kind, age: n.age, color: n.color,
+      radius: 9 + Math.sqrt(n.count) * 3,
+      x: c.x + (Math.random() - 0.5) * 0.12,
+      y: c.y + (Math.random() - 0.5) * 0.12,
+      vx: 0, vy: 0, fx: null, fy: null,
+    };
+  });
+  const idx = Object.fromEntries(nodes.map((n, i) => [n.name, i]));
+
+  const seen = new Set();
+  const edges = [];
+  for (const e of DATA.edges) {
+    if (!(e.a in idx) || !(e.b in idx)) continue;
+    const key = e.a < e.b ? e.a + "\u0001" + e.b : e.b + "\u0001" + e.a;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    edges.push({ source: idx[e.a], target: idx[e.b] });
+  }
+
+  const adj = {};
+  for (const n of nodes) adj[n.name] = new Set();
+  for (const e of edges) {
+    adj[nodes[e.source].name].add(nodes[e.target].name);
+    adj[nodes[e.target].name].add(nodes[e.source].name);
+  }
+
+  const REPULSION = 0.00045, SPRING_K = 0.020, SPRING_LEN = 0.20;
+  const GRAVITY = 0.012, GROUP_PULL = 0.022, DAMPING = 0.86;
+
+  function tick() {
+    for (const n of nodes) {
+      if (n.fx !== null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }
+      let ax = 0, ay = 0;
+      for (const m of nodes) {
+        if (m === n) continue;
+        const dx = n.x - m.x, dy = n.y - m.y;
+        const d2 = dx*dx + dy*dy + 0.0001;
+        const f = REPULSION / d2;
+        ax += dx * f; ay += dy * f;
+      }
+      ax += -n.x * GRAVITY; ay += -n.y * GRAVITY;
+      const c = groupCentroids[n.kind];
+      if (c) { ax += (c.x - n.x) * GROUP_PULL; ay += (c.y - n.y) * GROUP_PULL; }
+      n.vx = (n.vx + ax) * DAMPING;
+      n.vy = (n.vy + ay) * DAMPING;
+      n.x += n.vx; n.y += n.vy;
+    }
+    for (const e of edges) {
+      const a = nodes[e.source], b = nodes[e.target];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx*dx + dy*dy) + 0.0001;
+      const delta = (dist - SPRING_LEN) * SPRING_K;
+      const fx = (dx / dist) * delta, fy = (dy / dist) * delta;
+      if (a.fx === null) { a.vx += fx; a.vy += fy; a.x += fx; a.y += fy; }
+      if (b.fx === null) { b.vx -= fx; b.vy -= fy; b.x -= fx; b.y -= fy; }
+    }
+  }
+
+  for (let i = 0; i < 400; i++) tick();
+
+  const ns = "http://www.w3.org/2000/svg";
+  let viewScale = 1.0, viewX = 0, viewY = 0;
+  const gRoot = document.createElementNS(ns, "g");
+  const gEdges = document.createElementNS(ns, "g");
+  const gNodes = document.createElementNS(ns, "g");
+  gRoot.appendChild(gEdges); gRoot.appendChild(gNodes);
+  SVG.appendChild(gRoot);
+
+  const edgeEls = edges.map(() => {
+    const ln = document.createElementNS(ns, "line");
+    ln.setAttribute("class", "edge");
+    gEdges.appendChild(ln);
+    return ln;
+  });
+
+  const nodeEls = nodes.map(n => {
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("class", "node");
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("r", n.radius);
+    c.setAttribute("fill", n.color);
+    const t = document.createElementNS(ns, "text");
+    t.setAttribute("y", n.radius + 4);
+    t.textContent = n.name + "/";
+    g.appendChild(c); g.appendChild(t);
+    gNodes.appendChild(g);
+    g.addEventListener("click", ev => { ev.stopPropagation(); select(n.name); });
+    g.addEventListener("pointerdown", ev => {
+      ev.stopPropagation();
+      const p = toWorld(ev.clientX, ev.clientY);
+      n.fx = p.x; n.fy = p.y;
+      g.setPointerCapture(ev.pointerId);
+      const move = mv => { const q = toWorld(mv.clientX, mv.clientY); n.fx = q.x; n.fy = q.y; };
+      const up = () => {
+        try { g.releasePointerCapture(ev.pointerId); } catch (e) {}
+        g.removeEventListener("pointermove", move);
+        g.removeEventListener("pointerup", up);
+        setTimeout(() => { n.fx = null; n.fy = null; }, 600);
+      };
+      g.addEventListener("pointermove", move);
+      g.addEventListener("pointerup", up);
+    });
+    return g;
+  });
+
+  function worldToScreen() {
+    const scale = Math.min(VBW, VBH) * 0.9 * viewScale;
+    const cx = VBW / 2 + viewX, cy = VBH / 2 + viewY;
+    return { scale, cx, cy };
+  }
+  function toWorld(sx, sy) {
+    const r = SVG.getBoundingClientRect();
+    const ux = (sx - r.left) * (VBW / r.width);
+    const uy = (sy - r.top) * (VBH / r.height);
+    const { scale, cx, cy } = worldToScreen();
+    return { x: (ux - cx) / scale, y: (uy - cy) / scale };
+  }
+  function render() {
+    const { scale, cx, cy } = worldToScreen();
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i], a = nodes[e.source], b = nodes[e.target], ln = edgeEls[i];
+      ln.setAttribute("x1", cx + a.x * scale);
+      ln.setAttribute("y1", cy + a.y * scale);
+      ln.setAttribute("x2", cx + b.x * scale);
+      ln.setAttribute("y2", cy + b.y * scale);
+    }
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      nodeEls[i].setAttribute("transform", `translate(${cx + n.x * scale}, ${cy + n.y * scale})`);
+    }
+  }
+  function loop() { tick(); render(); requestAnimationFrame(loop); }
+  loop();
+
+  let panning = false, panStart = null;
+  SVG.addEventListener("pointerdown", ev => {
+    if (ev.target.closest(".node")) return;
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY, vx: viewX, vy: viewY, r: SVG.getBoundingClientRect() };
+    SVG.classList.add("dragging");
+    SVG.setPointerCapture(ev.pointerId);
+  });
+  SVG.addEventListener("pointermove", ev => {
+    if (!panning) return;
+    const sx = (ev.clientX - panStart.x) * (VBW / panStart.r.width);
+    const sy = (ev.clientY - panStart.y) * (VBH / panStart.r.height);
+    viewX = panStart.vx + sx; viewY = panStart.vy + sy;
+  });
+  SVG.addEventListener("pointerup", ev => {
+    panning = false; SVG.classList.remove("dragging");
+    try { SVG.releasePointerCapture(ev.pointerId); } catch (e) {}
+  });
+  SVG.addEventListener("wheel", ev => {
+    ev.preventDefault();
+    const factor = Math.exp(-ev.deltaY * 0.001);
+    viewScale = Math.max(0.3, Math.min(4, viewScale * factor));
+  }, { passive: false });
+  SVG.addEventListener("click", ev => {
+    if (ev.target.closest(".node")) return;
+    clearSelection();
+  });
+
+  function clearSelection() {
+    for (const el of nodeEls) { el.classList.remove("selected"); el.classList.remove("dim"); }
+    for (const el of edgeEls) el.classList.remove("hi");
+    INFO.classList.remove("show");
+  }
+  function select(name) {
+    const neigh = new Set([name, ...adj[name]]);
+    for (let i = 0; i < nodes.length; i++) {
+      nodeEls[i].classList.toggle("selected", nodes[i].name === name);
+      nodeEls[i].classList.toggle("dim", !neigh.has(nodes[i].name));
+    }
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      const hot = nodes[e.source].name === name || nodes[e.target].name === name;
+      edgeEls[i].classList.toggle("hi", hot);
+    }
+    const n = nodes[idx[name]];
+    const linked = [...adj[name]];
+    const linkHtml = linked.length
+      ? `<div class="links">${linked.map(x => `<a data-jump="${escapeHtml(x)}">${escapeHtml(x)}/</a>`).join("")}</div>`
+      : `<p class="empty">No linked dirs.</p>`;
+    INFO.innerHTML = `
+      <h3>${escapeHtml(n.name)}/</h3>
+      <span class="badge" style="background:${n.color}">${escapeHtml(n.kind)}</span>
+      <p class="meta">${n.count} file${n.count === 1 ? "" : "s"} &middot; ${escapeHtml(n.age)}</p>
+      <h4>Linked dirs (${linked.length})</h4>
+      ${linkHtml}
+    `;
+    INFO.classList.add("show");
+    INFO.querySelectorAll("a[data-jump]").forEach(a =>
+      a.addEventListener("click", ev => { ev.preventDefault(); select(a.dataset.jump); }));
+  }
+})();
+</script>
+</div>
+</section>
+
+
+<footer>
+  <span>This page rebuilds itself from the project — don't edit it directly. Curate via <code>HUB.md</code> and <code>docs/hub.yaml</code>.</span>
+  <span>Updated 2026-10-21 05:35</span>
+</footer>
+
+</body>
+</html>

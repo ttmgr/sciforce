@@ -1,0 +1,41 @@
+# CONTEXT.md — domain model
+
+## What this project is
+
+Science Bros is a Broforce-style run-and-gun platformer in one self-contained
+file, `science-bros/index.html` (plain JS in one script tag, canvas 480x270,
+no build step, no dependencies). Scientist "bros" fight the Anti-Science
+League's "quacks" through an 18-mission satire campaign, three bonus modes and
+endless random missions. Headless Node tests in `science-bros/tests/` check the
+logic with canvas and DOM stubbed.
+
+## Vocabulary
+
+- **bro** — a playable scientist (38 in all, 3 of them melee bros). A new run starts with `START_BROS` (10) random bros; the rest are unlocked by freeing them from cages. After a death the next bro is random, never the one who just died.
+- **quack** — any enemy. Bosses are separate and have their own wake-up rule.
+- **T** — tile size in pixels (16). A level is `LW` x `LH` tiles (376 x 40).
+- **GH** — ground height row (22). Rows 0-21 are the classic surface level; rows 22-38 are earth and row 39 is steel bedrock, filled by `deepen()`.
+- **stretch** — the extra 140 columns (`STRETCH`) inserted before each boss arena. Levels are built 236 wide, then `slideArena()` moves the arena right from `cutAt` and `buildStretch()` fills the gap. Hard-coded arena columns must go through `arenaCol()`.
+- **underground zone** — a mine, bunker, sewer, cavern or lab (`UG_KINDS`) below row 22, reached by shaft, ladder, lift or cracked floor.
+- **random mission** — a map made from scratch by `genLevel(seed, diff)` from segment and arena tables (`SEG_META`, `ARENA_META`). Same seed gives the same tiles; `?seed=` replays one.
+- **aim** — holding the aim key keeps the facing fixed so the bro can walk backwards and still shoot forwards; Up tilts the gun. `aimShots` applies it; weapons in `NO_AIM` keep their own path.
+- **blame** — global that records who caused a hit, so the player's own weapons never kill the player.
+- **DESTRUCT / wreck()** — per-weapon terrain damage by material (earth, brick, crate, ice, steel).
+- **BOSS_MUL** — per-weapon damage multiplier against bosses, tuned so every bro can beat every boss.
+- **difficulty / density** — two separate saved settings. `DIFFS` (EASY, NORMAL, HARD, INSANE) changes how hard fights are; `DENS` / `densMul` (25% to 300%) changes how many quacks spawn. NORMAL at 100% is the original game.
+- **gore** — setting 0 (off), 1 (on) or 2 (extra). Robots and bosses leak their own colour (`LEAK`) instead of blood.
+- **test hooks** — `window.__SB_TEST__` and `window.__SB__`, filled by `Object.assign` lines at the bottom of the script. Values that change must be exposed as functions, not copied values.
+
+## Invariants
+
+1. The game stays one HTML file with no build step and no external requests.
+2. NORMAL difficulty at 100% density plays exactly like the game before those settings existed.
+3. No quack fires in the first 10 seconds of a mission, and nothing spawns within 20 tiles of the start or inside a wall.
+4. The player's own weapons never kill the player; enemy hazards still do.
+5. Story text uses made-up names only. `tests/satire.js` blocks about 100 real brand, platform, company and living-person names.
+6. Every test file takes the game path as its argument and exits 1 on any failure.
+
+## Boundaries
+
+- Out of scope: online play, accounts, servers, analytics, any external asset or library.
+- Out of scope: real people or real brands in the satire.
