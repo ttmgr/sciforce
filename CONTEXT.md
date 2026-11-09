@@ -42,3 +42,7 @@ logic with canvas and DOM stubbed.
 
 - Out of scope: online play, accounts, servers, analytics, any external asset or library.
 - Out of scope: real people or real brands in the satire.
+- **region** — one of the 5 campaign groups of missions (`REGIONS`); free order inside an open region, cleared missions saved by name in `sciencebros.cleared`. `S.setReached(n)` in tests keeps its old meaning.
+- **rescue counter** — lifetime count of freed cages (`sciencebros.rescues`); thresholds unlock bros in a fixed order, starting from Dr Reskbro (`reska`).
+- **modifier** — a per-mission rule set by name in `MODS_OF` (DARK, FLOODED, RESTLESS, GALE); off in the boss arena; random maps roll it from a derived seed, so the main stream and layouts stay the same.
+- **tanksuit** — the player's Think Tank; shares the walker's boarding code through `P.mech.kind`. Not the enemy boss of type `tank`.

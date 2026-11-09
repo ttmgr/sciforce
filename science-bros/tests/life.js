@@ -21,7 +21,8 @@ const plantAt = (kind, c) => { const p = { kind, x: c * T + 8, y: 16 * T, c, r: 
 for (let l = 0; l < S.nLevels; l++) {
   S.startLevel(l); run(1);
   const name = S.levelDef(l).name;
-  check(name + ': plants grow and critters live here', S.plants.length >= 40 && S.critters.length >= 10, S.plants.length + ' plants, ' + S.critters.length + ' critters');
+  // the Detox Express is a steel train: only the dirt platform at the start grows tufts and weeds (birds perch on the roofs)
+  check(name + ': plants grow and critters live here', S.plants.length >= (name === 'DETOX EXPRESS' ? 15 : 40) && S.critters.length >= 10, S.plants.length + ' plants, ' + S.critters.length + ' critters');
   let err = null; try { for (let i = 0; i < 120; i++) run(1, { right: true, fire: i % 4 === 0 }); } catch (e) { err = e; }
   check(name + ': two seconds of play draw without errors', !err, err && err.message);
 }

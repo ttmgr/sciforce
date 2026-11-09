@@ -116,12 +116,13 @@ check('supply crate refills a special', S.P.spec === 2, 'spec ' + S.P.spec);
 
 // new bros
 lone(); stand(6); S.P.bro = S.ents.length >= 0 && S.P.bro; // keep the object, swap id via cage rescue below
+S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf('ada') - 1] - 1; // the next cage crosses Ada's threshold
 const cage = spawn('cage', 9, { bro: 'ada' }); run(1); S.P.x = cage.x; run(2);
 check('rescuing Ada unlocks her', S.unlocked.includes('ada') && S.P.bro.id === 'ada');
 e = spawn('grunt', 16, { face: -1, aware: false }); S.P.face = 1; S.P.spec = 3; S.pressed.special = true; run(1);
 const drone = S.ents.find((o) => o.type === 'drone'); run(120);
 check('Ada drone appears and kills', !!drone && e.dead);
-lone(); stand(6); const c2 = spawn('cage', 9, { bro: 'darwin' }); run(1); S.P.x = c2.x; run(2);
+lone(); stand(6); S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf('darwin') - 1] - 1; const c2 = spawn('cage', 9, { bro: 'darwin' }); run(1); S.P.x = c2.x; run(2);
 const weak = [spawn('grunt', 14), spawn('dog', 18), spawn('scout', 20)];
 S.P.spec = 3; S.pressed.special = true; run(2);
 check('Darwin natural selection kills the weak on screen', weak.every((w) => w.dead));
@@ -154,7 +155,7 @@ drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); 
 check('level-clear screen draws', drew);
 
 // level 3: builds clean, icicles drop on what walks under them, ice is slippery, the tank fights and the game ends
-S.startLevel(2); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(3); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
 check('level 3 has 3 cages, a mech and the tank', S.ents.filter((o) => o.type === 'cage').length === 3 && S.ents.some((o) => o.type === 'mechsuit') && S.ents.some((o) => o.type === 'tank'));
 run(1); S.ents.forEach((o) => { if (!['tank', 'icicle', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const ic = S.ents.find((o) => o.type === 'icicle');
@@ -163,7 +164,7 @@ S.P.inv = 0; S.P.x = ic.x - 2; S.P.y = 16 * T - 16; S.P.vx = 0; let k3 = 0;
 for (; k3 < 120 && !ic.dead; k3++) run(1);
 check('an icicle drops when you walk under it', ic.dead, k3 + ' frames');
 check('the icicle kills what it lands on', !S.P.alive || q.dead);
-S.startLevel(2); run(1); S.ents.forEach((o) => { if (!['tank', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+S.startLevel(3); run(1); S.ents.forEach((o) => { if (!['tank', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 S.P.inv = 1e9; S.P.x = 13 * T; S.P.y = 14 * T - 16; S.P.vx = 0; run(3);
 for (let i = 0; i < 30; i++) run(1, { right: true }); run(1);
 const v0 = S.P.vx; run(8);
@@ -178,7 +179,7 @@ for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, 
 check('extraction on level 3 leads on to level 4', S.state === 'win', S.state);
 
 // level 4: the Succussion Engine
-S.startLevel(3); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(4); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
 check('level 4 has 4 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 4 && S.ents.some((o) => o.type === 'engine'));
 run(1); S.ents.forEach((o) => { if (!['engine', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = S.arenaCol(192) * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
@@ -195,7 +196,7 @@ for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, 
 check('extraction on level 4 leads on to level 5', S.state === 'win', S.state);
 
 // level 5: the Flat Earth Zeppelin
-S.startLevel(4); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(5); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['blimp', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = S.arenaCol(180) * T; S.P.y = 16 * T - 16; run(5);
 check('Flat Earth Zeppelin activates', zep.active);

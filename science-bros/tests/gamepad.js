@@ -21,7 +21,8 @@ const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + 
 
 press(0); frame(); press(0, false); frame(); check('cross on the title opens the world map', S.state === 'map');
 press(0); frame(); press(0, false); frame(); check('cross again opens the briefing', S.state === 'brief');
-press(9); frame(); press(9, false); frame(); check('options deploys from the briefing', S.state === 'play');
+press(9); frame(); press(9, false); frame(); check('options deploys from the briefing (the opening plays first)', S.state === 'intro');
+S.pressed.start = true; S.step(1 / 60); check('enter skips the opening', S.state === 'play');
 S.endCeasefire(); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); S.P.inv = 1e9; frame(2);
 const x0 = S.P.x; pad.axes[0] = 0.6; frame(30); check('left stick moves', S.P.x > x0 + 30);
 pad.axes[0] = 1; frame(30); check('stick pushed all the way runs', S.P.run && S.P.vx > 160, 'vx ' + S.P.vx.toFixed(0));

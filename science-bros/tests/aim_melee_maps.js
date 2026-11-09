@@ -116,14 +116,17 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const foes = S.ents.filter((e) => inGap(e) && !e.dead && !['flag', 'ammo', 'icicle'].includes(e.type) && !BOSSES.includes(e.type)).length;
   const flags = S.ents.filter((e) => inGap(e) && e.type === 'flag').length;
   check(tag + ': the boss arena starts ' + S.stretchW() + ' columns later', S.isStretched() && B.ax0 >= cut + S.stretchW() && B.trig >= cut + S.stretchW(), 'ax0 ' + B.ax0 + ' trig ' + B.trig);
-  check(tag + ': the new stretch has quacks and four checkpoint flags', foes >= 5 && flags === 4, foes + ' quacks, ' + flags + ' flags');
+  check(tag + ': the new stretch has quacks and four checkpoint flags (five in the Flat Earth wraparound, which has its own)', foes >= 5 && flags === (tag === 'FLAT EARTH STATION' ? 5 : 4), foes + ' quacks, ' + flags + ' flags');
   check(tag + ': the extraction pad moved with the arena', S.padOf()[0] === S.levelDef(l).pad[0] + S.stretchW());
   // a bot that runs right and jumps gets from the end of the old path through the stretch into the arena (invulnerable)
-  S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag') e.dead = true; });
+  // the Flat Earth radio mast stays: the bot has to topple it to open the wraparound
+  const mast = tag === 'FLAT EARTH STATION' ? S.ents.find((e) => e.type === 'target' && e.skin === 'radio' && inGap(e)) : null;
+  S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag' && e !== mast) e.dead = true; });
   S.P.bro = S.BRO.einstein; S.P.x = (cut - 4) * T; S.P.y = 2 * T; S.P.vy = 0; let far = 0;
-  for (let i = 0; i < 90 * 60 && far < B.trig; i++) {
+  for (let i = 0; i < ((L.mods || []).includes('gale') ? 130 : 90) * 60 && far < B.trig; i++) { // a gale slows the bot by about 10 s, so it gets longer
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9; S.P.alive = true;
+    if (mast && !mast.dead && Math.abs(S.P.x - mast.x) < 6 * T) S.hitEnemy(mast, 999, 0); // the bot shoots the mast down when it gets near
     step({ right: true, jump: i % 25 < 14, fire: i % 6 < 3 });
     far = Math.max(far, S.P.x / T);
   }
@@ -134,16 +137,12 @@ check('Lab Siege keeps its yard (no stretch)', !S.isStretched() && S.padOf()[0] 
 S.startLevel(3); S.endCeasefire(); step(); S.keys.map = true; S.render(1); S.keys.map = false;
 check('the full map draws the longer level', true);
 
-// ---- random bros: a new campaign unlocks 10 at random; every respawn picks any of them but the one who died
-const starts = new Set(), firsts = new Set();
-for (let k = 0; k < 20; k++) {
+// ---- a new campaign starts with Dr Reskbro alone; every respawn picks any unlocked bro but the one who died
+for (let k = 0; k < 3; k++) {
   S.reset(); S.startMode && S.startMode('campaign');
-  check('a new campaign starts with 10 bros unlocked', S.unlocked.length === 10 && new Set(S.unlocked).size === 10, S.unlocked.length);
-  S.unlocked.forEach((id) => starts.add(id)); firsts.add(S.unlocked[0]);
+  check('a new campaign starts with Dr Reskbro alone', S.unlocked.length === 1 && S.unlocked[0] === 'reska', S.unlocked.join());
 }
-check('the 10 are random: over 20 new games most bros show up', starts.size >= 30, starts.size + ' of ' + S.BROS.length);
-check('and not always Albro Einstein first', firsts.size > 5, firsts.size + ' different first bros');
-S.reset(); S.startMode('campaign'); S.startLevel(0); S.endCeasefire(); step();
+S.reset(); S.startMode('campaign'); S.startLevel(0); S.endCeasefire(); step(); S.unlocked.length = 0; S.unlocked.push(...S.BRO_ORDER.slice(0, 10)); // ten freed bros to respawn from
 const seen = new Set(); let same = 0;
 for (let k = 0; k < 60; k++) {
   const before = S.P.bro.id; S.setLives(9); S.P.inv = 0; S.killPlayer('shot');
@@ -153,7 +152,7 @@ for (let k = 0; k < 60; k++) {
 }
 check('respawns are random across the unlocked bros', seen.size >= 8, seen.size + ' of 10 seen in 60 deaths');
 check('a respawn never sends the bro who just died', same === 0, same);
-S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); step(); const cage = S.makeEnt({ type: 'cage', c: 36, from: 0 }); S.ents.push(cage); const n0 = S.unlocked.length;
+S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); step(); const cage = S.makeEnt({ type: 'cage', c: 36, from: 0 }); S.ents.push(cage); const n0 = S.unlocked.length; S.rescues = S.BRO_AT[n0 - 1] - 1; // the next cage crosses a threshold
 S.P.inv = 1e9; for (let i = 0; i < 120 && S.unlocked.length === n0; i++) { S.P.x = 36 * T; step({ fire: true }); if (i === 30) S.pressed.melee = true; }
 check('freeing a cage unlocks one more bro', S.unlocked.length === n0 + 1, n0 + ' -> ' + S.unlocked.length);
 

@@ -60,7 +60,8 @@ let cur = new Set(); const used = new Set();
 for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   cur = new Set(); S.startLevel(l); S.endCeasefire(); step();
   const th = S.levelDef(l).theme, fit = kinds.filter((k) => S.NEW_PIECES[k].themes.includes(th));
-  check(S.levelDef(l).name + ': the stretch uses new pieces that fit the ' + th + ' theme', cur.size >= 1 && [...cur].every((k) => fit.includes(k)), [...cur].join(', '));
+  // the Detox Express builds its own train stretch (stretchBuild), so it draws no pool pieces at all
+  check(S.levelDef(l).name + ': the stretch uses new pieces that fit the ' + th + ' theme', (S.levelDef(l).name === 'DETOX EXPRESS' ? cur.size === 0 : cur.size >= 1) && [...cur].every((k) => fit.includes(k)), [...cur].join(', '));
   cur.forEach((k) => used.add(k));
   check(S.levelDef(l).name + ': the boss arena is still in place', S.isStretched() && S.boss && S.boss.ax0 >= S.cutAt() + S.stretchW());
 }

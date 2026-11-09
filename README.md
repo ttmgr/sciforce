@@ -2,11 +2,22 @@
 
 ## Science Bros
 
-Broforce-style run-and-gun platformer: a 25-mission campaign against the Anti-Science League that gets harder mission by mission, three bonus modes (Lab Siege, Boss Rush, Moon Base), 19 trophies, 51 scientist bros (3 of them melee bros), 7 special events, 4 pickup guns, 17 quack types, 25 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
+Broforce-style run-and-gun platformer: a 26-mission campaign against the Anti-Science League that gets harder mission by mission, three bonus modes (Lab Siege, Boss Rush, Moon Base), 19 trophies, 51 scientist bros (3 of them melee bros), 7 special events, 4 pickup guns, 17 quack types, 25 bosses, a drivable mech, objectives, intel, a world map and in-level maps. Single self-contained HTML file, no build step.
 
 - Game: `science-bros/index.html`. Open it in a browser.
 - Controls: arrows or A/D move; Up, W or Space jump (hold against a wall to climb, jump off it to wall-jump); Z or J fire; X or K special (3 per bro); C or L punch; Down + punch in the air for a ground pound; tap left or right twice quickly to run (or push a gamepad stick all the way); Shift or V dodge-roll (also jumps out of the mech); Up/Down on a ladder climbs; hold B or U to aim (you keep facing the same way, so you can walk backwards and keep shooting forwards; Up or W then tilts the gun up: 45 degrees while you move, straight up while you stand; Space still jumps); hold Tab for the map; P pause menu; M mute; F fullscreen (Esc leaves).
 - Gamepad (standard mapping; a PS5 DualSense works over USB-C or Bluetooth): stick or d-pad move (stick all the way runs), Cross/A jump, Square/X or R2 fire, Circle/B special, Triangle/Y melee (the layout Broforce players report as its pad default), L1/R1 roll, L2 hold to aim (d-pad up tilts the gun up), right stick aims in any direction ahead or up (and turns you to face that side), Options/Start pause, hold the touchpad or Create/Select for the map. Press a button once after the page loads so the browser sees the pad. Explosions rumble pads that support it (Chrome; Firefox has no rumble).
+
+### Regions, unlocks and round 7
+
+- **Regions:** the 26 missions sit in 5 regions (Placebo Coast, Look-Up Lands, Crank Country, Organic Acres, Juice Empire). Placebo Island comes first; inside an open region the missions are played in any order; clearing a region opens the next; the Citrus Citadel opens when every other mission is cleared. After a mission you return to the world map. Saved as mission names in `sciencebros.cleared`.
+- **Unlocks:** a new campaign starts with Dr Reskbro alone. Every freed cage adds to a lifetime counter (`sciencebros.rescues`), and thresholds unlock the next bro in a fixed order: bro 2 at 1 rescue, about one bro per 2.3 cages up to 105 rescues (bro 48), the last five at 106, 113, 122, 132 and 142. The levels hold 150 cages. RESET PROGRESS on the title menu needs a second press. Old saves migrate (missions below `reached` count as cleared, 3 rescues each).
+- **Opening:** the first start of mission 1 plays a skippable chopper drop over Placebo Island.
+- **New bros (53 in all):** Conrad Roentbro (Cathode ray; Gamma Blast with the nuke's power and an X-ray look) and Dr Reskbro (Squiggle signal, a chain shot drawn as a nanopore current trace; Gene Sequencing turns every foe on screen into A, C, G and T, bosses take the nuke's capped hit). Oppenbro carries 3 nukes per life.
+- **Think Tank** (`tanksuit`): 40 hp, 50 px/s, no jump or ladders, climbs 1-tile steps, runs over quacks with max hp up to 3, cannon on fire, Aim + Up raises the barrel. In missions by name with no walker; random maps swap a walker for it 30% of the time.
+- **Walls:** blasts need a clear path to the player, direct enemy shots are not released without a line to the player; both are off during boss fights.
+- **New rules per mission:** Detox Express (moving train), a wraparound section in Flat Earth Station (off once its mast falls), a meltdown in Pyramid Power Plant. Mission modifiers DARK, FLOODED (surface basins only), RESTLESS and GALE in `MODS_OF` (12 missions, 3 of them with two), by a derived-seed roll in random maps. The grant crate gives a strong gun and releases an auditor who walks after you for 45 s.
+- **Objective hint:** while the chopper waits on an open objective, the list stays up and an arrow points to the nearest missing target.
 
 ### Aiming, melee bros, random bros and longer maps
 

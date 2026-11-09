@@ -55,7 +55,7 @@ for (let l = 0; l < NL; l++) {
   if (c !== cut + S.STRETCH) bad.plan.push(tag + ':ends at ' + c);
   const forks = plan.filter((p) => p[0] === 'fork'), zones = S.ugZones().filter((z) => z.c0 >= cut - 10 && z.c1 <= cut + S.STRETCH + 2);
   totalSec += plan.length; oldSec += oldSections(l); totalZones += S.ugZones().length; totalForks += forks.length;
-  if (plan.length < oldSections(l) + 4 || forks.length !== wantF || zones.length !== wantZ || S.ugZones().length <= oldZones(l)) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + wantF + ' forks, ' + zones.length + '/' + wantZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
+  if (!S.levelDef(l).stretchBuild && (plan.length < oldSections(l) + 4 || forks.length !== wantF || zones.length !== wantZ || S.ugZones().length <= oldZones(l))) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + wantF + ' forks, ' + zones.length + '/' + wantZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
   for (const [, f0, w] of forks) { // a steel high road at row 10 with a ladder at each end, and the low road open under it
     const a = f0 + 6, b = f0 + w - 7, m = (a + b) >> 1; let ok = b - a >= 15;
     for (let k = a; k <= b; k++) { if (S.tileAt(k, 10) !== STEEL || solid(S.tileAt(k, 7)) || (k !== m && solid(S.tileAt(k, 9)))) ok = false; for (let r = 11; r <= 14; r++) if (solid(S.tileAt(k, r))) ok = false; if (!solid(S.tileAt(k, 16))) ok = false; }

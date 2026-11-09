@@ -49,16 +49,18 @@ for (let l = 0; l < S.nLevels; l++) { S.startLevel(l); if (S.checkCollapse() !==
 S.reset(); run(1);
 check('cages do not know their bro before you open them', S.ents.filter((e) => e.type === 'cage').every((e) => !e.bro));
 const firsts = {};
-const NB = S.BROS.length, NL = NB - 1; // every bro, and every bro but the first
-for (let k = 0; k < 100 * NL; k++) { S.unlocked.length = 0; S.unlocked.push('einstein'); const id = S.pickRescueBro(); firsts[id] = (firsts[id] || 0) + 1; }
-const counts = Object.values(firsts), lo = Math.min(...counts), hi = Math.max(...counts);
-check('the first freed bro can be any of the ' + NL + ' locked ones, about equally often', Object.keys(firsts).length === NL && !firsts.einstein && lo > 50 && hi < 160, 'min ' + lo + ' max ' + hi);
-// free cages one after another: new bros first, never a repeat while bros are still locked
-arena(); S.unlocked.length = 0; S.unlocked.push('einstein'); S.P.bro = S.BRO.einstein;
-let dup = false, got = [];
-for (let k = 0; k < NL; k++) { const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); got.push(S.P.bro.id); if (got.indexOf(S.P.bro.id) !== got.length - 1) dup = true; }
-check(NL + ' cages free all ' + NL + ' locked bros, no repeats', !dup && new Set(got).size === NL && S.unlocked.length === NB, S.unlocked.length + ' unlocked');
+const NB = S.BROS.length;
+S.unlocked.length = 0; S.unlocked.push('einstein', 'curie', 'tesla', 'newton');
+for (let k = 0; k < 400; k++) { const id = S.pickRescueBro(); firsts[id] = (firsts[id] || 0) + 1; }
+check('a cage without a new unlock only holds bros you have, any of them', Object.keys(firsts).every((id) => S.unlocked.includes(id)) && Object.keys(firsts).length >= 3, JSON.stringify(firsts));
+// free cages one after another from a fresh save: the counter unlocks the bros in the fixed order
+S.rescues = 0; S.unlocked.length = 0; S.unlocked.push('reska'); S.savedBros.length = 0; S.savedBros.push('reska');
+arena(); S.P.bro = S.BRO.reska;
+let got = [], at = [];
+for (let k = 1; k <= S.BRO_AT[S.BRO_AT.length - 1]; k++) { const n0 = S.unlocked.length; const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); if (S.unlocked.length > n0) { got.push(S.P.bro.id); at.push(k); } }
+check(NB - 1 + ' unlocks come in the fixed order, one at each threshold', got.join() === S.BRO_ORDER.slice(1).join() && at.join() === S.BRO_AT.join() && S.unlocked.length === NB, got.length + ' unlocks, ' + S.unlocked.length + ' unlocked');
 // with everyone free: never the bro you are playing, and everyone comes up before repeats
+const keepAll = S.unlocked.slice(); S.unlocked.length = 0; S.unlocked.push('reska'); S.pickRescueBro(); keepAll.forEach((id) => S.unlocked.push(id)); S.unlocked.splice(0, 1); // empty the draw bag so the draws start fresh
 const seq = []; let same = 0;
 for (let k = 0; k < 54; k++) { const before = S.P.bro.id; const c = add('cage', 30); c.bro = null; S.P.x = c.x; run(2); if (S.P.bro.id === before) same++; seq.push(S.P.bro.id); }
 check('freeing a cage never gives you the bro you already are', same === 0, same + ' repeats');

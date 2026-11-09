@@ -58,16 +58,18 @@ const want = S.unlocked[(S.briefBro + 1) % S.unlocked.length]; // the briefing o
 S.pressed.right = true; run(1); // next bro
 S.pressed.down = true; run(1); for (let k = 0; k < 4; k++) { S.pressed.right = true; run(1); } // gear: shotgun
 S.pressed.start = true; run(1);
+check('the first deploy of a campaign plays the opening', S.state === 'intro', S.state);
+S.pressed.start = true; run(1); // Enter skips it
 check('deployed as the chosen bro', S.state === 'play' && S.P.bro.id === want, S.P.bro.id + ' (wanted ' + want + ')');
 check('with the chosen gear', S.P.alt && S.P.alt.kind === 'shotgun', S.P.alt && S.P.alt.kind);
 
-// world map: pick any mission reached before
+// world map: only open missions can be picked (a new campaign has Placebo Island open and nothing else)
 S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
-S.setReached(2); S.pressed.start = true; run(1);
+S.setReached(0); S.pressed.start = true; run(1);
 S.pressed.right = true; run(1); S.pressed.right = true; run(1); S.pressed.right = true; run(1);
-check('left/right on the map moves only as far as you have reached', S.level === 2, 'level ' + S.level);
+check('left/right on the map stays on the open missions', S.level === 0, 'level ' + S.level);
 S.pressed.start = true; run(1); S.pressed.start = true; run(1);
-check('and deploys into that mission', S.state === 'play' && S.level === 2);
+check('and deploys into that mission', S.state === 'play' && S.level === 0);
 
 console.log(fails ? fails + ' check(s) failed' : 'all safe start and choice checks passed');
 process.exit(fails ? 1 : 0);

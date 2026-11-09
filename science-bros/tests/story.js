@@ -50,15 +50,15 @@ const B = S.ents.find((e) => e.final); S.ents.forEach((e) => { if (e !== B && e.
 S.P.x = (B.trig + 2) * T; S.P.y = 2 * T; for (let i = 0; i < 60; i++) { S.P.inv = 1e9; run(1); }
 check('the boss waking brings its line', B.active && (S.radioQ.some((m) => m.who === 'placebo') || (S.radioCur && /Homeopathitron/.test(S.radioCur.line))));
 S.finishObjectives(); S.radioQ.length = 0; for (let k = 0; k < 400 && !B.dead; k++) { S.P.inv = 1e9; if (!B.doomed) S.hitEnemy(B, 20, 0); run(2); }
-check('the boss going down brings the win line', B.dead && (S.radioQ.some((m) => /Detox Desert/.test(m.line)) || !!(S.radioCur && /Detox Desert/.test(S.radioCur.line))));
+check('the boss going down brings the win line', B.dead && (S.radioQ.some((m) => /hideouts/.test(m.line)) || !!(S.radioCur && /hideouts/.test(S.radioCur.line))));
 // no radio in the bonus modes
 S.startMode('siege'); check('no story radio in Lab Siege', S.radioQ.length === 0); S.startMode('campaign');
-// the briefing: the act and the intercepted message
+// the briefing: the region and the intercepted message
 S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
 S.pressed.start = true; run(1); S.pressed.start = true; run(1);
 check('on the briefing', S.state === 'brief', S.state);
 S.mapT = 3; texts.length = 0; S.render(3);
-check('the briefing names the act', texts.some((t) => /ACT I: THE PLACEBO EFFECT/.test(t)), texts.filter((t) => /ACT/.test(t)).join(' | '));
+check('the briefing names the region', texts.some((t) => /REGION 1: PLACEBO COAST/.test(t)), texts.filter((t) => /REGION/.test(t)).join(' | '));
 check('the briefing shows an intercepted League message', texts.some((t) => /INTERCEPTED/.test(t)));
 // the end screen rolls the epilogue and draws the stats afterwards
 let err = null; try { for (const m of [0, 5, 12, 30]) { S.mapT = m; S.render(m); } } catch (e) { err = e; }

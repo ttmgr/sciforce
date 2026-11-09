@@ -91,7 +91,7 @@ const reach = () => {
 };
 const THREAT = S.THREAT, FLY = ['jetpack', 'camdrone', 'drone', 'icicle', 'flag', 'dronecaller', ...BOSSES];
 
-check('the campaign has 25 missions, 18 of them remade (the Citadel is still last)', N === 25 && OLD.length === 18 && S.levelDef(N - 1).name === 'CITRUS CITADEL', N);
+check('the campaign has 26 missions, 18 of them remade (the Citadel is still last)', N === 26 && OLD.length === 18 && S.levelDef(N - 1).name === 'CITRUS CITADEL', N);
 const remade = (i) => Array.from({ length: N }, (_, k) => S.levelDef(k)).indexOf(S.ROUND5[i === OLD.length - 1 ? 19 : i]); // the fingerprint's mission, by its place among the 20 before round 6: the Citadel moved from 18th to last
 
 // ---- 1. the remake: missions 1-7 changed a lot, 8-18 changed some
@@ -147,8 +147,8 @@ for (let l = 0; l < N; l++) {
   const threat = []; for (let l = 0; l < N; l++) { S.startLevel(l); threat.push(S.ents.filter((e) => THREAT[e.type]).reduce((a, e) => a + THREAT[e.type], 0)); }
   check('the first mission is the easiest', threat[0] === Math.min(...threat), threat.map((x) => x.toFixed(0)).join(' '));
   check('the finale is among the hardest', threat[N - 1] >= Math.max(...threat) - 6);
-  let dips = 0; for (let l = 1; l < N; l++) if (threat[l] < threat[l - 1] - 6) dips++;
-  check('threat climbs along the campaign (no big drops)', dips === 0, dips + ' drops');
+  const avg = S.REGIONS.map((R) => R.missions.reduce((a, nm) => a + threat[Array.from({ length: N }, (_, i) => i).find((i) => S.levelDef(i).name === nm)], 0) / R.missions.length);
+  check('threat climbs from region to region', avg.every((v, r) => !r || v > avg[r - 1]), avg.map((x) => x.toFixed(1)).join(' '));
   check('the second half is clearly harder than the first', threat.slice(8).reduce((a, b) => a + b) / (N - 8) > 1.5 * threat.slice(0, 7).reduce((a, b) => a + b) / 7);
 }
 

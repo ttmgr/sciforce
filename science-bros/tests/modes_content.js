@@ -72,7 +72,7 @@ S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.press
 check('back on the title', S.state === 'title');
 S.pressed.down = true; run(1); S.pressed.start = true; run(1);
 check('the second menu entry starts Lab Siege', S.state === 'play' && S.mode === 'siege', S.mode);
-check('Lab Siege gives you every bro', S.unlocked.length === S.BROS.length);
+check('Lab Siege plays with the bros you have freed', S.unlocked.length === S.savedBros.length && S.unlocked.length >= 1);
 
 // ---- Lab Siege
 for (let i = 0; i < 60 * 10; i++) { S.P.inv = 1e9; run(1); }
@@ -130,8 +130,8 @@ check('G goes back to normal on a normal mission', (S.startMode('campaign'), S.s
 check('19 trophies exist', S.ACH.length === 19, S.ACH.length);
 check('trophy ids are unique', new Set(S.ACH.map((a) => a[0])).size === S.ACH.length);
 S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
-S.titleSel = S.TITLE_MENU.length - 1; S.pressed.start = true; run(1);
-check('the last menu entry opens the trophy screen', S.state === 'trophies', S.state);
+S.titleSel = S.TITLE_MENU.findIndex((m) => m[1] === 'trophies'); S.pressed.start = true; run(1);
+check('the trophies menu entry opens the trophy screen', S.state === 'trophies', S.state);
 check('the trophy screen draws', (() => { try { S.render(1); return true; } catch (e) { console.log(e); return false; } })());
 S.pressed.start = true; run(1); check('enter goes back to the title', S.state === 'title');
 

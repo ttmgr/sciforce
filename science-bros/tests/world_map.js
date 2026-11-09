@@ -40,10 +40,11 @@ check('stops sit between the header and the panel', spots.every(([x, y]) => x > 
 let close = 99; for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) close = Math.min(close, Math.hypot(spots[i][0] - spots[j][0], spots[i][1] - spots[j][1]));
 check('no two stops crowd each other', close >= 36, 'closest ' + close.toFixed(1) + ' px');
 
-// left/right picks only missions already reached
+// left/right walk the open missions in map order (region by region) and stop at the ends
 S.startMode('campaign'); S.setReached(5); S.setLevel(0); idle(5);
-for (let i = 0; i < 12; i++) press('right');
-check('right stops at the furthest mission reached', S.level === 5, S.level);
+const lastOpen = S.MAP_ORDER.filter(S.missionOpen).pop();
+for (let i = 0; i < 30; i++) press('right');
+check('right stops at the last open mission', S.level === lastOpen && S.MAP_ORDER.indexOf(lastOpen) === 9, S.level);
 for (let i = 0; i < 12; i++) press('left');
 check('left stops at the first mission', S.level === 0, S.level);
 S.setReached(0); press('right');
@@ -54,14 +55,15 @@ S.setReached(9); S.setLevel(0); idle(120);
 const at0 = S.mapPlane(), stop0 = spots[0];
 check('the plane waits over the chosen stop', Math.hypot(at0[0] - stop0[0], at0[1] - stop0[1]) < 0.5, at0.map((v) => v.toFixed(1)).join(','));
 for (let i = 0; i < 6; i++) press('right');
-check('the selection itself changes at once', S.level === 6, S.level);
-const p1 = S.mapPlane(), d1 = Math.hypot(p1[0] - spots[6][0], p1[1] - spots[6][1]);
+const m6 = S.MAP_ORDER[6];
+check('the selection itself changes at once', S.level === m6, S.level);
+const p1 = S.mapPlane(), d1 = Math.hypot(p1[0] - spots[m6][0], p1[1] - spots[m6][1]);
 check('right after the pick the plane is still on its way', d1 > 20, 'dist ' + d1.toFixed(1));
 idle(20);
-const p2 = S.mapPlane(), d2 = Math.hypot(p2[0] - spots[6][0], p2[1] - spots[6][1]);
+const p2 = S.mapPlane(), d2 = Math.hypot(p2[0] - spots[m6][0], p2[1] - spots[m6][1]);
 check('a moment later it is closer', d2 < d1 && d2 > 0.5, d1.toFixed(1) + ' -> ' + d2.toFixed(1));
 idle(180);
-const p3 = S.mapPlane(), d3 = Math.hypot(p3[0] - spots[6][0], p3[1] - spots[6][1]);
+const p3 = S.mapPlane(), d3 = Math.hypot(p3[0] - spots[m6][0], p3[1] - spots[m6][1]);
 check('after three seconds it has landed over the stop', d3 < 0.5, 'dist ' + d3.toFixed(2));
 
 // Enter from the map still opens the briefing for the chosen mission

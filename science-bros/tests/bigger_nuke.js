@@ -43,7 +43,7 @@ const NX = 70 * T + 8, NY = 16 * T;
 check('ring radius is 1.5x (80 -> 120)', S.NUKE_R === 120, S.NUKE_R);
 check('kill box is 1.5x (330 x 220 -> 495 x 330)', S.NUKE_BOX[0] === 495 && S.NUKE_BOX[1] === 330, S.NUKE_BOX.join(' x '));
 check('crater is 1.5x (6.5, 3.6, 5 -> 10, 5.4, 7.5 tiles)', S.NUKE_HOLE[0] === 10 && S.NUKE_HOLE[1] === 5.4 && S.NUKE_HOLE[2] === 7.5, S.NUKE_HOLE.join(', '));
-check('still one nuke per life', S.specMax(S.BRO.oppenheimer) === 1 && S.specMax(S.BRO.einstein) === 3);
+check('three nukes per life', S.specMax(S.BRO.oppenheimer) === 3 && S.specMax(S.BRO.einstein) === 3);
 
 // ---- 2. quacks die: inside the ring, between the old and new ring, in the new kill box beyond the old one
 flat();

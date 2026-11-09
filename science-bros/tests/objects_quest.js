@@ -25,7 +25,8 @@ const drew = () => { try { S.render(0); return true; } catch (err) { console.log
 check('starts on the title', S.state === 'title' && drew());
 S.pressed.start = true; run(1); check('enter opens the world map', S.state === 'map' && drew());
 S.pressed.start = true; run(1); check('enter opens the briefing', S.state === 'brief' && drew());
-S.pressed.start = true; run(1); check('enter deploys into level 1', S.state === 'play' && S.level === 0);
+S.pressed.start = true; run(1); check('enter starts the opening on level 1', S.state === 'intro' && S.level === 0);
+S.pressed.start = true; run(1); check('enter skips it and deploys into level 1', S.state === 'play' && S.level === 0);
 check('level 1 lists its objectives', S.objectives.length === 4 && S.objectives.filter((o) => o.req).length === 2);
 
 // ladder: up climbs it

@@ -1,6 +1,8 @@
 # Handover
 
-**Updated:** 2026-10-21 21:40
+**Updated:** 2026-11-08
+
+Round 7 (2026-11-08) is built but NOT committed, in the working tree of `feature/aim-melee-random-maps`: 26 missions in 5 regions with free order, rescue-counter unlocks from Dr Reskbro alone, chopper opening, Conrad Roentbro and Dr Reskbro (53 bros), Think Tank, walls fix, Oppenbro 3 nukes, Detox Express, Flat Earth wraparound, Pyramid meltdown, four mission modifiers, grant crate and auditor, objective list and arrow; see the README section "Regions, unlocks and round 7". Last full suite: 51 of 56 files; the 5 failures were then handled (Sagan fire rate, new_maps scenery prints re-recorded) or are flaky (life bird, levels bot, tuning go-home). The full suite was not rerun after those two last changes.
 
 Six rounds of work are done on branch `feature/aim-melee-random-maps` and are open as PR #2 (https://github.com/ttmgr/sciforce/pull/2), not yet merged into main. Round 6 (latest): 51 bros, 25 missions. Round 5: redrawn bros and bosses, calmer dogs, bosses go home after a death, 1.5x campaign quacks, more satire; details below. Rounds 1-3: aiming, melee bros, random bros, destruction, random maps, more quacks, underground levels, fancier maps, gore, difficulty and density, satire story. Round 4 (2026-10-21) merged six workstreams plus a follow-up: campaign missions 560 columns wide with 2-3 forks and 2-3 underground detours each (random missions and bonus modes keep 376 / 140-column stretch, `playW` / `stretchW`); a one-time remake of all 18 missions (1-7 most), still fixed and the same every play; Trinity 1.5x (ring 120, crater 10 / 5.4 / 7.5); more destruction (steel above bedrock breaks to heavy weapons, back walls collapse, shootable decor, bigger chunks and dust); 4 new bros (Semmelweis, Torricelli, Volta, Gauss; 42 in all); 4 pickup guns (pogo, glue, fizz, duck) and 3 one-use specials (confetti, beach, spud). Lead fixes after merging: crater core bug (fractional rows), cloud cap kept on screen, BOSS_MUL for Mendel (1.15) and Pasteur (1.1), mission 3 sign, and several seeded tests made robust. Before touching anything: the game is `science-bros/index.html` opened as a file in the browser; old copies under `.claude/worktrees/` are stale agent checkouts, not the game.
 
@@ -12,6 +14,8 @@ Round 6 (2026-10-21, merged and pushed): 5 more bros (Fibonacci, McClintock, Kek
 
 ## In flight / open tasks
 
+- Round 7 needs the user's go-ahead to commit and push.
+- FLOODED does not reach underground detours (surface basins only).
 - PR #2 waits for review and merge.
 - Known flaky checks (fail sometimes, pass alone, also on older commits): `life.js` bird, `deaggro.js` "then quacks notice you again", the `levels.js` simple bot, the `events.js` airstrike, single `boss_fairness.js` checks, `controls_destruction.js` "blast holes the lab back wall" (about 1 in 20 on 79f7697 too), `tuning.js` "all eight boss types go home" (kopter hp once under load, passes alone), and absolute timing checks under load.
 - Frame cost (INSANE, 300%): round 4 measured 1.67-1.73 ms vs 1.47-1.55 ms on 78b2cd6 on a quiet machine. Round 5 could only be compared under outside load (another project's pipeline): 3.6-4.6 ms vs 3.1-4.4 ms (7fd836a) and 3.6-3.8 ms (78b2cd6), within noise; re-measure on a quiet machine. The nuke's blast frame costs 3.6-4.0 ms (old nuke 4.2-4.4 ms); frames after it average 1.6 ms, worst 2.8-3.2 ms.
@@ -34,6 +38,6 @@ node science-bros/tests/longer_maps.js science-bros/index.html
 ## Files touched
 
 - `science-bros/index.html` — the whole game.
-- `science-bros/tests/*.js` — 47 headless test files (rounds 4-5 added bigger_nuke, more_destruction, new_bros, gimmick_weapons, longer_maps, mission_remake, dogs_ladders, page_ui, tuning, wit, new_maps, bros_art, boss_art).
+- `science-bros/tests/*.js` — 56 headless test files (rounds 4-5 added bigger_nuke, more_destruction, new_bros, gimmick_weapons, longer_maps, mission_remake, dogs_ladders, page_ui, tuning, wit, new_maps, bros_art, boss_art).
 - `README.md` — feature notes, controls and the test list.
 - `CONTEXT.md`, `LEARNINGS.md`, `HANDOVER.md` — project memory.

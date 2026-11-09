@@ -1,4 +1,4 @@
-// Headless checks for the five bros added in round 6 (Fibonacci, McClintock, Kekule, Linnaeus, Leeuwenhoek): 51 bros,
+// Headless checks for the five bros added in round 6 (Fibonacci, McClintock, Kekule, Linnaeus, Leeuwenhoek): 52 bros,
 // each new bro is wired into every per-bro table and switch, his art is shaded, has a signature item and differs from every
 // other bro (the painted pixels are hashed), each weapon hurts a quack and does its own trick, each special works and is
 // limited like the others, weapon and special cut terrain by material and never steel, nothing they fire kills the player,
@@ -58,7 +58,7 @@ const colours = (c) => new Set(c.ops.map((o) => o.split('@')[0]));
 const kinds = (k) => S.bullets.filter((b) => b.kind === k && !b.dead);
 
 // ---------------------------------------------------------------- 1. the roster, the tables and the switches
-check('there are 51 bros', S.BROS.length === 51, S.BROS.length + ' bros');
+check('there are 53 bros', S.BROS.length === 53, S.BROS.length + ' bros');
 check('the five new bros each exist exactly once', NEW.every((id) => S.BRO[id] && S.BROS.filter((b) => b.id === id).length === 1));
 check('the new bros are ranged bros listed before the melee bros', NEW.every((id) => !S.BRO[id].melee) && Math.max(...NEW.map((id) => S.BROS.indexOf(S.BRO[id]))) < S.BROS.findIndex((b) => b.melee));
 for (const id of NEW) {
@@ -78,7 +78,7 @@ for (const id of NEW) {
 check('the special shots have DESTRUCT entries too (rabbit, cob, kernel, snake)', SPEC_KINDS.every((k) => !!S.DESTRUCT[k]));
 check('no new shot kind is in NO_AIM (none needs to skip the aim)', [...Object.values(KINDS).flat(), ...SPEC_KINDS].every((k) => !S.NO_AIM[k]));
 check('every new name is a bro pun and ASCII, so the pixel font can draw it', NEW.every((id) => /bro$/.test(S.BRO[id].name) && /^[\x20-\x7e]+$/.test(S.BRO[id].name + S.BRO[id].weapon + S.BRO[id].special + S.BRO[id].formula + S.BRO[id].wdesc + S.BRO[id].sdesc)));
-check('the five weapons and specials all have different names', new Set(S.BROS.map((b) => b.weapon)).size === 51 && new Set(S.BROS.map((b) => b.special)).size >= 50, new Set(S.BROS.map((b) => b.weapon)).size + ' weapon names');
+check('the five weapons and specials all have different names', new Set(S.BROS.map((b) => b.weapon)).size === 53 && new Set(S.BROS.map((b) => b.special)).size >= 50, new Set(S.BROS.map((b) => b.weapon)).size + ' weapon names');
 
 // ---------------------------------------------------------------- 2. the art: shaded rows, a signature item, different from every other bro
 { const bad = []; for (const id of NEW) { const b = S.BRO[id], R = S.broRows(id), rows = R.head.concat(R.body); if (R.head.length !== 6 || R.body.length !== 6 || rows.some((r) => r.length !== 12) || [...rows.join('')].some((ch) => ch !== '.' && !b.rig.pal[ch])) bad.push(id); }
@@ -86,8 +86,8 @@ check('the five weapons and specials all have different names', new Set(S.BROS.m
 { const bad = NEW.filter((id) => { const j = S.broRows(id).head.concat(S.broRows(id).body).join(''); return !/[CU]/.test(j) || !/[HJWV]/.test(j) || !/S/.test(j) || !/[xX]/.test(j) || !/[EY]/.test(S.broRows(id).head.join('')); });
   check('each new bro is shaded (coat rim, hair rim, skin shadow, brow) and wears his signature item', !bad.length, bad.join(',')); }
 { const ups = S.BROS.map((b) => hash(b.rig.up[0])), sprs = S.BROS.map((b) => hash(b.spr[0][0]));
-  check('all 51 upper-body sprites are different (hash of the painted pixels)', new Set(ups).size === 51, new Set(ups).size + ' different');
-  check('all 51 small sprites (HUD, roster, cages) are different', new Set(sprs).size === 51, new Set(sprs).size + ' different');
+  check('all 53 upper-body sprites are different (hash of the painted pixels)', new Set(ups).size === 53, new Set(ups).size + ' different');
+  check('all 53 small sprites (HUD, roster, cages) are different', new Set(sprs).size === 53, new Set(sprs).size + ' different');
   const heads = S.BROS.map((b) => S.HEADS[b.id].join('/')); check('no new bro reuses another bro\'s head rows', NEW.every((id) => heads.filter((h) => h === S.HEADS[id].join('/')).length === 1));
   check('the hashes are real: each new sprite painted over 90 pixels', NEW.every((id) => S.BRO[id].rig.up[0].ops.length > 90 && S.BRO[id].spr[0][0].ops.length > 90)); }
 { const thin = NEW.filter((id) => colours(S.BRO[id].rig.up[0]).size < 9).map((id) => id + ' ' + colours(S.BRO[id].rig.up[0]).size);
@@ -251,18 +251,19 @@ const fight = (id, type, secs = 15, sd = 7) => {
 }
 
 // ---------------------------------------------------------------- 9. cages free them, and a new run still starts with 10
-check('a new run starts with 10 random bros (START_BROS unchanged)', (S.reset(), S.unlocked.length === 10), S.unlocked.length + '');
+check('a new run starts with one bro, Dr Reskbro (no random starting bros)', (S.reset(), S.unlocked.length === 1 && S.unlocked[0] === 'reska'), S.unlocked.join());
 for (const id of NEW) {
   S.reset(); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
-  check(id + ': when only he or she is locked, a cage frees them', S.pickRescueBro() === id);
+  check(id + ': a cage never hands out a locked bro', S.pickRescueBro() !== id);
   flat('einstein'); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
+  S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf(id) - 1] - 1; // the next cage crosses his threshold
   const cage = S.makeEnt({ type: 'cage', c: 31, from: 15 }); S.ents.push(cage); S.P.inv = 1e9;
   for (let i = 0; i < 160 && !S.unlocked.includes(id); i++) { S.P.x = 31 * T; step({ fire: true }); if (i === 30) S.pressed.melee = true; }
   check(id + ': a real cage opens and unlocks them', S.unlocked.includes(id) && S.P.bro.id === id, S.P.bro.id);
 }
-{ real = true; S.reset(); const locked = new Set(NEW); for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein'); const r = S.pickRescueBro(); if (NEW.includes(r)) locked.delete(r); }
-  real = false; check('the cage pool includes all five new bros', locked.size === 0, 'missed: ' + [...locked].join(',')); }
-check('freeing every one of the 51 bros fills the roster (unlocked can reach 51)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 51; })());
+{ real = true; S.reset(); let bad = 0; for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein', 'curie'); if (!['einstein', 'curie'].includes(S.pickRescueBro())) bad++; }
+  real = false; check('the cage pool only holds unlocked bros', bad === 0, bad + ' locked picks'); }
+check('freeing every one of the 53 bros fills the roster (unlocked can reach 53)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 53; })());
 
 // ---------------------------------------------------------------- 10. their lines reach the radio
 for (const id of NEW) { S.P.bro = S.BRO[id]; S.resetWit(); S.radioQ.length = 0; S.broQuip('s'); S.broQuip('s'); check(id + ': quips his special line on the radio', S.radioQ.some((m) => m.line === S.BRO_LINES[id].s)); }

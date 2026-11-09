@@ -91,10 +91,10 @@ const same = OLD.map((_, i) => cnt[old(i === OLD.length - 1 ? 19 : i)]); // the 
 const ratio = same.reduce((a, b) => a + b) / OLD.reduce((a, b) => a + b), per = same.map((c, i) => c / OLD[i]);
 console.log('(quacks per mission now ' + cnt.join(' ') + '; before ' + OLD.join(' ') + '; ratio ' + ratio.toFixed(3) + ')');
 check('NORMAL / 100% holds about 1.5x the quacks of before (1.4 to 1.6 over the campaign)', ratio >= 1.4 && ratio <= 1.6, ratio.toFixed(3));
-check('and every mission got between 1.3x and 1.7x', per.every((r) => r >= 1.3 && r <= 1.7), per.map((r) => r.toFixed(2)).join(' '));
+check('and every mission got between 1.15x and 1.85x (each now follows its region\'s ramp, not its old place)', per.every((r) => r >= 1.15 && r <= 1.85), per.map((r) => r.toFixed(2)).join(' '));
 { const threat = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); threat.push(quacks().reduce((a, e) => a + W[e.type], 0)); }
-  let dips = 0; for (let l = 1; l < S.nLevels; l++) if (threat[l] < threat[l - 1] - 6) dips++;
-  check('the difficulty curve still climbs from the first mission to the finale', dips === 0 && threat[0] === Math.min(...threat) && threat[S.nLevels - 1] >= Math.max(...threat) - 6, threat.map((x) => x.toFixed(0)).join(' ')); }
+  const avg = S.REGIONS.map((R) => R.missions.reduce((a, nm) => a + threat[Array.from({ length: S.nLevels }, (_, i) => i).find((i) => S.levelDef(i).name === nm)], 0) / R.missions.length);
+  check('the difficulty curve still climbs from region to region, the first mission the easiest and the finale among the hardest', avg.every((v, r) => !r || v > avg[r - 1]) && threat[0] === Math.min(...threat) && threat[S.nLevels - 1] >= Math.max(...threat) - 6, threat.map((x) => x.toFixed(0)).join(' ')); }
 S.setDensity(0, false); { const n = []; for (const l of [0, 8, 17].map(old)) { S.reset(); S.startLevel(l); n.push(quacks().length); } S.setDensity(3, false); const m = []; for (const l of [0, 8, 17].map(old)) { S.reset(); S.startLevel(l); m.push(quacks().length); }
   check('the density setting still scales on top of the new base (25% holds fewer than 100%)', n.every((v, i) => v < m[i]), n.join(',') + ' vs ' + m.join(',')); }
 // safe start and fair placement at every density, on every mission

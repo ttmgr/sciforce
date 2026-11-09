@@ -22,7 +22,7 @@ const run = (n, keys = {}) => { for (let i = 0; i < n; i++) step(keys); };
 let fails = 0, passes = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (ok) passes++; else fails++; };
 
-const LEVEL = { boss: 0, kopter: 1, crawler: 1, tank: 2, engine: 3, blimp: 4, citrus: S.nLevels - 1, director: Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i).name).indexOf('PERPETUAL MOTION WORKS') }; // the Citadel is always the last mission
+const LEVEL = { boss: 0, kopter: 1, crawler: 1, tank: 3, engine: 4, blimp: 5, citrus: S.nLevels - 1, director: Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i).name).indexOf('PERPETUAL MOTION WORKS') }; // the Citadel is always the last mission
 const TYPES = Object.keys(LEVEL);
 // boss names in the campaign, the strongholds and the random-map word lists (a random map puts a place word in front)
 const NAMES = { boss: ['', 'ZODIAC MECH', 'THE ZESTINATOR', 'THE ANCIENT ASTRONAUT', 'ISLAND PILLBOT', 'ISLAND GRIFTBOT', 'ISLAND WALKER', 'ISLAND MECH'], kopter: ['', 'CHEMTRAIL COPTER', 'ASTRAL KOPTER', 'THE POLTERCOPTER', 'DUNES HYPECOPTER', 'DUNES GYROCOPTER', 'DUNES KOPTER'],

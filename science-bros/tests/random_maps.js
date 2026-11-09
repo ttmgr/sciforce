@@ -26,7 +26,7 @@ const SEEDS = +process.argv[3] || 60;
 const snap = () => { const a = []; for (let r = 0; r < 22; r++) for (let c = 0; c < S.LW; c++) a.push(S.tileAt(c, r)); return a.join(''); };
 const drew = () => { try { S.render(1); return true; } catch (err) { console.log(err); return false; } };
 
-// ---- the title menu entry: a briefing for a fresh map, 10 random bros, then deploy
+// ---- the title menu entry: a briefing for a fresh map, your unlocked bros, then deploy
 S.reset(); S.state; step();
 const iR = S.TITLE_MENU.findIndex((m) => m[1] === 'random');
 check('the title menu has a RANDOM MISSION entry', iR >= 0 && S.TITLE_MENU[iR][0] === 'RANDOM MISSION');
@@ -38,7 +38,7 @@ check('and back to normal', S.genDiffKey() === 'normal'); check('the title draws
 S.pressed.start = true; run(1);
 const seed1 = S.genSeed();
 check('the entry opens the briefing of a random map', S.state === 'brief' && S.mode === 'random' && S.level === S.RANDOM, S.state + ' ' + S.mode);
-check('a random mission starts with 10 random bros, like a new campaign', S.unlocked.length === 10);
+check('a random mission plays with the bros you have freed (Dr Reskbro alone at first)', S.unlocked.length === 1 && S.unlocked[0] === 'reska');
 check('the briefing names the map and shows the seed', S.levelDef(S.RANDOM).sub.includes('SEED ' + seed1) && drew(), S.levelDef(S.RANDOM).name + ' / ' + seed1);
 S.pressed.start = true; run(1);
 check('enter deploys into the map', S.state === 'play' && S.level === S.RANDOM && S.P.alive);

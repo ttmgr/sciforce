@@ -1,4 +1,4 @@
-// Headless checks for the four bros added in round 4 (Semmelweis, Torricelli, Volta, Gauss): 51 bros in all, every per-bro table is
+// Headless checks for the four bros added in round 4 (Semmelweis, Torricelli, Volta, Gauss): 52 bros in all, every per-bro table is
 // filled, each weapon hurts a quack and does its own trick, each special works and is limited like the others, weapon and
 // special cut terrain by material, nothing they fire kills the player, the aim works, they can hurt every boss at a fair
 // pace, a cage can free each of them, a new run still starts with 10 bros, and a busy fight stays under 3 ms a frame.
@@ -44,7 +44,7 @@ const cutBy = (id, mat, n, special) => {
 };
 
 // ---------------------------------------------------------------- 1. the roster and every per-bro table
-check('there are 51 bros', S.BROS.length === 51, S.BROS.length + ' bros');
+check('there are 53 bros', S.BROS.length === 53, S.BROS.length + ' bros');
 check('the four new bros each exist exactly once', NEW.every((id) => S.BRO[id] && S.BROS.filter((b) => b.id === id).length === 1));
 for (const id of NEW) {
   const b = S.BRO[id];
@@ -180,18 +180,19 @@ const fight = (id, type, secs = 15) => {
 }
 
 // ---------------------------------------------------------------- 8. cages free them, and a new run still starts with 10
-check('a new run starts with 10 random bros (START_BROS unchanged)', (S.reset(), S.unlocked.length === 10), S.unlocked.length + '');
+check('a new run starts with one bro, Dr Reskbro (no random starting bros)', (S.reset(), S.unlocked.length === 1 && S.unlocked[0] === 'reska'), S.unlocked.join());
 for (const id of NEW) {
   S.reset(); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
-  check(id + ': when only he is locked, a cage frees him', S.pickRescueBro() === id);
+  check(id + ': a cage never hands out a locked bro', S.pickRescueBro() !== id);
   flat('einstein'); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
+  S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf(id) - 1] - 1; // the next cage crosses his threshold
   const cage = S.makeEnt({ type: 'cage', c: 31, from: 15 }); S.ents.push(cage); S.P.inv = 1e9;
   for (let i = 0; i < 160 && !S.unlocked.includes(id); i++) { S.P.x = 31 * T; step({ fire: true }); if (i === 30) S.pressed.melee = true; }
   check(id + ': a real cage opens and unlocks him', S.unlocked.includes(id) && S.P.bro.id === id, S.P.bro.id);
 }
-{ real = true; S.reset(); const locked = new Set(NEW); for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein'); const r = S.pickRescueBro(); if (NEW.includes(r)) locked.delete(r); }
-  real = false; check('the cage pool includes all four new bros', locked.size === 0, 'missed: ' + [...locked].join(',')); }
-check('freeing every one of the 51 bros unlocks the trophy path (unlocked can reach 51)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 51; })());
+{ real = true; S.reset(); let bad = 0; for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein', 'curie'); if (!['einstein', 'curie'].includes(S.pickRescueBro())) bad++; }
+  real = false; check('the cage pool only holds unlocked bros', bad === 0, bad + ' locked picks'); }
+check('freeing every one of the 53 bros unlocks the trophy path (unlocked can reach 53)', (() => { S.unlocked.length = 0; S.BROS.forEach((b) => S.unlocked.push(b.id)); return S.unlocked.length === 53; })());
 
 // ---------------------------------------------------------------- 9. frame cost on INSANE at 300%, and the shot count stays capped
 {

@@ -26,3 +26,8 @@
 - 2026-10-21 · agents — five agents running test batches at once drove the load to 115 and made git time out; tell agents to run tests one at a time and leave the full suite to the lead.
 - 2026-10-21 · tests — freeing a cage swaps the bro, so a bot that should play "as Einstein" must reset `S.P.bro` every frame; otherwise adding bros changes which bro the bot ends up with and seeded bot checks flip.
 - 2026-10-21 · missions — missions can now be inserted anywhere: every older mission has a fixed `seedN`, Boss Rush maps through the pre-round-6 list, and tests find fixture missions by name or old position. Never index a mission by number in new code or tests.
+- 2026-11-08 · game — the chopper waits for every required objective, so killing the boss first looks like nothing happens; the objective list and an arrow now stay up while it waits.
+- 2026-11-08 · walls — plain enemy shots already stopped at tiles; "shot through walls" came mainly from `explode()` hurting by distance alone.
+- 2026-11-08 · tests — inserting a mission shifts hard-coded level indices in many tests; walking-bot tests must remove `tanksuit`, whose 50 px/s only slows them. In zsh, `echo == x` fails; quote it.
+- 2026-11-08 · flaky — enemies_new.js sapper digging fails about 2 of 5 runs on 11f8070 too; levels.js bot flips on several missions; run frame-time checks alone.
+

@@ -1,4 +1,4 @@
-// Headless checks for the bro art (round 5) and the four bros added in round 5 (Kelvin, Huygens, Nightingale, Schrodinger): 51 bros,
+// Headless checks for the bro art (round 5) and the four bros added in round 5 (Kelvin, Huygens, Nightingale, Schrodinger): 52 bros,
 // every bro is built from shaded rows with a signature item and draws without error, each sprite differs from every other
 // one (the painted pixels are hashed), the rig still fits the hit box; the four new bros are wired into every per-bro
 // table, each weapon hurts a quack and does its own trick, each special works and is limited like the others, weapon and
@@ -56,7 +56,7 @@ const hash = (c) => crypto.createHash('md5').update(c.ops.join(';')).digest('hex
 const colours = (c) => new Set(c.ops.map((o) => o.split('@')[0]));
 
 // ---------------------------------------------------------------- 1. the art: every bro from shaded rows, each one different
-check('there are 51 bros (five more in round 6, see bros_r6.js)', S.BROS.length === 51, S.BROS.length + ' bros');
+check('there are 53 bros (five more in round 6, see bros_r6.js)', S.BROS.length === 53, S.BROS.length + ' bros');
 check('every bro has a head, a look (item and colour) and a known item', S.BROS.every((b) => S.HEADS[b.id] && S.LOOKS[b.id] && S.BRO_ITEM[S.LOOKS[b.id][0]] && /^#[0-9a-f]{6}$/.test(S.LOOKS[b.id][1])), S.BROS.filter((b) => !S.LOOKS[b.id]).map((b) => b.id).join(','));
 { const bad = []; for (const b of S.BROS) { const R = S.broRows(b.id), rows = R.head.concat(R.body); if (R.head.length !== 6 || R.body.length !== 6 || rows.some((r) => r.length !== 12) || [...rows.join('')].some((ch) => ch !== '.' && !b.rig.pal[ch])) bad.push(b.id); }
   check('every bro is 6 head rows and 6 body rows, 12 wide, and every pixel has a colour in his palette', !bad.length, bad.join(',')); }
@@ -226,17 +226,18 @@ const fight = (id, type, secs = 15) => {
 }
 
 // ---------------------------------------------------------------- 9. cages free them, and a new run still starts with 10
-check('a new run starts with 10 random bros (START_BROS unchanged)', (S.reset(), S.unlocked.length === 10), S.unlocked.length + '');
+check('a new run starts with one bro, Dr Reskbro (no random starting bros)', (S.reset(), S.unlocked.length === 1 && S.unlocked[0] === 'reska'), S.unlocked.join());
 for (const id of NEW) {
   S.reset(); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
-  check(id + ': when only he or she is locked, a cage frees them', S.pickRescueBro() === id);
+  check(id + ': a cage never hands out a locked bro', S.pickRescueBro() !== id);
   flat('einstein'); S.unlocked.length = 0; S.BROS.forEach((b) => { if (b.id !== id) S.unlocked.push(b.id); });
+  S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf(id) - 1] - 1; // the next cage crosses his threshold
   const cage = S.makeEnt({ type: 'cage', c: 31, from: 15 }); S.ents.push(cage); S.P.inv = 1e9;
   for (let i = 0; i < 160 && !S.unlocked.includes(id); i++) { S.P.x = 31 * T; step({ fire: true }); if (i === 30) S.pressed.melee = true; }
   check(id + ': a real cage opens and unlocks them', S.unlocked.includes(id) && S.P.bro.id === id, S.P.bro.id);
 }
-{ real = true; S.reset(); const locked = new Set(NEW); for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein'); const r = S.pickRescueBro(); if (NEW.includes(r)) locked.delete(r); }
-  real = false; check('the cage pool includes all four new bros', locked.size === 0, 'missed: ' + [...locked].join(',')); }
+{ real = true; S.reset(); let bad = 0; for (let i = 0; i < 400; i++) { S.reset(); S.unlocked.length = 0; S.unlocked.push('einstein', 'curie'); if (!['einstein', 'curie'].includes(S.pickRescueBro())) bad++; }
+  real = false; check('the cage pool only holds unlocked bros', bad === 0, bad + ' locked picks'); }
 
 // ---------------------------------------------------------------- 10. frame cost on INSANE at 300%, and the shot count stays capped
 {
