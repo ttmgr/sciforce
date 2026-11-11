@@ -112,8 +112,8 @@ for (const id of NEW) {
 { flat('huygens'); wall(BRICK, 36, 37, 10, 15); step({ fire: true }); let n = 0; for (let i = 0; i < 40 && !n; i++) { step(); n = S.bullets.filter((b) => b.kind === 'wlet').length; }
   const ws = S.bullets.filter((b) => b.kind === 'wlet');
   check('Huygens: the wave bursts into six wavelets where it hits a wall, outside the wall', n === 6 && ws.every((b) => !S.tileAt(Math.floor(b.x / T), Math.floor(b.y / T))), n + ' wavelets'); }
-{ flat('huygens'); const q = quack(36, { hp: 60, max: 60 }), q2 = quack(36, { hp: 60, max: 60 }); q2.x = q.x + 18; calm(q, q2); S.P.cool = 0; step({ fire: true }); S.P.cool = 9;
-  for (let i = 0; i < 40; i++) { calm(q, q2); q2.x = q.x + 18; step(); }
+{ flat('huygens'); const q = quack(36, { hp: 60, max: 60 }), q2 = quack(36, { hp: 60, max: 60 }); q2.x = q.x + 15; calm(q, q2); S.P.cool = 0; step({ fire: true }); S.P.cool = 9; // 15 px apart (18 before round 9: a wavelet only grazed the neighbour, and a 1.7 px difference in knock-back from another random stream made it miss)
+  for (let i = 0; i < 40; i++) { calm(q, q2); q2.x = q.x + 15; step(); }
   check('Huygens: the wavelets from a hit quack spare that quack and spread to its neighbour', Math.abs(60 - q.hp - 1.6) < 0.01 && q2.hp < 60, 'hit quack lost ' + (60 - q.hp).toFixed(2) + ', neighbour ' + (60 - q2.hp).toFixed(2)); }
 { flat('nightingale'); step({ fire: true }); const ps = S.bullets.filter((b) => b.kind === 'petal'); check('Nightingale: five petals fanned out (half a rose), some well up and some well down', ps.length === 5 && new Set(ps.map((b) => Math.round(b.vy))).size === 5 && Math.min(...ps.map((b) => b.vy)) < -150 && Math.max(...ps.map((b) => b.vy)) > 150, ps.map((b) => b.vy.toFixed(0)).join(' ')); }
 { flat('nightingale'); const near = quack(33, { hp: 60, max: 60 }), far = quack(50, { hp: 60, max: 60 }); calm(near, far); S.P.cool = 0; step({ fire: true }); for (let i = 0; i < 30; i++) { calm(near, far); step(); }

@@ -32,7 +32,7 @@ const iR = S.TITLE_MENU.findIndex((m) => m[1] === 'random');
 check('the title menu has a RANDOM MISSION entry', iR >= 0 && S.TITLE_MENU[iR][0] === 'RANDOM MISSION');
 S.reset(); run(1); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1); // quit to the title
 check('back on the title', S.state === 'title', S.state);
-S.titleSel = iR; S.pressed.right = true; run(1);
+S.titleSel = S.titleItems().findIndex((m) => m[1] === 'random'); S.pressed.right = true; run(1);
 check('left/right on the entry picks the difficulty', S.genDiffKey() === 'hard', S.genDiffKey()); S.pressed.left = true; run(1);
 check('and back to normal', S.genDiffKey() === 'normal'); check('the title draws the entry', drew());
 S.pressed.start = true; run(1);

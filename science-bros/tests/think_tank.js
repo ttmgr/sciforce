@@ -1,5 +1,5 @@
 // Headless checks for the Think Tank (the drivable tank, entity 'tanksuit', P.mech.kind 'tank'): boarding with the THINK TANK banner,
-// 40 hp and the hp bar, slower than the walker, driving over small quacks, a one-tile step climbed and a two-tile wall not, no jump and no
+// 40 hp and the hp bar, slower than the walker, driving over small quacks, a one-tile step climbed, a two-tile earth wall rammed through and a steel one not, a three-tile jump, no
 // ladders, the cannon shell that explodes and breaks blocks, the same exit keys as the walker, getting out when wedged against a wall, the
 // walker unchanged, the eight placed tanks (each on flat ground, reachable on foot from the start by a static walk graph), and random maps.
 // Usage: node science-bros/tests/think_tank.js science-bros/index.html
@@ -50,13 +50,28 @@ check('40 hp (the walker has 24)', S.P.mech.hp === 40 && S.P.mech.max === 40);
 { enter(); for (let c = 24; c < 60; c++) S.setTile(c, 15, DIRT); S.P.x = 18 * T; run(2); const y0 = S.P.y; for (let i = 0; i < 200 && S.P.x < 27 * T; i++) run(1, { right: true });
   check('it climbs a one-tile step', S.P.x > 26 * T && Math.abs(S.P.y - (y0 - T)) < 1, 'x ' + (S.P.x / T).toFixed(1) + ', rise ' + ((y0 - S.P.y) / T).toFixed(2)); }
 { enter(); for (let c = 24; c < 60; c++) { S.setTile(c, 15, DIRT); S.setTile(c, 14, DIRT); } S.P.x = 18 * T; run(2); for (let i = 0; i < 300; i++) run(1, { right: true });
-  check('a two-tile wall stops it', S.P.x + S.P.w <= 24 * T + 0.1 && S.P.y > 16 * T - S.P.h - 2, 'x ' + (S.P.x / T).toFixed(1)); }
+  check('a two-tile earth wall is rammed through (round 9)', S.P.x > 27 * T && S.P.y > 16 * T - S.P.h - 2 && S.tileAt(25, 15) === 0 && S.tileAt(25, 14) === 0, 'x ' + (S.P.x / T).toFixed(1)); }
+{ enter(); for (let c = 24; c < 60; c++) { S.setTile(c, 15, STEEL); S.setTile(c, 14, STEEL); } S.P.x = 18 * T; run(2); for (let i = 0; i < 300; i++) run(1, { right: true });
+  check('a two-tile steel wall stops it', S.P.x + S.P.w <= 24 * T + 0.1 && S.P.y > 16 * T - S.P.h - 2 && S.tileAt(24, 15) === STEEL, 'x ' + (S.P.x / T).toFixed(1)); }
 { enter(); const y0 = S.P.y; let top = y0; for (let i = 0; i < 60; i++) { S.keys.jump = true; S.pressed.jump = i % 20 === 0; S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; top = Math.min(top, S.P.y); } S.keys.jump = false;
-  check('it cannot jump', y0 - top < 1, (y0 - top).toFixed(1) + ' px'); }
+  check('it jumps about three tiles (round 9)', y0 - top > 40 && y0 - top < 56, (y0 - top).toFixed(1) + ' px'); }
 { enter(); for (let r = 8; r <= 15; r++) S.setTile(S.P.x / T + 3 | 0, r, LADDER); const x0 = S.P.x; S.P.x = ((S.P.x / T + 3) | 0) * T - 10; run(2); const y0 = S.P.y; for (let i = 0; i < 60; i++) run(1, { up: true, right: true }); 
   check('it cannot climb a ladder', S.P.y >= y0 - 1 && !S.P.climb, (y0 - S.P.y).toFixed(1) + ' px up'); }
 { enter(); S.setTile(24, 14, BRICK); S.setTile(24, 15, BRICK); S.P.x = 18 * T; run(2); for (let i = 0; i < 300; i++) run(1, { right: true });
-  check('it does not bulldoze walls by walking (the cannon does that)', S.tileAt(24, 15) === BRICK); }
+  check('it rams a brick wall down by driving at it (round 9)', S.tileAt(24, 15) === 0 && S.tileAt(24, 14) === 0 && S.P.x > 25 * T, 'x ' + (S.P.x / T).toFixed(1)); }
+// round 9: both suits break blocks faster. Frames from first contact with a 3-column brick wall until the suit is past it; the roof of a jumping suit breaks an earth ceiling; a hard landing breaks the floor
+{ const through = (type, wall) => { enter(type); if (wall) for (let c = 24; c < 27; c++) for (let r = 12; r <= 15; r++) S.setTile(c, r, BRICK); S.P.x = 22 * T - S.P.w; run(2); let n = 0; while (n < 900 && S.P.x < 27 * T) { run(1, { right: true }); n++; } return n; };
+  const nt = through('tanksuit', true) - through('tanksuit', false), nw = through('mechsuit', true) - through('mechsuit', false);
+  check('three columns of brick cost the tank under 1 s more than open ground', nt > 0 && nt < 60, nt + ' frames'); check('and the walker under 1.5 s (it was 1.2 s a column before)', nw > 0 && nw < 90, nw + ' frames'); }
+for (const type of ['tanksuit', 'mechsuit']) { enter(type); const c0 = Math.floor(S.P.x / T) - 1; for (let c = c0; c <= c0 + 4; c++) S.setTile(c, 12, DIRT); const y0 = S.P.y; let top = y0;
+  for (let i = 0; i < 50; i++) { S.keys.jump = true; S.pressed.jump = i === 0; S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; top = Math.min(top, S.P.y); } S.keys.jump = false;
+  let holes = 0; for (let c = c0; c <= c0 + 4; c++) if (S.tileAt(c, 12) === 0) holes++;
+  check('the jumping ' + type + ' breaks an earth ceiling with its roof', holes >= 1 && !!S.P.mech, holes + ' blocks'); }
+{ enter('mechsuit'); const c0 = Math.floor(S.P.x / T) - 1; for (let c = c0; c <= c0 + 4; c++) S.setTile(c, 12, STEEL); const y0 = S.P.y; let top = y0;
+  for (let i = 0; i < 50; i++) { S.keys.jump = true; S.pressed.jump = i === 0; S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; top = Math.min(top, S.P.y); } S.keys.jump = false;
+  check('a steel ceiling holds', S.tileAt(c0 + 1, 12) === STEEL && top >= 13 * T - 0.5, 'top ' + (top / T).toFixed(2)); }
+{ enter(); const c = Math.floor((S.P.x + S.P.w / 2) / T); S.P.y -= 7 * T; S.P.vy = 0; let n = 0; while (n < 200 && !(S.P.onGround && n > 5)) { run(1); n++; } run(2);
+  check('a hard landing breaks the earth it lands on', S.tileAt(c, 16) === 0, 'tile ' + S.tileAt(c, 16)); }
 
 // ---------------------------------------------------------------- 3. the cannon
 { enter(); for (let r = 10; r <= 15; r++) for (let c = 24; c <= 26; c++) S.setTile(c, r, BRICK); S.P.x = 14 * T; S.P.face = 1; run(2);

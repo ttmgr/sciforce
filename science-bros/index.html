@@ -138,7 +138,7 @@ button.bro.ghost:hover, button.bro.ghost:focus-visible, button.bro.ghost.open { 
 
 // ---------------------------------------------------------------- setup
 const cv = document.getElementById('game');
-const ctx = cv.getContext('2d');
+let ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 const T = 16, VW = 480, VH = 270, LW = 560, LH = 40; // a level is built 236 columns wide, then gets a 324-column stretch before its boss arena (140 outside the campaign, see stretchW); 40 rows: the top 22 as before, earth below (see underground)
 let G = 900; // gravity; lower on the Moon
@@ -685,7 +685,8 @@ function buildLevel() {
     grav: (c0, r0, c1, r1, k = 0.58) => devs.push({ kind: 'grav', k, x0: c0 * T, y0: r0 * T, x1: (c1 + 1) * T, y1: (r1 + 1) * T }),
     crumble: (c0, r0, c1, r1) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) crumbly[r * LW + c] = 1; },
   };
-  stretchW = level < LEVELS.length && mode !== 'rush' ? STRETCH : OLD_STRETCH; playW = 236 + stretchW; // only the campaign missions are long
+  stretchW = level < LEVELS.length && mode !== 'rush' ? stretchOf(level) : OLD_STRETCH; playW = 236 + stretchW; // only the campaign missions are long, and they grow region by region (STRETCH_OF)
+  stretchK = level < LEVELS.length && mode !== 'rush' ? stretchW / STRETCH : 1;
   LV().build(H);
   stretched = level < LEVELS.length || level === MOON || !!LV().gen; // a random map is built full width (genLevel)
   const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
@@ -698,6 +699,13 @@ function buildLevel() {
 // and the boss arena. The level is built as before (arena from about column ARENA_AT); then the arena and everything
 // in it slides stretchW columns right, and the gap is filled.
 const ARENA_AT = 176, STRETCH = 324, OLD_STRETCH = 140; // the campaign's stretch; random missions and the bonus modes keep the old one
+// round 9: the campaign stretch grows with the region (the first missions felt long and repeated themselves): 120 columns in region 1 (a 356-column
+// mission) up to 280 in region 5 (516 columns). A mission that builds its own stretch (the Detox Express and its ten cars) keeps the full 324.
+// Forks and underground detours (LONG_MAPS) are scaled down with the width, at least one of each.
+const STRETCH_OF = [120, 160, 200, 240, 280];
+const stretchOf = (n) => (LEVELS[n].stretchBuild ? STRETCH : STRETCH_OF[LEVELS[n].region] || STRETCH);
+let stretchK = 1; // this level's stretch as a share of the full 324 columns (1 outside the campaign)
+const longScaled = (k) => (stretchK < 1 ? Math.max(1, Math.round(k * stretchK)) : k);
 let stretchW = STRETCH, playW = LW; // this level's stretch and playable width (236 + stretchW): columns from playW on read as steel and are never shown
 let stretched = false, cutAt = ARENA_AT; // whether the level being played has the stretch, and where it starts
 const arenaCol = (c) => (stretched && c >= cutAt ? c + stretchW : c); // where a column of the built level ended up
@@ -746,7 +754,7 @@ let wrapEdge = null; // { c0, c1, off, n } of the level being played
 const WRAP_BACK = 5; // tiles in from the end where you come back
 function worldEdge(H, c, w) {
   const e = c + w - 1, m = c + (w >> 1), foes = ['grunt', 'shield', 'sniper', 'grenadier', 'medic', 'dog', 'rocketeer', 'grunt'];
-  H.ground(c, e, 16); // flat from end to end, so the join never lands you in a wall (and the Think Tank, which cannot jump, gets through)
+  H.ground(c, e, 16); // flat from end to end, so the join never lands you in a wall (and the Think Tank gets through without its jump)
   H.sp('target', m, 0, { skin: 'radio' }); H.sp('flag', c + 9, 0);
   [0.18, 0.28, 0.4, 0.58, 0.68, 0.8, 0.9].forEach((f, i) => H.sp(foes[i], c + Math.round(w * f)));
   [[3, 'WORLD EDGE'], [Math.round(w * 0.2), 'NOTHING PAST HERE'], [Math.round(w * 0.38), 'DEJA VU? NO. FLAT.'], [(w >> 1) + 4, 'EXIT: SEE MAST'], [Math.round(w * 0.78), 'HERE BEFORE? YES.'], [w - 4, 'WORLD EDGE (2)']].forEach(([k, text]) => H.dc('sign', c + k, { text }));
@@ -756,13 +764,13 @@ function buildStretch(H, n) {
   if (LV().stretchBuild) { stretchPlan = [['train', cutAt, stretchW]]; LV().stretchBuild(H, cutAt, cutAt + stretchW - 1); return; } // a mission with its own stretch (the Detox Express)
   const sn = seedN(n), hash = (k) => { const v = Math.sin(k * 12.9898 + sn * 78.233) * 43758.5453; return v - Math.floor(v); }; // the same layout every time
   const segs = (LV().build.segs || []).filter((g) => g[0] !== 'camp' && g[1] <= 44), own = segs.length ? segs[sn % segs.length] : null;
-  const rest = stretchW - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [], forks = longOf(n)[0], fk = [];
+  const rest = stretchW - (own ? own[1] : 0), cnt = Math.max(1, Math.round(rest / 32)), plan = [], forks = Math.min(longScaled(longOf(n)[0]), Math.max(1, cnt - 1)), fk = [];
   for (let k = 0; k < cnt; k++) plan.push([STRETCH_KINDS[(sn + k) % STRETCH_KINDS.length], k < cnt - 1 ? Math.floor(rest / cnt) : rest - Math.floor(rest / cnt) * (cnt - 1), {}]);
   for (let i = 0; i < forks; i++) fk.push(Math.round(((i + 1) * cnt) / (forks + 1))); // the forks, spread along the stretch
   const th = LV().theme, fits = Object.keys(NEW_PIECES).filter((s) => NEW_PIECES[s].themes.includes(th) && !(own && own[0] === s)); // new pieces that fit this theme: they take the other slots after the first
   for (let k = 1; k < cnt && fits.length; k++) { if (fk.includes(k)) continue; const s = fits.splice(Math.floor(hash(97 + k) * fits.length), 1)[0], [lo, hi] = NEW_PIECES[s].w, w = Math.min(hi, Math.max(lo, plan[k][1])); if (plan[0][1] + plan[k][1] - w < 24) continue; plan[0][1] += plan[k][1] - w; plan[k] = [s, w, {}]; }
   for (const k of fk) plan[k][0] = 'fork';
-  if (LV().wrap) { const k = [Math.round(cnt / 2), 4, 5, 6, 3, 7].find((j) => j + 2 < cnt && !fk.includes(j) && !fk.includes(j + 1)); if (k !== undefined) plan.splice(k, 2, ['worldedge', plan[k][1] + plan[k + 1][1], {}]); } // the edge of the world: two pieces joined into one
+  if (LV().wrap) { const k = [Math.round(cnt / 2), 4, 5, 6, 3, 7, 2, 1, 0].find((j) => j + 2 < cnt && !fk.includes(j) && !fk.includes(j + 1)); if (k !== undefined) plan.splice(k, 2, ['worldedge', plan[k][1] + plan[k + 1][1], {}]); } // the edge of the world: two pieces joined into one
   if (own) plan.splice(1, 0, [own[0], own[1], Object.assign({}, own[2], { put: [] })]);
   let c = cutAt; stretchPlan = [];
   for (const [kind, w, o] of plan) {
@@ -2114,7 +2122,7 @@ Object.assign(SEG, {
       H.fill(a - 3, 10, a - 1, 10, BRICK); H.fill(a + 9, 10, a + 11, 10, BRICK); // awnings
       H.sp('spring', a - 5); H.sp('spring', a + 13); H.sp('itemcrate', a + 4, 0);
     }
-    for (const k of [c + 2, (c + w) >> 1]) { H.fill(k, 15, k + 2, 15, CRATE); H.sp('barrel', k + 4); H.sp('barrel', k + 5); }
+    for (const k of [c + 2, c + (w >> 1)]) { H.fill(k, 15, k + 2, 15, CRATE); H.sp('barrel', k + 4); H.sp('barrel', k + 5); }
     H.dc('sign', c + 1, { text: 'FRESH CURES' });
     place(H, c, o);
   },
@@ -2454,11 +2462,13 @@ REGIONS.forEach((R, r) => R.missions.forEach((nm, k) => {
   L.map = [R.x + sl[0], clamp(sl[1] + R.y, 96, 190)];
 }));
 const FINALE = LEVELS.findIndex((L) => L.name === 'CITRUS CITADEL'), GATE = LEVELS.findIndex((L) => L.name === 'PLACEBO ISLAND');
+const missionNo = (i) => MAP_ORDER.indexOf(i) + 1; // the number a mission is shown with: its place on the world map, 1 to 26 region by region (not its index in LEVELS, which made region 2 read 6, 8, 12, 15, 19)
 // ---- bros are unlocked by freeing cages: a lifetime counter, and a threshold for each bro in a fixed order. Dr Reskbro starts, Einstein is
 // first to follow, the famous simple bros come early and the melee, Oppenbro and Roentbro are last. BRO_AT[k] rescues unlock BRO_ORDER[k + 1].
-const CAGES_TOTAL = 150; // the cages built into the 26 missions (tests/regions_unlock.js counts them): 142 (95%) unlock all 53 bros, 105 (70%) leave five locked
+const CAGES_TOTAL = 131; // the cages built into the 26 missions (tests/regions_unlock.js counts them; 150 before round 9 shortened the stretch): 124 (95%) unlock all 53 bros, 92 (70%) leave five locked
 const BRO_ORDER = ['reska', 'einstein', 'curie', 'tesla', 'newton', 'darwin', 'galileo', 'franklin', 'ada', 'turing', 'feynman', 'sagan', 'hawking', 'davinci', 'archimedes', 'pasteur', 'faraday', 'fleming', 'mendel', 'hubble', 'meitner', 'johnson', 'hypatia', 'hopper', 'wegener', 'mendeleev', 'wu', 'hodgkin', 'rutherford', 'nobel', 'bohr', 'lamarr', 'lavoisier', 'goodall', 'jemison', 'semmelweis', 'torricelli', 'volta', 'gauss', 'kelvin', 'huygens', 'nightingale', 'fibonacci', 'mcclintock', 'kekule', 'linnaeus', 'leeuwenhoek', 'anning', 'hooke', 'vesalius', 'schrodinger', 'oppenheimer', 'roentgen'];
-const BRO_AT = Array.from({ length: 47 }, (_, i) => Math.round(1 + i * 104 / 46)).concat([106, 113, 122, 132, 142]);
+const BRO_AT = Array.from({ length: 47 }, (_, i) => Math.round(1 + i * 104 / 46)).concat([106, 113, 122, 132, 142]).map((t) => Math.round(t * CAGES_TOTAL / 150)); // laid out for 150 cages, scaled to the cages there are
+for (let i = 1; i < BRO_AT.length; i++) BRO_AT[i] = Math.max(BRO_AT[i], BRO_AT[i - 1] + 1); // strictly rising after rounding
 const tierOf = (r) => 1 + BRO_AT.filter((t) => t <= r).length; // how many bros r rescues unlock
 // ---- saved progress: cleared missions by name, the rescue counter, the unlocked bros; an old save (one 'reached' index) migrates
 const saveGet = (k) => { try { return localStorage.getItem('sciencebros.' + k); } catch (e) { return null; } };
@@ -2531,6 +2541,7 @@ function recordRun(n) { // a campaign extraction: keep the best of each field on
 function resetProgress() {
   cleared = new Set(); rescues = 0; savedBros = ['reska']; openingSeen = false; mapNote = ''; forceOpen = -1; records = {}; lastResult = null;
   try { localStorage.removeItem('sciencebros.reached'); } catch (e) { /* storage blocked */ }
+  clearRun();
   saveProgress();
 }
 // levels outside the campaign: Lab Siege (horde) and the bonus Moon Base
@@ -3521,8 +3532,8 @@ function ugGen(H, R, x, spots, F, kind, qs, objective, cage) { // stock a random
 // tunnel, up another. A few missions get one in their main part too (past column 104, so the way to the middle stays as it was).
 const UG_MISSIONS = [8, 11]; // Zodiac Observatory and Pyramid Power Plant (by seedN, their place in the 18-mission campaign)
 function underStretch(H, n) {
-  const want = longOf(n)[1], R = rngOf(4099 + seedN(n) * 977), c0 = cutAt + 8, end = cutAt + stretchW - 6, W = Math.floor((end - c0) / want);
-  for (let i = 0, prev = 0; i < want; i++) { const b = ugDetour(H, n, Math.max(c0 + i * W, prev + 14), end - 24, end, R); if (b > 0) prev = b; } // each starts at its share of the stretch, or the first good spot after it
+  const want = longScaled(longOf(n)[1]), R = rngOf(4099 + seedN(n) * 977), c0 = cutAt + 8, end = cutAt + stretchW - 6, W = Math.floor((end - c0) / want);
+  for (let i = 0, prev = 0; i < want; i++) { const b = ugDetour(H, n, Math.max(c0 + i * W, prev + 18), end - 24, end, R); if (b > 0) prev = b; } // each starts at its share of the stretch, or the first good spot after it
   if (UG_MISSIONS.includes(seedN(n))) ugDetour(H, n, 104, 140, cutAt - 4, rngOf(7919 + seedN(n) * 131));
 }
 function ugDetour(H, n, lo, aMax, hi, R) { // a = the entry shaft between lo and aMax, b = the exit shaft before hi
@@ -3628,7 +3639,7 @@ function updateCollapse(dt) {
       if (HITTABLE[e.type]) { e.kx = 0; hitEnemy(e, 99, 0, 'crush'); }
     }
     if (blocked) { shatter(f); continue; }
-    if (P.alive && P.inv <= 0 && overlap(P, box)) { if (f.by === 'p') { shatter(f); continue; } killPlayer('crush'); } // a block you cut loose breaks on your helmet
+    if (P.alive && (P.inv <= 0 || P.mech) && overlap(P, box)) { if (f.by === 'p') { shatter(f); continue; } if (P.inv <= 0) killPlayer('crush'); } // a block you cut loose breaks on your helmet (on a suit's roof even while the bro cannot be hurt, so a rammed wall never lands inside it)
     for (const b of bodies) if (b.x > box.x && b.x < box.x + T && b.y > ny && b.y < ny + T + 4) { b.vy = f.vy; b.rest = false; if (b.kind === 'corpse') { b.life = Math.min(b.life, 0.5); gibBody(b); } }
     const rb = Math.floor((ny + T - 0.01) / T);
     if (rb >= LH) { f.dead = true; continue; }
@@ -4266,9 +4277,9 @@ function pauseMenu() {
     if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('ui_ok'); }
     else if (key === 'music') { setVol('musicVol', VOLS[(VOLS.indexOf(settings.musicVol) + 1) % VOLS.length]); sfx('ui_ok'); } // OFF, 25, 50, 75, 100 %
     else if (key) { settings[key] = !settings[key]; saveSettings(); sfx('ui_ok'); }
-    else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); }
+    else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); saveRun(); }
     else if (MENU[menuSel][0] === 'NEW RANDOM MAP') { paused = false; startRandom(newSeed(), true); }
-    else { paused = false; state = 'title'; init(); }
+    else { if (mode === 'campaign' && state === 'play' && P.alive && !bossFight() && !melt) saveRun(); paused = false; state = 'title'; init(); if (runSaved) titleSel = 0; } // SAVE AND QUIT: in a boss fight or a meltdown the save of the last checkpoint stays as it is
   }
 }
 
@@ -4431,9 +4442,74 @@ function startMode(m) {
   if (m === 'moon') { startLevel(MOON); applyGear(); }
   state = 'play';
 }
+// ---- the saved run (round 9). A campaign run saves itself at the start of a mission, at every checkpoint and on the world map; SAVE AND QUIT in
+// the pause menu saves once more. CONTINUE on the title screen puts the bro back at the last checkpoint with quacks, cages, targets, pickups,
+// broken blocks, objectives, score, lives and bros as they were. Not kept: shots in the air, loose bodies, back walls, where quacks and bosses stood
+// (they start from their spots; a boss keeps its damage), a pickup gun and the gear. Stored as JSON under 'sciencebros.run'.
+const RUN_V = 1;
+let freshTiles = null, freshSig = '', freshN = 0, runSaved = null; // the level as built (tiles, a fingerprint of its entities, their count); the save as last written or read
+function markFresh() { // called at the end of startLevel: every entity built with the level gets a stable number
+  let h = 0; ents.forEach((e, i) => { e.sid = i; for (let k = 0; k < e.type.length; k++) h = (h * 31 + e.type.charCodeAt(k) + i) | 0; h = (h * 31 + Math.round(e.x)) | 0; });
+  freshN = ents.length; freshSig = level + ':' + freshN + ':' + h; freshTiles = tiles.slice();
+}
+function snapRun(atMap) {
+  const s = { v: RUN_V, name: LEVELS[level].name, map: !!atMap, lives, score: runScore, unlocked: unlocked.slice(), dossier: dossier.slice() };
+  if (atMap) return s;
+  const alive = new Set(), hp = [], flags = [], dead = [], cut = [];
+  for (const e of ents) if (e.sid !== undefined && !e.dead) { alive.add(e.sid); if (e.hp < e.max) hp.push([e.sid, Math.round(e.hp * 100) / 100]); if (e.type === 'flag' && e.on) flags.push(e.sid); }
+  for (let i = 0; i < freshN; i++) if (!alive.has(i)) dead.push(i);
+  for (let i = 0; i < tiles.length; i++) if (tiles[i] !== freshTiles[i] && tiles[i] !== ACID && freshTiles[i] !== ACID) cut.push(i, tiles[i]); // flood water comes and goes by itself
+  return Object.assign(s, { sig: freshSig, diff: settings.difficulty, dens: settings.density, bro: P.bro.id, spec: P.spec, cp: [Math.round(checkpoint.x), Math.round(checkpoint.y)],
+    stats: { kills: stats.kills, rescued: stats.rescued, deaths: stats.deaths, time: Math.round(stats.time * 10) / 10, score: stats.score, best: stats.best }, obj: objectives.map((o) => o.n), dead, hp, flags, cut, story: storyFlag, wrapOff: !!(wrapEdge && wrapEdge.off) });
+}
+function saveRun(atMap = false) { // only the campaign has a run worth keeping
+  if (mode !== 'campaign' || level >= LEVELS.length || !freshTiles && !atMap) return false;
+  runSaved = snapRun(atMap); savePut('run', JSON.stringify(runSaved)); return true;
+}
+function clearRun() { if (runSaved || saveGet('run')) savePut('run', ''); runSaved = null; }
+function loadRun() {
+  let s = null; try { s = JSON.parse(saveGet('run') || 'null'); } catch (e) { s = null; }
+  runSaved = s && s.v === RUN_V && typeof s.name === 'string' && LEVELS.some((L) => L.name === s.name) && Array.isArray(s.unlocked) && (s.map || (Array.isArray(s.dead) && Array.isArray(s.cut) && Array.isArray(s.cp) && s.stats)) ? s : null;
+  return runSaved;
+}
+function resumeRun() { // true when the saved run is on screen again; a save this build cannot read is dropped
+  const s = runSaved; if (!s) return false;
+  try {
+    mode = 'campaign'; newGame();
+    lives = Math.max(0, s.lives | 0); runScore = Math.max(0, +s.score || 0);
+    const u = s.unlocked.filter((id) => BRO[id]); if (u.length) unlocked = u;
+    dossier = Array.isArray(s.dossier) ? s.dossier.slice() : [];
+    level = LEVELS.findIndex((L) => L.name === s.name);
+    if (s.map) { state = 'map'; mapT = 0; mapNote = ''; return true; }
+    if (DIFFS[s.diff]) setDifficulty(s.diff, false);
+    if (DENS[s.dens] !== undefined) setDensity(s.dens, false);
+    startLevel(level);
+    const same = s.sig === freshSig, bro = BRO[s.bro] || P.bro; // another build of the game lays the mission out differently: then it starts from its beginning, with the run's lives, score and bros
+    if (same) {
+      const dead = new Set(s.dead), hp = new Map(s.hp), on = new Set(s.flags || []);
+      for (const e of ents) { if (dead.has(e.sid)) e.dead = true; else if (hp.has(e.sid)) e.hp = Math.min(e.max, hp.get(e.sid)); if (on.has(e.sid)) e.on = true; }
+      ents = ents.filter((e) => !e.dead || e === boss);
+      for (let k = 0; k + 1 < s.cut.length; k += 2) { const i = s.cut[k], v = s.cut[k + 1]; if (i >= 0 && i < tiles.length && TILE_HP[v] !== undefined) { tiles[i] = v; thp[i] = TILE_HP[v]; } }
+      objectives.forEach((o, i) => { o.n = Math.max(0, Math.min(o.need, (s.obj || [])[i] | 0)); });
+      Object.assign(stats, s.stats); storyFlag = !!s.story; if (wrapEdge && s.wrapOff) wrapEdge.off = true;
+      checkpoint = { x: s.cp[0], y: s.cp[1] };
+      if (s.cut.length) { collapseDirty = true; miniDirty = true; seedLife(); }
+      radioQ = []; radioCur = null; objShowT = 6;
+    }
+    P = newPlayer(checkpoint.x, checkpoint.y, bro); if (same) P.spec = Math.max(0, Math.min(specMax(bro), s.spec | 0));
+    cam.x = clamp(P.x + P.w / 2 - VW / 2, 0, playW * T - VW); cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
+    if (same && boss && boss.dead) { if (reqDone()) callChopper(); else extractPending = true; } // the boss was already down
+    if (same && LV().meltdown && !melt && objectives.every((x) => !x.req || x.id === 'boss' || x.n >= x.need)) { startMelt(); meltSafe(); }
+    state = 'play'; paused = false; saveRun();
+    showBanner('GAME LOADED', same ? LV().name + ' · from the last checkpoint' : LV().name + ' · from the start (the mission was rebuilt)', 2.6);
+    return true;
+  } catch (e) { clearRun(); return false; }
+}
+loadRun();
+const titleItems = () => (runSaved ? [['CONTINUE', 'continue']].concat(TITLE_MENU) : TITLE_MENU); // the title menu; CONTINUE leads it while a run is saved
 const TITLE_MENU = [['CAMPAIGN', 'campaign'], ['LAB SIEGE', 'siege'], ['BOSS RUSH', 'rush'], ['MOON BASE', 'moon'], ['RANDOM MISSION', 'random'], ['TROPHIES', 'trophies'], ['RESET PROGRESS', 'reset']];
 let titleSel = 0, resetArm = false, resetAt = 0; // RESET PROGRESS needs a second press
-if (urlSeed) titleSel = TITLE_MENU.findIndex((m) => m[1] === 'random'); // ?seed=12345: the title points at the random mission
+if (urlSeed) titleSel = titleItems().findIndex((m) => m[1] === 'random'); // ?seed=12345: the title points at the random mission
 let bodies = [], decals = new Map(), hitStop = 0, combo = { n: 0, t: 0, pop: 0 };
 // kills inside 1.6 s of each other chain into a combo that multiplies the points
 function addScore(pts, kill = true, x, y) { // x, y (optional): where the points pop up
@@ -4716,7 +4792,8 @@ function startLevel(n) {
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
   slowT = 0; deathSlow = 0; bossIntroAt = -99; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
   cam.x = 0; cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
-  showBanner((n < LEVELS.length ? 'LEVEL ' + (n + 1) + ' · ' : '') + levelDef(n).name, levelDef(n).sub, 3);
+  showBanner((n < LEVELS.length ? 'LEVEL ' + missionNo(n) + ' · ' : '') + levelDef(n).name, levelDef(n).sub, 3);
+  markFresh();
 }
 function init() { newGame(); startLevel(0); }
 
@@ -6025,8 +6102,9 @@ const EV_RUN = {
   blackout(E) { return E.t > E.len; },
 };
 // how dark a blackout is right now (0: not at all); the lights flicker back on at the end
+const DARK_AMB = 0.84, DARK_LAMP = { r: 125, a: 0.95, col: '#fff6c2' }; // round 9: the DARK modifier is a whole mission, not a 10 s blackout, so it is less black and the bro carries a real lamp
 function evDark() {
-  const m = 0.95 * modDarkK; // DARK: the blackout's darkness for the whole mission (the lamp around the bro comes with it)
+  const m = DARK_AMB * modDarkK; // DARK: darkness for the whole mission (the lamp around the bro comes with it)
   if (!ev || ev.name !== 'blackout') return m;
   const left = ev.len - ev.t;
   return Math.max(m, left < 1.2 ? (Math.random() < 0.5 ? 0.95 : 0) : 0.95 * Math.min(1, ev.t * 2));
@@ -6193,7 +6271,8 @@ function drawEventHud(t) {
   } else if (whiteT > 0) { ctx.globalAlpha = Math.min(1, whiteT * 1.4); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
 }
 function eventLights(t) {
-  if (evDark() > 0) for (const L of lights) if (L[3] === null) L[4] *= 0.3; // in a blackout the bro barely sees himself
+  if (ev && ev.name === 'blackout' && evDark() > 0) for (const L of lights) if (L[3] === null) L[4] *= 0.3; // in a blackout (the short event) the bro barely sees himself
+  if (modDarkK > 0 && P.alive) light(P.x + 5, P.y + 6, DARK_LAMP.r, DARK_LAMP.col, DARK_LAMP.a * modDarkK); // DARK (the mission modifier): his lamp shows about eight tiles around him
   for (const n of nukes) if (!n.boom) light(n.x, n.y - 4, n.blink > 0 ? 40 : 18, n.style === 'gamma' ? '#8a5cff' : '#ff3a2a', 0.9);
   for (const f of fx) if (f.kind === 'mushroom') { const age = f.max - f.t, hot = Math.max(0, 1 - age / 1.8); light(f.x, f.y - 60 - Math.min(1, age / 2.4) * 120, 135 + 180 * hot, '#f29e4c', 0.4 + 0.6 * hot); }
   if (!ev) return;
@@ -6301,17 +6380,17 @@ function step(dt) {
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
       const was = state;
-      if (state === 'title') { const m = TITLE_MENU[titleSel][1]; if (m === 'trophies') state = 'trophies'; else if (m === 'reset') { if (resetArm) { resetProgress(); newGame(); resetArm = false; resetAt = clock + 3; } else resetArm = true; } else startMode(m); }
+      if (state === 'title') { if (titleSel >= titleItems().length) titleSel = 0; const m = titleItems()[titleSel][1]; if (m === 'trophies') state = 'trophies'; else if (m === 'reset') { if (resetArm) { resetProgress(); newGame(); resetArm = false; resetAt = clock + 3; titleSel = TITLE_MENU.findIndex((q) => q[1] === 'reset'); } else resetArm = true; } else if (m === 'continue') { if (!resumeRun()) { titleSel = 0; sfx('ui_deny'); return; } } else startMode(m); }
       else if (state === 'done' || state === 'modedone' || state === 'trophies' || (state === 'over' && (mode === 'siege' || mode === 'rush'))) { state = 'title'; mode = 'campaign'; init(); state = 'title'; }
       else if (state === 'map') { if (!missionOpen(level)) { sfx('ui_deny'); return; } state = 'brief'; briefBro = (Math.random() * unlocked.length) | 0; mapNote = ''; } // the briefing offers a random bro first; a locked mission stays shut
-      else if (state === 'brief') { startLevel(level); applyGear(); if (openingDue()) beginOpening(); else state = 'play'; }
+      else if (state === 'brief') { startLevel(level); applyGear(); saveRun(); if (openingDue()) beginOpening(); else state = 'play'; }
       else if (state === 'win' && mode === 'random') startRandom(newSeed());
-      else if (state === 'win') { level = nextStop(level); state = 'map'; mapT = 0; } // back to the world map; bros and reserve carry over
-      else if (state === 'over') { lives = startLives(3); startLevel(level); state = 'play'; } // retry this level
+      else if (state === 'win') { level = nextStop(level); state = 'map'; mapT = 0; saveRun(true); } // back to the world map; bros and reserve carry over
+      else if (state === 'over') { lives = startLives(3); startLevel(level); state = 'play'; saveRun(); } // retry this level
       sfx(was === 'trophies' || was === 'done' || was === 'modedone' ? 'ui_back' : 'ui_ok');
     }
     mapT += dt;
-    if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) { sfx('ui_move'); resetArm = false; } }
+    if (state === 'title') { const N = titleItems().length; if (pressed.jump) titleSel = (titleSel + N - 1) % N; if (pressed.down) titleSel = (titleSel + 1) % N; if (pressed.jump || pressed.down) { sfx('ui_move'); resetArm = false; } }
     if (state === 'title' && (pressed.left || pressed.right)) setDifficulty(settings.difficulty + (pressed.right ? 1 : -1)); // difficulty (the random mission's easy/normal/hard follows it)
     if (state === 'title' && (pressed.special || pressed.melee)) setDensity(settings.density + (pressed.special ? 1 : -1)); // X more quacks, C fewer
     if (state === 'brief') briefInput();
@@ -6361,7 +6440,7 @@ function step(dt) {
 
   if (!P.alive && !P.ride) {
     endT -= dt;
-    if (endT <= 0) { if (lives > 0) respawn(); else { state = 'over'; bankScore(); runScore -= stats.score; } } // a failed attempt can set a best, but a retry starts the level's score again
+    if (endT <= 0) { if (lives > 0) respawn(); else { state = 'over'; bankScore(); runScore -= stats.score; if (mode === 'campaign') clearRun(); } } // a failed attempt can set a best, but a retry starts the level's score again
   }
   if (banner.t > 0) banner.t -= dt;
   shake = Math.max(0, shake - dt * 25); kickX = approach(kickX, 0, dt * 30);
@@ -6538,6 +6617,24 @@ function bossCalm(e, dt) {
   for (const b of bullets) if (b.owner === 'e' && (b.kind === 'missile' || b.kind === 'bomb')) b.dead = true; // its homing missiles and bombs fizzle
   floatText(e.x + e.w / 2, e.y - 8, 'HMPH', '#a3abd0');
 }
+// ---- fall damage (round 9): a quack, dog or bomber that lands FALL.from tiles or more below the spot it last stood on takes FALL.per hp for the
+// fifth tile and for every tile after it. The drop is scaled by gravity (the Moon is kinder). Jumps, spring pads and blasts that land a quack back
+// at its old height cost nothing; parachutes, jetpacks and quacks thrown by a special (e.lever, its own rule) are left out. The kill is the player's.
+const FALL = { from: 5, per: 2, gib: 9 };
+const FALLERS = (e) => isQuack(e) || e.type === 'dog' || e.type === 'bomber';
+const fallDmg = (drop) => (drop >= FALL.from ? FALL.per * (Math.floor(drop) - FALL.from + 1) : 0); // drop in tiles
+function fallCheck(e) {
+  if (e.chute || e.type === 'jetpack' || e.zeroG > 0 || e.lever) { e.air = false; e.fallY = e.y; return; }
+  if (!e.onGround) { e.air = true; return; }
+  const drop = e.air ? ((e.y - e.fallY) / T) * (G / 900) + 0.02 : 0, d = fallDmg(drop); // 0.02: a drop of exactly five tiles counts as five
+  e.air = false; e.fallY = e.y;
+  if (!(d > 0)) return; // also when fallY is not set yet: the first landing after a spawn is free
+  const ob = blame; blame = 'p';
+  const cx = e.x + e.w / 2, fy = e.y + e.h;
+  sfx('thud', cx); dust(cx, fy - 2, 3, 80); if (d >= e.hp) floatText(cx, e.y - 8, 'SPLAT', '#f2c94c');
+  hitEnemy(e, d, 0, drop >= FALL.gib ? 'crush' : 'blast');
+  blame = ob;
+}
 function updateEnt(e, dt) {
   e.flash -= dt; if (e.flinch > 0) e.flinch -= dt; if (e.bug > 0) e.bug -= dt; if (e.jam > 0) e.jam -= dt;
   if (BOSS[e.type]) { bossCalm(e, dt); if (!e.active && grace > 0) return; } // no boss wakes up on a bro that is still parachuting in
@@ -6677,7 +6774,7 @@ function updateEnt(e, dt) {
       if (!e.on && P.alive && P.x + P.w > e.x - 2) {
         e.on = true; checkpoint = { x: e.x - 2, y: e.y + e.h - 16 }; sfx('checkpoint');
         P.spec = specMax(P.bro); floatText(e.x + 6, e.y - 4, 'SPECIALS REFILLED', '#a6d854');
-        showBanner('CHECKPOINT', 'Next bro drops in here', 1.4);
+        showBanner('CHECKPOINT', mode === 'campaign' ? 'Next bro drops in here · game saved' : 'Next bro drops in here', 1.4); saveRun();
         if (!storyFlag) { storyFlag = true; const st = storyOf(level); if (st) st.mid.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 0.8)); }
       }
       break;
@@ -6691,6 +6788,7 @@ function updateEnt(e, dt) {
     case 'director': updateDirector(e, dt * (diff.pace || 1)); break;
     case 'icicle': updateIcicle(e, dt); break;
   }
+  if (ground && FALLERS(e) && !e.dead) fallCheck(e);
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > ugFloor(e.x + e.w / 2)) && !e.dead) {
     if (e.type === 'cage' || e.type === 'pickup') { e.dead = true; } else if (HITTABLE[e.type]) { e.hp = 0; killEnemy(e); }
   }
@@ -7229,10 +7327,12 @@ function rescue(cage) {
 
 // ---------------------------------------------------------------- bro-mech
 // Walk into an empty mech to climb in. It bulldozes soft walls, fires a heavy gun (fire) and rockets (special),
-// punches through blocks, stomps on landing and soaks up 24 hits. Dash (Shift) or Down + Jump gets out; at 0 it blows up and throws you clear.
+// punches through blocks, butts through ceilings on a jump, stomps on landing and soaks up 24 hits. Dash (Shift) or Down + Jump gets out; at 0 it blows up and throws you clear.
+// per suit: top speed (px/s), jump speed, ram (hp/s ground off a soft block it drives or flies into), butt (hp knocked off blocks its roof hits on the way up), stomp (hp off the blocks it lands on)
+const MECH = { walker: { v: 82, jump: -340, ram: 16, butt: 4, stomp: 4 }, tank: { v: 50, jump: -300, ram: 24, butt: 6, stomp: 6 } };
 function boardMech(suit) {
   suit.dead = true; sfx('mech');
-  const tank = suit.type === 'tanksuit'; // the Think Tank: a P.mech of kind 'tank' (slower, 40 hp, no jump, no ladders, a cannon on the aim key)
+  const tank = suit.type === 'tanksuit'; // the Think Tank: a P.mech of kind 'tank' (slower, 40 hp, a low jump, no ladders, a cannon on the aim key)
   P.mech = { kind: tank ? 'tank' : 'walker', hp: suit.mhp || (tank ? 40 : 24), max: tank ? 40 : 24, gcool: 0, rcool: 0, wp: 0, hurt: 0, lift: 0 };
   P.w = tank ? 30 : 20; P.h = tank ? 18 : 26; P.x = suit.x; P.y = suit.y; P.vx = 0; P.vy = 0; P.dash = 0; P.pound = 0;
   if (tank) showBanner('THINK TANK', 'Z cannon · hold aim + Up to raise it · SHIFT or Down+Jump: get out', 3);
@@ -7261,23 +7361,32 @@ function updateMechSuit(dt) {
   const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), tank = M.kind === 'tank';
   if (tank) P.aim = padAim ? clamp(Math.atan2(-padAim[1], Math.abs(padAim[0])), 0, Math.PI / 2) : keys.aim && keys.up ? (dir ? Math.PI / 4 : Math.PI / 2) : 0; // the same aim as on foot
   if (dir && !(tank && (keys.aim || padAim))) P.face = dir; // the tank keeps its facing while the aim key is held, so it can drive backwards and still shoot forwards
-  P.vx = approach(P.vx, dir * (tank ? 50 : 82), (P.onGround ? 700 : 400) * dt);
+  const K = MECH[M.kind];
+  P.vx = approach(P.vx, dir * K.v, (P.onGround ? 700 : 400) * dt);
   P.coy = P.onGround ? 0.09 : P.coy - dt;
   if (pressed.jump && keys.down) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } // Down + Jump gets you out too
   if (pressed.jump) { if (clock - (M.tap || -9) < 0.3) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } M.tap = clock; } // and so does a quick double tap of Jump
   P.jbuf = pressed.jump ? 0.12 : P.jbuf - dt;
-  if (P.jbuf > 0 && P.coy > 0 && !tank) { P.vy = -300; P.coy = 0; P.jbuf = 0; sfx('jump'); } // the tank cannot jump
+  if (P.jbuf > 0 && P.coy > 0) { // both suits jump on jets: the walker four tiles, the tank three
+    P.vy = K.jump; P.coy = 0; P.jbuf = 0; sfx('jump'); if (tank) sfx('thud');
+    for (let i = 0; i < 8; i++) part(P.x + rand(3, P.w - 3), P.y + P.h - 1, rand(-40, 40), rand(60, 160), '', rand(0.15, 0.3), 2, 0, i % 2 ? 'fire' : 'smoke');
+  }
   if (!keys.jump && P.vy < -120) P.vy = -120;
   P.vy = Math.min(P.vy + G * dt, 560);
-  if (dir && P.onGround && !tank) { // bulldoze: walking into soft blocks grinds them away
-    const ex = dir > 0 ? P.x + P.w + 1 : P.x - 1;
-    for (let yy = P.y + 3; yy < P.y + P.h - 2; yy += 8) {
-      const c = Math.floor(ex / T), r = Math.floor(yy / T), v = tileAt(c, r);
-      if (v && v !== STEEL && v !== ACID) { damageTile(c, r, 5 * dt); if (Math.random() < 0.3) part(ex, yy, -dir * rand(20, 80), rand(-80, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
+  if (dir) { // ram: driving, walking or flying into soft blocks grinds them away (steel holds)
+    const ex = dir > 0 ? P.x + P.w + 1 : P.x - 1, c = Math.floor(ex / T), step1 = tank && P.onGround && !rectSolid(P.x + dir * 3, P.y - T, P.w, P.h); // the tank still climbs a one-tile step instead of eating it
+    for (let r = Math.floor((P.y + 1) / T); r <= Math.floor((P.y + P.h - 2) / T) && !step1; r++) {
+      const v = tileAt(c, r);
+      if (v && v !== STEEL && v !== ACID && v !== LADDER) { damageTile(c, r, K.ram * dt); if (Math.random() < 0.3) part(ex, r * T + 8, -dir * rand(20, 80), rand(-80, -10), (TILE_COL[v] || ['#888'])[0], 0.4, 2, G); }
     }
   }
   const vy0 = P.vy, was = P.onGround, wp0 = M.wp;
   moveBody(P, dt);
+  if (vy0 < -100 && P.vy === 0 && !P.onGround) { // the roof of the suit hits a ceiling: soft blocks break and the jump carries on through the hole
+    const r = Math.floor((P.y - 2) / T); let broke = false;
+    for (let c = Math.floor((P.x + 1) / T); c <= Math.floor((P.x + P.w - 1) / T); c++) if (damageTile(c, r, K.butt)) broke = true;
+    if (broke) { P.vy = vy0 * 0.6; shake = Math.min(10, shake + 2); sfx('thud'); }
+  }
   if (tank) { // climbs a one-tile step: a wall lower than a tile with room above it is driven up (drawn as a smooth lift)
     if (dir && P.wall === dir && was && !rectSolid(P.x + dir * 3, P.y - T, P.w, P.h)) { P.y -= T; P.x += dir * 3; M.lift = T; P.vx = dir * 30; P.vy = 0; P.onGround = true; sfx('thud'); }
     M.lift = Math.max(0, M.lift - 70 * dt);
@@ -7292,7 +7401,7 @@ function updateMechSuit(dt) {
   if (P.onGround && !was && vy0 > 300) { // stomp
     const cx = P.x + P.w / 2, fy = P.y + P.h + 2;
     shake = Math.min(12, shake + 4); sfx('thud'); rumble(0.5, 120);
-    for (let c = Math.floor((cx - 14) / T); c <= Math.floor((cx + 14) / T); c++) damageTile(c, Math.floor(fy / T), 2);
+    for (let c = Math.floor((cx - 14) / T); c <= Math.floor((cx + 14) / T); c++) damageTile(c, Math.floor(fy / T), K.stomp);
     for (const e of ents) if (live(e) && !BOSS[e.type] && Math.hypot(center(e)[0] - cx, center(e)[1] - fy) < 40) { e.vy = -240; hitEnemy(e, 2, Math.sign(center(e)[0] - cx || 1) * 200, 'blast'); }
     for (let i = 0; i < 12; i++) part(cx + rand(-10, 10), fy - 2, rand(-150, 150), rand(-100, -20), theme.dust, rand(0.3, 0.6), rand(3, 5), 0, 'smoke');
   }
@@ -8479,7 +8588,7 @@ function updateChopper(dt) {
       if (unlocked.length === BROS.length && mode === 'campaign') unlock('allbros');
       if (mode === 'moon') { state = 'modedone'; unlock('moon'); }
       else if (mode === 'random') { state = 'win'; runScore += stats.score; lastResult = runResult(); } // the debrief offers the next random map
-      else { if (mode === 'campaign') lastResult = recordRun(level); markCleared(level); state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); }
+      else { if (mode === 'campaign') lastResult = recordRun(level); markCleared(level); state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); if (mode === 'campaign') { if (state === 'done') clearRun(); else saveRun(true); } }
     }
   }
 }
@@ -10597,7 +10706,7 @@ function beginOpening() {
 }
 function endOpening() {
   P.x = introLand.x; P.y = introLand.y; P.chute = false; P.vx = P.vy = 0; P.inv = 1; P.onGround = true; chopper = null; state = 'play';
-  showBanner('LEVEL ' + (level + 1) + ' · ' + LV().name, LV().sub, 3);
+  showBanner('LEVEL ' + missionNo(level) + ' · ' + LV().name, LV().sub, 3);
 }
 function introStep(dt) {
   introT += dt;
@@ -10753,7 +10862,7 @@ function drawHud(t) {
     pauseItems().forEach(([label, key], i) => {
       const y = 88 + i * 13, sel = i === menuSel;
       if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
-      text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
+      text((sel ? '> ' : '  ') + (label === 'QUIT TO TITLE' && mode === 'campaign' && runSaved ? 'SAVE AND QUIT' : label), VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
       if (key === 'gore') text(['OFF', 'ON', 'EXTRA'][settings.gore | 0], VW / 2 + 100, y, 8, ['#e78ac3', '#a6d854', '#ff5a4a'][settings.gore | 0], 'right');
       else if (key === 'music') text(settings.musicVol > 0 ? Math.round(settings.musicVol * 100) + '%' : 'OFF', VW / 2 + 100, y, 8, settings.musicVol > 0 ? '#a6d854' : '#e78ac3', 'right');
       else if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
@@ -10796,14 +10905,15 @@ function drawScreen(t) {
     const per = Math.ceil(BROS.length / 2); // the roster in two rows, the second one offset half a step
     const stp = Math.min(19, Math.floor((VW - 16) / (per + 0.5))); // 19 px apart while the row fits, closer once it would run off the screen
     BROS.forEach((b, i) => { const r = Math.floor(i / per), x = Math.round(VW / 2 - per * stp / 2 + (i % per) * stp + r * stp / 2); drawRigAt(b.rig, x + 6, 132 + r * 18, 1, { leg: 'stand', fr: 0, bob: Math.floor(t * 2 + i * 0.37) % 2 }, false); }); // outlined, breathing
-    TITLE_MENU.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go
-      const sel = i === titleSel, y = 164 + i * 11;
+    const items = titleItems();
+    items.forEach(([label, m], i) => { // the menu: up/down to choose, enter to go (eight rows sit closer together than seven)
+      const sel = i === titleSel, y = 164 + i * (items.length > 7 ? 10 : 11);
       if (sel) { ctx.fillStyle = 'rgba(42,49,96,0.9)'; ctx.fillRect(VW / 2 - 90, y - 9, 180, 11); }
-      const extra = m === 'random' ? '  < ' + DF().name + ' >' + (urlSeed ? ' SEED ' + urlSeed : '') : m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
+      const extra = m === 'continue' ? '  ' + runSaved.name + (runSaved.map ? ' · MAP' : '') : m === 'random' ? '  < ' + DF().name + ' >' + (urlSeed ? ' SEED ' + urlSeed : '') : m === 'siege' && siege.best ? '  BEST WAVE ' + siege.best : m === 'rush' && rush.best ? '  BEST ' + fmtTime(rush.best) : m === 'trophies' ? '  ' + Object.keys(trophies).length + '/' + ACH.length : '';
       if (m === 'reset') { const arm = resetArm && sel; text((sel ? '> ' : '  ') + (clock < resetAt ? 'PROGRESS RESET' : arm ? 'RESET ALL PROGRESS? PRESS AGAIN' : label), VW / 2 - 82, y, 8, arm ? '#ff5a4a' : sel ? '#a6d854' : '#e7eaf6'); return; }
       text((sel ? '> ' : '  ') + label + extra, VW / 2 - 82, y, 8, sel ? '#a6d854' : '#e7eaf6');
     });
-    text('UP/DOWN CHOOSE · ENTER START · DOUBLE-TAP RUN · SHIFT ROLL', VW / 2, 241, 8, '#a3abd0', 'center');
+    text('UP/DOWN CHOOSE · ENTER START · DOUBLE-TAP RUN · SHIFT ROLL', VW / 2, items.length > 7 ? 243 : 241, 8, '#a3abd0', 'center');
     text('< DIFFICULTY ' + DF().name + ' >   ENEMIES ' + Math.round(densMul * 100) + '%', VW / 2, 252, 8, '#f2c94c', 'center'); text('LEFT/RIGHT DIFFICULTY · X MORE QUACKS · C FEWER', VW / 2, 263, 8, '#5c6480', 'center');
   } else if (state === 'over' && mode === 'siege') {
     text('THE LAB HAS FALLEN', VW / 2, 96, 24, '#e78ac3', 'center');
@@ -10823,7 +10933,7 @@ function drawScreen(t) {
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
     if (dT >= 0.12) text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LV().cages, VW / 2, 126, 8, '#a3abd0', 'center'); // the lines come in one after another
-    if (blink && dT >= 0.24) text(mode === 'random' ? 'PRESS ENTER TO RETRY SEED ' + genSeed : 'PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
+    if (blink && dT >= 0.24) text(mode === 'random' ? 'PRESS ENTER TO RETRY SEED ' + genSeed : 'PRESS ENTER TO RETRY LEVEL ' + missionNo(level), VW / 2, 160, 8, '#e7eaf6', 'center');
   } else if (state === 'win') { // debrief: what happened, what got done, the numbers
     text(LV().name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
     wrap(LV().debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
@@ -11211,7 +11321,7 @@ function drawWorldMap(t) {
     if (lib && records[L.name]) text(records[L.name].rank, x + 8, y + 5, 8, RANK.col[records[L.name].rank], 'left'); // best rank beside the flag
     if (lib) wmFlag(x + 4, y - 1, t, '#4f9a2a', false);
     else if (front && k !== 'citadel') wmFlag(x + 4, y - 1, t, '#c8323c', true);
-    if (!fog || i === sel) text(String(i + 1), x, y + 12, 8, lib ? '#a6d854' : front ? '#f2c94c' : '#8a83a3', 'center');
+    if (!fog || i === sel) text(String(missionNo(i)), x, y + 12, 8, lib ? '#a6d854' : front ? '#f2c94c' : '#8a83a3', 'center');
   });
   wmClouds(t, false);
   wmPlane(t);
@@ -11242,7 +11352,7 @@ function drawWorldMap(t) {
   ctx.restore();
   const st = done(sel) ? ['CLEARED', '#a6d854'] : open[sel] ? ['OPEN', '#f2c94c'] : ['LOCKED', '#ff5a4a'];
   text(st[0], VW - 8, 222, 8, st[1], 'right');
-  text('MISSION ' + (sel + 1) + ' · ' + L.name, 52, 222, 8, '#f2c94c');
+  text('MISSION ' + missionNo(sel) + ' · ' + L.name, 52, 222, 8, '#f2c94c');
   text(L.sub.toUpperCase(), 52, 233, 8, '#a3abd0');
   text('REGION ' + (L.region + 1) + ' · ' + R.name, 52, 244, 8, '#8da0cb');
   { const q = done(sel) && records[L.name]; if (q) text(q.rank + ' ' + fmtTime(q.time) + ' · ' + q.cages + '/' + L.cages + ' CAGES · ' + q.intel + '/3 INTEL', VW - 8, 244, 8, RANK.col[q.rank], 'right'); } // the best run of a cleared mission, right of the region line (y 244)
@@ -11272,7 +11382,7 @@ function drawBriefing(t) {
   ctx.fillStyle = '#0b0e1f'; ctx.fillRect(0, 0, VW, VH);
   if (mode === 'campaign') text('REGION ' + (LV().region + 1) + ': ' + REGIONS[LV().region].name, VW / 2, 13, 8, '#8da0cb', 'center');
   if (mode === 'random') text('RANDOM MAP · SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase() + ' · REPLAY: ?seed=' + genSeed, VW / 2, 13, 8, '#f2c94c', 'center');
-  text((mode === 'random' ? '' : 'MISSION ' + (level + 1) + ' · ') + L.name, VW / 2, 30, 16, '#a6d854', 'center');
+  text((mode === 'random' ? '' : 'MISSION ' + missionNo(level) + ' · ') + L.name, VW / 2, 30, 16, '#a6d854', 'center');
   ctx.fillStyle = '#171c37'; ctx.fillRect(24, 44, 40, 40); ctx.drawImage(BRO.einstein.spr[0][0], 30, 48, 24, 32); // HQ: Professor Peer Review
   text('PROF. PEER REVIEW, HQ', 72, 54, 8, '#8da0cb');
   const lines = wrap(L.brief, 62).slice(0, 7), shown = Math.min(lines.length, Math.floor(mapT * 2.2) + 1); // typed out line by line
@@ -11546,6 +11656,98 @@ function drawLighting(ox, oy) {
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(VIGNETTE, 0, 0);
 }
+
+// ---------------------------------------------------------------- graphics pass (round 9)
+// Render-only: a crisp outline and top rim on the bro, quacks and dogs; ambient occlusion where solid tiles meet open air; presence light and a gentler ambient in dark themes. Each part has a switch.
+const GFX = { outline: true, ao: true, glow: true };
+const GFX_OUT = '#0a0814', GFX_RIM = 'rgba(214,224,255,0.5)';
+// The outline is made once a frame for every character together (three screen-sized layers), not once per character: with 18 quacks on screen the
+// per-character version cost 10 ms of a 13 ms frame in Chrome, each one switching between small canvases. gfxOutlinePass runs just before the entities are
+// drawn: (1) the bro, quacks and dogs on screen are drawn alone into layer a, loose extras switched off; (2) layer b is their silhouette in the outline
+// colour and goes onto the screen at four 1 px offsets; (3) layer c is the pale top edge. Then the game draws everything as usual on top (order unchanged)
+// and gfxRim puts layer c over it after the bro is drawn.
+const gfxBuf = (() => {
+  try { const a = mk(VW, VH), b = mk(VW, VH), c = mk(VW, VH); return { a, b, c, ga: a.getContext('2d'), gb: b.getContext('2d'), gc: c.getContext('2d') }; } catch (e) { return null; }
+})();
+const gfxDark = () => (ev && ev.name === 'blackout') || ugDark() > 0; // a blackout and the deep underground stay as dark as before; under the DARK modifier quacks keep their faint light, so they can be seen coming
+const GFX_QUIET = ['zeroG', 'jam', 'fervor', 'brave', 'bug', 'hacked', 'react', 'huh', 'chute']; // one-off extras around a quack (bubble, static, halo, pennant, moth, text, marks): kept out of the silhouette
+function gfxQuiet(o, keys, saved) { for (const k of keys) if (o[k]) { saved.push(k, o[k]); o[k] = 0; } }
+function gfxRestore(o, saved) { for (let i = 0; i < saved.length; i += 2) o[saved[i]] = saved[i + 1]; }
+const gfxOutlined = (e) => !e.dead && (e.type === 'dog' || isQuack(e)) && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32;
+const gfxBroOutlined = () => P.alive && !P.ride && !P.mech && !(P.inv > 0 && Math.floor(P.inv * 15) % 2);
+let gfxT = 0, gfxRimDue = false, gfxN = 0; // the render time of this frame (from drawTiles), whether layer c waits to be drawn, how many characters the last pass held
+function gfxOutlinePass() {
+  gfxRimDue = false; gfxN = 0;
+  if (!GFX.outline || !gfxBuf) return;
+  const K = gfxBuf, main = ctx, ga = K.ga, gb = K.gb, gc = K.gc, tr = main.getTransform ? main.getTransform() : null;
+  const ox = tr && typeof tr.e === 'number' ? tr.e : Math.round(-cam.x), oy = tr && typeof tr.f === 'number' ? tr.f : Math.round(-cam.y); // the camera and shake offset render() is using
+  ga.setTransform(1, 0, 0, 1, 0, 0); ga.globalAlpha = 1; ga.globalCompositeOperation = 'source-over'; ga.clearRect(0, 0, VW, VH); ga.setTransform(1, 0, 0, 1, ox, oy);
+  ctx = ga;
+  try {
+    for (const e of ents) if (gfxOutlined(e)) {
+      const sv = []; gfxQuiet(e, GFX_QUIET, sv); if (e.aim && (e.type === 'sniper' || e.type === 'rocketeer')) { sv.push('aim', e.aim); e.aim = 0; } // the laser sight is not part of the body
+      try { g9DrawEnt(e, gfxT); gfxN++; } finally { gfxRestore(e, sv); }
+    }
+    if (gfxBroOutlined()) {
+      const sv = [], aim = keys.aim, pa = padAim;
+      gfxQuiet(P, ['shield', 'cage', 'chute', 'lamp', 'lens'], sv); if (P.jet && P.bro.id === 'davinci') { sv.push('jet', P.jet); P.jet = 0; }
+      keys.aim = false; padAim = null;
+      try { g9DrawPlayer(); gfxN++; } finally { gfxRestore(P, sv); keys.aim = aim; padAim = pa; }
+    }
+  } finally { ctx = main; }
+  ga.setTransform(1, 0, 0, 1, 0, 0); ga.globalAlpha = 1; ga.globalCompositeOperation = 'source-over';
+  if (!gfxN) return;
+  gb.globalCompositeOperation = 'source-over'; gb.clearRect(0, 0, VW, VH); gb.drawImage(K.a, 0, 0); gb.globalCompositeOperation = 'source-in'; gb.fillStyle = GFX_OUT; gb.fillRect(0, 0, VW, VH); gb.globalCompositeOperation = 'source-over';
+  gc.globalCompositeOperation = 'source-over'; gc.clearRect(0, 0, VW, VH); gc.drawImage(K.a, 0, 0); gc.globalCompositeOperation = 'source-in'; gc.fillStyle = GFX_RIM; gc.fillRect(0, 0, VW, VH);
+  gc.globalCompositeOperation = 'destination-out'; gc.drawImage(K.a, 0, 1); gc.globalCompositeOperation = 'source-over'; // what is left is the top edge: pixels with nothing above them
+  main.save(); main.setTransform(1, 0, 0, 1, 0, 0);
+  main.drawImage(K.b, -1, 0); main.drawImage(K.b, 1, 0); main.drawImage(K.b, 0, -1); main.drawImage(K.b, 0, 1);
+  main.restore();
+  gfxRimDue = true;
+}
+function gfxRim() { if (!gfxRimDue) return; gfxRimDue = false; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(gfxBuf.c, 0, 0); ctx.restore(); }
+const g9DrawEnt = drawEnt, g9DrawPlayer = drawPlayer, g9DrawBodies = drawBodies;
+drawBodies = function () { g9DrawBodies(); gfxOutlinePass(); }; // render() draws the bodies, then the entities, the chopper and the bro
+drawPlayer = function () { g9DrawPlayer(); gfxRim(); };
+// ---- ambient occlusion: soft shade in open cells under ledges and ceilings and beside walls, stronger in front of a back wall
+const GFX_AO = { top: null, left: null, right: null, c0: 0, c1: -1, r0: 0, r1: -1, n: 0 };
+function gfxAOSprites() {
+  const mkS = (w, h, x1, y1, x2, y2, a) => { const c = mk(w, h), g = c.getContext('2d'); try { const gr = g.createLinearGradient(x1, y1, x2, y2); gr.addColorStop(0, 'rgba(0,0,12,' + a + ')'); gr.addColorStop(0.45, 'rgba(0,0,12,' + a * 0.4 + ')'); gr.addColorStop(1, 'rgba(0,0,12,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); } catch (e) { /* optional */ } return c; };
+  GFX_AO.top = [mkS(T, 5, 0, 0, 0, 5, 0.4), mkS(T, 5, 0, 0, 0, 5, 0.6)]; GFX_AO.left = [mkS(3, T, 0, 0, 3, 0, 0.26), mkS(3, T, 0, 0, 3, 0, 0.42)]; GFX_AO.right = [mkS(3, T, 3, 0, 0, 0, 0.26), mkS(3, T, 3, 0, 0, 0, 0.42)];
+}
+function gfxAO() {
+  if (!GFX.ao) return;
+  if (!GFX_AO.top) gfxAOSprites();
+  const [c0, c1, r0, r1] = viewTiles(), S = GFX_AO, TP = S.top, LF = S.left, RT = S.right;
+  S.c0 = c0; S.c1 = c1; S.r0 = r0; S.r1 = r1; let n = 0;
+  for (let r = r0; r <= r1; r++) {
+    const row = r * LW, y = r * T;
+    for (let c = c0; c <= c1; c++) {
+      if (tiles[row + c] !== EMPTY) continue; // only open air (not ladders or acid)
+      n++;
+      const b = bg[row + c] ? 1 : 0, x = c * T;
+      if (r > 0 && isSolidT(tiles[row - LW + c])) ctx.drawImage(TP[b], x, y);
+      if (c > 0 && isSolidT(tiles[row + c - 1])) ctx.drawImage(LF[b], x, y);
+      if (c < LW - 1 && isSolidT(tiles[row + c + 1])) ctx.drawImage(RT[b], x + T - 3, y);
+    }
+  }
+  S.n = n;
+}
+const g9DrawTiles = drawTiles;
+drawTiles = function (t) { gfxT = t; g9DrawTiles(t); gfxAO(); };
+// ---- readability: quacks and dogs carry a faint light of their own, and the overall darkness is eased a little (never while DARK, a blackout or the deep is on)
+function gfxGlow() {
+  if (!GFX.glow || gfxDark()) return;
+  for (const e of ents) if (!e.dead && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32 && (e.type === 'dog' || isQuack(e))) light(e.x + e.w / 2, e.y + e.h / 2, 25, null, 0.35); // only those on screen: a mission holds over a hundred
+}
+const g9CollectLights = collectLights;
+collectLights = function (t) { g9CollectLights(t); gfxGlow(); };
+const g9DrawLighting = drawLighting;
+drawLighting = function (ox, oy) {
+  if (!GFX.glow || gfxDark()) { g9DrawLighting(ox, oy); return; }
+  const a = theme.ambient; theme.ambient = a * 0.85;
+  try { g9DrawLighting(ox, oy); } finally { theme.ambient = a; }
+};
 
 // ---------------------------------------------------------------- living world
 // Plants grow on the ground and hang under ledges: they bend when something walks through them and in the wind,
@@ -11938,16 +12140,27 @@ function drawWeather(t) {
 
 // ---------------------------------------------------------------- loop
 let last = performance.now(), acc = 0;
+// Round 9: (1) at most three steps are caught up in one frame (six before), so a busy machine slows the game a little instead of making every late frame
+// twice as heavy; (2) the picture is only redrawn when a step ran, so a 120 Hz display draws 60 frames a second, not 120 copies of 60 states;
+// (3) ?fps in the address shows frames per second and the time spent on steps and drawing (frameStats).
+const SHOW_FPS = /[?&]fps\b/.test(URL_ARGS), frameStats = { fps: 60, work: 0, drawn: 0 };
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt;
+  const gap = (now - last) / 1000, dt = Math.min(0.05, gap); last = now; acc += dt;
   pollPad();
-  let first = true;
+  let first = true; const w0 = SHOW_FPS ? performance.now() : 0;
   while (acc >= 1 / 60) {
     step(1 / 60);
     if (first) { for (const k in pressed) pressed[k] = false; first = false; }
     acc -= 1 / 60;
   }
-  render(now / 1000);
+  if (!first || !frameStats.drawn) {
+    render(now / 1000); frameStats.drawn++;
+    if (SHOW_FPS) {
+      frameStats.work += (performance.now() - w0 - frameStats.work) * 0.05; if (gap > 0) frameStats.fps += (1 / gap - frameStats.fps) * 0.05;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, VH - 26, 118, 11);
+      text(Math.round(frameStats.fps) + ' HZ · ' + frameStats.work.toFixed(1) + ' MS A FRAME', 8, VH - 18, 8, frameStats.work > 12 ? '#ff5a4a' : '#a6d854');
+    }
+  }
   updateMusic();
   requestAnimationFrame(frame);
 }
@@ -12598,9 +12811,12 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decor
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { FALL, fallDmg, fallCheck, MECH, STRETCH_OF, stretchOf, longScaled, DARK_AMB, DARK_LAMP });
+if (window.__SB_TEST__) Object.assign(window.__SB__, { saveRun, loadRun, resumeRun, clearRun, snapRun, runSaved: () => runSaved, titleItems, titleAt: () => titleSel, setTitleSel(v) { titleSel = v; }, freshSig: () => freshSig, pauseMenu, setMenuSel(v) { menuSel = v; }, RUN_V, isQuack, missionNo, run: () => ({ lives, runScore, unlocked, level, checkpoint, state, mode, paused }), setRun(o) { if (o.lives !== undefined) lives = o.lives; if (o.runScore !== undefined) runScore = o.runScore; if (o.unlocked) unlocked = o.unlocked; } }); // round 9 hooks: the saved run // round 9 hooks: fall damage and the suits
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows, BRO_LEGS, LEG_FRAMES, HEADS }); // bro art hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { rankOf, RANK, runResult, recordRun, addScore, hudStep, drawScreen, records: () => records, lastResult: () => lastResult, hud: () => hud, setMode(m) { mode = m; }, setState(v) { state = v; }, leave() { chopper = { x: 0, y: 0, tx: 0, ty: 0, floor: 0, state: 'leave', t: 0 }; endT = 2.7; P.alive = false; P.ride = true; }, setCam(x, y) { cam.x = x; cam.y = y; } }); // round 8 records hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { objHit, modState: () => ({ live: modLive, banner: modBannerT, dark: modDarkK }), restless, modOn, GRANT_GUNS, updateAuditor, melt: () => melt, MELT_V, MELT_LEAD, startMelt, meltSafe, wrap: () => wrapEdge, updateWrap, WRAP_BACK, bossFight, reachesPlayer, rectSolid, bannerNow: () => banner }); // wall rule and Think Tank hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { bossSkin, bossWear, BOSS_NAME, MICRO, bossMarks: () => bossMarks, drawBoss: (e, t) => (e.type === 'crawler' ? drawCrawlers(t) : drawEnt(e, t)) }); // boss art hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { GFX, gfxOutlinePass, gfxRim, gfxN: () => gfxN, gfxAO, gfxGlow, gfxDark, GFX_AO, viewTiles, drawEnt, drawTiles, collectLights, gfxLights: () => lights });
 })();
 </script>

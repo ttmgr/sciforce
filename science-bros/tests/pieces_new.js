@@ -78,7 +78,7 @@ for (const kind of arenas) {
     const tag = kind + ' + ' + boss, padRow = kind === 'quarry' ? 12 : 16;
     withBuild((H) => { H.ground(0, 175, 16); S.ARENA[kind](H, { kind, boss }); }, [231, padRow]);
     const B = S.boss, g = B && B.gate;
-    check(tag + ': the boss spawns, final, with its zone', !!B && B.type === boss && B.final && B.ax0 >= S.STRETCH + 176 && !B.active);
+    check(tag + ': the boss spawns, final, with its zone', !!B && B.type === boss && B.final && B.ax0 >= S.stretchW() + 176 && !B.active);
     check(tag + ': the gate is steel and the pad is solid and flat', !!g && [g[0], g[1]].every((c) => { for (let r = g[2]; r <= g[3]; r++) if (S.tileAt(c, r) !== 3) return false; return true; }) && solid(S.padOf()[0], padRow) && !solid(S.padOf()[0], padRow - 1), 'pad ' + S.padOf());
     // walk in: the boss wakes
     S.ents.forEach((e) => { if (e.type !== 'flag' && e !== B) e.dead = true; });

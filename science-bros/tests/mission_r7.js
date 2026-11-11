@@ -199,7 +199,7 @@ const pyr = () => { begin(PYR); S.ents.forEach((e) => { if (e.type !== 'target' 
   check('and the chopper is called as usual', !!S.chopper);
 }
 {
-  const B = pyr(); const res = bot(B.trig, 60 * 260, (i, far) => { const m = S.melt(); if (!m && far > 440) { S.objectives.find((o) => o.id === 'vat').n = 2; S.objHit('vat'); } if (m && S.P.x < m.x - 20) m.caught = true; });
+  const B = pyr(); const res = bot(B.trig, 60 * 260, (i, far) => { const m = S.melt(); if (!m && far > B.trig - 100) { S.objectives.find((o) => o.id === 'vat').n = 2; S.objHit('vat'); } if (m && S.P.x < m.x - 20) m.caught = true; });
   const m = S.melt();
   check('a bot runs Pyramid Power Plant, triggers the meltdown on the way and stays ahead of the front to the arena', res.far >= B.trig && !!m && !m.caught, 'col ' + res.far.toFixed(0) + ' of ' + B.trig + ', front ' + (m && (m.x / T).toFixed(0)));
   check('and the mission can be finished (boss, chopper)', (() => { const r = finishIt(); return r.dead && r.state === 'win'; })());

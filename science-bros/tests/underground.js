@@ -50,7 +50,7 @@ check('a level is 40 rows tall; missions are built in the top 22', LH === 40 && 
 const bad = { earth: [], float: [], wall: [] }, stretchZones = [], mainZones = [], kindsSeen = new Set();
 for (let l = 0; l < NL; l++) {
   S.startLevel(l); run(1); sound('L' + (l + 1), bad);
-  const z = S.ugZones().filter((o) => o.c0 >= S.cutAt() - 10 && o.c1 <= S.cutAt() + S.STRETCH + 2);
+  const z = S.ugZones().filter((o) => o.c0 >= S.cutAt() - 10 && o.c1 <= S.cutAt() + S.stretchW() + 2);
   if (z.length) { stretchZones.push(l + 1); z.forEach((o) => kindsSeen.add(o.kind)); }
   if (S.ugZones().some((o) => o.c1 < S.cutAt())) mainZones.push(l + 1);
 }

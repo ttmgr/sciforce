@@ -85,12 +85,12 @@ for (const how of ['dies', 'leaves the arena']) {
 const OLD = [38, 43, 46, 46, 51, 51, 49, 48, 50, 53, 54, 60, 57, 60, 67, 64, 63, 72]; // quacks per mission on 7fd836a at NORMAL / 100%
 S = boot(); // a fresh game that loads the saved NORMAL / 100%
 check('the saved 100% setting is loaded', S.density() === 1 && S.DIFFS[S.difficulty()].name === 'NORMAL');
-const cnt = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); cnt.push(quacks().length); }
+const cnt = [], wid = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); cnt.push(quacks().length); wid.push(S.playW()); }
 const old = (k) => Array.from({ length: S.nLevels }, (_, i) => S.levelDef(i)).indexOf(S.ROUND5[k]); // a mission by its place among the 20 before round 6 (five more sit between them now)
-const same = OLD.map((_, i) => cnt[old(i === OLD.length - 1 ? 19 : i)]); // the missions 7fd836a also had: the first 17 and the Citadel
+const same = OLD.map((_, i) => { const l = old(i === OLD.length - 1 ? 19 : i); return cnt[l] * 560 / wid[l]; }); // the missions 7fd836a also had: the first 17 and the Citadel. Round 9: missions are 356 to 516 columns instead of 560, so the counts are compared per column (scaled to 560)
 const ratio = same.reduce((a, b) => a + b) / OLD.reduce((a, b) => a + b), per = same.map((c, i) => c / OLD[i]);
-console.log('(quacks per mission now ' + cnt.join(' ') + '; before ' + OLD.join(' ') + '; ratio ' + ratio.toFixed(3) + ')');
-check('NORMAL / 100% holds about 1.5x the quacks of before (1.4 to 1.6 over the campaign)', ratio >= 1.4 && ratio <= 1.6, ratio.toFixed(3));
+console.log('(quacks per mission now ' + cnt.join(' ') + ' on ' + wid.join(' ') + ' columns' + '; before ' + OLD.join(' ') + '; ratio ' + ratio.toFixed(3) + ')');
+check('NORMAL / 100% holds about 1.5x the quacks of before per column (1.3 to 1.6 over the campaign; the budget counts the columns before the arena, so a shorter mission is about 7% thinner per column)', ratio >= 1.3 && ratio <= 1.6, ratio.toFixed(3));
 check('and every mission got between 1.15x and 1.85x (each now follows its region\'s ramp, not its old place)', per.every((r) => r >= 1.15 && r <= 1.85), per.map((r) => r.toFixed(2)).join(' '));
 { const threat = []; for (let l = 0; l < S.nLevels; l++) { S.reset(); S.startLevel(l); threat.push(quacks().reduce((a, e) => a + W[e.type], 0)); }
   const avg = S.REGIONS.map((R) => R.missions.reduce((a, nm) => a + threat[Array.from({ length: S.nLevels }, (_, i) => i).find((i) => S.levelDef(i).name === nm)], 0) / R.missions.length);

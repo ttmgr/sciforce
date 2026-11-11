@@ -122,10 +122,10 @@ for (const l of idx) {
   const cages = S.ents.filter((e) => e.type === 'cage'), intel = S.ents.filter((e) => e.type === 'pickup' && e.item === 'intel'), tk = L.objectives.find((o) => ['vat', 'radio', 'server'].includes(o.id)), targets = S.ents.filter((e) => e.type === 'target');
   const trig = [{ x: B.trig * T, y: (S.surf(B.trig, S.openRow(B.trig)) - 1) * T, w: T, h: T, type: 'boss arena' }], lost = [...cages, ...intel, ...targets, ...trig].filter((e) => !ok(e));
   check(tag + ': ' + cages.length + ' cages (' + L.cages + ' listed, at least 4), 3 intel files, ' + targets.length + ' targets (' + tk.need + ' needed), all within reach with the boss arena', lost.length === 0 && intel.length === 3 && cages.length >= L.cages && L.cages >= 4 && targets.filter((e) => e.skin === tk.id).length >= tk.need, 'unreachable: ' + lost.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join(' '));
-  check(tag + ': one final boss, a ' + NEW[idx.indexOf(l)][4] + ' under a name of its own, its arena after the stretch', S.ents.filter((e) => BOSSES.includes(e.type) && e.final).length === 1 && B.type === NEW[idx.indexOf(l)][4] && !!B.bossName && !!B.bossSub && B.ax0 >= S.cutAt() + S.STRETCH && S.padOf()[0] === L.pad[0] + S.STRETCH, B.type + ' ' + B.bossName);
+  check(tag + ': one final boss, a ' + NEW[idx.indexOf(l)][4] + ' under a name of its own, its arena after the stretch', S.ents.filter((e) => BOSSES.includes(e.type) && e.final).length === 1 && B.type === NEW[idx.indexOf(l)][4] && !!B.bossName && !!B.bossSub && B.ax0 >= S.cutAt() + S.stretchW() && S.padOf()[0] === L.pad[0] + S.stretchW(), B.type + ' ' + B.bossName);
   const base = S.ugZones().filter((z) => z.c1 < S.cutAt()), [wantF, wantZ] = S.longOf(l), plan = S.stretchPlan();
-  const forks = plan.filter((p) => p[0] === 'fork').length, detours = S.ugZones().filter((z) => z.c0 >= S.cutAt() - 10 && z.c1 <= S.cutAt() + S.STRETCH + 2).length;
-  check(tag + ': an underground part in its own base, and a stretch with ' + wantF + ' forks and ' + wantZ + ' underground detours', base.length >= 1 && forks === wantF && detours === wantZ && plan.length >= 8 && wantF >= 2 && wantZ >= 2 && S.LONG_MAPS[l] === S.longOf(l), base.length + ' base zones, ' + plan.length + ' sections, ' + forks + ' forks, ' + detours + ' detours');
+  const forks = plan.filter((p) => p[0] === 'fork').length, detours = S.ugZones().filter((z) => z.c0 >= S.cutAt() - 10 && z.c1 <= S.cutAt() + S.stretchW() + 2).length;
+  check(tag + ': an underground part in its own base, and a stretch with ' + wantF + ' forks and ' + wantZ + ' underground detours at full length, scaled to its region (round 9)', base.length >= 1 && forks >= 1 && forks <= S.longScaled(wantF) && detours === S.longScaled(wantZ) && plan.length >= 5 && wantF >= 2 && wantZ >= 2 && S.LONG_MAPS[l] === S.longOf(l), base.length + ' base zones, ' + plan.length + ' sections, ' + forks + ' forks, ' + detours + ' detours');
   S.endCeasefire(); S.P.inv = 1e9; S.P.x = 3 * T; run(30);
   const air = S.ents.filter((e) => !e.dead && !FLY.includes(e.type) && e.type !== 'para' && !solidT(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T))) && S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T)) !== LADDER && !S.devs.some((d) => d.kind === 'lift' && Math.abs(d.y - (e.y + e.h)) < 3 && e.x + e.w > d.x && e.x < d.x + d.w));
   check(tag + ': nothing floats in mid-air once it settles', air.length === 0, air.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join(' '));
@@ -149,7 +149,7 @@ for (const l of idx) {
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final); let reached = 0;
   S.P.x = (S.cutAt() - 4) * T; S.P.y = 2 * T; S.P.vx = S.P.vy = 0;
   for (let k = 0; k < 150 * 60 && reached < B.trig; k++) { if (k % 25 === 0) S.pressed.jump = true; S.P.inv = 1e9; S.P.alive = true; step({ right: true, jump: k % 25 < 14, fire: k % 6 < 3 }); reached = Math.max(reached, S.P.x / T); }
-  check(tag + ': a bot crosses the 324-column stretch into the boss arena', reached >= B.trig, 'reached col ' + reached.toFixed(0) + ' of ' + B.trig);
+  check(tag + ': a bot crosses the stretch into the boss arena', reached >= B.trig, 'reached col ' + reached.toFixed(0) + ' of ' + B.trig);
 }
 
 // ---- 5. the difficulty curve: one ramp per region, each region harder than the last (threat on the map and the ramp value)

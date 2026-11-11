@@ -51,7 +51,7 @@ S.startLevel(0); // through the screens instead:
 // go to the title and walk through map -> briefing
 S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1); // pause menu -> quit to title
 check('quit to title from the pause menu', S.state === 'title');
-S.pressed.start = true; run(1); check('on the world map', S.state === 'map');
+S.titleSel = S.titleItems().findIndex((m) => m[1] === 'campaign'); S.pressed.start = true; run(1); check('on the world map', S.state === 'map'); // round 9: the quit saved the run, so CONTINUE leads the menu; pick CAMPAIGN
 S.unlocked.push('curie', 'tesla');
 S.pressed.start = true; run(1); check('on the briefing', S.state === 'brief');
 const want = S.unlocked[(S.briefBro + 1) % S.unlocked.length]; // the briefing opens on a random bro

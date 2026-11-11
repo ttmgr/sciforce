@@ -55,7 +55,7 @@ check('the boss going down brings the win line', B.dead && (S.radioQ.some((m) =>
 S.startMode('siege'); check('no story radio in Lab Siege', S.radioQ.length === 0); S.startMode('campaign');
 // the briefing: the region and the intercepted message
 S.reset(); S.pressed.pause = true; run(1); for (let k = 0; k < 9; k++) { S.pressed.down = true; run(1); } S.pressed.fire = true; run(1);
-S.pressed.start = true; run(1); S.pressed.start = true; run(1);
+S.titleSel = S.titleItems().findIndex((m) => m[1] === 'campaign'); S.pressed.start = true; run(1); S.pressed.start = true; run(1);
 check('on the briefing', S.state === 'brief', S.state);
 S.mapT = 3; texts.length = 0; S.render(3);
 check('the briefing names the region', texts.some((t) => /REGION 1: PLACEBO COAST/.test(t)), texts.filter((t) => /REGION/.test(t)).join(' | '));

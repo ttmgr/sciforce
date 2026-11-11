@@ -89,7 +89,7 @@ check('a kill off screen adds none', pops() === 0);
 
 // ---- 9. the random stream is untouched: same Math.random count as the game before round 8 over 600 scripted steps of mission 1
 // (fingerprint recorded on a023136 plus the Wegbro fix, 2026-11-10; re-record it when a change alters the random stream on purpose)
-const BEFORE = { n: 37597, x: 630, kills: 5, score: 900 };
+const BEFORE = { n: 10764, x: 438, kills: 2, score: 300 }; // re-recorded 2026-11-11 for round 9 (mission 1 is 356 columns instead of 560, so the build draws fewer numbers and the run plays out differently; it was 37597 / 630 / 5 / 900 after round 8)
 function stream(path) {
   const { S: G, box } = load(path), st = (keys) => { for (const k in G.keys) G.keys[k] = false; Object.assign(G.keys, keys); G.step(1 / 60); for (const k in G.pressed) G.pressed[k] = false; };
   box.gen = mulberry(99); G.reset(); G.startLevel(0); box.n = 0;
@@ -97,6 +97,6 @@ function stream(path) {
   return { n: box.n, x: Math.round(G.P.x), kills: G.stats.kills, score: G.stats.score };
 }
 const a = stream(process.argv[2]), b = BEFORE;
-check('Math.random is called as often as before round 8', a.n === b.n && a.n > 0, a.n + ' vs ' + b.n);
+check('Math.random is called as often as in the recorded run', a.n === b.n && a.n > 0, a.n + ' vs ' + b.n);
 check('and the run ends in the same place', a.x === b.x && a.kills === b.kills && a.score === b.score, JSON.stringify(a) + ' vs ' + JSON.stringify(b));
 console.log(fails ? fails + ' FAILED' : 'all passed'); process.exit(fails ? 1 : 0);

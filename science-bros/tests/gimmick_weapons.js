@@ -107,8 +107,11 @@ for (const id of GUNS) {
 const BOSSES = ['boss', 'kopter', 'crawler', 'tank', 'engine', 'blimp', 'citrus', 'director'], pick = {};
 for (let l = 0; l < S.nLevels; l++) { S.startLevel(l); for (const B of S.ents.filter((e) => BOSSES.includes(e.type))) if (!pick[B.type]) pick[B.type] = [l, !!B.final]; }
 const hpOf = (e) => Math.max(0, e.hp) + (e.vats || []).reduce((a, o) => a + (o.dead ? 0 : Math.max(0, o.hp)), 0);
-const bossFight = (id, type, secs) => {
-  const [lvl, fin] = pick[type]; seed = 7; S.startLevel(lvl); S.endCeasefire(); S.finishObjectives(); step();
+// Round 9: each gun's fight is run on three seeds (7, 101, 999) and the middle one by damage per second counts. Lobbed and bouncing shots against the tank are bimodal: the pogo gun does
+// about 10.8 hp/s in most fights and 4 to 7 hp/s (0.34x to 0.54x of the other guns) when the tank's pattern makes the shot miss; that was 3 of 8 seeds on the round 8 build and 3 of 8 on
+// round 9, on different seeds. One seed decided pass or fail by which mode it fell in.
+const bossFight = (id, type, secs, sd = 7) => {
+  const [lvl, fin] = pick[type]; seed = sd; S.startLevel(lvl); S.endCeasefire(); S.finishObjectives(); step();
   const B = S.ents.find((e) => BOSSES.includes(e.type) && !!e.final === fin); S.ents.forEach((e) => { if (e !== B && e.type !== 'flag') e.dead = true; });
   S.P.bro = S.BRO.einstein; S.P.alt = null; S.P.once = null; S.P.x = (B.trig + 2) * T; S.P.y = 2 * T; step();
   let best = null, bs = 1e9; const tx = B.x + B.w / 2, ty = B.y + B.h / 2;
@@ -123,7 +126,7 @@ const bossFight = (id, type, secs) => {
   return { dmg: h0 - hpOf(B), hp: h0, dead: B.dead || B.doomed || B.dying > 0, spike, t };
 };
 const rows = {}, REF = ['shotgun', 'rocket', 'minigun', 'railgun'], med = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1];
-for (const id of ALL.concat(REF)) { rows[id] = {}; for (const ty of ['boss', 'tank']) rows[id][ty] = bossFight(id, ty, S.GUNS[id] ? 20 : 6); }
+for (const id of ALL.concat(REF)) { rows[id] = {}; for (const ty of ['boss', 'tank']) { const three = [7, 101, 999].map((sd) => bossFight(id, ty, S.GUNS[id] ? 20 : 6, sd)).sort((p, q) => p.dmg / Math.max(1, p.t) - q.dmg / Math.max(1, q.t)); rows[id][ty] = three[1]; } }
 const dps = (id, ty) => rows[id][ty].dmg / Math.max(1, rows[id][ty].t);
 for (const id of GUNS) {
   const out = ['boss', 'tank'].map((ty) => ty + ' ' + dps(id, ty).toFixed(1) + '/s vs ' + med(REF.map((r) => dps(r, ty))).toFixed(1) + '/s').join(', ');

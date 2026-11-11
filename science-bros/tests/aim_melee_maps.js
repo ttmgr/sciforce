@@ -123,7 +123,7 @@ for (const l of [...Array(S.nLevels).keys(), S.MOON]) {
   const mast = tag === 'FLAT EARTH STATION' ? S.ents.find((e) => e.type === 'target' && e.skin === 'radio' && inGap(e)) : null;
   S.ents.forEach((e) => { if (!BOSSES.includes(e.type) && e.type !== 'flag' && e !== mast) e.dead = true; });
   S.P.bro = S.BRO.einstein; S.P.x = (cut - 4) * T; S.P.y = 2 * T; S.P.vy = 0; let far = 0;
-  for (let i = 0; i < ((L.mods || []).includes('gale') ? 130 : 90) * 60 && far < B.trig; i++) { // a gale slows the bot by about 10 s, so it gets longer
+  for (let i = 0; i < ((L.mods || []).includes('gale') || L.stretchBuild ? 130 : 90) * 60 && far < B.trig; i++) { // a gale slows the bot by about 10 s, so it gets longer; so does the Detox Express, the one mission that kept the 324-column stretch (round 9)
     if (i % 25 === 0) S.pressed.jump = true;
     S.P.inv = 1e9; S.P.alive = true;
     if (mast && !mast.dead && Math.abs(S.P.x - mast.x) < 6 * T) S.hitEnemy(mast, 999, 0); // the bot shoots the mast down when it gets near

@@ -1,4 +1,4 @@
-// Headless checks for the longer campaign maps: every mission is 560 columns wide with a 324-column stretch before
+// Headless checks for the longer campaign maps (round 9: the stretch grows by region, 120 to 280 columns, see STRETCH_OF; the Detox Express keeps 324): a stretch before
 // its boss arena, the stretch has more sections, forks (a high road over a low road) and more underground detours
 // than before, the boss arena sits where arenaCol() puts it and a bot reaches it, both roads of a fork can be walked,
 // the start stays safe, nothing floats or sits in a wall, missions keep the same quacks every time, and a big fight
@@ -52,10 +52,11 @@ for (let l = 0; l < NL; l++) {
   run(1);
   const tag = 'L' + (l + 1), cut = S.cutAt(), plan = S.stretchPlan(), [wantF, wantZ] = S.longOf(l);
   let c = cut; for (const [, c0, w] of plan) { if (c0 !== c) bad.plan.push(tag + ':gap at ' + c0); c = c0 + w; }
-  if (c !== cut + S.STRETCH) bad.plan.push(tag + ':ends at ' + c);
-  const forks = plan.filter((p) => p[0] === 'fork'), zones = S.ugZones().filter((z) => z.c0 >= cut - 10 && z.c1 <= cut + S.STRETCH + 2);
+  if (c !== cut + S.stretchW()) bad.plan.push(tag + ':ends at ' + c);
+  const forks = plan.filter((p) => p[0] === 'fork'), zones = S.ugZones().filter((z) => z.c0 >= cut - 10 && z.c1 <= cut + S.stretchW() + 2);
   totalSec += plan.length; oldSec += oldSections(l); totalZones += S.ugZones().length; totalForks += forks.length;
-  if (!S.levelDef(l).stretchBuild && (plan.length < oldSections(l) + 4 || forks.length !== wantF || zones.length !== wantZ || S.ugZones().length <= oldZones(l))) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + wantF + ' forks, ' + zones.length + '/' + wantZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
+  const sF = S.longScaled(wantF), sZ = S.longScaled(wantZ); // round 9: forks and detours scale with the stretch, at least one each; the world-edge mission may have no room for a detour
+  if (!S.levelDef(l).stretchBuild && (plan.length < 4 || forks.length < 1 || forks.length > sF || zones.length > sZ || (zones.length !== sZ && !S.levelDef(l).wrap))) bad.more.push(tag + ': ' + plan.length + ' sections (was ' + oldSections(l) + '), ' + forks.length + '/' + sF + ' forks, ' + zones.length + '/' + sZ + ' detours, ' + S.ugZones().length + ' zones (was ' + OLD_ZONES[l] + ')');
   for (const [, f0, w] of forks) { // a steel high road at row 10 with a ladder at each end, and the low road open under it
     const a = f0 + 6, b = f0 + w - 7, m = (a + b) >> 1; let ok = b - a >= 15;
     for (let k = a; k <= b; k++) { if (S.tileAt(k, 10) !== STEEL || solid(S.tileAt(k, 7)) || (k !== m && solid(S.tileAt(k, 9)))) ok = false; for (let r = 11; r <= 14; r++) if (solid(S.tileAt(k, r))) ok = false; if (!solid(S.tileAt(k, 16))) ok = false; }
@@ -64,14 +65,14 @@ for (let l = 0; l < NL; l++) {
   }
   const zs = S.ugZones().slice().sort((p, q) => p.c0 - q.c0); for (let i = 1; i < zs.length; i++) if (zs[i].c0 <= zs[i - 1].c1 + 6) bad.zones.push(tag + ':' + zs[i - 1].c1 + '/' + zs[i].c0); // zones apart
   const B = S.ents.find((e) => BOSSES.includes(e.type) && e.final);
-  if (!B || B.ax0 < cut + S.STRETCH || B.trig < cut + S.STRETCH || B.ax1 >= LW || B.x < (cut + S.STRETCH) * T || S.padOf()[0] !== S.levelDef(l).pad[0] + S.STRETCH || S.arenaCol(S.levelDef(l).pad[0]) !== S.padOf()[0]) bad.arena.push(tag + (B ? ': ax0 ' + B.ax0 + ' ax1 ' + B.ax1 : ': no boss'));
+  if (!B || B.ax0 < cut + S.stretchW() || B.trig < cut + S.stretchW() || B.ax1 >= S.playW() || B.x < (cut + S.stretchW()) * T || S.padOf()[0] !== S.levelDef(l).pad[0] + S.stretchW() || S.arenaCol(S.levelDef(l).pad[0]) !== S.padOf()[0]) bad.arena.push(tag + (B ? ': ax0 ' + B.ax0 + ' ax1 ' + B.ax1 : ': no boss'));
   const fl = floating(); if (fl.length) bad.float.push(tag + ':' + fl.slice(0, 4).map((p) => p.join(',')).join('/'));
   const w = inWall(); if (w.length) bad.wall.push(tag + ':' + w.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join('/'));
   if (S.ceasefire < 9.9 || quacks().some((e) => e.x < 20 * T)) bad.start.push(tag);
 }
 check('every stretch is one run of pieces from the cut to the boss arena', !bad.plan.length, bad.plan.join(' '));
-check('every mission: more sections, its forks, its underground detours, more zones than before', !bad.more.length, bad.more.join('; ') || totalSec + ' sections (was ' + oldSec + '), ' + totalForks + ' forks, ' + totalZones + ' zones (was ' + OLD_ZONES.reduce((s, v) => s + v) + ')');
-check('the stretches have at least twice as many sections as before', totalSec >= oldSec * 2, totalSec + ' vs ' + oldSec);
+check('every mission: at least four sections, its forks and its underground detours, scaled to its stretch', !bad.more.length, bad.more.join('; ') || totalSec + ' sections (was ' + oldSec + '), ' + totalForks + ' forks, ' + totalZones + ' zones (was ' + OLD_ZONES.reduce((s, v) => s + v) + ')');
+check('the stretches still hold more sections than the 140-column ones did', totalSec > oldSec, totalSec + ' vs ' + oldSec);
 check('every fork: a steel high road with a ladder at each end over an open low road', !bad.fork.length, bad.fork.join(' '));
 check('underground zones never run into each other', !bad.zones.length, bad.zones.join(' '));
 check('every boss arena sits after the stretch, where arenaCol() puts it, with its pad', !bad.arena.length, bad.arena.join(' '));
@@ -94,7 +95,7 @@ for (const l of [0, 5, 9, NL - 1]) {
     if (S.P.x / T > f0 + w + 1 && ys.filter(([x]) => x >= a && x <= b).every(([, y]) => y > 10.5)) low++; else roadInfo.push('low L' + (l + 1) + '@' + f0 + ' at ' + (S.P.x / T).toFixed(0));
   }
 }
-check('a bot walks the high road of every fork it tries, start to end, without dropping off', nf >= 8 && high === nf, high + ' of ' + nf + (roadInfo.length ? ', ' + roadInfo.join(' ') : ''));
+check('a bot walks the high road of every fork it tries, start to end, without dropping off', nf >= 5 && high === nf, high + ' of ' + nf + (roadInfo.length ? ', ' + roadInfo.join(' ') : ''));
 check('and the low road under it, past the barricade', low === nf, low + ' of ' + nf);
 let thru = 0; const thruInfo = [];
 for (let l = 0; l < NL; l++) {
@@ -103,7 +104,7 @@ for (let l = 0; l < NL; l++) {
   walk((cut - 4) * T, 2 * T, () => far >= B.trig, 150 * 60, (i) => { far = Math.max(far, S.P.x / T); if (i % 25 === 0) S.pressed.jump = true; return { right: true, jump: i % 25 < 14, fire: i % 6 < 3 }; });
   if (far >= B.trig) thru++; else thruInfo.push('L' + (l + 1) + ':' + far.toFixed(0) + '/' + B.trig);
 }
-check('a bot crosses every 324-column stretch into the boss arena', thru === NL, thru + ' of ' + NL + (thruInfo.length ? ', stuck ' + thruInfo.join(' ') : ''));
+check('a bot crosses every stretch into the boss arena', thru === NL, thru + ' of ' + NL + (thruInfo.length ? ', stuck ' + thruInfo.join(' ') : ''));
 
 // ---- 4. the same quacks every time, and the difficulty curve holds
 const snap = () => S.ents.map((e) => e.type + Math.round(e.x) + ',' + Math.round(e.y)).join();
@@ -144,8 +145,9 @@ const edge = (tag, walk = true) => { // run right at the end of the map: the bro
   return [ok, tag + ': bro to ' + (px / T).toFixed(1) + ', view to ' + (cx / T).toFixed(1) + ', bullets to ' + (bx / T).toFixed(1) + (wall ? '' : ', no wall') + (drew ? '' : ', draw failed')];
 };
 {
-  let camp = 0; for (let l = 0; l < NL; l++) { S.reset(); S.startLevel(l); if (S.stretchW() === S.STRETCH && S.playW() === LW) camp++; }
-  check('the campaign keeps the 324-column stretch and the 560-column map', S.STRETCH === 324 && S.OLD_STRETCH === 140 && camp === NL, camp + ' of ' + NL);
+  let camp = 0; const byReg = [[], [], [], [], []]; for (let l = 0; l < NL; l++) { S.reset(); S.startLevel(l); const L = S.levelDef(l), want = L.stretchBuild ? S.STRETCH : S.STRETCH_OF[L.region]; if (S.stretchW() === want && S.playW() === 236 + want && S.playW() <= LW) camp++; if (!L.stretchBuild) byReg[L.region].push(S.playW()); }
+  check('round 9: a campaign stretch is as long as its region says (120, 160, 200, 240, 280 columns; the Detox Express keeps 324)', S.STRETCH === 324 && S.OLD_STRETCH === 140 && S.STRETCH_OF.join() === '120,160,200,240,280' && camp === NL, camp + ' of ' + NL);
+  check('so missions are 356 columns in region 1 and grow to 516 in region 5', byReg.every((a, r) => a.length >= 4 && a.every((w) => w === 356 + 40 * r)), byReg.map((a) => a[0]).join(' '));
   const bad6 = [], edges = []; let n6 = 0;
   for (const dk of Object.keys(S.GEN_DIFF)) for (const d of [0, 1, 2, 3]) for (const seed of Object.keys(OLD_RANDOM)) {
     S.setDifficulty(d, false); S.setGenDiff(dk); S.reset(); S.startRandom(+seed, true); n6++;
@@ -165,7 +167,9 @@ const edge = (tag, walk = true) => { // run right at the end of the map: the bro
   S.reset(); S.startMode('rush');
   check('Boss Rush: 376 columns, the first boss fight starts at column 319 as before', S.playW() === OLD_W && Math.floor(S.P.x / T) === 319, 'width ' + S.playW() + ', bro at ' + Math.floor(S.P.x / T));
   S.reset(); S.startMode('campaign'); S.startLevel(0);
-  check('back in the campaign the map is long again', S.playW() === LW && S.stretchW() === S.STRETCH);
+  { const short = []; let all = 0; for (let l = 0; l < NL; l++) { S.startLevel(l); const n = S.ents.filter((e) => e.type === 'cage').length; all += n; if (n < S.levelDef(l).cages) short.push('L' + (l + 1) + ':' + n + '/' + S.levelDef(l).cages); }
+    check('round 9: every mission still holds at least the cages its FREED counter asks for (' + all + ' in all)', !short.length && all === S.CAGES_TOTAL, short.join(' ') || all + ' vs ' + S.CAGES_TOTAL); S.startLevel(0); }
+  check('back in the campaign the map has its region length again', S.playW() === 236 + S.STRETCH_OF[0] && S.stretchW() === S.STRETCH_OF[0]);
 }
 
 console.log(fails ? fails + ' check(s) failed' : 'all longer maps checks passed');

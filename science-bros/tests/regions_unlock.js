@@ -94,11 +94,11 @@ check('setReached(n) keeps its meaning: everything before n is cleared and n is 
 // ---- 6. RESET PROGRESS needs a second press
 clearOnly(['PLACEBO ISLAND', 'DETOX DESERT']); S.rescues = 12; S.saveProgress();
 const RS = S.TITLE_MENU.findIndex((m) => m[1] === 'reset');
-S.setState('title'); S.titleSel = RS;
+S.setState('title'); S.titleSel = S.titleItems().findIndex((m) => m[1] === 'reset');
 check('the title menu has a RESET PROGRESS entry', RS > 0 && S.TITLE_MENU[RS][0] === 'RESET PROGRESS');
 press('start');
 check('the first press only asks', S.resetArm && S.cleared.size === 2 && S.rescues === 12 && S.state === 'title');
-press('down'); S.titleSel = RS;
+press('down'); S.titleSel = S.titleItems().findIndex((m) => m[1] === 'reset');
 check('moving the cursor takes the question back', !S.resetArm);
 press('start'); press('start');
 check('the second press clears cleared missions, rescues and unlocks', S.cleared.size === 0 && S.rescues === 0 && S.savedBros.join() === 'reska' && JSON.parse(store.get('sciencebros.cleared')).length === 0 && store.get('sciencebros.rescues') === '0', S.cleared.size + ' ' + S.rescues);
@@ -111,6 +111,11 @@ S.rescues = 30; S.savedBros.length = 0; S.savedBros.push(...S.BRO_ORDER.slice(0,
 S.startMode('siege'); check('Lab Siege uses the unlocked bros', S.unlocked.length === S.tierOf(30) && S.unlocked.length < S.BROS.length);
 S.startMode('random'); check('a random mission uses them too', S.unlocked.length === S.tierOf(30));
 
+// ---- 7b. round 9: missions are numbered by their place on the world map, 1 to 26, region by region (the LEVELS index made region 2 read 6, 8, 12, 15, 19)
+{ const nos = S.MAP_ORDER.map((i) => S.missionNo(i)); let from = 1, ok = true;
+  for (const R of S.REGIONS) { const got = R.missions.map((nm) => S.missionNo(Array.from({ length: N }, (_, i) => S.levelDef(i).name).indexOf(nm))); if (got.join() !== R.missions.map((_, k) => from + k).join()) ok = false; from += R.missions.length; }
+  check('mission numbers run 1 to ' + N + ' along the map, consecutive inside every region', nos.join() === Array.from({ length: N }, (_, i) => i + 1).join() && ok, nos.join(' '));
+  S.startLevel(S.MAP_ORDER[6]); check('the mission banner shows that number (the 7th stop is LEVEL 7)', /^LEVEL 7 /.test(S.bannerNow().text), S.bannerNow().text); }
 // ---- 8. the thresholds
 const ids = S.BROS.map((b) => b.id);
 check('the unlock order holds each of the 53 bros once, Dr Reskbro first, Einstein second', S.BRO_ORDER.length === 53 && ids.length === 53 && S.BRO_ORDER.slice().sort().join() === ids.slice().sort().join() && S.BRO_ORDER[0] === 'reska' && S.BRO_ORDER[1] === 'einstein');
@@ -139,7 +144,7 @@ check('the unlock banner names the new bro', S.unlocked.length === before + 1 &&
 arena(); S.unlocked.length = 0; S.unlocked.push('reska'); S.rescues = 3; S.savedBros.length = 0; S.savedBros.push('reska');
 free('oppenheimer');
 check('a cage with a fixed locked bro never hands him out', S.P.bro.id !== 'oppenheimer' && !S.unlocked.includes('oppenheimer'), S.P.bro.id);
-arena(); S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf('curie') - 1] + 5; S.unlocked.push('curie'); free('curie');
+arena(); S.rescues = (() => { let r = S.BRO_AT[S.BRO_ORDER.indexOf('curie') - 1] + 1; while (S.tierOf(r + 1) !== S.tierOf(r)) r++; return r; })(); S.unlocked.push('curie'); free('curie'); // a rescue count whose next rescue unlocks nobody (a new unlock would step out of the cage instead)
 check('a cage with a fixed bro you have unlocked may hand him out', S.P.bro.id === 'curie', S.P.bro.id);
 // the debrief shows NEXT BRO n/m
 {
