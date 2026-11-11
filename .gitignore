@@ -2,3 +2,6 @@
 .DS_Store
 node_modules/
 CLAUDE.md
+
+# session handovers (project-hub hook)
+.handover/

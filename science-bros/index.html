@@ -149,6 +149,8 @@ const FONT = '"Silkscreen", "Courier New", monospace';
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const approach = (v, t, d) => (v < t ? Math.min(v + d, t) : Math.max(v - d, t));
+const easeOut = (u) => 1 - Math.pow(1 - clamp(u, 0, 1), 3); // 0..1 in, fast start and a soft stop
+const easeBack = (u) => { u = clamp(u, 0, 1) - 1; return 1 + 2.70158 * u * u * u + 1.70158 * u * u; }; // overshoots 1, then settles on it
 const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
 
 // ---------------------------------------------------------------- sprites
@@ -516,8 +518,9 @@ function drawRigAt(rig, cx, feet, face, pose, white) {
   const set = R.legs[pose.leg], leg = Array.isArray(set[0]) ? set[pose.fr] : set;
   ctx.drawImage(leg[f], ox - 1, fy - 5);
   const uy = fy - 4 - rig.uh + pose.bob;
-  ctx.drawImage(R.up[f], ox - 1, uy - 1);
-  return { x: face > 0 ? ox + rig.w - 5 : ox + 3, y: uy + rig.hh + 2, uy, ox };
+  const ux = pose.ux || 0; // a 1 px sideways shift of the upper body only (the idle look)
+  ctx.drawImage(R.up[f], ox - 1 + ux, uy - 1);
+  return { x: (face > 0 ? ox + rig.w - 5 : ox + 3) + ux, y: uy + rig.hh + 2, uy, ox };
 }
 // front arm in one of a few poses; returns where the hand is
 function drawArm(sh, face, mode, coat, skin, swing = 0, edge = null) { // edge: a darker sleeve underside, so the arm stands out from the coat (bros only)
@@ -2461,7 +2464,16 @@ const tierOf = (r) => 1 + BRO_AT.filter((t) => t <= r).length; // how many bros 
 const saveGet = (k) => { try { return localStorage.getItem('sciencebros.' + k); } catch (e) { return null; } };
 const savePut = (k, v) => { try { localStorage.setItem('sciencebros.' + k, v); } catch (e) { /* storage blocked */ } };
 let cleared = new Set(), rescues = 0, savedBros = ['reska'], openingSeen = false, forceOpen = -1, mapNote = '';
-function saveProgress() { savePut('cleared', JSON.stringify([...cleared])); savePut('rescues', String(rescues)); savePut('unlocked', JSON.stringify(savedBros)); savePut('opening', openingSeen ? '1' : '0'); }
+let dbS = null, dbK = '', dbT0 = 0, dbTick = -1, dbSum = -1, dbRank = false; // the debrief clock (render side: mapT is not reset on entering 'win')
+let records = {}, lastResult = null; // best of each field per mission name: { time, score, cages, intel, deaths, rank, pts }; lastResult is the run just finished (for the debrief)
+const RANK = { cage: 35, intel: 25, deaths: 25, perDeath: 5, time: 15, par: 300, parCols: 560, cuts: [['S', 90], ['A', 75], ['B', 55], ['C', 35]], floor: 'D', col: { S: '#f2c94c', A: '#a6d854', B: '#8fd3ff', C: '#a3abd0', D: '#e78ac3' } }; // the 100-point rank sheet, tunable here
+const RANK_FIELDS = ['time', 'score', 'cages', 'intel', 'deaths', 'pts'];
+function rankOf({ cages, cagesTotal, intel, intelTotal, deaths, time, parTime }) { // 35 cages + 25 intel + 25 deaths + 15 time, rounded
+  const share = (a, b) => (b > 0 ? Math.max(0, Math.min(1, a / b)) : 1);
+  const pts = Math.round(RANK.cage * share(cages, cagesTotal) + RANK.intel * share(intel, intelTotal) + Math.max(0, RANK.deaths - RANK.perDeath * deaths) + RANK.time * Math.max(0, Math.min(1, 2 - time / parTime)));
+  return { pts, rank: (RANK.cuts.find((c) => pts >= c[1]) || [RANK.floor])[0] };
+}
+function saveProgress() { savePut('cleared', JSON.stringify([...cleared])); savePut('rescues', String(rescues)); savePut('unlocked', JSON.stringify(savedBros)); savePut('opening', openingSeen ? '1' : '0'); savePut('records', JSON.stringify(records)); }
 function loadProgress() {
   let c = null, r = null, u = null, moved = false;
   try { c = JSON.parse(saveGet('cleared')); r = saveGet('rescues'); u = JSON.parse(saveGet('unlocked')); } catch (e) { c = null; }
@@ -2471,6 +2483,8 @@ function loadProgress() {
   const ids = new Set(BRO_ORDER.slice(0, tierOf(rescues)).concat(Array.isArray(u) ? u.filter((id) => BRO_ORDER.includes(id)) : []));
   savedBros = BRO_ORDER.filter((id) => ids.has(id));
   openingSeen = saveGet('opening') === '1' || cleared.size > 0;
+  records = {}; let rec = null; try { rec = JSON.parse(saveGet('records')); } catch (e) { rec = null; }
+  if (rec && typeof rec === 'object') for (const L of LEVELS) { const q = rec[L.name]; if (q && typeof q === 'object' && RANK_FIELDS.every((k) => typeof q[k] === 'number' && isFinite(q[k])) && typeof q.rank === 'string' && 'SABCD'.includes(q.rank) && q.rank.length === 1) records[L.name] = { time: q.time, score: q.score, cages: q.cages, intel: q.intel, deaths: q.deaths, rank: q.rank, pts: q.pts }; }
   if (moved || r === null && cleared.size) saveProgress();
 }
 loadProgress();
@@ -2503,8 +2517,19 @@ function nextBro() { // the counter towards the next bro: [done, needed], or nul
   const from = k > 1 ? BRO_AT[k - 2] : 0;
   return [rescues - from, BRO_AT[k - 1] - from];
 }
+function runResult() { // the finished run as numbers, with its points and rank
+  const o = objective('intel'), r = { time: stats.time, score: stats.score, cages: stats.rescued, intel: o ? o.n : 0, deaths: stats.deaths, nw: {}, st: stats };
+  return Object.assign(r, rankOf({ cages: r.cages, cagesTotal: LV().cages, intel: r.intel, intelTotal: 3, deaths: r.deaths, time: r.time, parTime: RANK.par * playW / RANK.parCols }));
+}
+function recordRun(n) { // a campaign extraction: keep the best of each field on its own; lastResult remembers which beat the old record
+  const r = runResult(), nm = LEVELS[n].name, b = records[nm], o = b || { time: Infinity, score: -1, cages: -1, intel: -1, deaths: Infinity, rank: 'D', pts: -1 };
+  if (b && r.time < o.time) r.nw.time = 1;
+  const nb = { time: Math.min(o.time, r.time), score: Math.max(o.score, r.score), cages: Math.max(o.cages, r.cages), intel: Math.max(o.intel, r.intel), deaths: Math.min(o.deaths, r.deaths), rank: r.pts > o.pts ? r.rank : o.rank, pts: Math.max(o.pts, r.pts) };
+  if (b) { if (r.score > o.score) r.nw.score = 1; if (r.cages > o.cages) r.nw.cages = 1; if (r.intel > o.intel) r.nw.intel = 1; if (r.deaths < o.deaths) r.nw.deaths = 1; if (r.pts > o.pts) r.nw.pts = 1; }
+  records[nm] = nb; saveProgress(); return r;
+}
 function resetProgress() {
-  cleared = new Set(); rescues = 0; savedBros = ['reska']; openingSeen = false; mapNote = ''; forceOpen = -1;
+  cleared = new Set(); rescues = 0; savedBros = ['reska']; openingSeen = false; mapNote = ''; forceOpen = -1; records = {}; lastResult = null;
   try { localStorage.removeItem('sciencebros.reached'); } catch (e) { /* storage blocked */ }
   saveProgress();
 }
@@ -3808,7 +3833,7 @@ function drawDevices(t) {
 }
 
 // ---------------------------------------------------------------- audio
-let AC = null, muted = false, noiseBuf = null, master = null, echo = null;
+let AC = null, muted = false, noiseBuf = null, master = null, echo = null, comp = null, musicBus = null, sfxBus = null, wv = null; // wv: the firing bro's weapon voice while fireWeapon runs
 // every sound goes through one master bus: a compressor keeps loud moments from clipping, a short echo
 // gives explosions a tail. A sound can be panned left or right to where it happened.
 let sPan = 0, sVol = 1, sPitch = 1, sWet = 0;
@@ -3818,20 +3843,21 @@ function audioInit() {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     noiseBuf = AC.createBuffer(1, AC.sampleRate * 0.6, AC.sampleRate);
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    const comp = AC.createDynamicsCompressor();
+    comp = AC.createDynamicsCompressor();
     comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = 0.002; comp.release.value = 0.18;
     master = AC.createGain(); master.gain.value = 1.6; master.connect(comp); comp.connect(AC.destination);
+    sfxBus = AC.createGain(); sfxBus.connect(master); musicBus = AC.createGain(); musicBus.connect(comp); // sound effects and music have a bus each: the volume settings, and the music has no pan, pitch or echo
     const dl = AC.createDelay(0.5), fb = AC.createGain(), wet = AC.createGain();
     dl.delayTime.value = 0.12; fb.gain.value = 0.32; wet.gain.value = 0.5;
-    dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(master); echo = dl;
-    startAmbience();
+    dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(sfxBus); echo = dl;
+    applyVol(); startAmbience();
   } catch (e) { AC = null; }
 }
 // where a sound goes: through a panner to the master bus, and some of it into the echo
 function outNode(g) {
   let n = g;
   if (sPan && AC.createStereoPanner) { const pn = AC.createStereoPanner(); pn.pan.value = sPan; n.connect(pn); n = pn; }
-  n.connect(master || AC.destination);
+  n.connect(sfxBus || master || AC.destination);
   if (sWet && echo) { const w = AC.createGain(); w.gain.value = sWet; n.connect(w); w.connect(echo); }
 }
 function tone(f0, f1, dur, type, vol, delay = 0) {
@@ -3858,7 +3884,7 @@ function startAmbience() {
     const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
     src.buffer = noiseBuf; src.loop = true;
     f.type = 'lowpass'; f.frequency.value = { rain: 650, wind: 420, hum: 160, cave: 260 }[kind]; // rain: a soft, low bed; the drops are separate sounds
-    g.gain.value = 0; src.connect(f).connect(g); g.connect(master || AC.destination); src.start();
+    g.gain.value = 0; src.connect(f).connect(g); g.connect(sfxBus || master || AC.destination); src.start();
     amb = { src, g, f, kind, base: { rain: 0.03, wind: 0.07, hum: 0.05, cave: 0.04 }[kind], dropAcc: 0 };
     if (kind === 'hum') { const o = AC.createOscillator(), og = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = 55; og.gain.value = 0.012; o.connect(og).connect(g); o.start(); amb.osc = o; }
   } catch (e) { amb = null; }
@@ -3880,17 +3906,27 @@ function updateAmbience(dt) {
     else if (L.critters.includes('bird') && critters.some((c) => c.kind === 'bird' && c.state === 'idle' && Math.abs(c.x - cam.x - VW / 2) < VW / 2)) sfx('chirp', cam.x + rand(0, VW));
   }
 }
+// weapon voices: [pitch factor, oscillator type, tail length factor] per bro, for the 'shot' and 'throw' sounds; a bro without an entry gets one from his id
+const WV = { einstein: [1, 'square', 1], ada: [1.35, 'square', 0.7], turing: [1.7, 'sine', 0.6], mendel: [0.8, 'sawtooth', 1.1], pasteur: [1.5, 'triangle', 0.8], hubble: [0.65, 'sine', 1.6], hopper: [1.15, 'sawtooth', 0.9], wu: [0.9, 'triangle', 1.3], rutherford: [0.75, 'square', 1.2],
+  mendeleev: [1.25, 'triangle', 1], gauss: [0.55, 'sawtooth', 1.8], schrodinger: [1.9, 'square', 0.5], fibonacci: [1.05, 'sine', 0.8], linnaeus: [1.45, 'sawtooth', 0.6], jemison: [0.7, 'triangle', 1.5],
+  curie: [0.9, 'sine', 1.2], newton: [0.7, 'square', 1], johnson: [1.1, 'sawtooth', 0.8], hypatia: [1.4, 'triangle', 0.9], davinci: [0.8, 'sine', 1.4], nobel: [0.6, 'sawtooth', 1.5], torricelli: [1.25, 'square', 0.7], nightingale: [1.6, 'sine', 1] };
+function voiceOf(id) {
+  if (WV[id]) return WV[id];
+  let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return [0.6 + (h % 13) / 10, ['square', 'sawtooth', 'triangle', 'sine'][(h >> 4) % 4], 0.6 + ((h >> 8) % 12) / 10];
+}
 const sfxLast = {};
 function sfx(n, wx) {
   if (!AC || muted || quiet) return;
+  if (!(settings.sfxVol > 0)) return; // SOUND is off
   const now = performance.now();
-  if (sfxLast[n] && now - sfxLast[n] < 45) return;
+  if (sfxLast[n] && now - sfxLast[n] < (n === 'tick' ? 25 : 45)) return;
   sfxLast[n] = now;
   sPan = 0; sVol = 1; sWet = 0; sPitch = 0.94 + Math.random() * 0.12; // no two shots quite alike
   if (wx !== undefined && typeof cam !== 'undefined') { const d = (wx - (cam.x + VW / 2)) / (VW / 2); sPan = clamp(d, -1, 1) * 0.75; sVol = Math.abs(d) > 1.2 ? Math.max(0.25, 1.6 - Math.abs(d) * 0.5) : 1; }
   try {
     switch (n) {
-      case 'shot': noise(0.03, 0.06, 5000, AC.currentTime, 'highpass'); tone(1300, 520, 0.05, 'square', 0.028); tone(170, 60, 0.06, 'sine', 0.07); break;
+      case 'shot': { const v = wv || [1, 'square', 1]; noise(0.03 * v[2], 0.06, 5000 * v[0], AC.currentTime, 'highpass'); tone(1300 * v[0], 520 * v[0], 0.05 * v[2], v[1], 0.028); tone(170 * v[0], 60 * v[0], 0.06 * v[2], 'sine', 0.07); break; }
       case 'eshot': tone(640, 260, 0.08, 'square', 0.024); noise(0.04, 0.035, 2800); break;
       case 'drop': sfxLast[n] = 0; noise(0.018, 0.006 + Math.random() * 0.01, 2200 + Math.random() * 3000, AC.currentTime, 'bandpass'); break;
       case 'plop': tone(900 + Math.random() * 500, 500, 0.035, 'sine', 0.012); noise(0.03, 0.01, 1400, AC.currentTime, 'bandpass'); break;
@@ -3898,10 +3934,10 @@ function sfx(n, wx) {
       case 'drip': tone(1900, 1100, 0.06, 'sine', 0.025); tone(1400, 900, 0.05, 'sine', 0.012, 0.09); break;
       case 'croak': tone(190, 140, 0.09, 'square', 0.02); tone(180, 130, 0.09, 'square', 0.02, 0.14); break;
       case 'step': noise(0.035, 0.035, 900); break;
-      case 'throw': tone(400, 700, 0.08, 'triangle', 0.04); break;
+      case 'throw': { const v = wv || [1, 'triangle', 1]; tone(400 * v[0], 700 * v[0], 0.08 * v[2], v[1], 0.04); break; }
       case 'zap': noise(0.12, 0.05, 6000); tone(1500, 200, 0.1, 'sawtooth', 0.02); break;
       case 'beam': tone(1800, 1700, 0.06, 'sine', 0.02); break;
-      case 'boom': sWet = 0.35; tone(110, 26, 0.75, 'sine', 0.38); noise(0.9, 0.34, 1600); noise(0.09, 0.22, 6000, AC.currentTime, 'highpass'); noise(0.5, 0.12, 300, AC.currentTime + 0.08); break;
+      case 'boom': duck(0.6); sWet = 0.35; tone(110, 26, 0.75, 'sine', 0.38); noise(0.9, 0.34, 1600); noise(0.09, 0.22, 6000, AC.currentTime, 'highpass'); noise(0.5, 0.12, 300, AC.currentTime + 0.08); break;
       case 'hit': noise(0.06, 0.09, 1800, AC.currentTime, 'bandpass'); tone(260, 90, 0.07, 'sine', 0.06); break;
       case 'flap': noise(0.07, 0.015, 2500); break;
       case 'jump': tone(260, 560, 0.08, 'triangle', 0.04); noise(0.06, 0.025, 3000, AC.currentTime, 'highpass'); break;
@@ -3909,6 +3945,18 @@ function sfx(n, wx) {
       case 'rescue': [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => AC && tone(f, f, 0.12, 'square', 0.04), i * 80)); break;
       case 'special': tone(200, 1200, 0.35, 'sawtooth', 0.05); break;
       case 'flag': tone(660, 990, 0.2, 'triangle', 0.05); break;
+      case 'checkpoint': tone(660, 990, 0.2, 'triangle', 0.05); break; // the checkpoint flag
+      case 'ui_move': tone(880, 990, 0.035, 'square', 0.014); break; // menu cursor
+      case 'ui_ok': tone(660, 880, 0.07, 'triangle', 0.045); tone(990, 1320, 0.1, 'triangle', 0.035, 0.06); break; // confirm
+      case 'ui_back': tone(700, 440, 0.09, 'triangle', 0.04); break; // leave or cancel
+      case 'ui_deny': tone(190, 160, 0.1, 'square', 0.035); tone(150, 120, 0.14, 'square', 0.03, 0.1); break; // locked
+      case 'tick': tone(1700, 1600, 0.014, 'sine', 0.02); break; // a count tick, safe to repeat; 25 ms throttle
+      case 'rank': tone(90, 40, 0.28, 'sine', 0.22); noise(0.12, 0.14, 900); [523, 659, 784, 1047].forEach((f) => tone(f, f, 0.5, 'triangle', 0.03, 0.08)); break; // a stamp: a thud, then a bright chord
+      case 'combo': { const k = 1 + Math.min(12, Math.max(0, combo.n)) * 0.06; tone(700 * k, 900 * k, 0.06, 'square', 0.02); break; } // rises with the combo, capped
+      case 'lifelost': tone(600, 140, 0.42, 'sawtooth', 0.045); tone(300, 80, 0.3, 'triangle', 0.04, 0.12); break;
+      case 'bossintro': sWet = 0.3; tone(55, 30, 0.7, 'sine', 0.34); noise(0.5, 0.18, 500); tone(120, 900, 0.9, 'sawtooth', 0.03, 0.15); break; // a low hit, then a rising tone
+      case 'whoosh': { const t = AC.currentTime, s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(3200, t + 0.25); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * sVol, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); s.connect(f).connect(g); outNode(g); s.start(t); s.stop(t + 0.26); break; }
+      case 'trophy': playStinger('trophy'); break;
       case 'alert': tone(900, 900, 0.06, 'square', 0.02); break;
       case 'punch': noise(0.09, 0.28, 1700, AC.currentTime, 'bandpass'); tone(190, 48, 0.13, 'sine', 0.16); break;
       case 'thud': noise(0.26, 0.26, 420); tone(80, 38, 0.22, 'sine', 0.14); break;
@@ -3956,7 +4004,7 @@ function sfx(n, wx) {
       case 'neutron': tone(2400, 700, 0.07, 'sine', 0.03); noise(0.04, 0.04, 6000, AC.currentTime, 'highpass'); tone(160, 70, 0.05, 'sine', 0.05); break;
       case 'beep': tone(1560, 1560, 0.07, 'square', 0.035); break;
       case 'nuke': { // a crack, a deep rumble that rolls on for seconds, and a ringing in the ears
-        sWet = 0.6; const t0 = AC.currentTime;
+        duck(2.6); sWet = 0.6; const t0 = AC.currentTime;
         noise(0.2, 0.45, 7000, t0, 'highpass'); tone(90, 18, 4, 'sine', 0.6); tone(46, 22, 3.5, 'triangle', 0.25, 0.1);
         for (let k = 0; k < 8; k++) noise(0.6, 0.42 * (1 - k / 9), 600 - k * 50, t0 + k * 0.45);
         sWet = 0; tone(3700, 3600, 4, 'sine', 0.018, 0.25); break;
@@ -3970,32 +4018,127 @@ function sfx(n, wx) {
 }
 
 // ---------------------------------------------------------------- music
-// A tiny step sequencer: bass, drums and a lead line, scheduled a little ahead on the audio clock.
-// Boss fights switch to a faster, harder pattern. M mutes it with everything else.
-const SONGS = {
-  level: { bpm: 124, bass: [45, 0, 45, 0, 48, 0, 45, 43, 45, 0, 45, 0, 50, 0, 48, 47], lead: [69, 0, 72, 0, 76, 0, 72, 0, 69, 0, 72, 0, 74, 0, 72, 0] },
-  boss: { bpm: 150, bass: [40, 40, 52, 40, 40, 52, 43, 44, 40, 40, 52, 40, 47, 46, 45, 44], lead: [76, 0, 75, 0, 76, 0, 79, 0, 76, 0, 75, 0, 72, 0, 71, 0] },
+// A small step sequencer on the audio clock: bass, lead, an arpeggio and drums, scheduled a little ahead. Everything goes through
+// one music bus (musicBus) that feeds the compressor: no panner, no echo, no random pitch, so the sound effects cannot touch it.
+// A song is written as data. form 'AABA' names sections of two bars (32 steps); each section holds four chords (one per half bar,
+// scale degrees counted from 0) and 32 lead tokens: 1-7 scale degree ('+' octave up, '-' octave down), '.' rest, '_' hold the note.
+// bass and arp name a pattern for one half bar (8 steps); k, s, h are drum patterns for one bar ('x' = hit), ih is the extra hat of the intensity layer.
+const SCALES = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10], mix: [0, 2, 4, 5, 7, 9, 10], phr: [0, 1, 3, 5, 7, 8, 10], hmin: [0, 2, 3, 5, 7, 8, 11], lyd: [0, 2, 4, 6, 7, 9, 11] };
+const BASSP = { walk: 'r...f.o.', sync: 'r..r..f.', slow: 'r..r..r.', oompah: 'r.f.r.f.', drive: 'r.rr.rr.', fast: 'rrrrrrrr', whole: 'r.......' }; // r root, f fifth, o octave
+const ARPP = { up: '0.1.2.3.', fast: '01230123', rock: '0.2.1.3.', calm: '0...2...' }; // chord tone: 0 root, 1 third, 2 fifth, 3 octave
+const SONG_DEFS = {
+  coast: { bpm: 112, sw: 0.12, key: 60, sc: 'maj', form: 'AABA', bass: 'walk', arp: 'up', bw: 'triangle', lw: 'triangle', lv: 0.03, aw: 'sine', k: 'x.......x..x....', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', ih: '.x...x...x...x.x', // Placebo Coast: breezy, a little shuffle
+    A: { p: [0, 4, 5, 2], l: '5 . 3 . 5 . 6 5 3 . 2 . 1 . 2 .  3 . 1 . 3 . 5 . 3 _ _ . 2 . 1 .' }, B: { p: [3, 4, 5, 0], l: '6 . 6 5 6 . 1+ . 7 . 6 . 5 . . .  1+ . 7 6 5 . 3 . 5 . 6 . 5 _ _ _' } },
+  lookup: { bpm: 128, sw: 0, key: 59, sc: 'mix', form: 'AABA', bass: 'sync', arp: 'fast', bw: 'triangle', lw: 'square', lv: 0.012, aw: 'sine', k: 'x..x..x...x.x...', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', ih: '.x.x.x.x.x.x.x.x', // Look-up Lands: airy, a fast shimmering arpeggio
+    A: { p: [0, 6, 3, 0], l: '1+ . . 5 . 1+ . 2+ 3+ . 2+ . 1+ . 5 .  7 . . 5 . 7 . 1+ 2+ . . . 1+ _ _ .' }, B: { p: [5, 6, 0, 0], l: '3+ . 3+ 2+ 1+ . 7 . 1+ . 2+ . 3+ . 5+ .  5+ . 3+ . 2+ . 1+ 7 1+ _ _ _ . . 5 .' } },
+  crank: { bpm: 104, sw: 0, key: 57, sc: 'min', form: 'AABA', bass: 'slow', arp: 'rock', bw: 'triangle', lw: 'square', lv: 0.012, aw: 'triangle', k: 'x.....x.x.......', s: '........x.......', h: 'x...x...x...x...', ih: '..x...x...x...x.', // Crank Country: minor, slow and uneasy
+    A: { p: [0, 0, 5, 4], l: '1 . . 3 . . 5 . 4 . . 3 . . 2 .  3 . . 1 . . 7- . 1 _ _ . . . . .' }, B: { p: [3, 3, 4, 4], l: '6 . 5 . 4 . 5 . 6 . . 1+ . 7 . 6  5 _ _ . 3 . 4 . 5 . 7 . 1+ _ _ .' } },
+  organic: { bpm: 120, sw: 0.2, key: 55, sc: 'maj', form: 'AABA', bass: 'oompah', arp: 'calm', bw: 'triangle', lw: 'triangle', lv: 0.03, aw: 'triangle', k: 'x.......x...x...', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', ih: '.x.x.x.x.x.x.x.x', // Organic Acres: a folk shuffle, oom-pah bass
+    A: { p: [0, 3, 0, 4], l: '1 . 2 3 5 . 5 . 6 . 5 . 3 . 2 3  5 . 3 . 2 . 1 . 2 . 3 . 5 _ _ .' }, B: { p: [5, 3, 4, 0], l: '1+ . 1+ 7 6 . 6 5 6 . 1+ . 6 . 5 .  3 . 5 . 6 . 7 . 1+ . 7 . 6 5 3 .' } },
+  juice: { bpm: 138, sw: 0, key: 52, sc: 'min', form: 'AABA', bass: 'drive', arp: 'fast', bw: 'sawtooth', lw: 'square', lv: 0.012, aw: 'square', k: 'x...x...x...x...', s: '....x.......x..x', h: '..x...x...x...x.', ih: 'x.x.x.x.x.x.x.x.', // Juice Empire: neon synth-pop, driving saw bass
+    A: { p: [0, 5, 2, 6], l: '5 . . 5 3 . 5 . 6 . . 6 5 . 3 .  2 . . 3 5 . 3 . 7- . 1 . 2 _ _ .' }, B: { p: [3, 5, 6, 6], l: '1+ . 7 . 1+ . 3+ . 2+ . 1+ . 7 . 5 .  6 . 7 . 1+ . 2+ . 3+ _ _ _ 5+ _ _ _' } },
+  boss: { bpm: 152, sw: 0, key: 52, sc: 'phr', form: 'AABA', bass: 'drive', arp: 'fast', bw: 'sawtooth', lw: 'square', lv: 0.013, aw: 'square', k: 'x.x...x.x.x...x.', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', ih: 'xxxxxxxxxxxxxxxx', // boss fights: phrygian, hard
+    A: { p: [0, 0, 1, 0], l: '1+ . 1+ . 2+ 1+ . 1+ 5 . 5 . 6 5 . .  1+ . 1+ . 2+ 1+ . 7 6 . 5 . 2 . 1 .' }, B: { p: [5, 3, 4, 1], l: '3+ . 3+ 2+ 1+ . 7 . 6 . 6 7 1+ . . .  2+ . 1+ . 7 . 6 . 5 . 6 7 1+ 2+ 3+ _' } },
+  finale: { bpm: 164, sw: 0, key: 50, sc: 'hmin', form: 'AABA', bass: 'fast', arp: 'fast', bw: 'sawtooth', lw: 'sawtooth', lv: 0.012, aw: 'square', k: 'x.x.x.xxx.x.x.xx', s: '....x..x....x.x.', h: 'x.xxx.xxx.xxx.xx', ih: 'xxxxxxxxxxxxxxxx', // the last boss: harmonic minor, double-time kick
+    A: { p: [0, 5, 4, 0], l: '1+ 1+ . 1+ 3+ . 1+ . 5 . . 1+ . 7 6 5  6 . 6 . 1+ . 6 . 5 . 5 . 7 . 5 .' }, B: { p: [3, 4, 5, 4], l: '4+ . 4+ 3+ 2+ . 1+ . 7 . 1+ 2+ 3+ . . .  4+ 3+ 2+ 1+ 7 6 5 4 3 4 5 6 7 1+ 2+ 3+' } },
+  calm: { bpm: 84, sw: 0.08, key: 53, sc: 'lyd', form: 'AABA', bass: 'whole', arp: 'calm', bw: 'sine', lw: 'sine', lv: 0.035, aw: 'sine', dv: 0.5, k: 'x.......x.......', s: '................', h: '..x...x...x...x.', ih: '................', // title, map and briefing: slow and open, no snare
+    A: { p: [0, 4, 5, 1], l: '5 . . . 3 . . . 4 . . . 5 . . .  3 . . . 2 . . . 1 _ _ _ 2 . 3 .' }, B: { p: [5, 1, 4, 0], l: '6 . . 5 . . 3 . 5 . . . 6 _ _ _  7 . . 6 . . 5 . 3 . . . 1 _ _ _' } },
 };
-let musicStep = 0, musicNext = 0;
+function buildSong(d) { // the sequencer arrays: one entry per step of the whole form
+  const sc = SCALES[d.sc], deg = (base, k) => base + sc[((k % 7) + 7) % 7] + 12 * Math.floor(k / 7), n = d.form.length * 32;
+  const song = { bpm: d.bpm, sw: d.sw, len: n, bw: d.bw, lw: d.lw, lv: d.lv, aw: d.aw, dv: d.dv || 1, k: d.k, s: d.s, h: d.h, ih: d.ih, bass: new Array(n).fill(0), lead: new Array(n).fill(0), ll: new Array(n).fill(0), arp: new Array(n).fill(0) };
+  [...d.form].forEach((c, si) => {
+    const S = d[c], o = si * 32, bp = BASSP[d.bass], ap = ARPP[d.arp];
+    for (let h = 0; h < 4; h++) for (let j = 0; j < 8; j++) {
+      const i = o + h * 8 + j, r = S.p[h], b = bp[j], a = ap[j];
+      if (b !== '.') song.bass[i] = deg(d.key - 12, r + (b === 'f' ? 4 : 0)) + (b === 'o' ? 12 : 0);
+      if (a !== '.') song.arp[i] = deg(d.key + 12, r + [0, 2, 4, 7][+a]);
+    }
+    let last = -1;
+    S.l.split(/\s+/).forEach((tk, j) => {
+      const i = o + j;
+      if (tk === '_') { if (last >= 0) song.ll[last]++; return; }
+      const m = /^(\d)([+-]*)$/.exec(tk);
+      if (!m) { last = -1; return; }
+      const oct = [...m[2]].reduce((a, ch) => a + (ch === '+' ? 1 : -1), 0);
+      song.lead[i] = deg(d.key + 12, +m[1] - 1 + 7 * oct); song.ll[i] = 1; last = i;
+    });
+  });
+  return song;
+}
+const SONGS = {}; for (const k in SONG_DEFS) SONGS[k] = buildSong(SONG_DEFS[k]);
+// stingers: short one-shots, [step, midi note, length in steps, wave, volume, midi note to glide to]; len is the length in steps
+const STING = {
+  win: { bpm: 140, len: 16, n: [[0, 67, 2, 'square', 0.03], [2, 67, 2, 'square', 0.03], [4, 67, 2, 'square', 0.03], [6, 72, 8, 'square', 0.035], [6, 64, 8, 'triangle', 0.04], [6, 55, 8, 'triangle', 0.05], [0, 48, 6, 'triangle', 0.05]] },
+  done: { bpm: 120, len: 56, n: [[0, 60, 2, 'square', 0.03], [2, 64, 2, 'square', 0.03], [4, 67, 2, 'square', 0.03], [6, 72, 6, 'square', 0.035], [12, 71, 2, 'square', 0.03], [14, 72, 2, 'square', 0.03], [16, 74, 6, 'square', 0.035], [16, 55, 6, 'triangle', 0.05],
+    [24, 72, 2, 'square', 0.03], [26, 76, 2, 'square', 0.03], [28, 79, 2, 'square', 0.03], [30, 84, 10, 'square', 0.035], [30, 67, 10, 'triangle', 0.045], [30, 52, 10, 'triangle', 0.05], [40, 79, 4, 'triangle', 0.035], [44, 84, 12, 'square', 0.035], [44, 72, 12, 'triangle', 0.045], [44, 64, 12, 'triangle', 0.045], [44, 48, 12, 'triangle', 0.06], [44, 36, 4, 'sine', 0.12, 30]] },
+  over: { bpm: 80, len: 20, n: [[0, 64, 3, 'triangle', 0.045], [3, 62, 3, 'triangle', 0.045], [6, 60, 3, 'triangle', 0.045], [9, 57, 11, 'sawtooth', 0.03, 55], [0, 40, 20, 'triangle', 0.05]] },
+  bossintro: { bpm: 120, len: 14, n: [[0, 40, 8, 'triangle', 0.08], [0, 28, 8, 'sine', 0.12, 24], [4, 52, 2, 'sawtooth', 0.02], [6, 55, 2, 'sawtooth', 0.02], [8, 58, 2, 'sawtooth', 0.022], [10, 64, 4, 'sawtooth', 0.025, 70]] },
+  trophy: { bpm: 150, len: 10, n: [[0, 72, 1, 'square', 0.025], [1, 76, 1, 'square', 0.025], [2, 79, 1, 'square', 0.025], [3, 84, 7, 'triangle', 0.04], [3, 88, 7, 'sine', 0.02]] },
+};
+const RSONG = ['coast', 'lookup', 'crank', 'organic', 'juice']; // one song per campaign region
+let musicStep = 0, musicNext = 0, musicCur = null, musicHold = 0, musicPrev = 'title', stingN = 0, stingLast = '';
 const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
-function note(f0, f1, t0, dur, type, vol) {
+const musicLevel = () => muted ? 0 : settings.musicVol / 0.75; // 75% is the old loudness
+function applyVol() { // push the volume settings to the buses
+  if (!AC || !musicBus) return;
+  try { const t = AC.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(musicLevel(), t); sfxBus.gain.setValueAtTime(settings.sfxVol, t); } catch (e) { /* audio is optional */ }
+}
+function duck(sec) { // the music dips under a big explosion and swells back
+  if (!AC || !musicBus || muted) return;
+  try { const t = AC.currentTime, g = musicBus.gain, lv = musicLevel(); g.cancelScheduledValues(t); g.setTargetAtTime(lv * 0.55, t, 0.03); g.setTargetAtTime(lv, t + sec, 0.25); } catch (e) { /* audio is optional */ }
+}
+const audible = () => !!AC && !muted && !quiet && settings.music && settings.musicVol > 0;
+function note(f0, f1, t0, dur, type, vol) { // one music note, straight onto the music bus
   const o = AC.createOscillator(), g = AC.createGain();
   o.type = type; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
   g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  o.connect(g).connect(musicBus); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function mnoise(dur, vol, freq, t0, ftype) { // music drums: filtered noise on the music bus, no sfx pan, pitch or echo
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = noiseBuf; f.type = ftype; f.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f).connect(g).connect(musicBus); s.start(t0); s.stop(t0 + dur);
+}
+function playStinger(name) {
+  const s = STING[name];
+  if (!s || !audible() || !musicBus) return;
+  try {
+    const t0 = AC.currentTime + 0.03, spb = 60 / s.bpm / 4;
+    for (const [st, m, len, w, v, m2] of s.n) note(midi(m), midi(m2 || m), t0 + st * spb, len * spb, w, v);
+    musicHold = t0 + s.len * spb; stingN++; stingLast = name;
+  } catch (e) { /* audio is optional */ }
+}
+function regionSong() { // campaign: the mission's region; other modes: a stable pick from the theme name
+  let r = -1; try { if (mode === 'campaign') r = LV().region; } catch (e) { r = -1; }
+  if (!(r >= 0)) r = [...(theme && theme.name || '')].reduce((a, c) => a + c.charCodeAt(0), 0);
+  return RSONG[r % RSONG.length];
+}
+function wantSong() {
+  if (state === 'play') { const b = ents.find((e) => BOSS[e.type] && e.active && !e.dead); return b ? (b.type === 'citrus' ? 'finale' : 'boss') : regionSong(); }
+  return state === 'over' ? null : 'calm'; // game over is silent after its stinger; every other screen has the calm tune
 }
 function updateMusic() {
-  if (!AC || muted || !settings.music || state !== 'play' || paused) { musicNext = 0; return; }
-  const song = ents.some((e) => BOSS[e.type] && e.active && !e.dead) ? SONGS.boss : SONGS.level, spb = 60 / song.bpm / 4;
+  if (state !== musicPrev) { // a new screen: the stingers fire here, so step() does not need to know
+    musicPrev = state;
+    if (state === 'win' || state === 'modedone') playStinger('win'); else if (state === 'done') playStinger('done'); else if (state === 'over') playStinger('over');
+  }
+  let want = null; try { want = audible() && !paused ? wantSong() : null; } catch (e) { want = null; }
+  if (!want || AC.currentTime < musicHold) { musicNext = 0; return; } // paused, muted, silent screen or a stinger still ringing
+  const fresh = !musicNext; // just came out of silence: a new song may start at once
   if (musicNext < AC.currentTime) musicNext = AC.currentTime + 0.05;
   try {
+    const intense = combo.t > 0 || ents.some((e) => e.aware && !e.dead);
     while (musicNext < AC.currentTime + 0.15) {
-      const i = musicStep % 16, t0 = musicNext;
-      if (song.bass[i]) note(midi(song.bass[i]), midi(song.bass[i]), t0, spb * 1.8, 'triangle', 0.05);
-      if (song.lead[i] && (musicStep >> 4) % 2) note(midi(song.lead[i]), midi(song.lead[i]), t0, spb * 1.3, 'square', 0.012);
-      if (i % 4 === 0) note(130, 40, t0, 0.12, 'sine', 0.12);
-      if (i % 8 === 4) noise(0.1, 0.05, 3000, t0);
-      if (i % 2 === 1) noise(0.03, 0.015, 9000, t0);
+      if (want !== musicCur && (musicStep % 16 === 0 || fresh || !musicCur)) { musicCur = want; musicStep = 0; } // a new song starts on a bar line
+      const song = SONGS[musicCur], spb = 60 / song.bpm / 4, i = musicStep % song.len, d = musicStep % 16, t0 = musicNext + (musicStep & 1 ? spb * song.sw : 0), dv = song.dv;
+      if (song.bass[i]) note(midi(song.bass[i]), midi(song.bass[i]), t0, spb * 1.8, song.bw, 0.05);
+      if (song.lead[i]) { const m = midi(song.lead[i]), len = spb * (song.ll[i] * 0.95 + 0.3); note(m, m, t0, len, song.lw, song.lv); if (intense) note(m * 2, m * 2, t0, len, song.lw, song.lv * 0.5); }
+      if (song.arp[i]) note(midi(song.arp[i]), midi(song.arp[i]), t0, spb * 0.9, song.aw, 0.007);
+      if (song.k[d] === 'x') note(130, 40, t0, 0.12, 'sine', 0.12 * dv);
+      if (song.s[d] === 'x') mnoise(0.1, 0.05 * dv, 2500, t0, 'bandpass');
+      if (song.h[d] === 'x' || (intense && song.ih[d] === 'x')) mnoise(0.03, 0.015 * dv, 8000, t0, 'highpass');
       musicStep++; musicNext += spb;
     }
   } catch (e) { /* music is optional */ }
@@ -4064,8 +4207,14 @@ function rumble(strength, ms) {
 
 // ---------------------------------------------------------------- settings
 // Toggled from the pause menu; kept in this browser only.
-const settings = { shake: true, scanlines: false, music: true, lighting: true, minimap: true, hitboxes: false, gore: 1, ambience: true, difficulty: 1, density: 3 }; // gore: 0 off, 1 on, 2 extra; difficulty: index into DIFFS; density: index into DENS
-try { Object.assign(settings, JSON.parse(localStorage.getItem('sciencebros.settings') || '{}')); } catch (e) { /* storage blocked: defaults */ }
+const settings = { shake: true, scanlines: false, music: true, musicVol: 0.75, sfxVol: 1, lighting: true, minimap: true, hitboxes: false, gore: 1, ambience: true, difficulty: 1, density: 3 }; // gore: 0 off, 1 on, 2 extra; difficulty: index into DIFFS; density: index into DENS
+let savedSet = {};
+try { savedSet = JSON.parse(localStorage.getItem('sciencebros.settings') || '{}') || {}; Object.assign(settings, savedSet); } catch (e) { /* storage blocked: defaults */ }
+const volFix = (v, d) => (Number.isFinite(+v) && v !== null && v !== '' ? Math.round(Math.min(1, Math.max(0, +v)) * 4) / 4 : d); // volumes go in steps of a quarter
+settings.musicVol = savedSet.musicVol === undefined ? (savedSet.music === false ? 0 : 0.75) : volFix(savedSet.musicVol, 0.75); // an old save has only music on or off
+settings.sfxVol = volFix(savedSet.sfxVol, 1); settings.music = settings.musicVol > 0;
+const VOLS = [0, 0.25, 0.5, 0.75, 1];
+function setVol(key, v) { settings[key] = v; settings.music = settings.musicVol > 0; saveSettings(); applyVol(); }
 let hiScore = 0;
 try { hiScore = +localStorage.getItem('sciencebros.hiscore') || 0; } catch (e) { /* storage blocked */ }
 // the run's score is the sum over levels; the best run is kept in this browser
@@ -4094,23 +4243,29 @@ const startLives = (base) => Math.max(1, base + DF().lives);
 function setDifficulty(i, say = true) {
   const was = DF().boss; settings.difficulty = (i % DIFFS.length + DIFFS.length) % DIFFS.length; saveSettings(); genDiffKey = DF().gen;
   if (diffBase) { diff = foldDiff(diffBase); if (boss && !boss.dead && boss.final) { boss.hp = Math.round(boss.hp * DF().boss / was); boss.max = Math.round(boss.max * DF().boss / was); } } // applies at once; the boss keeps its share of health
-  if (say) { sfx('flag'); if (state === 'play') showBanner('DIFFICULTY: ' + DF().name, 'quacks ' + (DF().fire > 1 ? 'shoot faster' : DF().fire < 1 ? 'shoot slower' : 'as usual') + ' · bosses ' + Math.round(DF().boss * 100) + '% health', 1.4); }
+  if (say) { sfx('ui_move'); if (state === 'play') showBanner('DIFFICULTY: ' + DF().name, 'quacks ' + (DF().fire > 1 ? 'shoot faster' : DF().fire < 1 ? 'shoot slower' : 'as usual') + ' · bosses ' + Math.round(DF().boss * 100) + '% health', 1.4); }
 }
 function setDensity(i, say = true) {
   settings.density = (i % DENS.length + DENS.length) % DENS.length; densMul = DENS[settings.density]; saveSettings();
-  if (say) { sfx('flag'); if (state === 'play') showBanner('ENEMY DENSITY: ' + Math.round(densMul * 100) + '%', mode === 'siege' ? 'from the next wave' : 'from the next mission (or restart it)', 1.4); }
+  if (say) { sfx('ui_move'); if (state === 'play') showBanner('ENEMY DENSITY: ' + Math.round(densMul * 100) + '%', mode === 'siege' ? 'from the next wave' : 'from the next mission (or restart it)', 1.4); }
 }
 const MENU = [['SCREEN SHAKE', 'shake'], ['SCANLINES', 'scanlines'], ['MUSIC', 'music'], ['LIGHTING', 'lighting'], ['MINIMAP', 'minimap'], ['SHOW HITBOXES', 'hitboxes'], ['BLOOD AND GORE', 'gore'], ['AMBIENCE', 'ambience'], ['RESTART LEVEL'], ['QUIT TO TITLE']];
 let menuSel = 0;
 function pauseMenu() {
-  const MENU = pauseItems(), N = MENU.length + 2; // two more rows under the list: difficulty and enemy density (left/right or fire change them)
+  const MENU = pauseItems(), N = MENU.length + 3; // three more rows under the list: difficulty, enemy density and sound volume (left/right or fire change them)
   if (pressed.jump) menuSel = (menuSel + N - 1) % N;
   if (pressed.down) menuSel = (menuSel + 1) % N;
-  if (menuSel >= MENU.length) { const d = (pressed.right || pressed.fire || pressed.start || pressed.melee ? 1 : 0) - (pressed.left ? 1 : 0); if (d) { if (menuSel === MENU.length) setDifficulty(settings.difficulty + d); else setDensity(settings.density + d); } return; }
+  if (pressed.jump || pressed.down) sfx('ui_move');
+  if (menuSel >= MENU.length) {
+    const d = (pressed.right || pressed.fire || pressed.start || pressed.melee ? 1 : 0) - (pressed.left ? 1 : 0), k = menuSel - MENU.length;
+    if (d) { if (k === 0) setDifficulty(settings.difficulty + d); else if (k === 1) setDensity(settings.density + d); else { setVol('sfxVol', VOLS[(VOLS.indexOf(settings.sfxVol) + d + VOLS.length) % VOLS.length]); sfx('ui_ok'); } }
+    return;
+  }
   if (pressed.fire || pressed.start || pressed.melee) {
     const [, key] = MENU[menuSel];
-    if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('flag'); }
-    else if (key) { settings[key] = !settings[key]; saveSettings(); sfx('flag'); }
+    if (key === 'gore') { settings.gore = ((settings.gore | 0) + 1) % 3; saveSettings(); sfx('ui_ok'); }
+    else if (key === 'music') { setVol('musicVol', VOLS[(VOLS.indexOf(settings.musicVol) + 1) % VOLS.length]); sfx('ui_ok'); } // OFF, 25, 50, 75, 100 %
+    else if (key) { settings[key] = !settings[key]; saveSettings(); sfx('ui_ok'); }
     else if (MENU[menuSel][0] === 'RESTART LEVEL') { paused = false; startLevel(level); }
     else if (MENU[menuSel][0] === 'NEW RANDOM MAP') { paused = false; startRandom(newSeed(), true); }
     else { paused = false; state = 'title'; init(); }
@@ -4121,6 +4276,7 @@ function pauseMenu() {
 let state = 'title', paused = false;
 let ents, bullets, parts, fx, P, boss, chopper, unlocked, lives, stats, checkpoint, slowT, shake, banner, endT;
 let ceasefire = 0; // seconds left of the quiet start of a mission
+let deathSlow = 0, bossIntroAt = -99, bossIntroTxt = null, bossIntroBanner = null, lastDrawn = null, fadeAt = -99, fadeNow = 0; // round 8 animation: final-boss slow motion, boss name card, screen fade
 // Difficulty grows along the campaign. p runs from 0 on the first mission to 1 on the finale: early missions keep
 // only part of their quacks, the hard hitters turn up later, quacks react and shoot slower, and bosses have less
 // health. Bonus modes and the finale play at full strength.
@@ -4280,9 +4436,11 @@ let titleSel = 0, resetArm = false, resetAt = 0; // RESET PROGRESS needs a secon
 if (urlSeed) titleSel = TITLE_MENU.findIndex((m) => m[1] === 'random'); // ?seed=12345: the title points at the random mission
 let bodies = [], decals = new Map(), hitStop = 0, combo = { n: 0, t: 0, pop: 0 };
 // kills inside 1.6 s of each other chain into a combo that multiplies the points
-function addScore(pts, kill = true) {
+function addScore(pts, kill = true, x, y) { // x, y (optional): where the points pop up
   if (kill) { unlock('first'); if (P.mech) career.mech++; if (P.alt) career.guns++; stats.kills++; combo.n = combo.t > 0 ? combo.n + 1 : 1; if (combo.n >= 10) unlock('combo10'); combo.t = 1.6; combo.pop = 0.25; stats.best = Math.max(stats.best, combo.n); pts *= combo.n; }
+  if (kill && combo.n >= 2) sfx('combo');
   stats.score += pts;
+  if (x !== undefined && x > cam.x - 8 && x < cam.x + VW + 8 && y > cam.y - 8 && y < cam.y + VH && fx.filter((f) => f.pop).length < 10) fx.push({ kind: 'text', x, y, txt: '+' + pts + (kill && combo.n >= 2 ? ' x' + combo.n : ''), col: kill && combo.n >= 5 ? '#e78ac3' : '#f2c94c', t: 1.1, max: 1.1, pop: 1 }); // a popup on screen only, ten at most
 }
 const cam = { x: 0, y: 0 };
 
@@ -4556,7 +4714,7 @@ function startLevel(n) {
   checkpoint = { x: 3 * T, y: surf(3, openRow(3)) * T - 16 }; // under the rock roof, if there is one
   resetEvents(n);
   P = newPlayer(checkpoint.x, checkpoint.y, BRO[unlocked[briefBro % unlocked.length] || 'einstein']);
-  slowT = 0; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
+  slowT = 0; deathSlow = 0; bossIntroAt = -99; shake = 0; endT = 0; banner = { text: '', sub: '', t: 0, max: 1 };
   cam.x = 0; cam.y = clamp(P.y - VH * 0.6, 0, LH * T - VH);
   showBanner((n < LEVELS.length ? 'LEVEL ' + (n + 1) + ' · ' : '') + levelDef(n).name, levelDef(n).sub, 3);
 }
@@ -4644,7 +4802,7 @@ function killEnemy(e, how = 'shot') {
   }
   if (e.type === 'ammo' || e.type === 'strike') { sfx('crumble'); for (let i = 0; i < 6; i++) chunk(cx + rand(-5, 5), cy + rand(-5, 5), rand(-130, 130), rand(-220, -60), i % 2 ? '#7a5c36' : (e.type === 'ammo' ? '#a6d854' : '#d9534f')); spawnPickup(cx, cy, e.type === 'strike'); return; }
   if (diff.drop && isQuack(e) && Math.random() < diff.drop) spawnPickup(cx, cy); // easier: a dead quack sometimes drops a special
-  addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100);
+  addScore(e.type === 'heavy' ? 500 : e.type === 'guru' ? 300 : 100, true, cx, cy - 10);
   if (isQuack(e)) { bark(e, 'die'); broQuip('k'); }
   if (how === 'seq') { bases(cx, cy, e.w, e.h); sfx('beep', cx); return; } // Gene Sequencing: no gore, no blast, just letters
   if (e.type === 'heavy' || e.type === 'brute') bigKill(cx, cy);
@@ -4717,11 +4875,12 @@ function bossDying(e) {
   leak(e, 0, 24); // it spills its own colour
   bigKill(e.x + e.w / 2, e.y + e.h / 2); hitStop = Math.max(hitStop, 0.12); fx.push({ kind: 'screen', t: 0.1, max: 0.1, col: '#ffffff' });
   e.dying = e.type === 'kopter' ? 9 : 3.2; e.boomT = 0;
+  if (e.final) deathSlow = 0.7; // a beat of slow motion on the last boss (no HUD overlay, no fire-rate bonus: that is slowT)
   if (e.type !== 'kopter') e.vx = 0;
   showBanner(bname(e) + ' DOWN', { boss: 'diluted to zero', kopter: 'flushed out', crawler: 'bad vibes only' }[e.type], 2.5);
 }
 function bossDown(e) {
-  e.dead = true; addScore(5000);
+  e.dead = true; addScore(5000, false, e.x + e.w / 2, e.y);
   if (e.gate) { const [c0, c1, r0, r1] = e.gate; for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) breakTile(c, r); }
   objHit(e.final ? 'boss' : e.type);
   if (mode === 'rush') { rush.nextT = 2.5; showBanner(bname(e) + ' DOWN', 'next boss coming', 2); return; }
@@ -4960,7 +5119,8 @@ function aimShots(n0, f) {
 }
 // Leeuwenhoek's Magnify: for 6 s every shot he fires is twice the size and hits twice as hard
 function magnify(n0) { if (!(P.lens > 0) || P.bro.id !== 'leeuwenhoek') return; for (let i = n0; i < bullets.length; i++) { const o = bullets[i]; if (o.owner !== 'p') continue; o.dmg *= 2; o.hitR = (o.hitR || 2) * 2; o.big = 1; } }
-function fireWeapon() {
+function fireWeapon() { wv = P.alt ? null : voiceOf(P.bro.id); try { fireWeapon0(); } finally { wv = null; } } // the bro's weapon voice colours the 'shot' and 'throw' sounds
+function fireWeapon0() {
   const f = P.face, a = P.aim || 0, gx = P.x + P.w / 2 + f * (P.w / 2 + 2) * Math.cos(a), gy = P.y + 8 - 10 * Math.sin(a);
   const dx = f * Math.cos(a), dy = -Math.sin(a), n0 = bullets.length; // the aim as a unit vector
   lifeNoise(gx, gy, 150);
@@ -6048,7 +6208,7 @@ let attractT = 1, mapT = 0;
 let wmX = -1, wmY = 0, wmDir = 1, wmTrail = []; // the plane: where it is on the map, its heading, its contrail
 function mapInput() {
   const d = (pressed.right ? 1 : 0) - (pressed.left ? 1 : 0);
-  if (d) { const open = MAP_ORDER.filter(missionOpen), k = open.indexOf(level); level = open[k < 0 ? 0 : clamp(k + d, 0, open.length - 1)]; mapT = 0; sfx('flag'); } // left and right walk the open missions, region by region
+  if (d) { const open = MAP_ORDER.filter(missionOpen), k = open.indexOf(level); level = open[k < 0 ? 0 : clamp(k + d, 0, open.length - 1)]; mapT = 0; sfx('ui_move'); } // left and right walk the open missions, region by region
   // the plane flies to the chosen stop; the choice itself counts at once (one step is 1/60 s)
   const [tx, ty] = LEVELS[clamp(level, 0, LEVELS.length - 1)].map;
   if (wmX < 0) { wmX = tx; wmY = ty; }
@@ -6140,17 +6300,18 @@ function step(dt) {
   if (state === 'intro') { introStep(dt); return; }
   if (state !== 'play') {
     if (pressed.start || pressed.fire) {
+      const was = state;
       if (state === 'title') { const m = TITLE_MENU[titleSel][1]; if (m === 'trophies') state = 'trophies'; else if (m === 'reset') { if (resetArm) { resetProgress(); newGame(); resetArm = false; resetAt = clock + 3; } else resetArm = true; } else startMode(m); }
       else if (state === 'done' || state === 'modedone' || state === 'trophies' || (state === 'over' && (mode === 'siege' || mode === 'rush'))) { state = 'title'; mode = 'campaign'; init(); state = 'title'; }
-      else if (state === 'map') { if (!missionOpen(level)) { sfx('hit'); return; } state = 'brief'; briefBro = (Math.random() * unlocked.length) | 0; mapNote = ''; } // the briefing offers a random bro first; a locked mission stays shut
+      else if (state === 'map') { if (!missionOpen(level)) { sfx('ui_deny'); return; } state = 'brief'; briefBro = (Math.random() * unlocked.length) | 0; mapNote = ''; } // the briefing offers a random bro first; a locked mission stays shut
       else if (state === 'brief') { startLevel(level); applyGear(); if (openingDue()) beginOpening(); else state = 'play'; }
       else if (state === 'win' && mode === 'random') startRandom(newSeed());
       else if (state === 'win') { level = nextStop(level); state = 'map'; mapT = 0; } // back to the world map; bros and reserve carry over
       else if (state === 'over') { lives = startLives(3); startLevel(level); state = 'play'; } // retry this level
-      sfx('flag');
+      sfx(was === 'trophies' || was === 'done' || was === 'modedone' ? 'ui_back' : 'ui_ok');
     }
     mapT += dt;
-    if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) { sfx('flag'); resetArm = false; } }
+    if (state === 'title') { if (pressed.jump) titleSel = (titleSel + TITLE_MENU.length - 1) % TITLE_MENU.length; if (pressed.down) titleSel = (titleSel + 1) % TITLE_MENU.length; if (pressed.jump || pressed.down) { sfx('ui_move'); resetArm = false; } }
     if (state === 'title' && (pressed.left || pressed.right)) setDifficulty(settings.difficulty + (pressed.right ? 1 : -1)); // difficulty (the random mission's easy/normal/hard follows it)
     if (state === 'title' && (pressed.special || pressed.melee)) setDensity(settings.density + (pressed.special ? 1 : -1)); // X more quacks, C fewer
     if (state === 'brief') briefInput();
@@ -6174,8 +6335,9 @@ function step(dt) {
   careerT -= dt; if (careerT <= 0) { careerT = 1; checkCareer(); }
   if (ceasefire > 0) { ceasefire -= dt; if (ceasefire <= 0) { showBanner('GO LOUD', 'the quacks are awake now', 1.2); sfx('alert'); } }
   combo.t -= dt; combo.pop = Math.max(0, combo.pop - dt);
-  const edt = slowT > 0 ? dt * 0.3 : dt;
+  const edt = slowT > 0 || deathSlow > 0 ? dt * 0.3 : dt;
   if (slowT > 0) slowT -= dt;
+  if (deathSlow > 0) deathSlow -= dt;
 
   for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const t = timers.splice(i, 1)[0]; t.fn(); } }
 
@@ -6192,7 +6354,7 @@ function step(dt) {
   updateBodies(dt);
   updateParticles(dt);
   updateProps(dt);
-  updateChopper(dt);
+  updateChopper(dt); hudStep(dt);
   updateWeather(dt);
   updateLife(dt);
   updateRadio(dt);
@@ -6232,7 +6394,7 @@ function updatePlayer(dt) {
     if (P.onGround) { P.chute = false; body({ kind: 'chunk', x: P.x + 5, y: P.y - 14, vx: rand(-30, 30), vy: -40, col: '#e6e2f0', s: 6, r: 3, bounce: 0.1, fric: 0.3, vr: rand(-3, 3), life: 4 }); sfx('jump'); }
     return;
   }
-  P.squash = approach(P.squash, 0, dt * 1.2); P.recoil = approach(P.recoil, 0, dt * 30);
+  P.squash = approach(P.squash, 0, dt * 1.2); P.recoil = approach(P.recoil, 0, dt * 30); P.landT = Math.max(0, (P.landT || 0) - dt);
   const dir = P.wlock > 0 ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   // aiming: hold aim to keep facing while you walk (backwards too); Up tilts the gun 45 degrees while you move, straight up when you stand
   if (dir && P.dash <= 0 && !keys.aim && !padAim) P.face = dir;
@@ -6244,7 +6406,9 @@ function updatePlayer(dt) {
   if (!dir || (padFull === 0 && !keys.left && !keys.right)) P.run = false;
   if (padFull && padFull === dir) P.run = true;
   P.sprint = P.run && P.dash <= 0 && dir !== 0;
+  P.idleT = P.onGround && !dir && P.dash <= 0 && P.pound <= 0 && P.punch <= 0 && Math.abs(P.vx) < 5 && !keys.fire && !keys.jump && !keys.down && !keys.aim ? (P.idleT || 0) + dt : 0; // seconds of standing still (idle look)
   if (P.wlock <= 0 && P.pound <= 0) P.vx = approach(P.vx, dir * (P.sprint ? 185 : 118) * oilSlow(), (P.onGround ? (onIce ? 240 : 1500) : 950) * dt);
+  P.skidT = P.onGround && dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 70 ? Math.sign(P.vx) : 0; // for the skid lean
   if (P.onGround && dir && Math.sign(P.vx) === -dir && Math.abs(P.vx) > 70) { // skid when turning at speed
     if (Math.random() < 0.6) part(P.x + 5 + Math.sign(P.vx) * 4, P.y + P.h, Math.sign(P.vx) * rand(20, 60), rand(-30, -5), theme.dust, 0.35, 2, 0, 'smoke');
     if (Math.random() < 0.08) sfx('skid');
@@ -6275,10 +6439,10 @@ function updatePlayer(dt) {
   }
   if (P.dash > 0) {
     P.dash -= dt; P.vx = P.dashDir * 290; if (!P.onGround) P.vy = Math.min(P.vy, 40);
-    if (Math.random() < 0.5) fx.push({ kind: 'ghost', x: P.x, y: P.y, face: P.face, bro: P.bro, rot: P.onGround ? (1 - P.dash / 0.24) * Math.PI * 2 * P.dashDir : 0, t: 0.18, max: 0.18 });
+    if (Math.random() < 0.5) fx.push({ kind: 'ghost', x: P.x, y: P.y, face: P.face, bro: P.bro, rot: (1 - P.dash / 0.24) * Math.PI * 2 * P.dashDir, t: 0.18, max: 0.18 });
   }
   // ground pound: down + punch in the air slams straight down and smashes what you land on
-  if (!P.onGround && keys.down && (pressed.melee || P.wantMelee) && P.pound <= 0) { P.pound = 1; P.layers = 0; P.vx = 0; P.vy = 420; P.wantMelee = false; pressed.melee = false; sfx('dash'); }
+  if (!P.onGround && keys.down && (pressed.melee || P.wantMelee) && P.pound <= 0) { P.pound = 1; P.squash = -0.2; P.layers = 0; P.vx = 0; P.vy = 420; P.wantMelee = false; pressed.melee = false; sfx('dash'); }
 
   // ladders: up or down grabs on; climb, slide sideways off, or hop off the top
   const onLadder = rectHas(P.x + 3, P.y + 2, P.w - 6, P.h - 2, (v) => v === LADDER);
@@ -6294,12 +6458,12 @@ function updatePlayer(dt) {
     }
   }
   // wall climb: hold toward a wall in the air; hold jump to climb up
-  P.climb = false;
+  P.climb = false; P.slide = 0;
   if (!P.onGround && dir !== 0 && P.dash <= 0 && P.pound <= 0 && (dir > 0 ? wallR : wallL)) {
     const ex = dir > 0 ? P.x + P.w + 0.5 : P.x - 1.5, head = rectSolid(ex, P.y, 1, 5);
     P.climb = true;
     if (keys.jump) { P.vy = head ? -120 : -230; if (Math.random() < 0.2) part(ex, P.y + P.h, -dir * 20, -20, '#6b6185', 0.3, 1); }
-    else { P.vy = Math.min(P.vy, 45); if (P.vy > 20 && Math.random() < 0.3) part(ex, P.y + P.h - 2, -dir * 10, -10, theme.dust, 0.3, 1); } // sliding down
+    else { P.vy = Math.min(P.vy, 45); P.slide = dir; if (P.vy > 20 && Math.random() < 0.3) part(ex, P.y + P.h - 2, -dir * 10, -10, theme.dust, 0.3, 1); } // sliding down
   }
   const vy0 = P.vy, wasGround = P.onGround;
   moveBody(P, dt);
@@ -6308,7 +6472,7 @@ function updatePlayer(dt) {
   if (P.onGround && P.pound > 0) groundPound();
   else if (P.onGround && !wasGround && vy0 > 200) { // landing: dust and a squash
     for (let i = 0; i < vy0 / 70; i++) part(P.x + 5 + rand(-4, 4), P.y + P.h, rand(-70, 70), rand(-25, -5), theme.dust, rand(0.25, 0.5), rand(2, 4), 0, 'smoke');
-    P.squash = Math.min(0.2, vy0 / 2400);
+    P.squash = Math.min(0.2, vy0 / 2400); if (vy0 > 300) P.landT = 0.1; // a hard landing kneels for a moment
     if (vy0 > 430) shake = Math.min(10, shake + 1.5);
   }
   if (P.onGround && Math.abs(P.vx) > 70) { P.stepT -= dt; if (P.stepT <= 0) { P.stepT = 0.22; part(P.x + 5 - P.face * 4, P.y + P.h, -P.face * 20, -12, theme.dust, 0.3, 2, 0, 'smoke'); sfx('step'); } }
@@ -6511,7 +6675,7 @@ function updateEnt(e, dt) {
       break;
     case 'flag':
       if (!e.on && P.alive && P.x + P.w > e.x - 2) {
-        e.on = true; checkpoint = { x: e.x - 2, y: e.y + e.h - 16 }; sfx('flag');
+        e.on = true; checkpoint = { x: e.x - 2, y: e.y + e.h - 16 }; sfx('checkpoint');
         P.spec = specMax(P.bro); floatText(e.x + 6, e.y - 4, 'SPECIALS REFILLED', '#a6d854');
         showBanner('CHECKPOINT', 'Next bro drops in here', 1.4);
         if (!storyFlag) { storyFlag = true; const st = storyOf(level); if (st) st.mid.forEach((l, i) => say(l[0], l[1], i ? 0.3 : 0.8)); }
@@ -7051,7 +7215,7 @@ function updateDrone(e, dt) {
   e.cool = 0.22; e.aimA = a; sfx('shot');
 }
 function rescue(cage) {
-  cage.dead = true; lives++; stats.rescued++; career.rescues++; addScore(1000, false); sfx('rescue'); objHit('cage');
+  cage.dead = true; lives++; stats.rescued++; career.rescues++; addScore(1000, false, cage.x + 8, cage.y - 4); sfx('rescue'); objHit('cage');
   const nu = addRescue(), fresh = !!nu; // the counter may unlock the next bro in the fixed order; a cage never hands out a bro you have not unlocked
   if (nu && !unlocked.includes(nu)) unlocked.push(nu);
   cage.bro = nu || (cage.bro && unlocked.includes(cage.bro) ? cage.bro : pickRescueBro());
@@ -7218,6 +7382,7 @@ function drawBroMech(x, y, face, wp, onGround, vx, bro, flash, kick, punchT) {
 const PART_WORDS = { engine: ['STABILISER VAT', 'CORE', 'SHIELDED: BREAK THE VATS FIRST'], blimp: ['GONDOLA', 'GAS BAG', 'SHIELDED: SHOOT THE GONDOLAS'], director: ['STUDIO LIGHT', 'CAMERA', 'SHIELDED: SHOOT THE LIGHTS'] };
 function activateBoss(b, sub) {
   b.active = true; showBanner(bname(b), b.bossSub || sub, 3); sfx('roar');
+  bossIntroAt = clock; bossIntroTxt = [bname(b), b.bossSub || sub || '']; bossIntroBanner = banner; sfx('bossintro'); // the name card (drawn from drawBossCard) replaces the plain banner
   if (!b.talked) { b.talked = true; const st = storyOf(level); if (st) (b.final ? st.boss : st.midboss || []).forEach((l, i) => say(l[0], l[1], i ? 0.3 : 1.2)); }
   const W = PART_WORDS[b.type];
   if (W && b.vats) setTimeoutGame(() => { if (b.active && !b.dead && b.vats.some((v) => !v.dead)) showBanner('BREAK THE ' + b.vats.length + ' ' + W[0] + 'S', 'then hit the ' + W[1].toLowerCase() + ' (follow the arrows)', 2.6); }, 3.1);
@@ -8313,8 +8478,8 @@ function updateChopper(dt) {
       if (stats.time < 180) unlock('speed');
       if (unlocked.length === BROS.length && mode === 'campaign') unlock('allbros');
       if (mode === 'moon') { state = 'modedone'; unlock('moon'); }
-      else if (mode === 'random') { state = 'win'; runScore += stats.score; } // the debrief offers the next random map
-      else { markCleared(level); state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); }
+      else if (mode === 'random') { state = 'win'; runScore += stats.score; lastResult = runResult(); } // the debrief offers the next random map
+      else { if (mode === 'campaign') lastResult = recordRun(level); markCleared(level); state = level < LEVELS.length - 1 ? 'win' : 'done'; bankScore(); if (state === 'done') unlock('campaign'); }
     }
   }
 }
@@ -8930,16 +9095,23 @@ function drawPlayer() {
     ctx.strokeStyle = '#7a5c36'; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - F * 15, by - 7 - fl * 7); ctx.stroke();
   } else if (P.jet > 0) { ctx.fillStyle = '#b4bed0'; ctx.fillRect(Math.round(P.x + (P.face > 0 ? -1 : P.w - 3)), Math.round(P.y + 5), 4, 8); }
   const rig = P.bro.rig, cx = P.x + P.w / 2, feet = P.y + P.h + 1;
-  const pose = P.ride ? { leg: 'climb', fr: 0, bob: 0 } : poseOf(P);
+  let pose = P.ride ? { leg: 'climb', fr: Math.floor(P.anim * 8) % 2, bob: 0 } : poseOf(P); // on the rope the two climb frames alternate
+  const slide = P.climb && !P.ladder && !P.ride ? P.slide || 0 : 0, gnd = P.onGround && !P.ride; // slide: wall side while sliding down (not climbing)
+  if (slide) pose = { leg: 'climb', fr: 0, bob: 0 };
+  else if (P.landT > 0 && (pose.leg === 'stand' || (pose.leg === 'run' && Math.abs(P.vx) < 125))) pose = { leg: 'kneel', fr: 0, bob: 2 }; // hard landing
+  else if (pose.leg === 'stand' && gnd && P.idleT >= 3 && (P.idleT - 3) % 4 < 0.4) pose = { leg: 'stand', fr: 0, bob: pose.bob, ux: Math.floor((P.idleT - 3) / 4) % 2 ? -P.face : P.face }; // idle: a 1 px look to the side every 4 s
   if (P.chute) drawChute(cx, Math.round(P.y), anim0());
   ctx.save();
   if (P.flip > 0) { const a = (1 - P.flip / 0.45) * Math.PI * 2 * P.face; ctx.translate(cx, feet - 8); ctx.rotate(a); ctx.translate(-cx, -(feet - 8)); } // freed-bro flip
-  if (P.sprint && P.onGround && Math.abs(P.vx) > 140) { ctx.translate(cx, feet); ctx.transform(1, 0, -0.12 * P.face, 1, 0, 0); ctx.translate(-cx, -feet); } // lean into the sprint
+  if (P.sprint && P.onGround && Math.abs(P.vx) > 140 && !P.skidT) { ctx.translate(cx, feet); ctx.transform(1, 0, -0.12 * P.face, 1, 0, 0); ctx.translate(-cx, -feet); } // lean into the sprint
+  if (P.skidT && gnd) { ctx.translate(cx, feet); ctx.transform(1, 0, 0.14 * P.skidT, 1, 0, 0); ctx.translate(-cx, -feet); } // skid: lean back against the slide
+  if (slide) ctx.translate(slide, 0); // hug the wall
+  if (P.pound > 0 && !P.onGround) { ctx.translate(cx, feet - 8); ctx.rotate(0.3 * P.face); ctx.translate(-cx, -(feet - 8)); } // dive tilted forward
   if (P.squash) { ctx.translate(cx, feet); ctx.scale(1 + P.squash, 1 - P.squash); ctx.translate(-cx, -feet); } // squash on landing, stretch on jump
-  if (P.dash > 0 && P.onGround) { const a = (1 - P.dash / 0.24) * Math.PI * 2 * P.dashDir; ctx.translate(cx, feet - 7); ctx.rotate(a); ctx.translate(-cx, -(feet - 7)); } // roll
+  if (P.dash > 0) { const a = (1 - P.dash / 0.24) * Math.PI * 2 * P.dashDir, k = P.onGround ? 1 : 0.85; ctx.translate(cx, feet - 7); ctx.rotate(a); ctx.scale(k, k); ctx.translate(-cx, -(feet - 7)); } // roll; in the air the same tuck, a little smaller
   const sh = drawRigAt(rig, cx, feet, P.face, P.pound > 0 ? { leg: 'jump', fr: 0, bob: 0 } : pose, false), c = P.bro.pal.c, s = P.bro.pal.s, ed = P.bro.look.C;
   if (P.pound > 0) { const h = drawArm(sh, P.face, 'down', c, s, 0, ed); ctx.fillStyle = s; ctx.fillRect(h.x - 1, h.y + 1, 4, 3); }
-  else if (P.ride || P.climb) drawArm(P.climb ? { x: sh.x, y: sh.y + pose.fr * 2 } : sh, P.face, 'up', c, s, 0, ed); // on a ladder the hand reaches up and pulls down with the legs
+  else if (P.ride || P.climb) drawArm(slide ? sh : { x: sh.x, y: sh.y + pose.fr * 2 }, P.face, 'up', c, s, 0, ed); // on a ladder the hand reaches up and pulls down with the legs
   else if (P.punch > 0) drawArm(sh, P.face, 'punch', c, s, 0, ed);
   else if (pose.leg === 'run' && P.aimT <= 0 && !keys.fire && !P.aim) { const h = drawArm(sh, P.face, 'down', c, s, [0, 1, 1, 0, -1, -1][pose.fr], ed); drawBroGun(P.bro, h.x - 2, h.y, P.face); } // gun swings with the stride
   else { // the shot kicks the arm back and the muzzle up; aiming up turns arm and gun about the shoulder
@@ -9066,6 +9238,9 @@ function drawChute(cx, top, t) {
   ctx.fillStyle = '#e6e2f0'; ctx.beginPath(); ctx.arc(cx + sway, top - 10, 12, Math.PI, 0); ctx.fill();
   ctx.fillStyle = '#d9534f'; ctx.fillRect(Math.round(cx + sway) - 2, top - 22, 4, 12);
 }
+// the firing tell: 0, or a 0..1 ramp while a grunt, para or shield quack is about to shoot (aware, still seeing you, gun working, reaction spent, cooldown under 0.2 s). Reads state only
+const fireTell = (e) => (e.type === 'grunt' || e.type === 'para' || e.type === 'shield') && !e.dead && e.aware && !(e.lost > 0) && !(e.jam > 0) && !(e.stun > 0) && !(e.burn > 0) && !(e.hacked > 0) && !(e.react > 0) && e.cool < 0.2 ? clamp(1 - Math.max(0, e.cool) / 0.2, 0, 1) : 0;
+const tellGlint = (mx, my, k) => { const s = 1 + Math.floor(k * 2.99); ctx.fillStyle = '#ffd27a'; ctx.fillRect(Math.round(mx) - s, Math.round(my) - s + 1, s * 2, s * 2); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(mx) - 1, Math.round(my), 2, 1); }; // a bright spark at the muzzle that grows until the shot
 // every quack type on the shared rig, with its own arm pose, weapon and tells
 function drawQuack(e, t) {
   const rig = e.burn > 0 && Math.floor(t * 14) % 2 ? RIG.char : (RIG[e.type] || RIG.grunt);
@@ -9082,7 +9257,7 @@ function drawQuack(e, t) {
     return;
   }
   switch (e.type) {
-    case 'grunt': case 'para': { const h = drawArm(sh, F, e.aware ? 'aim' : 'down', coat, skin, swing); if (e.aware) rifle(h, F); break; }
+    case 'grunt': case 'para': { const tl = fireTell(e), h = drawArm(tl ? { x: sh.x, y: sh.y - 1 } : sh, F, e.aware ? 'aim' : 'down', coat, skin, swing); if (e.aware) rifle(h, F); if (tl) tellGlint(F > 0 ? h.x + 9 : h.x - 7, h.y + 1, tl); break; } // tl: the arm lifts 1 px and the muzzle glints just before a shot
     case 'auditor': { const h = drawArm(sh, F, 'down', coat, skin, swing), bx = F > 0 ? h.x : h.x - 4; ctx.fillStyle = '#7a5c36'; ctx.fillRect(bx, h.y - 3, 6, 8); ctx.fillStyle = '#e9eef6'; ctx.fillRect(bx + 1, h.y - 1, 4, 6); ctx.fillStyle = '#5c6480'; ctx.fillRect(bx + 1, h.y, 3, 1); ctx.fillRect(bx + 1, h.y + 2, 3, 1); ctx.fillStyle = '#d9534f'; ctx.fillRect(Math.round(cx) - F, y + 7, 2, 4); break; } // a suit, a red tie and a clipboard
     case 'bomber': { const h = drawArm(sh, F, e.run || e.beep > 0 ? 'up' : 'down', coat, skin, swing); ctx.fillStyle = '#d9534f'; ctx.fillRect(h.x, h.y - 4, 2, 5); if (Math.floor(t * 20) % 2) { ctx.fillStyle = '#fff6c2'; ctx.fillRect(h.x, h.y - 6, 2, 2); } break; }
     case 'flagbearer': { const h = drawArm(sh, F, 'up', coat, skin, swing), w = Math.floor(Math.sin(t * 8) * 1.5); ctx.fillStyle = '#b4bed0'; ctx.fillRect(h.x, h.y - 12, 1, 14); ctx.fillStyle = '#d9534f'; ctx.fillRect(F > 0 ? h.x + 1 : h.x - 6, h.y - 12 + w, 6, 4); ctx.fillStyle = '#f2c94c'; ctx.fillRect(F > 0 ? h.x + 3 : h.x - 4, h.y - 11 + w, 2, 2); break; }
@@ -9107,7 +9282,7 @@ function drawQuack(e, t) {
     case 'dronecaller': { const h = drawArm(sh, F, 'up', coat, skin, swing); ctx.fillStyle = '#25223a'; ctx.fillRect(h.x - 1, h.y - 4, 4, 3); ctx.fillStyle = e.windup > 0 || Math.floor(t * 3) % 2 ? '#66c2a5' : '#d9534f'; ctx.fillRect(h.x, h.y - 3, 1, 1); ctx.fillStyle = '#8b93ad'; ctx.fillRect(h.x + 2, h.y - 8, 1, 4); break; } // a remote with an antenna
     case 'knight': { const h = drawArm(sh, F, e.windup > 0 ? 'up' : 'down', coat, skin, swing); ctx.fillStyle = '#e6e2f0'; if (e.windup > 0) ctx.fillRect(h.x, h.y - 9, 1, 10); else ctx.fillRect(h.x, h.y + 1, 1, 8); const px = F > 0 ? x + 8 : x - 1; ctx.fillStyle = '#5c6480'; ctx.fillRect(px, y + 2, 3, 12); ctx.fillStyle = '#b4bed0'; ctx.fillRect(F > 0 ? px + 1 : px, y + 3, 2, 10); break; }
     case 'shield': {
-      const h = drawArm(sh, F, 'aim', coat, skin);
+      const tl = fireTell(e), h = drawArm(tl ? { x: sh.x, y: sh.y - 1 } : sh, F, 'aim', coat, skin);
       if (e.shield > 0) {
         const sx = F > 0 ? h.x + 2 : h.x - 2;
         ctx.fillStyle = '#5c6480'; ctx.fillRect(sx, y - 2, 3, 17);
@@ -9115,6 +9290,7 @@ function drawQuack(e, t) {
         ctx.fillStyle = '#bfe9ff'; ctx.fillRect(F > 0 ? sx + 1 : sx, y + 2, 2, 3);
         if (e.shield < 4) { ctx.fillStyle = '#25223a'; ctx.fillRect(sx + 1, y + 7, 1, 4); }
       } else { ctx.fillStyle = '#2c2840'; ctx.fillRect(F > 0 ? h.x : h.x - 3, h.y, 5, 2); }
+      if (tl) tellGlint(F > 0 ? h.x + (e.shield > 0 ? 7 : 6) : h.x - (e.shield > 0 ? 5 : 4), h.y + 1, tl);
       break;
     }
     case 'heavy': { // minigun: the barrels spin and the highlight runs round them
@@ -10342,7 +10518,8 @@ function drawFx() {
     } else if (f.kind === 'orbital') {
       ctx.globalAlpha = a; ctx.fillStyle = '#bfe9ff'; ctx.fillRect(Math.round(f.x) - 3, cam.y - 10, 6, f.y - cam.y + 10); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(f.x) - 1, cam.y - 10, 2, f.y - cam.y + 10); ctx.globalAlpha = 1;
     } else if (f.kind === 'text') {
-      ctx.globalAlpha = Math.min(1, a * 2); text(f.txt, Math.round(f.x), Math.round(f.y - (1 - a) * 18), 8, f.col, 'center'); ctx.globalAlpha = 1;
+      const age = f.max - f.t, k = 1.4 - 0.4 * easeOut(age / 0.12); // pops from 1.4x to 1x first, then rises
+      ctx.globalAlpha = Math.min(1, a * 2); ctx.save(); ctx.translate(Math.round(f.x), Math.round(f.y - 18 * clamp((age - 0.12) / (f.max - 0.12), 0, 1))); ctx.scale(k, k); text(f.txt, 0, 0, 8, f.col, 'center'); ctx.restore(); ctx.globalAlpha = 1;
     } else if (f.kind === 'ghost') { // dash afterimage
       const img = f.bro.rig.still[f.face > 0 ? 0 : 1];
       ctx.globalAlpha = a * 0.45; ctx.save(); ctx.translate(f.x + 5, f.y + 8); ctx.rotate(f.rot); ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore(); ctx.globalAlpha = 1;
@@ -10424,7 +10601,7 @@ function endOpening() {
 }
 function introStep(dt) {
   introT += dt;
-  if (pressed.fire || pressed.start) { sfx('flag'); endOpening(); return; }
+  if (pressed.fire || pressed.start) { sfx('ui_ok'); endOpening(); return; }
   const c = chopper, hx = introLand.x + 5;
   c.t = introT;
   if (introT < OPENING_DROP) { const u = introT / OPENING_DROP; c.x = cam.x - 70 + (hx - cam.x + 70) * (1 - (1 - u) * (1 - u)); c.y = introLand.y - 120 + Math.sin(introT * 3) * 2; }
@@ -10469,14 +10646,41 @@ function drawObjectiveHint(t) {
   ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(sx - 4, ay - 6); ctx.lineTo(sx + 4, ay - 6); ctx.lineTo(sx, ay - 1); ctx.fill();
   text('SHOOT', sx, ay - 10, 8, col, 'center');
 }
+// HUD feedback, stepped with the game (no randomness): the score counts up, lost lives and used flasks fade, the boss trail and objective flashes run down
+const hud = { st: null, sc: 0, rate: 0, lives: 0, heads: [], P: null, spec: 0, fl: [], bt: null, od: [], of: [] };
+function hudStep(dt) {
+  if (hud.st !== stats) { hud.st = stats; hud.sc = 0; hud.rate = 0; hud.lives = lives; hud.heads = []; hud.P = P; hud.spec = P.spec; hud.fl = []; hud.bt = null; hud.od = objectives.map((o) => o.n >= o.need); hud.of = []; } // a new mission starts the HUD afresh
+  const gap = stats.score - hud.sc;
+  if (gap <= 0) { hud.sc = stats.score; hud.rate = 0; } else { hud.rate = Math.max(hud.rate, gap / 0.4); hud.sc = Math.min(stats.score, hud.sc + hud.rate * dt); if (hud.sc >= stats.score) hud.rate = 0; } // the shown score closes the gap in 0.4 s and never passes the real one
+  if (lives < hud.lives) { for (let i = lives; i < hud.lives && i < 9; i++) hud.heads.push({ i, t: 0.4 }); sfx('lifelost'); }
+  hud.lives = lives; hud.heads = hud.heads.filter((h) => (h.t -= dt) > 0);
+  if (hud.P !== P) { hud.P = P; hud.spec = P.spec; hud.fl = []; } else { for (let i = P.spec; i < hud.spec; i++) hud.fl[i] = 0.2; hud.spec = P.spec; }
+  for (let i = 0; i < hud.fl.length; i++) if (hud.fl[i] > 0) hud.fl[i] -= dt;
+  objectives.forEach((o, i) => { const d = o.n >= o.need; if (hud.of[i] > 0) hud.of[i] -= dt; if (d && !hud.od[i]) hud.of[i] = 0.6; hud.od[i] = d; });
+  const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !e.doomed);
+  if (!B) hud.bt = null; else if (!hud.bt || hud.bt.e !== B) hud.bt = { e: B, v: B.hp }; else hud.bt.v = B.hp > hud.bt.v ? B.hp : B.hp + (hud.bt.v - B.hp) * Math.exp(-dt * 6); // the pale trail eases down to the real health
+}
+// the boss name card: letterbox bars ease in and out, a dark strip carries the name (sliding in from the right) and the subtitle (from the left, 0.15 s later)
+const bossCardAge = () => (bossIntroTxt ? clock - bossIntroAt : -1);
+const bossCardOn = () => { const a = bossCardAge(); return a >= 0 && a < 2.2; };
+function drawBossCard() {
+  const a = bossCardAge(); if (a < 0 || a >= 2.2 || paused || keys.map) return;
+  const h = Math.round(24 * Math.min(easeOut(a / 0.35), easeOut((2.2 - a) / 0.35))), fade = Math.min(1, (2.2 - a) / 0.3), W = VW / 2 + 140;
+  ctx.fillStyle = '#05060f'; ctx.fillRect(0, 0, VW, h); ctx.fillRect(0, VH - h, VW, h);
+  ctx.globalAlpha = fade * Math.min(1, a / 0.2); ctx.fillStyle = 'rgba(11,14,31,0.82)'; ctx.fillRect(0, 76, VW, 42);
+  text(bossIntroTxt[0], VW / 2 + Math.round((1 - easeOut(a / 0.4)) * W), 98, 16, '#e7eaf6', 'center');
+  if (bossIntroTxt[1] && a > 0.15) text(bossIntroTxt[1], VW / 2 - Math.round((1 - easeOut((a - 0.15) / 0.4)) * W), 111, 8, '#a6d854', 'center');
+  ctx.globalAlpha = 1;
+}
 function drawHud(t) {
   // left: portrait, name, specials as little flasks, the bro reserve as heads, dash cooldown
   ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 4, 168, 34);
   ctx.fillStyle = '#2a3160'; ctx.fillRect(6, 6, 30, 30);
   ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 10, 9, 9, 24, 20);
   text(P.bro.name.toUpperCase(), 40, 14, 8, '#a6d854');
-  for (let i = 0; i < specMax(P.bro); i++) { const fx0 = 40 + i * 9, on = i < P.spec, nk = P.bro.id === 'oppenheimer' || P.bro.id === 'roentgen', gm = P.bro.id === 'roentgen'; ctx.fillStyle = on ? (nk ? (gm ? '#7b4cff' : '#d9534f') : '#e9eef6') : '#2a3160'; ctx.fillRect(fx0 + 2, 19, 3, 2); ctx.fillStyle = on ? (nk ? (gm ? '#7bd88f' : '#f2c94c') : '#8da0cb') : '#2a3160'; ctx.fillRect(fx0, 21, 7, 6); } // Oppenbro: one nuke, a yellow flask
+  for (let i = 0; i < specMax(P.bro); i++) { const fx0 = 40 + i * 9, on = i < P.spec, nk = P.bro.id === 'oppenheimer' || P.bro.id === 'roentgen', gm = P.bro.id === 'roentgen'; const fl = hud.fl[i] > 0 && hud.P === P; ctx.fillStyle = fl ? '#ffffff' : on ? (nk ? (gm ? '#7b4cff' : '#d9534f') : '#e9eef6') : '#2a3160'; ctx.fillRect(fx0 + 2, 19, 3, 2); ctx.fillStyle = fl ? '#ffffff' : on ? (nk ? (gm ? '#7bd88f' : '#f2c94c') : '#8da0cb') : '#2a3160'; ctx.fillRect(fx0, 21, 7, 6); } // Oppenbro: one nuke, a yellow flask
   for (let i = 0; i < Math.min(lives, 9); i++) ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 7, 70 + i * 10, 20, 9, 5);
+  for (const h of hud.heads) { const u = 1 - h.t / 0.4; ctx.globalAlpha = 1 - u; ctx.drawImage(P.bro.spr[0][0], 0, 0, 12, 7, 70 + h.i * 10, 20 + Math.round(u * 8), 9, 5); ctx.globalAlpha = 1; } // a lost head drops and fades
   if (lives > 9) text('+' + (lives - 9), 162, 26, 8, '#e7eaf6');
   if (P.alt) text(GUNS[P.alt.kind].name + ' ' + P.alt.ammo, 104, 34, 8, '#c96a2a');
   if (P.once) { const yy = P.mech ? 53 : 40; ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, yy, 142, 11); text('NEXT SPECIAL: ' + ONCE[P.once].name, 8, yy + 8, 8, '#c78bff'); }
@@ -10486,7 +10690,7 @@ function drawHud(t) {
   ctx.fillStyle = P.dcool > 0 ? '#5c6480' : '#a6d854'; ctx.fillRect(40, 31, 60 * (1 - Math.max(0, P.dcool) / 0.6), 2);
   // right: score, kills, rescued, time
   ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(VW - 132, 4, 128, 34);
-  text(String(stats.score).padStart(7, '0'), VW - 126, 15, 8, '#f2c94c');
+  text(String(hud.st === stats ? Math.floor(hud.sc) : stats.score).padStart(7, '0'), VW - 126, 15, 8, '#f2c94c');
   text(fmtTime(stats.time), VW - 10, 15, 8, '#a3abd0', 'right');
   text('KILLS ' + stats.kills, VW - 126, 27, 8, '#e7eaf6');
   text('FREED ' + stats.rescued + '/' + LV().cages, VW - 10, 27, 8, '#a6d854', 'right');
@@ -10496,6 +10700,7 @@ function drawHud(t) {
     ctx.globalAlpha = a; ctx.fillStyle = 'rgba(11,14,31,0.78)'; ctx.fillRect(4, 42, 190, 8 + objectives.length * 10);
     objectives.forEach((o, i) => {
       const done = o.n >= o.need, y = 51 + i * 10;
+      if (hud.of[i] > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (0.35 * Math.min(1, hud.of[i] / 0.3) * (Math.floor(hud.of[i] * 20) % 2 ? 1 : 0.6)).toFixed(2) + ')'; ctx.fillRect(5, y - 7, 188, 9); } // a line that just completed flashes
       ctx.fillStyle = done ? '#a6d854' : o.req ? '#f2c94c' : '#5c6480'; ctx.fillRect(8, y - 5, 4, 4);
       text((o.req ? '' : 'BONUS: ') + o.text.toUpperCase() + (o.need > 1 ? ' ' + o.n + '/' + o.need : ''), 16, y, 8, done ? '#a6d854' : o.req ? '#e7eaf6' : '#a3abd0');
     });
@@ -10516,7 +10721,7 @@ function drawHud(t) {
     ctx.save(); ctx.translate(VW / 2, 30); ctx.scale(sc, sc);
     text('x' + combo.n + ' COMBO', 0, 0, 8, combo.n >= 5 ? '#e78ac3' : '#f2c94c', 'center');
     ctx.restore();
-    ctx.fillStyle = '#f2c94c'; ctx.fillRect(VW / 2 - 20, 34, 40 * combo.t / 1.6, 1);
+    ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 20, 33, 40, 2); ctx.fillStyle = combo.n >= 5 ? '#e78ac3' : '#f2c94c'; ctx.fillRect(VW / 2 - 20, 33, 40 * Math.max(0, Math.min(1, combo.t / 1.6)), 2); // the bar drains over the 1.6 s window
   }
   if (slowT > 0) { ctx.fillStyle = 'rgba(141,160,203,0.12)'; ctx.fillRect(0, 0, VW, VH); text('TIME DILATION ' + slowT.toFixed(1) + ' S', VW / 2, 46, 8, '#8da0cb', 'center'); }
   const B = ents.find((e) => BOSS[e.type] && e.active && !e.dead && !e.doomed);
@@ -10524,17 +10729,19 @@ function drawHud(t) {
     const w = 200, x = (VW - w) / 2 - 50, y = VH - 18;
     text(bname(B), x + w / 2, y - 4, 8, '#e6e2f0', 'center');
     ctx.fillStyle = '#0b0e1f'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
+    if (hud.bt && hud.bt.e === B && hud.bt.v > B.hp + 0.01) { ctx.fillStyle = '#e6e2f0'; ctx.fillRect(x, y, w * Math.min(B.max, hud.bt.v) / B.max, 5); } // the pale damage trail
     ctx.fillStyle = B.p2 ? '#b0507a' : '#7570b3'; ctx.fillRect(x, y, w * Math.max(0, B.hp) / B.max, 5);
     const W = PART_WORDS[B.type];
     if (W && B.vats) { const n = B.vats.filter((v) => !v.dead).length; text(n ? n + ' ' + W[0] + (n > 1 ? 'S' : '') + ' LEFT · ' + W[1] + ' SHIELDED' : W[1] + ' EXPOSED: HIT IT', x + w / 2, y + 13, 8, n ? '#f2c94c' : '#ff5a4a', 'center'); }
   }
   drawEventHud(t);
   if (extractPending && !paused && !keys.map) drawObjectiveHint(t);
-  if (banner.t > 0 && !paused && !keys.map) {
-    const a = Math.min(1, banner.t * 3, (banner.max - banner.t) * 6 + 0.2);
+  if (banner.t > 0 && !paused && !keys.map && banner !== bossIntroBanner) { // the boss's own banner is replaced by its name card
+    const a = Math.min(1, banner.t * 3, (banner.max - banner.t) * 6 + 0.2), age = banner.max - banner.t;
+    const k1 = 1.25 - 0.25 * easeOut(age / 0.18), k2 = 1.25 - 0.25 * easeOut((age - 0.08) / 0.18), o1 = Math.round(4 * easeOut(1 - banner.t * 3)), o2 = Math.round(4 * easeOut(1 - (banner.t + 0.08) * 3)); // scale in from 1.25x, slide up 4 px on the way out; the subtitle 0.08 s behind
     ctx.globalAlpha = a;
-    text(banner.text, VW / 2, 72, 16, '#e7eaf6', 'center');
-    if (banner.sub) text(banner.sub, VW / 2, 88, 8, '#a6d854', 'center');
+    ctx.save(); ctx.translate(VW / 2, 72 - o1); ctx.scale(k1, k1); text(banner.text, 0, 0, 16, '#e7eaf6', 'center'); ctx.restore();
+    if (banner.sub) { ctx.save(); ctx.translate(VW / 2, 88 - o2); ctx.scale(k2, k2); text(banner.sub, 0, 0, 8, '#a6d854', 'center'); ctx.restore(); }
     ctx.globalAlpha = 1;
   }
   drawRadio(t);
@@ -10548,12 +10755,13 @@ function drawHud(t) {
       if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 10, 220, 14); }
       text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6');
       if (key === 'gore') text(['OFF', 'ON', 'EXTRA'][settings.gore | 0], VW / 2 + 100, y, 8, ['#e78ac3', '#a6d854', '#ff5a4a'][settings.gore | 0], 'right');
+      else if (key === 'music') text(settings.musicVol > 0 ? Math.round(settings.musicVol * 100) + '%' : 'OFF', VW / 2 + 100, y, 8, settings.musicVol > 0 ? '#a6d854' : '#e78ac3', 'right');
       else if (key) text(settings[key] ? 'ON' : 'OFF', VW / 2 + 100, y, 8, settings[key] ? '#a6d854' : '#e78ac3', 'right');
     });
     text('UP/DOWN CHOOSE · Z OR ENTER SWITCH · P RESUME', VW / 2, 228, 8, '#a3abd0', 'center');
-    [['DIFFICULTY', DF().name, '#f2c94c'], ['ENEMY DENSITY', Math.round(densMul * 100) + '%', '#8fd3ff']].forEach(([label, val, col], i) => { // LEFT/RIGHT change these two
-      const y = 242 + i * 12, sel = menuSel === pauseItems().length + i;
-      if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 9, 220, 12); }
+    [['DIFFICULTY', DF().name, '#f2c94c'], ['ENEMY DENSITY', Math.round(densMul * 100) + '%', '#8fd3ff'], ['SOUND', settings.sfxVol > 0 ? Math.round(settings.sfxVol * 100) + '%' : 'OFF', '#e78ac3']].forEach(([label, val, col], i) => { // LEFT/RIGHT change these three
+      const y = 239 + i * 11, sel = menuSel === pauseItems().length + i;
+      if (sel) { ctx.fillStyle = '#2a3160'; ctx.fillRect(VW / 2 - 110, y - 8, 220, 11); }
       text((sel ? '> ' : '  ') + label, VW / 2 - 100, y, 8, sel ? '#a6d854' : '#e7eaf6'); text('< ' + val + ' >', VW / 2 + 100, y, 8, col, 'right');
     });
   }
@@ -10562,9 +10770,21 @@ function drawHud(t) {
 function drawScreen(t) {
   ctx.fillStyle = state === 'title' ? 'rgba(11,14,31,0.5)' : 'rgba(11,14,31,0.72)'; ctx.fillRect(0, 0, VW, VH);
   const blink = Math.floor(t * 2) % 2 === 0;
-  const statRows = (y0) => {
-    const rows = [['SCORE', String(stats.score) + (stats.newHi ? '  NEW BEST' : '')], ['RUN TOTAL', String(runScore)], ['TIME', fmtTime(stats.time)], ['QUACKS DEFEATED', String(stats.kills)], ['BEST COMBO', 'x' + stats.best], ['SCIENTISTS RESCUED', stats.rescued + ' / ' + LV().cages], ['BROS LOST', String(stats.deaths)]];
-    rows.forEach(([k, v], i) => { text(k, VW / 2 - 100, y0 + i * 12, 8, '#a3abd0'); text(v, VW / 2 + 100, y0 + i * 12, 8, '#e7eaf6', 'right'); });
+  if (dbS !== stats || dbK !== state) { dbS = stats; dbK = state; dbT0 = t; dbTick = -1; dbSum = -1; dbRank = false; } // the debrief clock restarts when the screen (or the mission) changes
+  const dT = t - dbT0, lr = lastResult && lastResult.st === stats ? lastResult : null;
+  // statRows: y0 first row, an = when the rows start appearing (null: no animation, all shown), intel = add the intel row (debrief)
+  const statRows = (y0, an = null, intel = false) => {
+    const L = LV(), rows = [['SCORE', stats.score, (v) => String(v), 'score'], ['RUN TOTAL', runScore, (v) => String(v)], ['TIME', stats.time, (v) => fmtTime(v), 'time'], ['QUACKS DEFEATED', stats.kills, (v) => String(v)], ['BEST COMBO', stats.best, (v) => 'x' + v], ['SCIENTISTS RESCUED', stats.rescued, (v) => v + ' / ' + L.cages, 'cages']];
+    if (intel) rows.push(['INTEL FOUND', lr ? lr.intel : 0, (v) => v + ' / 3', 'intel']);
+    rows.push(['BROS LOST', stats.deaths, (v) => String(v), 'deaths']);
+    const ys = intel ? 11 : 12; let sum = 0;
+    rows.forEach(([k, val, f, nw], i) => {
+      const u = an === null ? 1 : Math.max(0, Math.min(1, (dT - an - i * 0.12) / 0.6)), y = y0 + i * ys; if (an !== null && dT < an + i * 0.12) return; // each row appears 0.12 s after the last, its number counts up over 0.6 s
+      const v = k === 'TIME' ? val * u : Math.round(val * u); sum += Math.floor(v);
+      text(k, VW / 2 - 100, y, 8, '#a3abd0'); text(f(v) + (k === 'SCORE' && stats.newHi && u >= 1 ? '  NEW BEST' : ''), VW / 2 + 100, y, 8, '#e7eaf6', 'right');
+      if (u >= 1 && nw && lr && lr.nw[nw] && !(k === 'SCORE' && stats.newHi)) text('NEW BEST', VW / 2 + 106, y, 8, '#f2c94c'); // beat the saved record (the score row already says so on a new best run)
+    });
+    if (an !== null && sum !== dbSum) { dbSum = sum; if (t - dbTick >= 1 / 15 || dbTick < 0) { dbTick = t; sfx('tick'); } } // a tick when a number moves, at most 15 a second
   };
   if (state === 'map') { drawWorldMap(t); return; }
   if (state === 'brief') { drawBriefing(t); return; }
@@ -10602,17 +10822,27 @@ function drawScreen(t) {
     drawTrophies(t);
   } else if (state === 'over') {
     text('ALL BROS LOST', VW / 2, 100, 24, '#e78ac3', 'center');
-    text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LV().cages, VW / 2, 126, 8, '#a3abd0', 'center');
-    if (blink) text(mode === 'random' ? 'PRESS ENTER TO RETRY SEED ' + genSeed : 'PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
+    if (dT >= 0.12) text('SCORE ' + stats.score + ' · KILLS ' + stats.kills + ' · RESCUED ' + stats.rescued + '/' + LV().cages, VW / 2, 126, 8, '#a3abd0', 'center'); // the lines come in one after another
+    if (blink && dT >= 0.24) text(mode === 'random' ? 'PRESS ENTER TO RETRY SEED ' + genSeed : 'PRESS ENTER TO RETRY LEVEL ' + (level + 1), VW / 2, 160, 8, '#e7eaf6', 'center');
   } else if (state === 'win') { // debrief: what happened, what got done, the numbers
     text(LV().name + ' LIBERATED', VW / 2, 34, 20, '#a6d854', 'center');
     wrap(LV().debrief, 70).forEach((ln, i) => text(ln, VW / 2, 52 + i * 11, 8, '#8da0cb', 'center'));
-    objectives.forEach((o, i) => { const done = o.n >= o.need; text((done ? '+ ' : '- ') + o.text.toUpperCase() + (o.req ? '' : '  BONUS'), VW / 2 - 100, 82 + i * 10, 8, done ? '#a6d854' : '#5c6480'); });
-    statRows(140);
-    { const nb = nextBro(); text(nb ? 'NEXT BRO ' + nb[0] + '/' + nb[1] : 'ALL ' + BROS.length + ' BROS FREED', VW / 2, 226, 8, '#a6d854', 'center'); }
-    if (mode === 'campaign') { const R = REGIONS[LV().region]; text(R.name + ' ' + R.missions.filter((nm) => cleared.has(nm)).length + '/' + R.missions.length + ' CLEARED · ' + cleared.size + '/' + LEVELS.length + ' IN ALL', VW / 2, 238, 8, '#f2c94c', 'center'); }
-    if (mode === 'random') text('SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase() + ' · REPLAY IT WITH ?seed=' + genSeed, VW / 2, 238, 8, '#f2c94c', 'center');
-    if (blink) text(mode === 'random' ? 'PRESS ENTER FOR A NEW RANDOM MAP' : 'PRESS ENTER FOR THE WORLD MAP', VW / 2, 252, 8, '#e7eaf6', 'center');
+    objectives.forEach((o, i) => { const done = o.n >= o.need; if (dT >= i * 0.12) text((done ? '+ ' : '- ') + o.text.toUpperCase() + (o.req ? '' : '  BONUS'), VW / 2 - 100, 82 + i * 10, 8, done ? '#a6d854' : '#5c6480'); }); // y 82..122
+    const sT = objectives.length * 0.12 + 0.12, rT = sT + 7 * 0.12 + 0.6; // stat rows y 134..211 (11 apart); the rank stamps in after the last count
+    statRows(134, sT, true);
+    if (lr && dT >= rT) { // rank letter at x 440, y 182 (stamp), RANK label y 148, points y 196
+      const u = Math.min(1, (dT - rT) / 0.2), k = 1 - Math.pow(1 - u, 3), sc = 2.5 - 1.5 * k;
+      if (!dbRank) { dbRank = true; sfx('rank'); }
+      text('RANK', 440, 148, 8, '#a3abd0', 'center');
+      ctx.save(); ctx.globalAlpha = k; ctx.translate(440, 182); ctx.scale(sc, sc); text(lr.rank, 0, 0, 32, RANK.col[lr.rank], 'center'); ctx.restore();
+      if (u >= 1) text(lr.pts + ' PTS', 440, 196, 8, '#e7eaf6', 'center');
+    }
+    if (dT >= rT) {
+      { const nb = nextBro(); text(nb ? 'NEXT BRO ' + nb[0] + '/' + nb[1] : 'ALL ' + BROS.length + ' BROS FREED', VW / 2, 226, 8, '#a6d854', 'center'); }
+      if (mode === 'campaign') { const R = REGIONS[LV().region]; text(R.name + ' ' + R.missions.filter((nm) => cleared.has(nm)).length + '/' + R.missions.length + ' CLEARED · ' + cleared.size + '/' + LEVELS.length + ' IN ALL', VW / 2, 238, 8, '#f2c94c', 'center'); }
+      if (mode === 'random') text('SEED ' + genSeed + ' · ' + genDiffKey.toUpperCase() + ' · REPLAY IT WITH ?seed=' + genSeed, VW / 2, 238, 8, '#f2c94c', 'center');
+      if (blink) text(mode === 'random' ? 'PRESS ENTER FOR A NEW RANDOM MAP' : 'PRESS ENTER FOR THE WORLD MAP', VW / 2, 252, 8, '#e7eaf6', 'center');
+    }
   } else if (state === 'done') {
     text('SCIENCE WINS', VW / 2, 34, 28, '#a6d854', 'center');
     wrap(ENDING, 74).forEach((ln, i) => text(ln, VW / 2, 52 + i * 10, 8, '#8da0cb', 'center'));
@@ -10978,6 +11208,7 @@ function drawWorldMap(t) {
     if (i === sel) { ctx.strokeStyle = '#f2c94c'; ctx.lineWidth = 1; ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.4; ctx.beginPath(); ctx.arc(x, y, 8 + Math.sin(t * 5) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     const c = lib ? '#a6d854' : front ? (Math.floor(t * 3) % 2 ? '#f2c94c' : '#ff8a4a') : '#6a6290';
     if (fog && k !== 'citadel') wmSkull(ctx, x - 2, y - 2, '#a39cbc'); else wmDot(x, y, c);
+    if (lib && records[L.name]) text(records[L.name].rank, x + 8, y + 5, 8, RANK.col[records[L.name].rank], 'left'); // best rank beside the flag
     if (lib) wmFlag(x + 4, y - 1, t, '#4f9a2a', false);
     else if (front && k !== 'citadel') wmFlag(x + 4, y - 1, t, '#c8323c', true);
     if (!fog || i === sel) text(String(i + 1), x, y + 12, 8, lib ? '#a6d854' : front ? '#f2c94c' : '#8a83a3', 'center');
@@ -11014,6 +11245,7 @@ function drawWorldMap(t) {
   text('MISSION ' + (sel + 1) + ' · ' + L.name, 52, 222, 8, '#f2c94c');
   text(L.sub.toUpperCase(), 52, 233, 8, '#a3abd0');
   text('REGION ' + (L.region + 1) + ' · ' + R.name, 52, 244, 8, '#8da0cb');
+  { const q = done(sel) && records[L.name]; if (q) text(q.rank + ' ' + fmtTime(q.time) + ' · ' + q.cages + '/' + L.cages + ' CAGES · ' + q.intel + '/3 INTEL', VW - 8, 244, 8, RANK.col[q.rank], 'right'); } // the best run of a cleared mission, right of the region line (y 244)
   text(open[sel] ? R.blurb.toUpperCase() : sel === FINALE ? 'CLEAR EVERY OTHER MISSION TO OPEN THE CITADEL' : L.region === 0 ? 'CLEAR PLACEBO ISLAND TO OPEN THE COAST' : 'CLEAR REGION ' + L.region + ' TO OPEN THIS ONE', 52, 255, 8, '#8da0cb');
   if (Math.floor(t * 2) % 2) text(open[sel] ? 'PRESS ENTER FOR THE BRIEFING' : 'THIS MISSION IS LOCKED', 52, 266, 8, '#e7eaf6');
   text('LEFT/RIGHT PICK AN OPEN MISSION', VW - 8, 266, 8, '#5c6480', 'right');
@@ -11022,12 +11254,12 @@ function drawWorldMap(t) {
 const GEAR = [['NONE'], ['SHIELD', 'shield'], ['JETPACK', 'jetpack'], ['OVERCLOCK', 'overclock'], ['SHOTGUN', 'gun', 'shotgun'], ['MINIGUN', 'gun', 'minigun'], ['ROCKETS', 'gun', 'rocket'], ['RAILGUN', 'gun', 'railgun']];
 let briefRow = 0, briefBro = 0, briefGear = 0;
 function briefInput() {
-  if (pressed.jump || pressed.down) briefRow = 1 - briefRow;
+  if (pressed.jump || pressed.down) { briefRow = 1 - briefRow; sfx('ui_move'); }
   const d = (pressed.right ? 1 : 0) - (pressed.left ? 1 : 0);
   if (!d) return;
   if (briefRow === 0) briefBro = (briefBro + d + unlocked.length) % unlocked.length;
   else briefGear = (briefGear + d + GEAR.length) % GEAR.length;
-  sfx('flag');
+  sfx('ui_move');
 }
 function applyGear() {
   const g = GEAR[briefGear];
@@ -11126,8 +11358,15 @@ function render(t) {
   for (const f of fx) if (f.kind === 'edge') { ctx.globalAlpha = Math.min(1, f.t / f.max * 1.4) * 0.8; ctx.fillStyle = '#7a1a2a'; for (const [bx, by, br] of f.blobs) { ctx.beginPath(); ctx.arc(bx, by, br, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; } // extra gore: red splats at the screen edge after a very close big kill
   for (const f of fx) if (f.kind === 'screen') { ctx.globalAlpha = f.t / f.max * 0.5; ctx.fillStyle = f.col; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   if (slowT > 0 && state === 'play') { ctx.globalAlpha = 0.07 * Math.min(1, slowT); ctx.fillStyle = '#8fd3ff'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; } // dilated time: a cold blue cast
-  if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawHud(t); } else if (state === 'intro') drawIntro(t); else drawScreen(t);
+  if (state === 'play') { if (settings.minimap) drawMinimap(t); if (keys.map) drawFullMap(t); drawBossCard(); drawHud(t); } else if (state === 'intro') drawIntro(t); else drawScreen(t);
   if (settings.scanlines) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < VH; y += 2) ctx.fillRect(0, y, VW, 1); }
+  { // screen transition: a state change fades in from black over 0.3 s (not intro <-> play: the opening's hand-over stays visible); on the chopper's way out the last 0.5 s darken so the debrief cuts in from black
+    if (lastDrawn !== null && lastDrawn !== state && !((lastDrawn === 'intro' && state === 'play') || (lastDrawn === 'play' && state === 'intro'))) { fadeAt = t; sfx('whoosh'); }
+    lastDrawn = state;
+    const fu = (t - fadeAt) / 0.3; fadeNow = fu >= 0 && fu < 1 ? 1 - fu : 0;
+    if (state === 'play' && chopper && chopper.state === 'leave') fadeNow = Math.max(fadeNow, clamp((endT - 2.1) / 0.5, 0, 1));
+    if (fadeNow > 0) { ctx.globalAlpha = fadeNow; ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
+  }
 }
 
 // ---------------------------------------------------------------- extra visuals
@@ -12337,6 +12576,7 @@ const startFonts = () => { try { document.fonts && document.fonts.load('8px "Sil
 startFonts();
 try { page = pageUI(); } catch (e) { console.warn('page ui', e); }
 if (window.__SB_TEST__) Object.assign(window.__SB__, { page: () => page }); // page hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { SONGS, SONG_DEFS, STING, RSONG, updateMusic, playStinger, voiceOf, setVol, music: () => ({ cur: musicCur, step: musicStep, next: musicNext, hold: musicHold, stingN, stingLast }), buses: () => ({ musicBus, sfxBus, comp }), setState(v) { state = v; }, setPaused(v) { paused = v; }, setMuted(v) { muted = v; }, setMode(v) { mode = v; }, setCombo(n, t) { combo.n = n; combo.t = t; } }); // round 8 audio hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { devs, crumbly: (c, r) => crumbly[r * LW + c], updateDevices, drawDevices, surf, SEG, ARENA, cityKinds: () => Object.keys(THEMES).map((k) => THEMES[k].cityKind) }); // level mechanics hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { parts: () => parts, kick: () => kickX, GUNFX, GUNS });
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LW, ARENA_AT, STRETCH, OLD_STRETCH, stretchW: () => stretchW, playW: () => playW, arenaCol, padOf, isStretched: () => stretched, cutAt: () => cutAt, LONG_MAPS, longOf, seedN, ROUND5, UG_BY_THEME, stretchPlan: () => stretchPlan }); // longer maps hooks
@@ -12350,6 +12590,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_PIECES, NEW_ARENAS, S
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NEW_FOES, BOMBER: { speed: BOMBER_SPEED, beep: BOMBER_BEEP, fuse: BOMBER_FUSE }, RAMP_FROM, THREAT }); // newer quacks and the bomber numbers
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DESTRUCT, MAT, BOSS_MUL, wreck, hpAt: (c, r) => thp[r * LW + c], blame: () => blame, useSpecial, hitSteel, shootDecor, bgHeld, bgFirm: () => bgFirm, bgDrop: () => bgDrop, parts: () => parts, dust, dustLeft: () => dustLeft, STEEL_HP, setBlame(v) { blame = v; }, ONCE, givePickup, spawnPickup }); // weapon destruction, self-kill and boss damage hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LEAK, meat, splat, edgeSplat }); // gore hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { easeOut, easeBack, fireTell, drawPlayer, drawQuack, activateBoss, bossDying, bossCardOn, bossCardAge, fade: () => fadeNow, deathSlow: () => deathSlow, slowT: () => slowT, setPaused(v) { paused = v; }, setClock(v) { clock = v; }, clock: () => clock }); // round 8 animation hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { GEN_WORDS, HQ_DEATH, BRO_QUIPS, EVENT_RADIO, ENDING, decor: () => decor }); // satire hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { QUACK_BARKS, TYPE_BARKS, BRO_LINES, RADIO_CHATTER, EVENT_EXTRA, PAUSE_TIPS, WIT_SIGNS, bark, broQuip, setState(v) { state = v; }, resetWit() { barkT = quipT = killQuipT = -99; barkGate.hit = barkGate.die = killQuipN = quipN = respN = 0; } }); // wit hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { MORE_FOES, GEN_GROUPS, oilSlow, tiles: () => tiles }); // second-round quacks hooks
@@ -12358,6 +12599,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficult
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows, BRO_LEGS, LEG_FRAMES, HEADS }); // bro art hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { rankOf, RANK, runResult, recordRun, addScore, hudStep, drawScreen, records: () => records, lastResult: () => lastResult, hud: () => hud, setMode(m) { mode = m; }, setState(v) { state = v; }, leave() { chopper = { x: 0, y: 0, tx: 0, ty: 0, floor: 0, state: 'leave', t: 0 }; endT = 2.7; P.alive = false; P.ride = true; }, setCam(x, y) { cam.x = x; cam.y = y; } }); // round 8 records hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { objHit, modState: () => ({ live: modLive, banner: modBannerT, dark: modDarkK }), restless, modOn, GRANT_GUNS, updateAuditor, melt: () => melt, MELT_V, MELT_LEAD, startMelt, meltSafe, wrap: () => wrapEdge, updateWrap, WRAP_BACK, bossFight, reachesPlayer, rectSolid, bannerNow: () => banner }); // wall rule and Think Tank hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { bossSkin, bossWear, BOSS_NAME, MICRO, bossMarks: () => bossMarks, drawBoss: (e, t) => (e.type === 'crawler' ? drawCrawlers(t) : drawEnt(e, t)) }); // boss art hooks
 })();

@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
-"""Generate HUB.html — auto-derived + curated project dashboard.
+"""Print the agent brief: auto-derived + curated project state for a new session.
 
 A *narrative* layer for the repo: project status, where current truth lives,
-the temporal waves of work, the named concepts, the runnable scripts, who's
-contributed, what's loose right now (uncommitted / unpushed / TODOs / drafts).
-Distinct from INDEX.html (structural file graph) — HUB.html answers "what's
-the state of this project?", INDEX.html answers "where in the code is X?".
+the named concepts, the runnable scripts, what's loose right now (uncommitted /
+unpushed / TODOs / drafts), decisions, guardrails and recent learnings.
 
-The generator pulls from FOUR sources, in increasing curation:
+The brief pulls from FOUR sources, in increasing curation:
 
-1.  git state                         — status pill, waves, contributors, activity, loose-ends
+1.  git state                         — status, loose ends, recent commits
 2.  filesystem + README/CONTEXT/CLAUDE.md — auto-derived canonical, concepts, scripts
 3.  docs/hub.yaml (optional)           — surgical overrides (`oneliner:`, `next_action:`, ...)
 4.  HUB.md / docs/HUB.md (optional)    — curated `## :section` bodies, win over auto-derive
 
 Designed to be **project-agnostic** so it runs unchanged in any repo. Heuristics
 fill in for everything; overrides are only needed when auto-derive gets it wrong.
+The HTML dashboard (HUB.html) was removed on 2026-10-25; the brief is the only
+output. The session handover lives in `handover.py` in the skill.
 
 Usage:
-    python3 scripts/build_hub.py              # write HUB.html
-    python3 scripts/build_hub.py --check      # exit 1 if stale
-    python3 scripts/build_hub.py --out PATH   # explicit output path
-    python3 scripts/build_hub.py --brief      # print compact agent brief to stdout
+    python3 scripts/build_hub.py              # print the agent brief to stdout
+    python3 scripts/build_hub.py --brief      # same (the SessionStart hook uses it)
 """
 from __future__ import annotations
 
@@ -30,7 +28,6 @@ import os
 import re
 import subprocess
 import sys
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -45,8 +42,6 @@ OVERRIDES = ROOT / "docs" / "hub.yaml"
 README = ROOT / "README.md"
 CONTEXT = ROOT / "CONTEXT.md"
 CLAUDE_MD = ROOT / "CLAUDE.md"
-INDEX_HTML_DOCS = ROOT / "docs" / "INDEX.html"
-INDEX_HTML_ROOT = ROOT / "INDEX.html"
 ADR_DIR = ROOT / "docs" / "adr"
 PLANS_DIR = ROOT / "docs" / "plans"
 SCRIPTS_DIR = ROOT / "scripts"
@@ -55,7 +50,7 @@ LEARNINGS = ROOT / "LEARNINGS.md"
 # Bump on every change to the skill master. Installed copies compare their own
 # value against the master's so --brief can say "your copy is out of date"; a
 # local patch in a repo copy leaves this line alone, so it does not trigger.
-HUB_VERSION = "2026-10-20"
+HUB_VERSION = "2026-10-25"
 SKILL_MASTER = Path.home() / ".claude" / "skills" / "79-project-hub" / "scripts" / "build_hub.py"
 
 # Earth+Sky palette — Tim's design tokens.
@@ -79,63 +74,8 @@ PALETTE = {
 CHECKPOINT_CANDIDATES = ["CHECKPOINT.md", "SESSION.md", "HANDOVER.md"]
 CURATED_CANDIDATES = ["HUB.md", "docs/HUB.md", "docs/hub.md"]
 DRAFT_PATTERNS = ("draft", "wip", "_v_", "scratch")
-TODO_RE = re.compile(r"\b(TODO|FIXME|XXX|HACK)\b", re.IGNORECASE)
 TODO_SKIP_EXTS = ("csv", "tsv", "json", "jsonl", "ipynb", "html", "svg",
                   "lock", "map", "min.js")
-
-# Plain-English subtitle for each section, rendered after the `///:section_name`
-# heading. 2–4 sentences each. Designed for a reader who has never seen this
-# dashboard before and is reading it at 2 a.m.
-SECTION_BLURBS = {
-    "status": "A one-glance verdict on whether this project is alive, paused, or shelved. Pulled from a curated status line where possible, otherwise inferred from how recent the last commit is (a repo that hasn't moved in six months gets flagged DORMANT). Read this first to decide if it's even worth digging in.",
-    "pickup": "Where the last working session ended, lifted verbatim from the most recent handover note (CHECKPOINT.md, SESSION.md, or HANDOVER.md). Think of it as a sticky note from past-you to present-you — usually the fastest way back into the work without re-reading everything.",
-    "loose_ends": "Everything that's mid-air right now in your local working copy and git history. Uncommitted edits, commits sitting locally that nobody else can see yet, TODO and FIXME notes scattered in the code, and any files with 'draft' or 'wip' in the name. If you want to leave a clean slate before stepping away, this is the to-do list.",
-    "waves": "A horizontal timeline of the phases this project has moved through, with each circle sized by how busy that phase was. Useful for spotting whether you're in a flurry of work or a quiet stretch, and for remembering what big chunks of effort came before (e.g. an early 'data ingestion' phase, then a later 'paper writing' phase). The newest phase is highlighted.",
-    "map": "A directory-level overview of the repo, one tile per top-level folder. Tiles are colour-coded by what's mostly inside (code, docs, data, figures) and show file counts plus when the folder was last touched, newest first. Good for getting the lay of the land in three seconds.",
-    "graph": "A draggable bubble diagram of the same top-level folders, with lines drawn between folders that depend on each other — for example, a scripts folder linked to the outputs folder it writes into. Useful for spotting which parts of the repo are tightly coupled and which sit on their own. Scroll to zoom, click a circle to focus on what it touches.",
-    "canonical": "The official source-of-truth files for this project. If anything else in the repo disagrees with these, these win — everything not listed here is historical, draft, or auxiliary and can be ignored. Each card shows the file's age and warns if it's gone missing from disk.",
-    "concepts": "A small glossary of project-specific terms that keep showing up in commits, memos, and code (things like 'dual_threshold' or 'competitive_mapping'). Each entry pairs the term with a short definition so you don't have to reverse-engineer the meaning from context months down the line.",
-    "scripts": "The runnable entry points of the repo — Python scripts, npm tasks, Makefile targets — each one paired with what it produces. Treat this as the 'how does anything in here get made' index. If you want to know which command regenerates a given figure or table, start here.",
-    "decisions": "Architecture Decision Records (ADRs) — one short Markdown file per past design call, kept under docs/adr/. They explain WHY the code looks the way it does, so future-you doesn't undo a deliberate choice by accident. Worth a skim before any refactor that feels obvious.",
-    "plans": "Implementation plans that are mid-flight, one Markdown file each under docs/plans/. Each plan is a task-by-task breakdown for a feature still being built, with the boxes that are done and the ones still open. Open one to see what's next on the build list.",
-    "collaborators": "Everyone who has touched this repo via git, plus anyone explicitly credited in the curated list. Handy when you need to track down who originally wrote a chunk of code or owns a particular module and your memory is blank.",
-    "activity": "The last eight commits to the repo, newest first, with the author and how long ago each one landed. A quick pulse-check on what's moved recently — useful for catching changes someone else made while you were away.",
-    "superseded": "Folders kept around purely for historical reference — old versions, backups, archived runs (anything matching patterns like _old, _v2, *backup*, or *.archived-*). Dimmed on purpose so it doesn't compete for attention; only dig in here if you specifically need to look at how something used to be.",
-    "guardrails": "The safety nets that stop accidents — pre-commit hooks, CI workflows, check-/verify-/lint- scripts, policy tests, secret-scan configs, ops runbooks, and the NEVER/ALWAYS rulebook in CLAUDE.md. Each card shows the file the check lives in and when it runs. If one of these fails, fix the underlying problem; don't bypass the check with --no-verify or by deleting the test.",
-}
-
-# Plain-English titles shown to readers (newcomer-friendly, no `:tag` cipher).
-SECTION_LABELS = {
-    "status":        "Status",
-    "guardrails":    "Guardrails",
-    "pickup":        "Where we left off",
-    "loose_ends":    "Loose ends",
-    "waves":         "Phases of work",
-    "map":           "Folder map",
-    "graph":         "Code map",
-    "canonical":     "Important files",
-    "concepts":      "Glossary",
-    "scripts":       "Scripts you can run",
-    "decisions":     "Decisions",
-    "plans":         "Plans",
-    "collaborators": "People",
-    "activity":      "Recent activity",
-    "superseded":    "Archived",
-}
-
-
-def section_heading(key: str, extra_hint: str = "") -> str:
-    """Plain-English `<h2>` + a one-paragraph `.hint` subtitle."""
-    title = (str(key).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-             if key not in SECTION_LABELS
-             else SECTION_LABELS[key])
-    blurb = SECTION_BLURBS.get(key, "")
-    blurb_html = (blurb.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                  .replace('"', "&quot;"))
-    if extra_hint:
-        blurb_html = f"{blurb_html} {extra_hint}"
-    return (f'    <h2 class="section">{title}</h2>\n'
-            f'    <p class="hint">{blurb_html}</p>')
 
 
 # --- generic helpers ------------------------------------------------------
@@ -216,15 +156,6 @@ def load_overrides() -> dict:
         return {}
 
 
-def esc(s) -> str:
-    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-            .replace('"', "&quot;").replace("'", "&#39;"))
-
-
-def vscode_link(rel: str) -> str:
-    return f"vscode://file/{ROOT.as_posix()}/{rel}"
-
-
 def fmt_age(hours: float) -> str:
     if hours < 1:   return f"{int(hours * 60)} min ago"
     if hours < 48:  return f"{int(hours)} h ago"
@@ -245,23 +176,6 @@ def first_heading(p: Path) -> str:
         if m:
             return m.group(1).strip()
     return ""
-
-
-def find_output(o: dict) -> Path:
-    """Where to write HUB.html. CLI --out wins; then hub.yaml output:; then
-    docs/HUB.html if docs/ exists; then root HUB.html if it already exists;
-    then default to docs/HUB.html (will create the dir)."""
-    if "--out" in sys.argv:
-        i = sys.argv.index("--out")
-        if i + 1 < len(sys.argv):
-            return Path(sys.argv[i + 1]).resolve()
-    if o.get("output"):
-        return (ROOT / o["output"]).resolve()
-    if (ROOT / "docs").is_dir():
-        return ROOT / "docs" / "HUB.html"
-    if (ROOT / "HUB.html").exists():
-        return ROOT / "HUB.html"
-    return ROOT / "docs" / "HUB.html"
 
 
 def find_curated_hub(o: dict) -> Path | None:
@@ -293,29 +207,6 @@ def find_checkpoint(o: dict) -> Path | None:
 # inline `code`, **bold**, *italic*, [text](url). Relative-path links are
 # rewritten as vscode://file/... so they open in the editor.
 
-def md_inline(text: str) -> str:
-    text = esc(text)
-    # Stash code spans first so inline processing doesn't touch their contents.
-    spans: list[str] = []
-    def _save_code(m: re.Match) -> str:
-        spans.append(f'<code>{m.group(1)}</code>')
-        return f"\x00C{len(spans) - 1}\x00"
-    text = re.sub(r"`([^`]+)`", _save_code, text)
-    # Links — rewrite repo-relative paths to vscode://
-    def _link(m: re.Match) -> str:
-        label, url = m.group(1), m.group(2)
-        if not re.match(r"^(https?:|mailto:|vscode:|#|/)", url):
-            url = vscode_link(url.lstrip("./"))
-        return f'<a href="{url}">{label}</a>'
-    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _link, text)
-    # Bold / italic
-    text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
-    text = re.sub(r"(?<![*\w])\*([^*\n]+)\*(?![*\w])", r"<em>\1</em>", text)
-    # Restore code spans
-    for i, span in enumerate(spans):
-        text = text.replace(f"\x00C{i}\x00", span)
-    return text
-
 
 def _parse_row(line: str) -> list[str]:
     # strip leading/trailing pipes then split
@@ -325,108 +216,6 @@ def _parse_row(line: str) -> list[str]:
     if s.endswith("|"):
         s = s[:-1]
     return [c.strip() for c in s.split("|")]
-
-
-def md_to_html(text: str) -> str:
-    """Block-level renderer. Returns concatenated HTML for the input markdown."""
-    if not text or not text.strip():
-        return ""
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    lines = text.split("\n")
-    n = len(lines)
-    blocks: list[str] = []
-    i = 0
-
-    def _is_table_divider(s: str) -> bool:
-        return bool(re.match(r"^\s*\|?[\s\-:|]+\|?\s*$", s)) and "-" in s
-
-    while i < n:
-        line = lines[i]
-        stripped = line.strip()
-        if not stripped:
-            i += 1
-            continue
-
-        # horizontal rule
-        if re.fullmatch(r"-{3,}|\*{3,}|_{3,}", stripped):
-            blocks.append("<hr>")
-            i += 1
-            continue
-
-        # heading (h3..h6 inside curated sections; we emit h3+ to avoid clashing
-        # with the page-level h2.section labels)
-        h = re.match(r"^(#{1,6})\s+(.+)$", stripped)
-        if h:
-            level = min(6, max(3, len(h.group(1)) + 1))
-            blocks.append(f'<h{level}>{md_inline(h.group(2))}</h{level}>')
-            i += 1
-            continue
-
-        # pipe table — must have a divider on the next line
-        if "|" in line and i + 1 < n and _is_table_divider(lines[i + 1]):
-            header = _parse_row(line)
-            i += 2  # skip divider
-            rows: list[list[str]] = []
-            while i < n and lines[i].strip() and "|" in lines[i]:
-                rows.append(_parse_row(lines[i]))
-                i += 1
-            blocks.append(_render_table(header, rows))
-            continue
-
-        # bullet list
-        if re.match(r"^[-*]\s+", stripped):
-            items: list[str] = []
-            while i < n and re.match(r"^[-*]\s+", lines[i].lstrip()):
-                content = re.sub(r"^\s*[-*]\s+", "", lines[i])
-                j = i + 1
-                while (j < n and lines[j].startswith(("  ", "\t")) and lines[j].strip()):
-                    content += " " + lines[j].strip()
-                    j += 1
-                items.append(content.strip())
-                i = j
-            blocks.append("<ul>" + "".join(
-                f"<li>{md_inline(it)}</li>" for it in items) + "</ul>")
-            continue
-
-        # numbered list
-        if re.match(r"^\d+\.\s+", stripped):
-            items = []
-            while i < n and re.match(r"^\s*\d+\.\s+", lines[i]):
-                content = re.sub(r"^\s*\d+\.\s+", "", lines[i])
-                j = i + 1
-                while (j < n and lines[j].startswith(("  ", "\t")) and lines[j].strip()):
-                    content += " " + lines[j].strip()
-                    j += 1
-                items.append(content.strip())
-                i = j
-            blocks.append("<ol>" + "".join(
-                f"<li>{md_inline(it)}</li>" for it in items) + "</ol>")
-            continue
-
-        # paragraph — collect until blank line or block-starter
-        para = [line.rstrip()]
-        i += 1
-        while i < n and lines[i].strip():
-            s = lines[i].strip()
-            if (re.match(r"^#{1,6}\s+", s) or re.match(r"^[-*]\s+", s)
-                    or re.match(r"^\d+\.\s+", s)):
-                break
-            para.append(lines[i].rstrip())
-            i += 1
-        joined = " ".join(p.strip() for p in para if p.strip())
-        blocks.append(f"<p>{md_inline(joined)}</p>")
-
-    return "\n".join(blocks)
-
-
-def _render_table(header: list[str], rows: list[list[str]]) -> str:
-    th = "".join(f"<th>{md_inline(c)}</th>" for c in header)
-    body = "".join(
-        "<tr>" + "".join(f"<td>{md_inline(c)}</td>" for c in r) + "</tr>"
-        for r in rows
-    )
-    return (f'<div class="md-table-wrap"><table class="md-table">'
-            f'<thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>')
 
 
 # --- curated parsing -----------------------------------------------------
@@ -929,44 +718,6 @@ def derive_auto_checkpoint() -> dict | None:
             "last_prompt": quoted("last user prompt", 200)}
 
 
-def derive_waves(o: dict, curated: dict) -> list[dict]:
-    if o.get("waves"):
-        return o["waves"]
-    log = git("log", "--format=%s", "--reverse")
-    prefix_re = re.compile(r"^(#\d+)\s+(.{0,40})")
-    by_prefix: dict[str, dict] = {}
-    for line in log.splitlines():
-        m = prefix_re.match(line.strip())
-        if not m:
-            continue
-        key = m.group(1)
-        by_prefix.setdefault(key, {"label": key, "sub": m.group(2).strip(), "count": 0})
-        by_prefix[key]["count"] += 1
-    if len(by_prefix) >= 3:
-        waves = list(by_prefix.values())
-        for i, w in enumerate(waves):
-            w["color"] = PALETTE["ok"] if i == len(waves) - 1 else PALETTE["thesis"]
-        return waves
-    # cluster by month
-    months: Counter = Counter()
-    for ts in git("log", "--format=%ct").splitlines():
-        try:
-            d = datetime.fromtimestamp(int(ts), tz=timezone.utc)
-            months[d.strftime("%Y-%m")] += 1
-        except ValueError:
-            continue
-    waves = []
-    items = sorted(months.items())
-    for i, (m, c) in enumerate(items):
-        waves.append({
-            "label": f"W{i + 1}",
-            "sub": datetime.strptime(m, "%Y-%m").strftime("%b %Y").lower(),
-            "count": c,
-            "color": PALETTE["ok"] if i == len(items) - 1 else PALETTE["thesis"],
-        })
-    return waves[-9:]
-
-
 def derive_concepts(o: dict, curated: dict) -> list[dict]:
     """Curated `## :concepts` bullets WIN; else CONTEXT.md bullets; else nothing."""
     if o.get("concepts"):
@@ -1297,57 +1048,6 @@ def _annotate_age(card: dict) -> None:
         card["path_primary"] = in_repo[0]
 
 
-def derive_collaborators(o: dict, curated: dict) -> list[dict]:
-    if o.get("collaborators"):
-        return o["collaborators"]
-    if "collaborators" in curated:
-        cards = parse_bullets_to_cards(curated["collaborators"])
-        if cards:
-            return [{"name": c["name"], "count": c["desc"]} for c in cards]
-    raw = git("shortlog", "-sn", "HEAD")
-    out: list[dict] = []
-    for line in raw.splitlines():
-        m = re.match(r"\s*(\d+)\s+(.+)$", line)
-        if m:
-            out.append({"name": m.group(2).strip(), "count": f"{m.group(1)} commits"})
-    return out
-
-
-def derive_superseded(curated: dict) -> dict:
-    """Return {'curated_md': str or '', 'items': list of {path, parent}}."""
-    if "superseded" in curated:
-        return {"curated_md": curated["superseded"], "items": []}
-    patterns = [
-        re.compile(r"(^|/)_orig($|/)"),
-        re.compile(r"(^|/)_old($|/)"),
-        re.compile(r"(^|/)_v\d+($|/)"),
-        re.compile(r"(^|/).*backup.*", re.IGNORECASE),
-        re.compile(r"(^|/).*\.archived[-_].*"),
-    ]
-    # directories = ancestors of git-visible files (a dir whose entire content
-    # is gitignored is junk, not a superseded artifact worth surfacing)
-    dirs: set[str] = set()
-    for p in repo_files():
-        for parent in p.relative_to(ROOT).parents:
-            s = parent.as_posix()
-            if s != ".":
-                dirs.add(s)
-    seen: set[str] = set()
-    items: list[dict] = []
-    for rel in dirs:
-        if any(seg in ("node_modules", "DerivedData") for seg in rel.split("/")):
-            continue
-        for rx in patterns:
-            if rx.search(rel):
-                parent = Path(rel).parent.as_posix() or "(root)"
-                if rel not in seen:
-                    items.append({"path": rel, "parent": parent})
-                    seen.add(rel)
-                break
-    items.sort(key=lambda x: x["path"])
-    return {"curated_md": "", "items": items}
-
-
 def derive_decisions() -> list[dict]:
     if not ADR_DIR.is_dir():
         return []
@@ -1371,7 +1071,7 @@ def derive_plans() -> list[dict]:
 def derive_learnings(limit: int = 10) -> list[str]:
     """Last `limit` bullet entries of LEARNINGS.md (root, falls back to docs/).
     Append-only project gotchas the agent records when corrected; surfaced in
-    the --brief output only, not in HUB.html."""
+    the brief."""
     p = LEARNINGS if LEARNINGS.exists() else ROOT / "docs" / "LEARNINGS.md"
     if not p.exists():
         return []
@@ -1420,1227 +1120,16 @@ def derive_recent_activity() -> list[dict]:
     return out
 
 
-def derive_directory_edges(dir_map: list[dict], canonical: list[dict]) -> list[dict]:
-    """Lightweight edges between top-level directories.
-
-    Rule 1: if a `scripts` directory exists, link it to every dir that owns a
-    canonical artifact (scripts produce canonical things).
-    Rule 2: link any directory whose name appears as a substring in another
-    directory's filenames (catches e.g. strain_analysis ↔ strain_analysis_sanity
-    pairings).
-    Rule 3: cap fan-out at 4 edges per node so the graph stays readable."""
-    names = [d["name"] for d in dir_map]
-    name_set = set(names)
-    edges: set[tuple[str, str]] = set()
-
-    # Rule 1: scripts → canonical-owning dirs
-    if "scripts" in name_set:
-        for c in canonical:
-            p = c.get("path_primary") or c.get("path", "")
-            if not p or p.startswith(("../", "/", "http")):
-                continue
-            top = p.split("/", 1)[0]
-            if top in name_set and top != "scripts":
-                a, b = sorted(("scripts", top))
-                edges.add((a, b))
-
-    # Rule 2: name-substring pairs (same prefix → likely related)
-    for i, a in enumerate(names):
-        for b in names[i + 1:]:
-            if a in b or b in a:
-                ea, eb = sorted((a, b))
-                edges.add((ea, eb))
-
-    # Rule 3: cap fan-out per node
-    fan: Counter = Counter()
-    keep: list[tuple[str, str]] = []
-    for a, b in sorted(edges):
-        if fan[a] >= 4 or fan[b] >= 4:
-            continue
-        keep.append((a, b))
-        fan[a] += 1
-        fan[b] += 1
-    return [{"a": a, "b": b} for a, b in keep]
-
-
-def derive_directory_map() -> list[dict]:
-    """Top-level directories of the repo, with file count, dominant kind, last
-    modified time, and a colour by inferred role. This is the always-on at-a-
-    glance map; the curated force-directed INDEX.html (if present) is a richer
-    layer on top of it."""
-    EXT_KIND = {
-        ".py": "code", ".ts": "code", ".js": "code", ".tsx": "code", ".jsx": "code",
-        ".sh": "code", ".rs": "code", ".go": "code", ".swift": "code", ".kt": "code",
-        ".java": "code", ".c": "code", ".cpp": "code", ".h": "code", ".hpp": "code",
-        ".r": "code", ".rmd": "code",
-        ".md": "docs", ".rst": "docs", ".txt": "docs", ".pdf": "docs",
-        ".docx": "docs", ".html": "docs",
-        ".csv": "data", ".tsv": "data", ".json": "data", ".yaml": "data",
-        ".yml": "data", ".parquet": "data", ".xlsx": "data", ".xls": "data",
-        ".fasta": "data", ".fastq": "data", ".vcf": "data", ".bed": "data",
-        ".png": "figs", ".jpg": "figs", ".jpeg": "figs", ".svg": "figs",
-        ".pdf": "docs",   # pdfs lean documentary; figs win if dir is mostly figs
-    }
-    KIND_COLOR = {
-        "code": PALETTE["air"],
-        "docs": PALETTE["thesis"],
-        "data": PALETTE["water"],
-        "figs": "#7E57C2",
-        "mixed": PALETTE["muted"],
-    }
-    SKIP_DIRS = {".git", "node_modules", "DerivedData", "__pycache__",
-                 ".matplotlib-cache", ".venv", "venv", ".pytest_cache",
-                 ".mypy_cache", "dist", "build", ".next"}
-    by_top: dict[str, list[Path]] = {}
-    for p in repo_files():
-        rel = p.relative_to(ROOT)
-        if len(rel.parts) < 2:
-            continue   # top-level file, not a directory bucket
-        top = rel.parts[0]
-        if top in SKIP_DIRS or top.startswith("."):
-            continue
-        if any(seg in rel.parts[1:] for seg in SKIP_DIRS):
-            continue
-        by_top.setdefault(top, []).append(p)
-    items: list[dict] = []
-    for name in sorted(by_top, key=str.lower):
-        kind_counts: Counter = Counter()
-        n_files = 0
-        latest_mtime = 0.0
-        for sub in by_top[name]:
-            n_files += 1
-            kind_counts[EXT_KIND.get(sub.suffix.lower(), "mixed")] += 1
-            try:
-                m = sub.stat().st_mtime
-                if m > latest_mtime:
-                    latest_mtime = m
-            except OSError:
-                pass
-        # dominant kind = most common, falling back to mixed if no plurality
-        top = kind_counts.most_common(1)[0] if kind_counts else ("mixed", 0)
-        kind = top[0] if top[1] >= n_files * 0.5 else "mixed"
-        age = (fmt_age((datetime.now(timezone.utc).timestamp() - latest_mtime) / 3600)
-               if latest_mtime else "")
-        items.append({
-            "name": name,
-            "count": n_files,
-            "kind": kind,
-            "age": age,
-            "color": KIND_COLOR.get(kind, KIND_COLOR["mixed"]),
-            "mtime": latest_mtime,
-        })
-    # sort by recency so freshest dirs sit first
-    items.sort(key=lambda d: -d["mtime"])
-    return items
-
-
-def derive_health(canonical: list[dict], loose: dict) -> list[dict]:
-    """Cockpit row: small set of green/amber/red dots."""
-    out: list[dict] = []
-    out.append({"label": "README", "state": "ok" if README.exists() else "warn"})
-    out.append({"label": "CLAUDE.md", "state": "ok" if CLAUDE_MD.exists() else "warn"})
-    out.append({"label": "CONTEXT.md", "state": "ok" if CONTEXT.exists() else "warn"})
-    if loose["uncommitted"]:
-        out.append({"label": f"git: {len(loose['uncommitted'])} dirty", "state": "warn"})
-    else:
-        out.append({"label": "git clean", "state": "ok"})
-    # unpushed: 0 → ok; >0 → warn; no upstream → dim
-    upstream = git("rev-parse", "--abbrev-ref", "@{u}")
-    if not upstream:
-        out.append({"label": "no upstream", "state": "dim"})
-    elif loose["unpushed"]:
-        out.append({"label": f"unpushed {len(loose['unpushed'])}", "state": "warn"})
-    else:
-        out.append({"label": "remote synced", "state": "ok"})
-    out.append({"label": f"scripts/ ({len(list(SCRIPTS_DIR.iterdir())) if SCRIPTS_DIR.is_dir() else 0})",
-                "state": "ok" if SCRIPTS_DIR.is_dir() else "warn"})
-    # canonical links live?
-    missing = sum(1 for c in canonical if c.get("exists") is False)
-    if missing:
-        out.append({"label": f"{missing} canonical missing", "state": "warn"})
-    else:
-        out.append({"label": "canonical OK", "state": "ok"})
-    return out
-
-
 # --- rendering ------------------------------------------------------------
-
-def render_waves_svg(waves: list[dict]) -> str:
-    if not waves:
-        return '<p class="empty">no waves detected</p>'
-    n = len(waves)
-    width = 1080
-    margin = 60
-    spacing = (width - 2 * margin) / max(1, n - 1) if n > 1 else 0
-    parts = [
-        f'<svg viewBox="0 0 {width} 150" xmlns="http://www.w3.org/2000/svg" '
-        f'preserveAspectRatio="xMinYMin meet" '
-        f'style="font-family:\'JetBrains Mono\',\'SF Mono\',Menlo,monospace;">',
-        f'<line x1="40" y1="65" x2="{width - 40}" y2="65" stroke="#D5D5D5" stroke-width="1"/>',
-    ]
-    for i, w in enumerate(waves):
-        x = margin + spacing * i if n > 1 else width / 2
-        color = w.get("color", PALETTE["thesis"])
-        r = 24 if i == n - 1 else 19
-        parts.append(f'<text x="{x:.0f}" y="33" text-anchor="middle" font-size="11" '
-                     f'fill="#6B6B6B">{esc(str(w.get("sub", ""))[:22])}</text>')
-        parts.append(f'<circle cx="{x:.0f}" cy="65" r="{r}" fill="{color}"/>')
-        parts.append(f'<text x="{x:.0f}" y="70" text-anchor="middle" fill="white" '
-                     f'font-size="12" font-weight="700">{esc(w["label"])}</text>')
-        if w.get("count"):
-            parts.append(f'<text x="{x:.0f}" y="113" text-anchor="middle" '
-                         f'font-size="10.5" fill="#6B6B6B">{w["count"]} commits</text>')
-    parts.append('</svg>')
-    return "\n".join(parts)
-
-
-def render_hero(data: dict) -> str:
-    status = data["status"]
-    return f"""
-  <header class="hero" style="--accent:{status['color']}">
-    <div class="hero-main">
-      <p class="eyebrow">Dashboard for {esc(data['project'])}</p>
-      <h1>{esc(data['project'])}</h1>
-      <p class="oneliner">{esc(data['oneliner']) or '<em>(no one-liner — add `oneliner:` to docs/hub.yaml or a `## :oneline` section to HUB.md)</em>'}</p>
-      <p class="status-line">
-        <span class="pill" style="background:{status['color']}">{esc(status['pill'])}</span>
-        <span class="reason mono">{esc(status['reason'])}</span>
-      </p>
-      <p class="next mono"><span class="next-tag">NEXT →</span> {esc(data['next_action'])}</p>
-    </div>
-    <div class="hero-meta mono">
-      <div>branch <strong>{esc(data['branch'])}</strong></div>
-      <div>{datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
-      <div class="dim">scripts/build_hub.py</div>
-    </div>
-  </header>
-"""
-
-
-def render_health(items: list[dict]) -> str:
-    if not items:
-        return ""
-    parts = ['<div class="health-row mono">']
-    for it in items:
-        state = it["state"]
-        glyph = {"ok": "●", "warn": "◐", "fail": "✕", "dim": "○"}[state]
-        parts.append(
-            f'<span class="health-cell health-{state}">{glyph}&nbsp;{esc(it["label"])}</span>'
-        )
-    parts.append("</div>")
-    return "".join(parts)
-
-
-def render_guardrails(items: list[dict]) -> str:
-    """Render the Guardrails section. Always rendered (empty-state covers
-    repos with no auto-detected safety nets)."""
-    def _path_link(path: str) -> str:
-        # Strip optional `#anchor` and link the file in VS Code.
-        file_part = path.split("#", 1)[0] if "#" in path else path
-        return f'<a href="{esc(vscode_link(file_part))}">{esc(path)}</a>'
-
-    if items:
-        cards = "".join(
-            f'<div class="guardrail-card k-{esc(g.get("kind", "block"))}">'
-            f'<div class="title">{esc(g["name"])}</div>'
-            f'<div class="path mono">{_path_link(g["path"])}</div>'
-            f'<div class="protects">{esc(g.get("protects", ""))}</div>'
-            f'<div class="when mono">{esc(g.get("when", ""))}</div>'
-            f'</div>'
-            for g in items
-        )
-        body = f'<div class="guardrail-grid">{cards}</div>'
-    else:
-        body = ('<p class="empty">No guardrails auto-detected. Common patterns: '
-                '<code>.husky/*</code>, <code>.github/workflows/*</code>, '
-                '<code>scripts/check-*.sh</code>, policy tests like '
-                '<code>rls.test.ts</code>, and a NEVER/ALWAYS section in '
-                '<code>CLAUDE.md</code>. Add curated ones via '
-                '<code>hub.yaml</code> → <code>guardrails:</code> or a '
-                '<code>## :guardrails</code> table in <code>HUB.md</code>.</p>')
-
-    return f"""
-  <section id="guardrails">
-    {section_heading("guardrails")}
-    <div class="guardrail-legend mono">
-      <span><span class="dot" style="background:#C25A1D"></span>Blocks the action</span>
-      <span><span class="dot" style="background:var(--air)"></span>Test catches it</span>
-      <span><span class="dot" style="background:var(--water)"></span>Rules &amp; runbooks</span>
-      <span><span class="dot" style="background:var(--dim)"></span>Configuration</span>
-    </div>
-    {body}
-  </section>
-"""
-
-
-def render_pickup(cp: dict | None) -> str:
-    if not cp:
-        return ""
-    stale_note = (f'\n        <span class="dim" style="color: {PALETTE["warn"]};">'
-                  f'· ⚠ {cp["commits_since"]} commits since — may be stale</span>'
-                  if cp.get("stale") else "")
-    return f"""
-  <section id="pickup">
-    {section_heading("pickup")}
-    <div class="pickup-card">
-      <div class="pickup-src mono">from <a href="{esc(vscode_link(cp['path']))}">{esc(cp['path'])}</a>
-        <span class="dim">· modified {esc(cp['age'])}</span>{stale_note}</div>
-      <p class="pickup-text">{esc(cp['snippet'])}</p>
-    </div>
-  </section>
-"""
-
-
-def render_inline_graph(dir_map: list[dict], edges: list[dict]) -> str:
-    """Return a self-contained HTML+CSS+JS snippet embedding a force-directed
-    directory graph. Scoped under .auto-graph-wrap; no external libraries."""
-    payload = {"nodes": dir_map, "edges": edges}
-    # Escape `</` so the JSON cannot terminate the surrounding <script> tag.
-    payload_json = json.dumps(payload, ensure_ascii=False, default=str).replace("</", "<\\/")
-
-    return f"""<div class="auto-graph-wrap">
-<style>
-  .auto-graph-wrap {{ position: relative; width: 100%; height: 720px;
-    border: 1px solid rgba(17,24,39,0.08); border-radius: 10px;
-    background: radial-gradient(ellipse at center, #fff 0%, #fafafa 70%);
-    overflow: hidden; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-    color: #111827; }}
-  .auto-graph-wrap svg {{ width: 100%; height: 100%; cursor: grab;
-    user-select: none; display: block; }}
-  .auto-graph-wrap svg.dragging {{ cursor: grabbing; }}
-  .auto-graph-wrap .edge {{ stroke: rgba(17,24,39,0.18); stroke-width: 1; fill: none; }}
-  .auto-graph-wrap .edge.hi {{ stroke: #f59e0b; stroke-width: 2; }}
-  .auto-graph-wrap .node circle {{ stroke: white; stroke-width: 2; cursor: pointer; }}
-  .auto-graph-wrap .node.selected circle {{ stroke: #316D33; stroke-width: 3; }}
-  .auto-graph-wrap .node.dim {{ opacity: 0.18; }}
-  .auto-graph-wrap .node text {{ font: 11px "JetBrains Mono", ui-monospace, monospace;
-    pointer-events: none; fill: #111827; text-anchor: middle;
-    dominant-baseline: hanging; paint-order: stroke;
-    stroke: white; stroke-width: 3; }}
-  .auto-graph-wrap .ag-legend {{ position: absolute; top: 14px; right: 14px; z-index: 5;
-    background: #fff; border: 1px solid rgba(17,24,39,0.08); border-radius: 8px;
-    padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); font-size: 12px; }}
-  .auto-graph-wrap .ag-legend .row {{ display: flex; align-items: center; gap: 8px; padding: 2px 0; }}
-  .auto-graph-wrap .ag-legend .dot {{ width: 10px; height: 10px; border-radius: 50%; }}
-  .auto-graph-wrap .ag-info {{ position: absolute; top: 120px; right: 14px; z-index: 5;
-    width: 260px; background: #fff; border: 1px solid rgba(17,24,39,0.08);
-    border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    font-size: 12px; display: none; }}
-  .auto-graph-wrap .ag-info.show {{ display: block; }}
-  .auto-graph-wrap .ag-info h3 {{ margin: 0 0 4px; font-size: 14px;
-    font-family: "JetBrains Mono", ui-monospace, monospace; word-break: break-all; }}
-  .auto-graph-wrap .ag-info .badge {{ display: inline-block; padding: 2px 8px;
-    border-radius: 999px; font-size: 11px; color: white; margin-bottom: 8px; }}
-  .auto-graph-wrap .ag-info .meta {{ color: #6b7280; margin: 0 0 8px; }}
-  .auto-graph-wrap .ag-info h4 {{ margin: 10px 0 4px; font-size: 11px;
-    text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; }}
-  .auto-graph-wrap .ag-info .links a {{ display: inline-block; padding: 3px 8px;
-    margin: 2px 4px 2px 0; background: rgba(37,99,235,0.08); color: #2563EB;
-    border-radius: 6px; cursor: pointer; text-decoration: none;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; }}
-  .auto-graph-wrap .ag-info .links a:hover {{ background: rgba(37,99,235,0.16); }}
-  .auto-graph-wrap .ag-info .empty {{ color: #6b7280; font-style: italic; }}
-</style>
-<div class="ag-legend"></div>
-<div class="ag-info"></div>
-<svg viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet"></svg>
-<script>
-(function() {{
-  const DATA = {payload_json};
-  const WRAP = document.currentScript.parentElement;
-  const SVG = WRAP.querySelector("svg");
-  const LEGEND = WRAP.querySelector(".ag-legend");
-  const INFO = WRAP.querySelector(".ag-info");
-  const VBW = 1200, VBH = 720;
-
-  function escapeHtml(s) {{
-    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
-      ({{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}})[c]);
-  }}
-
-  const kinds = [];
-  const kindColor = {{}};
-  for (const n of DATA.nodes) {{
-    if (!(n.kind in kindColor)) {{ kinds.push(n.kind); kindColor[n.kind] = n.color; }}
-  }}
-  for (const k of kinds) {{
-    const row = document.createElement("div");
-    row.className = "row";
-    row.innerHTML = `<span class="dot" style="background:${{kindColor[k]}}"></span>${{escapeHtml(k)}}`;
-    LEGEND.appendChild(row);
-  }}
-
-  const groupCentroids = {{}};
-  kinds.forEach((k, i) => {{
-    const angle = (i / Math.max(1, kinds.length)) * Math.PI * 2;
-    groupCentroids[k] = {{ x: Math.cos(angle) * 0.30, y: Math.sin(angle) * 0.30 }};
-  }});
-
-  const nodes = DATA.nodes.map(n => {{
-    const c = groupCentroids[n.kind] || {{ x: 0, y: 0 }};
-    return {{
-      name: n.name, count: n.count, kind: n.kind, age: n.age, color: n.color,
-      radius: 9 + Math.sqrt(n.count) * 3,
-      x: c.x + (Math.random() - 0.5) * 0.12,
-      y: c.y + (Math.random() - 0.5) * 0.12,
-      vx: 0, vy: 0, fx: null, fy: null,
-    }};
-  }});
-  const idx = Object.fromEntries(nodes.map((n, i) => [n.name, i]));
-
-  const seen = new Set();
-  const edges = [];
-  for (const e of DATA.edges) {{
-    if (!(e.a in idx) || !(e.b in idx)) continue;
-    const key = e.a < e.b ? e.a + "\\u0001" + e.b : e.b + "\\u0001" + e.a;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    edges.push({{ source: idx[e.a], target: idx[e.b] }});
-  }}
-
-  const adj = {{}};
-  for (const n of nodes) adj[n.name] = new Set();
-  for (const e of edges) {{
-    adj[nodes[e.source].name].add(nodes[e.target].name);
-    adj[nodes[e.target].name].add(nodes[e.source].name);
-  }}
-
-  const REPULSION = 0.00045, SPRING_K = 0.020, SPRING_LEN = 0.20;
-  const GRAVITY = 0.012, GROUP_PULL = 0.022, DAMPING = 0.86;
-
-  function tick() {{
-    for (const n of nodes) {{
-      if (n.fx !== null) {{ n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; continue; }}
-      let ax = 0, ay = 0;
-      for (const m of nodes) {{
-        if (m === n) continue;
-        const dx = n.x - m.x, dy = n.y - m.y;
-        const d2 = dx*dx + dy*dy + 0.0001;
-        const f = REPULSION / d2;
-        ax += dx * f; ay += dy * f;
-      }}
-      ax += -n.x * GRAVITY; ay += -n.y * GRAVITY;
-      const c = groupCentroids[n.kind];
-      if (c) {{ ax += (c.x - n.x) * GROUP_PULL; ay += (c.y - n.y) * GROUP_PULL; }}
-      n.vx = (n.vx + ax) * DAMPING;
-      n.vy = (n.vy + ay) * DAMPING;
-      n.x += n.vx; n.y += n.vy;
-    }}
-    for (const e of edges) {{
-      const a = nodes[e.source], b = nodes[e.target];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const dist = Math.sqrt(dx*dx + dy*dy) + 0.0001;
-      const delta = (dist - SPRING_LEN) * SPRING_K;
-      const fx = (dx / dist) * delta, fy = (dy / dist) * delta;
-      if (a.fx === null) {{ a.vx += fx; a.vy += fy; a.x += fx; a.y += fy; }}
-      if (b.fx === null) {{ b.vx -= fx; b.vy -= fy; b.x -= fx; b.y -= fy; }}
-    }}
-  }}
-
-  for (let i = 0; i < 400; i++) tick();
-
-  const ns = "http://www.w3.org/2000/svg";
-  let viewScale = 1.0, viewX = 0, viewY = 0;
-  const gRoot = document.createElementNS(ns, "g");
-  const gEdges = document.createElementNS(ns, "g");
-  const gNodes = document.createElementNS(ns, "g");
-  gRoot.appendChild(gEdges); gRoot.appendChild(gNodes);
-  SVG.appendChild(gRoot);
-
-  const edgeEls = edges.map(() => {{
-    const ln = document.createElementNS(ns, "line");
-    ln.setAttribute("class", "edge");
-    gEdges.appendChild(ln);
-    return ln;
-  }});
-
-  const nodeEls = nodes.map(n => {{
-    const g = document.createElementNS(ns, "g");
-    g.setAttribute("class", "node");
-    const c = document.createElementNS(ns, "circle");
-    c.setAttribute("r", n.radius);
-    c.setAttribute("fill", n.color);
-    const t = document.createElementNS(ns, "text");
-    t.setAttribute("y", n.radius + 4);
-    t.textContent = n.name + "/";
-    g.appendChild(c); g.appendChild(t);
-    gNodes.appendChild(g);
-    g.addEventListener("click", ev => {{ ev.stopPropagation(); select(n.name); }});
-    g.addEventListener("pointerdown", ev => {{
-      ev.stopPropagation();
-      const p = toWorld(ev.clientX, ev.clientY);
-      n.fx = p.x; n.fy = p.y;
-      g.setPointerCapture(ev.pointerId);
-      const move = mv => {{ const q = toWorld(mv.clientX, mv.clientY); n.fx = q.x; n.fy = q.y; }};
-      const up = () => {{
-        try {{ g.releasePointerCapture(ev.pointerId); }} catch (e) {{}}
-        g.removeEventListener("pointermove", move);
-        g.removeEventListener("pointerup", up);
-        setTimeout(() => {{ n.fx = null; n.fy = null; }}, 600);
-      }};
-      g.addEventListener("pointermove", move);
-      g.addEventListener("pointerup", up);
-    }});
-    return g;
-  }});
-
-  function worldToScreen() {{
-    const scale = Math.min(VBW, VBH) * 0.9 * viewScale;
-    const cx = VBW / 2 + viewX, cy = VBH / 2 + viewY;
-    return {{ scale, cx, cy }};
-  }}
-  function toWorld(sx, sy) {{
-    const r = SVG.getBoundingClientRect();
-    const ux = (sx - r.left) * (VBW / r.width);
-    const uy = (sy - r.top) * (VBH / r.height);
-    const {{ scale, cx, cy }} = worldToScreen();
-    return {{ x: (ux - cx) / scale, y: (uy - cy) / scale }};
-  }}
-  function render() {{
-    const {{ scale, cx, cy }} = worldToScreen();
-    for (let i = 0; i < edges.length; i++) {{
-      const e = edges[i], a = nodes[e.source], b = nodes[e.target], ln = edgeEls[i];
-      ln.setAttribute("x1", cx + a.x * scale);
-      ln.setAttribute("y1", cy + a.y * scale);
-      ln.setAttribute("x2", cx + b.x * scale);
-      ln.setAttribute("y2", cy + b.y * scale);
-    }}
-    for (let i = 0; i < nodes.length; i++) {{
-      const n = nodes[i];
-      nodeEls[i].setAttribute("transform", `translate(${{cx + n.x * scale}}, ${{cy + n.y * scale}})`);
-    }}
-  }}
-  function loop() {{ tick(); render(); requestAnimationFrame(loop); }}
-  loop();
-
-  let panning = false, panStart = null;
-  SVG.addEventListener("pointerdown", ev => {{
-    if (ev.target.closest(".node")) return;
-    panning = true;
-    panStart = {{ x: ev.clientX, y: ev.clientY, vx: viewX, vy: viewY, r: SVG.getBoundingClientRect() }};
-    SVG.classList.add("dragging");
-    SVG.setPointerCapture(ev.pointerId);
-  }});
-  SVG.addEventListener("pointermove", ev => {{
-    if (!panning) return;
-    const sx = (ev.clientX - panStart.x) * (VBW / panStart.r.width);
-    const sy = (ev.clientY - panStart.y) * (VBH / panStart.r.height);
-    viewX = panStart.vx + sx; viewY = panStart.vy + sy;
-  }});
-  SVG.addEventListener("pointerup", ev => {{
-    panning = false; SVG.classList.remove("dragging");
-    try {{ SVG.releasePointerCapture(ev.pointerId); }} catch (e) {{}}
-  }});
-  SVG.addEventListener("wheel", ev => {{
-    ev.preventDefault();
-    const factor = Math.exp(-ev.deltaY * 0.001);
-    viewScale = Math.max(0.3, Math.min(4, viewScale * factor));
-  }}, {{ passive: false }});
-  SVG.addEventListener("click", ev => {{
-    if (ev.target.closest(".node")) return;
-    clearSelection();
-  }});
-
-  function clearSelection() {{
-    for (const el of nodeEls) {{ el.classList.remove("selected"); el.classList.remove("dim"); }}
-    for (const el of edgeEls) el.classList.remove("hi");
-    INFO.classList.remove("show");
-  }}
-  function select(name) {{
-    const neigh = new Set([name, ...adj[name]]);
-    for (let i = 0; i < nodes.length; i++) {{
-      nodeEls[i].classList.toggle("selected", nodes[i].name === name);
-      nodeEls[i].classList.toggle("dim", !neigh.has(nodes[i].name));
-    }}
-    for (let i = 0; i < edges.length; i++) {{
-      const e = edges[i];
-      const hot = nodes[e.source].name === name || nodes[e.target].name === name;
-      edgeEls[i].classList.toggle("hi", hot);
-    }}
-    const n = nodes[idx[name]];
-    const linked = [...adj[name]];
-    const linkHtml = linked.length
-      ? `<div class="links">${{linked.map(x => `<a data-jump="${{escapeHtml(x)}}">${{escapeHtml(x)}}/</a>`).join("")}}</div>`
-      : `<p class="empty">No linked dirs.</p>`;
-    INFO.innerHTML = `
-      <h3>${{escapeHtml(n.name)}}/</h3>
-      <span class="badge" style="background:${{n.color}}">${{escapeHtml(n.kind)}}</span>
-      <p class="meta">${{n.count}} file${{n.count === 1 ? "" : "s"}} &middot; ${{escapeHtml(n.age)}}</p>
-      <h4>Linked dirs (${{linked.length}})</h4>
-      ${{linkHtml}}
-    `;
-    INFO.classList.add("show");
-    INFO.querySelectorAll("a[data-jump]").forEach(a =>
-      a.addEventListener("click", ev => {{ ev.preventDefault(); select(a.dataset.jump); }}));
-  }}
-}})();
-</script>
-</div>"""
-
-
-def render_directory_map(items: list[dict]) -> str:
-    """Always-on at-a-glance map of top-level directories. Replaces the dead
-    'no graph' state when no curated INDEX.html exists; pairs with it when it
-    does."""
-    if not items:
-        return '<p class="empty">No subdirectories at repo root.</p>'
-    KIND_LABEL = {
-        "code": "code",
-        "docs": "docs",
-        "data": "data",
-        "figs": "figures",
-        "mixed": "mixed",
-    }
-    tiles = []
-    for d in items:
-        tiles.append(
-            f'<div class="dir-tile" style="--tile-accent:{d["color"]}">'
-            f'<div class="dir-tile-name mono">{esc(d["name"])}/</div>'
-            f'<div class="dir-tile-stats">'
-            f'<span class="dir-tile-kind">{esc(KIND_LABEL.get(d["kind"], d["kind"]))}</span>'
-            f'<span class="dir-tile-count mono">{d["count"]} file{"s" if d["count"] != 1 else ""}</span>'
-            f'</div>'
-            f'<div class="dir-tile-age mono">touched {esc(d["age"])}</div>'
-            f'</div>'
-        )
-    return f'<div class="dir-grid">{"".join(tiles)}</div>'
-
-
-def render_loose_ends(loose: dict) -> str:
-    def _panel(title: str, blurb: str, count: int, body: str, color_var: str) -> str:
-        head = (f'<div class="loose-head mono">{esc(title)} '
-                f'<span class="loose-count" style="color:{color_var}">{count}</span></div>')
-        sub = f'<p class="loose-sub">{esc(blurb)}</p>'
-        return f'<div class="loose-panel">{head}{sub}{body}</div>'
-
-    # uncommitted
-    if loose["uncommitted"]:
-        uc_rows = "".join(
-            f'<li><code class="loose-status">{esc(u["status"])}</code> '
-            f'<a href="{esc(vscode_link(u["path"]))}">{esc(u["path"])}</a></li>'
-            for u in loose["uncommitted"][:6]
-        )
-        extra = f'<li class="more">… +{len(loose["uncommitted"]) - 6} more</li>' if len(loose["uncommitted"]) > 6 else ""
-        uc_body = f'<ul class="loose-list">{uc_rows}{extra}</ul>'
-    else:
-        uc_body = '<p class="empty">clean</p>'
-    p1 = _panel("UNCOMMITTED",
-                "Files you changed but haven't committed yet. Finish them or roll them back before you forget.",
-                len(loose["uncommitted"]), uc_body,
-                PALETTE["warn"] if loose["uncommitted"] else PALETTE["ok"])
-
-    # unpushed
-    if loose["unpushed"]:
-        up_rows = "".join(
-            f'<li><code>{esc(u["hash"])}</code> {esc(u["subject"])} '
-            f'<span class="dim">· {esc(u["when"])}</span></li>'
-            for u in loose["unpushed"][:6]
-        )
-        up_body = f'<ul class="loose-list">{up_rows}</ul>'
-    else:
-        up_body = '<p class="empty">remote synced</p>'
-    p2 = _panel("UNPUSHED",
-                "Commits sitting on your laptop that haven't reached the remote. A `git push` away from being shared.",
-                len(loose["unpushed"]), up_body,
-                PALETTE["warn"] if loose["unpushed"] else PALETTE["ok"])
-
-    # todos
-    if loose["todos"]:
-        td_rows = "".join(
-            f'<li><a href="{esc(vscode_link(t["path"]))}"><code>{esc(t["path"])}:{t["line"]}</code></a> '
-            f'<span class="todo-text">{esc(t["text"])}</span></li>'
-            for t in loose["todos"][:6]
-        )
-        extra = f'<li class="more">… +{len(loose["todos"]) - 6} more</li>' if len(loose["todos"]) > 6 else ""
-        td_body = f'<ul class="loose-list">{td_rows}{extra}</ul>'
-    else:
-        td_body = '<p class="empty">none</p>'
-    p3 = _panel("TODO / FIXME",
-                "Notes you (or someone) left in the code for later. Each one is a small unfinished thing.",
-                len(loose["todos"]), td_body,
-                PALETTE["warn"] if loose["todos"] else PALETTE["ok"])
-
-    # drafts
-    if loose["drafts"]:
-        dr_rows = "".join(
-            f'<li><a href="{esc(vscode_link(d["path"]))}">{esc(d["path"])}</a> '
-            f'<span class="dim">· {esc(d["when"])}</span></li>'
-            for d in loose["drafts"][:6]
-        )
-        dr_body = f'<ul class="loose-list">{dr_rows}</ul>'
-    else:
-        dr_body = '<p class="empty">none recent</p>'
-    p4 = _panel("DRAFTS (7d)",
-                "Files whose name contains 'draft', 'wip', or 'scratch' and were touched in the last week. Likely in-progress.",
-                len(loose["drafts"]), dr_body,
-                PALETTE["warn"] if loose["drafts"] else PALETTE["ok"])
-
-    return f"""
-  <section id="loose_ends">
-    {section_heading("loose_ends")}
-    <div class="loose-grid">{p1}{p2}{p3}{p4}</div>
-  </section>
-"""
-
-
-def render_status_section(curated: dict, status: dict) -> str:
-    body_html: str
-    if "status" in curated:
-        body_html = md_to_html(curated["status"])
-    else:
-        reason_suffix = f" — {esc(status['reason'])}" if status.get("reason") else ""
-        body_html = (
-            f"<p>The project is currently <strong>{esc(status['pill'])}</strong>{reason_suffix}.</p>"
-            "<p style=\"margin-top:14px\">From here you can:</p>"
-            "<ul class=\"touch-list\">"
-            "<li>See which files hold the current source of truth → "
-            "<a href=\"#canonical\">Important files</a></li>"
-            "<li>Look up project-specific words → "
-            "<a href=\"#concepts\">Glossary</a></li>"
-            "<li>Run a script to refresh something → "
-            "<a href=\"#scripts\">Scripts</a></li>"
-            "<li>Read why decisions were made → "
-            "<a href=\"#decisions\">Decisions</a></li>"
-            "<li>See what's been retired → "
-            "<a href=\"#superseded\">Archived</a></li>"
-            "</ul>"
-        )
-    return f"""
-  <section id="status">
-    {section_heading("status")}
-    <div class="prose">{body_html}</div>
-  </section>
-"""
-
-
-def render(data: dict) -> str:
-    p = PALETTE
-    waves_svg = render_waves_svg(data["waves"])
-    waves_table = (f'<div class="prose waves-table">{md_to_html(data["curated"]["waves"])}</div>'
-                   if "waves" in data["curated"] else "")
-
-    def cards(items: list[str]) -> str:
-        return '<div class="grid">' + "".join(items) + '</div>'
-
-    def _canonical_card(c: dict) -> str:
-        primary = c.get("path_primary") or c["path"]
-        # if the original cell had multiple paths, show the extras as a sub-line
-        # — compare with trailing slashes stripped so "foo/" doesn't count
-        # as different from "foo"
-        original = str(c["path"]).strip()
-        all_backticked = re.findall(r"`([^`]+)`", original)
-        prim_norm = primary.rstrip("/")
-        extras = [b for b in all_backticked if b.rstrip("/") != prim_norm] if all_backticked else []
-        extras_html = (f'<div class="extras mono">also: {", ".join(esc(e) for e in extras)}</div>'
-                       if extras else "")
-        age_or_missing = ""
-        if "exists" in c:
-            if c["exists"] is False:
-                age_or_missing = '<span class="missing">missing on disk</span>'
-            elif c.get("age") == "external":
-                age_or_missing = '<span class="external">external reference</span>'
-            elif c.get("age"):
-                age_or_missing = f'modified {esc(c["age"])}'
-        return (f'<div class="card">'
-                f'<div class="id">:{esc(c["name"])}</div>'
-                f'<div class="path"><a href="{esc(vscode_link(primary))}">{esc(primary)}</a></div>'
-                f'{extras_html}'
-                + (f'<div class="meta-line mono">{age_or_missing}</div>' if age_or_missing else "")
-                + f'<div class="desc">{md_inline(c.get("desc", ""))}</div>'
-                '</div>')
-
-    canonical_cards = "".join(_canonical_card(c) for c in data["canonical"]) \
-        or '<p class="empty">No canonical artifacts inferred. Curate `## :canonical` in HUB.md or add canonical_refs: to docs/hub.yaml.</p>'
-
-    concept_cards = "".join(
-        f'<div class="card"><div class="id cn">:{esc(c["name"])}</div>'
-        f'<div class="desc">{md_inline(c["desc"])}</div></div>'
-        for c in data["concepts"]
-    ) or '<p class="empty">No concepts detected.</p>'
-
-    script_cards = "".join(
-        f'<div class="card"><div class="id sc">:{esc(s["name"])}</div>'
-        f'<div class="path">{esc(s["path"])}</div></div>'
-        for s in data["scripts"]
-    ) or '<p class="empty">No runnable entry points found.</p>'
-
-    collab_cards = "".join(
-        f'<div class="card"><div class="id pp">:{esc(c["name"])}</div>'
-        f'<div class="desc">{md_inline(str(c.get("count", "")))}</div></div>'
-        for c in data["collaborators"]
-    ) or '<p class="empty">No contributors.</p>'
-
-    decision_list = "".join(
-        f'<li><a href="{esc(vscode_link(d["path"]))}"><code>{esc(d["path"])}</code></a> '
-        f'<span class="note">— {esc(d["title"])}</span></li>'
-        for d in data["decisions"]
-    ) or '<li class="empty">No ADRs in docs/adr/.</li>'
-
-    plan_list = "".join(
-        f'<li><a href="{esc(vscode_link(d["path"]))}"><code>{esc(d["path"])}</code></a> '
-        f'<span class="note">— {esc(d["title"])}</span></li>'
-        for d in data["plans"]
-    ) or '<li class="empty">No plans in docs/plans/.</li>'
-
-    if data["superseded"]["curated_md"]:
-        superseded_block = f'<div class="prose">{md_to_html(data["superseded"]["curated_md"])}</div>'
-    else:
-        sup_items = "".join(
-            f'<li><code>{esc(s["path"])}/</code> <span class="note">— in <code>{esc(s["parent"])}/</code></span></li>'
-            for s in data["superseded"]["items"]
-        ) or '<li class="empty">Nothing matched common superseded patterns.</li>'
-        superseded_block = f'<ul class="doc-list">{sup_items}</ul>'
-
-    activity_list = "".join(
-        f'<li><code>{esc(a["hash"])}</code> {esc(a["subject"])} '
-        f'<span class="note">({esc(a["when"])}{(" · " + esc(a["who"])) if a.get("who") and len(data["collaborators"]) > 1 else ""})</span></li>'
-        for a in data["recent_activity"]
-    )
-
-    index_html_present = INDEX_HTML_DOCS.exists() or INDEX_HTML_ROOT.exists()
-    # Resolve the iframe src RELATIVE to HUB.html's actual write location, not
-    # to repo root. Otherwise an HUB.html at `docs/HUB.html` ends up pointing
-    # the iframe at `docs/docs/INDEX.html` (404 in browsers, including Firefox
-    # over file://).
-    _index_target = INDEX_HTML_DOCS if INDEX_HTML_DOCS.exists() else INDEX_HTML_ROOT
-    _out_path = find_output(data["_overrides"])
-    index_html_path = os.path.relpath(_index_target, _out_path.parent)
-    index_link = (f'<a href="#graph" class="cta">Code map ↓</a>'
-                  if index_html_present else "")
-
-    dir_map_html = render_directory_map(data["directory_map"])
-    map_section = f"""
-  <section id="map">
-    {section_heading("map")}
-    {dir_map_html}
-  </section>
-"""
-
-    if index_html_present:
-        graph_extra = (f' Showing the curated <code>{index_html_path}</code> view — '
-                       f'open full screen for more room.')
-        graph_body = f"""    <div class="graph-embed">
-      <a href="{index_html_path}" target="_blank" class="open-full">open full screen ↗</a>
-      <iframe src="{index_html_path}" title="Code map" loading="lazy" referrerpolicy="no-referrer"></iframe>
-    </div>"""
-        graph_section = f"""
-<section id="graph" class="fullwidth">
-{section_heading("graph", extra_hint=graph_extra)}
-{graph_body}
-</section>
-"""
-    else:
-        # No curated INDEX.html — render the inline auto-derived force-directed
-        # graph instead. Same data source as :map (top-level directories), plus
-        # the lightweight inferred edges from derive_directory_edges.
-        inline_graph_html = render_inline_graph(
-            data["directory_map"], data["directory_edges"]
-        )
-        graph_extra = (" Install the curated <code>docs/INDEX.html</code> layer "
-                       "for a richer file-level view.")
-        graph_section = f"""
-<section id="graph" class="fullwidth">
-{section_heading("graph", extra_hint=graph_extra)}
-    {inline_graph_html}
-</section>
-"""
-
-    hero_html = render_hero(data)
-    health_html = render_health(data["health"])
-    pickup_html = render_pickup(data["checkpoint"])
-    loose_html = render_loose_ends(data["loose"])
-    status_html = render_status_section(data["curated"], data["status"])
-    guardrails_html = render_guardrails(data["guardrails"])
-
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{esc(data['project'])} · project hub</title>
-<style>
-  :root {{
-    --air: {p['air']}; --water: {p['water']}; --thesis: {p['thesis']};
-    --bg: {p['bg']}; --bg-soft: {p['bg_soft']};
-    --ink: {p['ink']}; --muted: {p['muted']};
-    --border: {p['border']}; --border-2: {p['border_2']};
-    --ok: {p['ok']}; --warn: {p['warn']}; --fail: {p['fail']}; --dim: {p['dim']};
-    --accent-default: {p['accent']};
-  }}
-  * {{ box-sizing: border-box; }}
-  html, body {{ margin: 0; padding: 0; }}
-  body {{ background: var(--bg); color: var(--ink);
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    font-size: 16px; line-height: 1.55; }}
-  .wrap {{ max-width: 1080px; margin: 0 auto; padding: 28px 32px 60px; }}
-  section.fullwidth {{ margin-top: 64px; padding: 36px 32px 80px;
-    border-top: 1px solid var(--border); background: var(--bg-soft); }}
-  section.fullwidth > h2.section {{ max-width: 1280px; margin: 0 auto 4px;
-    font-size: 22px; }}
-  section.fullwidth > p.hint {{ max-width: 1280px; margin: 0 auto 22px; }}
-  section.fullwidth > .graph-embed,
-  section.fullwidth > .auto-graph-wrap {{ max-width: 1600px; margin: 0 auto; }}
-  .mono, code {{ font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }}
-  a {{ color: var(--air); text-decoration: none; }}
-  a:hover {{ text-decoration: underline; }}
-  .dim {{ color: var(--dim); }}
-
-  /* ── HERO ───────────────────────────────────────────────── */
-  .hero {{ border: 1px solid var(--border); border-left: 6px solid var(--accent);
-    padding: 28px 32px; background: var(--bg-soft);
-    display: grid; grid-template-columns: 1fr auto; gap: 36px; align-items: start; }}
-  .hero-main {{ min-width: 0; }}
-  .hero .eyebrow {{ margin: 0 0 8px; font-size: 12px; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--muted); }}
-  .hero h1 {{ font-size: 38px; font-weight: 700; margin: 0 0 8px;
-    letter-spacing: -0.02em; line-height: 1.05; color: var(--ink); }}
-  .hero .oneliner {{ font-size: 18px; line-height: 1.45; color: var(--ink);
-    margin: 0 0 18px; max-width: 60ch; }}
-  .hero .oneliner em {{ color: var(--muted); font-size: 15px; }}
-  .hero .status-line {{ margin: 0 0 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }}
-  .hero .pill {{ display: inline-block; padding: 5px 14px; color: white;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 13px; font-weight: 700; letter-spacing: 0.14em; border-radius: 2px; }}
-  .hero .reason {{ font-size: 14px; color: var(--muted); }}
-  .hero .next {{ margin: 0; font-size: 15px; color: var(--ink);
-    padding: 10px 14px; background: white;
-    border: 1px dashed var(--border-2); border-left: 3px solid var(--accent-default); }}
-  .hero .next-tag {{ color: var(--accent-default); font-weight: 700; letter-spacing: 0.08em; margin-right: 8px; }}
-  .hero-meta {{ font-size: 12.5px; color: var(--muted); text-align: right;
-    line-height: 1.7; white-space: nowrap; }}
-  .hero-meta strong {{ color: var(--ink); font-weight: 600; }}
-  @media (max-width: 760px) {{
-    .hero {{ grid-template-columns: 1fr; padding: 22px 22px; }}
-    .hero-meta {{ text-align: left; }}
-    .hero h1 {{ font-size: 30px; }}
-  }}
-
-  /* ── HEALTH ROW ─────────────────────────────────────────── */
-  .health-row {{ display: flex; flex-wrap: wrap; gap: 0;
-    margin: 10px 0 0; padding: 10px 14px;
-    background: white; border: 1px solid var(--border);
-    font-size: 12.5px; }}
-  .health-cell {{ padding: 2px 14px; border-right: 1px solid var(--border);
-    color: var(--muted); }}
-  .health-cell:last-child {{ border-right: 0; }}
-  .health-ok {{ color: var(--ok); }}
-  .health-ok span, .health-warn {{ color: var(--warn); }}
-  .health-fail {{ color: var(--fail); }}
-  .health-dim {{ color: var(--dim); }}
-
-  /* ── COMPASS ────────────────────────────────────────────── */
-  .compass {{ margin: 16px 0 0; padding: 12px 16px;
-    background: var(--bg-soft); border: 1px solid var(--border);
-    border-left: 3px solid var(--water);
-    font-size: 13.5px; color: var(--ink); line-height: 1.6; }}
-  .compass strong {{ color: var(--ink); }}
-  .compass em {{ color: var(--muted); font-style: italic; }}
-  .compass a {{ color: var(--air); font-family: "JetBrains Mono", monospace;
-    font-size: 12.5px; }}
-
-  /* ── NAV STRIP (sticky) ─────────────────────────────────── */
-  nav.strip {{ position: sticky; top: 0; z-index: 10;
-    display: flex; flex-wrap: wrap; gap: 4px; margin: 28px 0 36px;
-    padding: 10px 4px; background: var(--bg);
-    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    font-size: 13px; align-items: center; }}
-  nav.strip a {{ color: var(--muted); padding: 5px 12px; border-radius: 3px; }}
-  nav.strip a:hover {{ color: var(--air); background: var(--bg-soft); text-decoration: none; }}
-  nav.strip a.cta {{ margin-left: auto; color: var(--air); font-weight: 600; }}
-
-  /* ── SECTIONS ──────────────────────────────────────────── */
-  h2.section {{ font-size: 20px; font-weight: 600; color: var(--ink);
-    margin: 56px 0 4px; letter-spacing: -0.01em; }}
-  p.hint {{ color: var(--muted); font-size: 13.5px; line-height: 1.55;
-    margin: 0 0 18px; max-width: 78ch; }}
-  p.hint code {{ background: var(--bg-soft); padding: 1px 6px;
-    font-size: 12.5px; color: var(--ink); }}
-  /* legacy support — old curated sections may still use these */
-  h2.section .id {{ color: var(--air); }}
-  .section-note {{ color: var(--muted); letter-spacing: 0; text-transform: none;
-    font-weight: normal; font-family: Inter, sans-serif; font-size: 13px; }}
-
-  .prose {{ font-size: 15px; line-height: 1.6; }}
-  .prose p {{ margin: 0 0 12px; }}
-  .prose ul, .prose ol {{ margin: 0 0 14px; padding-left: 22px; }}
-  .prose li {{ margin: 4px 0; }}
-  .prose h3, .prose h4 {{ font-size: 14px; margin: 18px 0 6px;
-    font-family: "JetBrains Mono", monospace; color: var(--ink); }}
-  .prose code {{ background: var(--bg-soft); padding: 1px 6px;
-    font-size: 13.5px; color: var(--ink); }}
-  .prose a {{ color: var(--air); }}
-
-  /* curated markdown tables */
-  .md-table-wrap {{ overflow-x: auto; margin: 0 0 14px; }}
-  table.md-table {{ width: 100%; border-collapse: collapse;
-    font-size: 13.5px; font-family: "JetBrains Mono", monospace; }}
-  table.md-table th, table.md-table td {{ padding: 8px 12px;
-    border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }}
-  table.md-table thead th {{ background: var(--bg-soft); color: var(--ink);
-    font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11.5px; }}
-  table.md-table tr:hover td {{ background: var(--bg-soft); }}
-
-  /* ── PICKUP ─────────────────────────────────────────────── */
-  .pickup-card {{ border: 1px solid var(--border); border-left: 4px solid var(--water);
-    background: white; padding: 16px 20px; }}
-  .pickup-src {{ font-size: 12px; color: var(--muted); margin-bottom: 8px; }}
-  .pickup-text {{ font-size: 15px; line-height: 1.6; margin: 0; color: var(--ink); }}
-
-  /* ── LOOSE ENDS ─────────────────────────────────────────── */
-  .loose-grid {{ display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }}
-  .loose-panel {{ border: 1px solid var(--border); background: white;
-    padding: 14px 16px; }}
-  .loose-head {{ font-size: 12px; letter-spacing: 0.10em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 4px;
-    display: flex; align-items: baseline; justify-content: space-between; }}
-  .loose-count {{ font-size: 17px; font-weight: 700; }}
-  .loose-sub {{ font-size: 12px; color: var(--muted); margin: 0 0 10px;
-    line-height: 1.45; }}
-  .loose-list {{ margin: 0; padding: 0; list-style: none; font-size: 12.5px;
-    font-family: "JetBrains Mono", monospace; line-height: 1.7; }}
-  .loose-list li {{ padding: 3px 0; border-bottom: 1px dashed var(--border);
-    word-break: break-all; }}
-  .loose-list li:last-child {{ border-bottom: 0; }}
-  .loose-list li.more {{ color: var(--muted); font-style: italic; border: 0; }}
-  .loose-status {{ display: inline-block; min-width: 28px; padding: 1px 5px;
-    background: var(--bg-soft); color: var(--warn); font-size: 11.5px; margin-right: 4px; }}
-  .loose-list .todo-text {{ color: var(--muted); font-family: Inter, sans-serif;
-    font-size: 12.5px; }}
-  .loose-list code {{ background: transparent; color: var(--ink); padding: 0; }}
-  .loose-panel .empty {{ font-size: 13px; }}
-
-  /* ── WAVES + GRAPH ──────────────────────────────────────── */
-  .flow-frame {{ border: 1px solid var(--border);
-    background: linear-gradient(var(--bg-soft) 1px, transparent 1px) 0 0 / 100% 14px,
-                linear-gradient(90deg, var(--bg-soft) 1px, transparent 1px) 0 0 / 14px 100%,
-                var(--bg);
-    background-blend-mode: multiply; padding: 22px 12px 18px; overflow-x: auto; }}
-  .flow-frame svg {{ display: block; width: 100%; min-width: 940px; height: auto; }}
-  .waves-table {{ margin-top: 14px; }}
-  .graph-embed {{ position: relative; border: 1px solid var(--border);
-    background: var(--bg-soft); border-radius: 4px; overflow: hidden; }}
-  .graph-embed iframe {{ display: block; width: 100%; height: 78vh; min-height: 600px;
-    border: 0; background: white; }}
-  .graph-embed .open-full {{ position: absolute; top: 10px; right: 14px;
-    font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--air);
-    background: white; padding: 5px 10px; border: 1px solid var(--border);
-    border-radius: 3px; z-index: 2; text-decoration: none; }}
-  .graph-embed .open-full:hover {{ background: var(--bg); }}
-
-  /* ── DIRECTORY MAP TILES ────────────────────────────────── */
-  .dir-grid {{ display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px; }}
-  .dir-tile {{ border: 1px solid var(--border);
-    border-top: 4px solid var(--tile-accent, var(--muted));
-    background: white; padding: 14px 16px;
-    display: flex; flex-direction: column; gap: 6px;
-    transition: border-color 0.15s, background 0.15s; }}
-  .dir-tile:hover {{ background: var(--bg-soft); border-color: var(--tile-accent); }}
-  .dir-tile-name {{ font-size: 15px; font-weight: 700; color: var(--ink);
-    letter-spacing: -0.01em; word-break: break-all; }}
-  .dir-tile-stats {{ display: flex; justify-content: space-between;
-    font-size: 12.5px; color: var(--muted); }}
-  .dir-tile-kind {{ color: var(--tile-accent); font-weight: 600; letter-spacing: 0.02em; }}
-  .dir-tile-count {{ color: var(--muted); }}
-  .dir-tile-age {{ font-size: 11.5px; color: var(--muted); }}
-
-  /* ── GRAPH PLACEHOLDER ──────────────────────────────────── */
-  .graph-placeholder {{ border: 1px dashed var(--border-2);
-    background: var(--bg-soft); padding: 22px 26px; }}
-  .graph-placeholder p {{ margin: 0 0 12px; font-size: 14.5px; }}
-  .graph-placeholder pre {{ background: white; border: 1px solid var(--border);
-    padding: 14px 16px; font-size: 12.5px; line-height: 1.55;
-    overflow-x: auto; margin: 12px 0; color: var(--ink); }}
-
-  /* ── CARDS ──────────────────────────────────────────────── */
-  .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }}
-  .card {{ border: 1px solid var(--border); padding: 14px 16px 15px;
-    background: white; transition: border-color 0.15s, background 0.15s; }}
-  .card:hover {{ border-color: var(--air); background: var(--bg-soft); }}
-  .card .id {{ font-family: "JetBrains Mono", monospace; font-size: 13.5px;
-    font-weight: 600; color: var(--air); letter-spacing: -0.01em; }}
-  .card .id.cn {{ color: var(--water); }}
-  .card .id.sc {{ color: var(--thesis); }}
-  .card .id.pp {{ color: #5A5A5A; }}
-  .card .path {{ font-family: "JetBrains Mono", monospace; font-size: 12.5px;
-    color: var(--ink); margin-top: 5px; word-break: break-all; }}
-  .card .meta-line {{ font-size: 11.5px; color: var(--muted); margin-top: 3px; }}
-  .card .extras {{ font-size: 11.5px; color: var(--muted); margin-top: 2px; }}
-  .card .desc {{ font-size: 13.5px; color: var(--ink); margin-top: 8px; line-height: 1.5; }}
-  .card .missing {{ color: var(--fail); font-weight: 600; }}
-  .card .external {{ color: var(--muted); font-style: italic; }}
-
-  /* ── GUARDRAIL CARDS ────────────────────────────────────── */
-  /* Colour-coded left border by kind so the eye can scan categories: */
-  /* orange = blocks the action; blue = test catches it; green = rules/runbook; grey = config. */
-  .guardrail-legend {{ display: flex; flex-wrap: wrap; gap: 16px;
-    margin: 6px 0 18px; font-size: 12.5px; color: var(--muted); }}
-  .guardrail-legend .dot {{ display: inline-block; width: 9px; height: 9px;
-    border-radius: 2px; margin-right: 5px; vertical-align: middle; }}
-  .guardrail-grid {{ display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }}
-  .guardrail-card {{ border: 1px solid var(--border); background: white;
-    padding: 14px 16px 12px; border-radius: 4px;
-    transition: border-color 0.15s, background 0.15s;
-    border-left-width: 4px; }}
-  .guardrail-card:hover {{ background: var(--bg-soft); }}
-  .guardrail-card.k-block   {{ border-left-color: #C25A1D; }}
-  .guardrail-card.k-test    {{ border-left-color: var(--air); }}
-  .guardrail-card.k-config  {{ border-left-color: var(--dim); }}
-  .guardrail-card.k-runbook {{ border-left-color: var(--water); }}
-  .guardrail-card.k-rules   {{ border-left-color: var(--water); }}
-  .guardrail-card .title {{ font-weight: 600; color: var(--ink);
-    font-size: 14.5px; letter-spacing: -0.005em; }}
-  .guardrail-card .path {{ font-size: 11.5px; color: var(--air);
-    margin-top: 4px; word-break: break-all; }}
-  .guardrail-card .path a {{ color: var(--air); }}
-  .guardrail-card .protects {{ font-size: 13px; color: var(--ink);
-    margin-top: 8px; line-height: 1.5; }}
-  .guardrail-card .when {{ font-size: 11.5px; color: var(--muted);
-    margin-top: 6px; font-style: italic; }}
-  .guardrail-card .when::before {{ content: "When: "; font-style: normal;
-    text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px;
-    color: var(--muted); margin-right: 4px; }}
-
-  /* ── DOC LISTS / TOUCH LISTS ────────────────────────────── */
-  .touch-list, .doc-list {{ margin: 8px 0 0; padding: 0; list-style: none; }}
-  .touch-list li, .doc-list li {{ padding: 6px 0; font-size: 14.5px;
-    border-bottom: 1px dashed var(--border); }}
-  .touch-list li:last-child, .doc-list li:last-child {{ border-bottom: 0; }}
-  .touch-list code, .doc-list code {{ color: var(--air); background: var(--bg-soft);
-    padding: 1px 6px; font-size: 13px; }}
-  .doc-list .note {{ color: var(--muted); font-family: Inter, sans-serif; font-size: 13px; }}
-
-  #superseded {{ opacity: 0.65; }}
-  #superseded:hover {{ opacity: 1; }}
-  .empty {{ color: var(--muted); font-style: italic; }}
-
-  footer {{ max-width: 1080px; margin: 40px auto 0;
-    padding: 22px 32px 32px;
-    border-top: 1px solid var(--border);
-    font-size: 12px; color: var(--muted);
-    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }}
-  footer code {{ background: var(--bg-soft); padding: 1px 5px; color: var(--ink); }}
-  @media (max-width: 720px) {{
-    .wrap {{ padding: 20px 18px 40px; }}
-    section.fullwidth {{ padding: 24px 18px 60px; }}
-    footer {{ padding: 22px 18px 30px; }}
-    .health-row {{ font-size: 11.5px; }}
-  }}
-</style>
-</head>
-<body>
-<div class="wrap">
-
-  {hero_html}
-  {health_html}
-
-  <p class="compass">
-    <strong>How to read this page:</strong>
-    the card at the top says what this project <em>is</em> and where you left off ·
-    the coloured row shows what's healthy and what isn't ·
-    <a href="#loose_ends">Loose ends</a> lists what's still open ·
-    <a href="#waves">Phases of work</a> is the timeline ·
-    <a href="#map">Folder map</a> is the folder layout ·
-    <a href="#canonical">Important files</a> are the source-of-truth files ·
-    everything below that is reference.
-    The interactive <a href="#graph">Code map</a> lives at the very bottom of the page.
-  </p>
-
-  <nav class="strip">
-    <a href="#status">Status</a>
-    <a href="#guardrails">Guardrails</a>
-    {'<a href="#pickup">Where we left off</a>' if data["checkpoint"] else ''}
-    <a href="#loose_ends">Loose ends</a>
-    <a href="#waves">Phases</a>
-    <a href="#map">Folder map</a>
-    <a href="#canonical">Important files</a>
-    <a href="#concepts">Glossary</a>
-    <a href="#scripts">Scripts</a>
-    <a href="#decisions">Decisions</a>
-    <a href="#plans">Plans</a>
-    <a href="#collaborators">People</a>
-    <a href="#activity">Recent activity</a>
-    <a href="#superseded">Archived</a>
-    {index_link}
-  </nav>
-
-  {status_html}
-  {guardrails_html}
-  {pickup_html}
-  {loose_html}
-
-  <section id="waves">
-    {section_heading("waves")}
-    <div class="flow-frame">{waves_svg}</div>
-    {waves_table}
-  </section>
-
-  {map_section}
-
-  <section id="canonical">
-    {section_heading("canonical")}
-    {cards([canonical_cards])}
-  </section>
-
-  <section id="concepts">
-    {section_heading("concepts")}
-    {cards([concept_cards])}
-  </section>
-
-  <section id="scripts">
-    {section_heading("scripts")}
-    {cards([script_cards])}
-  </section>
-
-  <section id="decisions">
-    {section_heading("decisions")}
-    <ul class="doc-list">{decision_list}</ul>
-  </section>
-
-  <section id="plans">
-    {section_heading("plans")}
-    <ul class="doc-list">{plan_list}</ul>
-  </section>
-
-  <section id="collaborators">
-    {section_heading("collaborators")}
-    {cards([collab_cards])}
-  </section>
-
-  <section id="activity">
-    {section_heading("activity")}
-    <ul class="doc-list">{activity_list}</ul>
-  </section>
-
-  <section id="superseded">
-    {section_heading("superseded")}
-    {superseded_block}
-  </section>
-
-</div>
-
-{graph_section}
-
-<footer>
-  <span>This page rebuilds itself from the project — don't edit it directly. Curate via <code>HUB.md</code> and <code>docs/hub.yaml</code>.</span>
-  <span>Updated {datetime.now().strftime('%Y-%m-%d %H:%M')}</span>
-</footer>
-
-</body>
-</html>
-"""
 
 
 # --- main -----------------------------------------------------------------
 
 def render_brief(data: dict) -> str:
     """Compact markdown project brief for an agent's session-start memory load.
-    Same data as HUB.html, none of the chrome. Designed to be read once at the
-    top of a session instead of re-exploring the repo; stays well under ~150
-    lines on a big project via per-section caps."""
+    Designed to be read once at the top of a session instead of re-exploring
+    the repo; stays well under ~150 lines on a big project via per-section
+    caps. handover.py cuts it further to fit the SessionStart hook limit."""
     L: list[str] = []
     st = data["status"]
     ages = data.get("curated_ages") or {}
@@ -2747,7 +1236,7 @@ def render_brief(data: dict) -> str:
         for s in data["scripts"][:15]:
             L.append(f"- {s['name']} (`{s['path']}`)")
         if len(data["scripts"]) > 15:
-            L.append(f"- … +{len(data['scripts']) - 15} more (see HUB.html)")
+            L.append(f"- … +{len(data['scripts']) - 15} more in `scripts/`")
 
     if data["recent_activity"]:
         L.append("\n## Recent commits")
@@ -2769,20 +1258,17 @@ def render_brief(data: dict) -> str:
     L.append("Memory protocol — write at the moment it happens, never wait for session end: "
              "decision → `docs/adr/` · new term/invariant → `CONTEXT.md` · "
              "correction/gotcha → `LEARNINGS.md` · task done, direction changed, or "
-             "about to stop → overwrite `HANDOVER.md`. Full dashboard: `docs/HUB.html`.")
+             "about to stop → overwrite `HANDOVER.md`.")
     return "\n".join(L) + "\n"
 
 
-def collect(brief: bool = False) -> dict:
-    """brief=True skips the derives whose sections render_brief never prints
-    (HTML-only views) — the brief must stay fast enough for a session-start
-    hook even on a large repo."""
+def collect() -> dict:
+    """Everything render_brief prints; stays fast enough for a session-start hook."""
     o = load_overrides()
     curated = parse_curated(find_curated_hub(o))
     canonical = derive_canonical(o, curated)
     loose = derive_loose_ends()
     status = derive_status(o, curated)
-    directory_map = [] if brief else derive_directory_map()
     return {
         "project": derive_project_name(o, curated),
         "oneliner": derive_oneliner(o, curated),
@@ -2790,66 +1276,27 @@ def collect(brief: bool = False) -> dict:
         "status": status,
         "next_action": derive_next_action(o, curated, status, loose),
         "checkpoint": derive_checkpoint(o),
-        "auto_checkpoint": derive_auto_checkpoint() if brief else None,
-        "memory_ages": derive_memory_ages() if brief else [],
-        "curated_ages": (derive_curated_ages(o, curated, status) if brief
-                         else {"next": None, "status": None}),
-        "script_update": derive_script_update() if brief else None,
+        "auto_checkpoint": derive_auto_checkpoint(),
+        "memory_ages": derive_memory_ages(),
+        "curated_ages": derive_curated_ages(o, curated, status),
+        "script_update": derive_script_update(),
         "loose": loose,
-        "health": [] if brief else derive_health(canonical, loose),
-        "waves": [] if brief else derive_waves(o, curated),
-        "directory_map": directory_map,
-        "directory_edges": [] if brief else derive_directory_edges(directory_map, canonical),
         "canonical": canonical,
         "concepts": derive_concepts(o, curated),
         "scripts": derive_scripts(o),
         "guardrails": derive_guardrails(o, curated),
-        "collaborators": [] if brief else derive_collaborators(o, curated),
-        "superseded": ({"curated_md": "", "items": []} if brief
-                       else derive_superseded(curated)),
         "decisions": derive_decisions(),
         "plans": derive_plans(),
         "learnings": derive_learnings(),
         "recent_activity": derive_recent_activity(),
-        "curated": curated,
-        "_overrides": o,
     }
 
 
 def main() -> int:
-    data = collect(brief="--brief" in sys.argv)
-
-    if "--brief" in sys.argv:
-        print(render_brief(data), end="")
+    if "--check" in sys.argv:  # old pre-commit hooks and CI steps still call it
+        print("HUB.html is no longer generated (project-hub 2026-10-25); nothing to check.")
         return 0
-
-    out_path = find_output(data["_overrides"])
-    html = render(data)
-
-    if "--check" in sys.argv:
-        current = out_path.read_text(encoding="utf-8") if out_path.exists() else ""
-        if current != html:
-            print(f"❌ {out_path.relative_to(ROOT)} is stale.  → run: python3 scripts/build_hub.py")
-            return 1
-        print(f"✓ {out_path.relative_to(ROOT)} up to date.")
-        return 0
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(html, encoding="utf-8")
-    curated_note = ("HUB.md merged" if data["curated"]
-                    else "no curated HUB.md")
-    print(f"wrote {out_path.relative_to(ROOT)}  "
-          f"(status={data['status']['pill']}, "
-          f"{len(data['waves'])} waves, "
-          f"{len(data['canonical'])} canonical, "
-          f"{len(data['concepts'])} concepts, "
-          f"{len(data['scripts'])} scripts, "
-          f"{len(data['collaborators'])} contributors, "
-          f"loose={len(data['loose']['uncommitted'])}u/"
-          f"{len(data['loose']['unpushed'])}p/"
-          f"{len(data['loose']['todos'])}t/"
-          f"{len(data['loose']['drafts'])}d, "
-          f"{curated_note})")
+    print(render_brief(collect()), end="")
     return 0
 
 
