@@ -103,6 +103,30 @@ for (const [name, act] of [['Shift / V', () => tap('dash')], ['Down + Jump', () 
   let moved = false; const x0 = S.P.x; run(40, { left: true }); moved = S.P.x < x0 - 5; check('and he can walk away', moved); }
 { enter(); S.P.mech.hp = 1; S.P.inv = 0; S.killPlayer('shot'); run(1); check('when it is destroyed he is thrown clear and the tank is gone', !S.P.mech && S.P.alive && live('tanksuit').length === 0); }
 
+// ---------------------------------------------------------------- 4b. round 10: the charge (forward twice) and the mortar salvo (special key)
+const dtap = (k) => { tap(k); run(2); tap(k); };
+{ enter(); const x0 = S.P.x; dtap('right'); const on = S.P.mech.charge > 0; run(20); const v = (S.P.x - x0) / (23 / 60);
+  check('forward twice starts the charge at about ' + S.TANK.chargeV + ' px/s (driving is 50)', on && v > 200 && v < 280, v.toFixed(0) + ' px/s');
+  run(60); check('it ends by itself after ' + S.TANK.chargeT + ' s', !(S.P.mech.charge > 0) && Math.abs(S.P.vx) < 60, 'vx ' + S.P.vx.toFixed(0)); }
+{ enter(); tap('right'); run(30); tap('right'); run(5); check('two presses 0.5 s apart are not a charge', !(S.P.mech.charge > 0)); }
+{ enter(); dtap('right'); run(50); const x1 = S.P.x; dtap('right'); check('a second charge has to wait ' + S.TANK.chargeCool + ' s', !(S.P.mech.charge > 0)); run(80); dtap('right'); check('and then it goes again', S.P.mech.charge > 0); }
+{ enter(); for (let c = 24; c < 27; c++) for (let r = 12; r <= 15; r++) S.setTile(c, r, BRICK); S.P.x = 23 * T - S.P.w - 4; run(2); dtap('right'); run(34);
+  let gone = 0; for (let c = 24; c < 27; c++) for (let r = 14; r <= 15; r++) if (S.tileAt(c, r) === 0) gone++;
+  check('the charge goes through three columns of brick without slowing down', gone === 6 && S.P.x > 27 * T, gone + ' of 6 blocks gone, x ' + (S.P.x / T).toFixed(1)); }
+{ enter(); const h = S.makeEnt({ type: 'heavy', c: 24, from: 0 }), g = S.makeEnt({ type: 'grunt', c: 26, from: 0 }), b = S.makeEnt({ type: 'barrel', c: 28, from: 0 }); S.ents.push(h, g, b); run(3); for (const e of [h, g]) { e.cool = 99; e.react = 99; }
+  S.P.x = 22 * T - S.P.w; run(1); const hp0 = S.P.mech.hp; dtap('right'); run(34);
+  check('it runs down a heavy (20 hp), a grunt and a barrel in its way and drives on (into the barrel\'s crater)', h.dead && g.dead && b.dead && S.P.x > 25 * T && !!S.P.mech, 'heavy ' + h.dead + ', grunt ' + g.dead + ', barrel ' + b.dead + ', x ' + (S.P.x / T).toFixed(1));
+  check('the barrel it set off does not hurt the tank', S.P.mech.hp === hp0, 'hp ' + S.P.mech.hp + ' of ' + hp0); }
+{ enter(); for (let r = 12; r <= 15; r++) S.setTile(26, r, STEEL); S.P.x = 22 * T - S.P.w; run(2); dtap('right'); run(40);
+  check('steel stops the charge', S.P.x + S.P.w <= 26 * T + 0.1 && S.tileAt(26, 15) === STEEL && !(S.P.mech.charge > 0), 'x ' + ((S.P.x + S.P.w) / T).toFixed(2)); }
+{ enter('mechsuit', 14); dtap('right'); check('the walker has no charge', !(S.P.mech.charge > 0)); }
+{ enter(); for (let r = 13; r <= 15; r++) S.setTile(22, r, STEEL); const h = S.makeEnt({ type: 'heavy', c: 27, from: 0 }); S.ents.push(h); run(3); h.cool = 99; h.react = 99; S.P.x = 16 * T; S.P.face = 1; run(2);
+  S.bullets.length = 0; tap('special'); let shells = S.bullets.filter((q) => q.kind === 'tshell' && q.grav > 300).length; for (let i = 0; i < 30; i++) { h.cool = 99; h.react = 99; run(1); shells = Math.max(shells, S.bullets.filter((q) => q.kind === 'tshell' && q.grav > 300).length); }
+  check('the special key fires a salvo of ' + S.TANK.mortars + ' mortar shells', shells === S.TANK.mortars, shells + ' shells');
+  tap('special'); run(2); const again = S.bullets.filter((q) => q.kind === 'tshell' && q.grav > 300).length; for (let i = 0; i < 200; i++) { h.cool = 99; h.react = 99; run(1); }
+  check('they arc over a three-block steel wall and hurt the heavy behind it', h.dead || h.hp < 20, 'heavy hp ' + h.hp.toFixed(1));
+  check('and the salvo has a pause of ' + S.TANK.mortarCool + ' s', again <= S.TANK.mortars, again + ' shells in the air after a second press'); }
+
 // ---------------------------------------------------------------- 5. the walker is unchanged
 { enter('mechsuit', 14); check('the walker is still a 24 hp walker', S.P.mech.kind === 'walker' && S.P.mech.hp === 24 && S.P.w === 20 && S.P.h === 26);
   const y0 = S.P.y; let top = y0; for (let i = 0; i < 30; i++) { S.keys.jump = true; S.pressed.jump = i === 0; S.step(1 / 60); for (const k in S.pressed) S.pressed[k] = false; top = Math.min(top, S.P.y); } S.keys.jump = false; check('the walker still jumps', y0 - top > 20, (y0 - top).toFixed(0) + ' px');

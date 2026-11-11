@@ -669,7 +669,7 @@ function buildLevel() {
   const fill = (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) set(c, r, v); };
   const H = {
     fill,
-    ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, GH - 2, v); fill(c0, GH - 1, c1, GH - 1, STEEL); },
+    ground: (c0, c1, top, v = DIRT) => { fill(c0, top, c1, GH - 1, v); }, // round 10: soil all the way down (row 21 was a steel layer under every piece of ground; boss arenas get theirs back in buildLevel)
     sp: (type, c, from = 0, extra = {}) => spawns.push(Object.assign({ type, c, from }, extra)),
     bgFill: (c0, r0, c1, r1, v) => { for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) bg[r * LW + c] = v; },
     // decor sits on the tile under it (or hangs on a wall tile) and drops when that tile goes
@@ -692,6 +692,7 @@ function buildLevel() {
   const fb = spawns.find((o) => o.final && o.ax0 !== undefined); cutAt = Math.min(ARENA_AT, fb ? fb.ax0 - 2 : ARENA_AT); // just before the boss arena
   if (stretched && !LV().gen) { slideArena(); buildStretch(H, level); }
   else if (!stretched) for (let r = 0; r < LH; r++) for (let c = 236; c < playW; c++) set(c, r, tiles[r * LW + 235]); // no stretch (Lab Siege): the last column goes on
+  for (const o of spawns) if (o.ax0 !== undefined) for (let c = Math.max(0, o.ax0 - 1); c <= Math.min(LW - 1, Math.max(o.ax1 || 0, o.gate ? o.gate[1] : 0) + 1); c++) if (isSolidT(tiles[(GH - 1) * LW + c])) set(c, GH - 1, STEEL); // a boss arena keeps its steel floor under the soil: it never breaks (steelHeld), so no boss ends up in a pit
   deepen(); // earth under the level down to the bedrock (see underground)
   modBuild();
 }
@@ -3448,7 +3449,7 @@ const UG_SIGN = { mine: ['MINE 7', 'DIG SITE', 'ORE SHAFT'], bunker: ['BUNKER', 
 const deep = new Uint8Array(LW), ugDug = new Uint8Array(LW); // columns of a zone (camera and fall line); columns that have their earth already
 let ugZones = [], ugOf = null; // the zones of the level built last, and its tile array (a new array means a new level)
 const ugFresh = () => { if (ugOf !== tiles) { ugOf = tiles; ugZones = []; deep.fill(0); ugDug.fill(0); } };
-const ugFloor = (x) => (deep[clamp(Math.floor(x / T), 0, LW - 1)] ? LH : GH) * T; // below this you have fallen off the map
+const ugFloor = (x) => LH * T; // below this you have fallen off the map. Round 10: the bottom of the map everywhere (it was row 22 outside an underground zone, so a bro who dug through the ground fell out and died); only a pit with no ground under it is bottomless now
 const camBottom = () => ugFloor(P.x + P.w / 2) - VH; // how far down the camera may go where you are
 const ugDark = () => clamp((cam.y + VH / 2 - GH * T) / (8 * T), 0, 1) * 0.55; // the deeper the camera, the darker; lamps still light it
 const mapRows = () => (ugZones.length ? LH : GH); // the full map shows the underground only when the level has some
@@ -7800,12 +7801,14 @@ function drawQueen(e, x, y, fl, f, t) {
 // punches through blocks, butts through ceilings on a jump, stomps on landing and soaks up 24 hits. Dash (Shift) or Down + Jump gets out; at 0 it blows up and throws you clear.
 // per suit: top speed (px/s), jump speed, ram (hp/s ground off a soft block it drives or flies into), butt (hp knocked off blocks its roof hits on the way up), stomp (hp off the blocks it lands on)
 const MECH = { walker: { v: 82, jump: -340, ram: 16, butt: 4, stomp: 4 }, tank: { v: 50, jump: -300, ram: 24, butt: 6, stomp: 6 } };
+// the Think Tank's charge (forward twice): speed, how long it lasts, the pause before the next one, damage to what it runs through; and its mortar salvo (special key)
+const TANK = { chargeV: 260, chargeT: 0.55, chargeCool: 1.6, chargeDmg: 25, chargeBoss: 12, mortars: 3, mortarCool: 2.2, mortarDmg: 5 };
 function boardMech(suit) {
   suit.dead = true; sfx('mech');
   const tank = suit.type === 'tanksuit'; // the Think Tank: a P.mech of kind 'tank' (slower, 40 hp, a low jump, no ladders, a cannon on the aim key)
   P.mech = { kind: tank ? 'tank' : 'walker', hp: suit.mhp || (tank ? 40 : 24), max: tank ? 40 : 24, gcool: 0, rcool: 0, wp: 0, hurt: 0, lift: 0 };
   P.w = tank ? 30 : 20; P.h = tank ? 18 : 26; P.x = suit.x; P.y = suit.y; P.vx = 0; P.vy = 0; P.dash = 0; P.pound = 0;
-  if (tank) showBanner('THINK TANK', 'Z cannon · hold aim + Up to raise it · SHIFT or Down+Jump: get out', 3);
+  if (tank) showBanner('THINK TANK', 'Z cannon · X mortars · forward twice: charge · SHIFT: get out', 3);
   else showBanner('BRO-MECH', 'Z gun · X rockets · C smash · SHIFT or Down+Jump: get out', 3);
 }
 function ejectMech(destroyed) {
@@ -7832,7 +7835,14 @@ function updateMechSuit(dt) {
   if (tank) P.aim = padAim ? clamp(Math.atan2(-padAim[1], Math.abs(padAim[0])), 0, Math.PI / 2) : keys.aim && keys.up ? (dir ? Math.PI / 4 : Math.PI / 2) : 0; // the same aim as on foot
   if (dir && !(tank && (keys.aim || padAim))) P.face = dir; // the tank keeps its facing while the aim key is held, so it can drive backwards and still shoot forwards
   const K = MECH[M.kind];
-  P.vx = approach(P.vx, dir * K.v, (P.onGround ? 700 : 400) * dt);
+  M.ccool = (M.ccool || 0) - dt;
+  if (tank) for (const [k, d] of [['left', -1], ['right', 1]]) if (pressed[k]) { // forward twice: the charge
+    if (M.tapDir === d && clock - (M.tapAt || -9) < 0.28 && M.ccool <= 0 && !(M.charge > 0)) { M.charge = TANK.chargeT; M.cdir = d; M.ccool = TANK.chargeCool; M.hitBoss = false; sfx('roar'); sfx('mech'); shake = Math.min(12, shake + 3); }
+    M.tapDir = d; M.tapAt = clock;
+  }
+  const charging = M.charge > 0, mv = charging ? M.cdir : dir; // while it charges the tank goes its own way
+  if (charging) { M.charge -= dt; P.face = M.cdir; P.vx = M.cdir * TANK.chargeV; }
+  else P.vx = approach(P.vx, dir * K.v, (P.onGround ? 700 : 400) * dt);
   P.coy = P.onGround ? 0.09 : P.coy - dt;
   if (pressed.jump && keys.down) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } // Down + Jump gets you out too
   if (pressed.jump) { if (clock - (M.tap || -9) < 0.3) { ejectMech(false); P.wantSpec = P.wantMelee = P.wantDash = false; return; } M.tap = clock; } // and so does a quick double tap of Jump
@@ -7843,7 +7853,17 @@ function updateMechSuit(dt) {
   }
   if (!keys.jump && P.vy < -120) P.vy = -120;
   P.vy = Math.min(P.vy + G * dt, 560);
-  if (dir) { // ram: driving, walking or flying into soft blocks grinds them away (steel holds)
+  if (charging) { // the charge goes through every block that is not steel, and through quacks, dogs, crates and barrels; steel stops it
+    const x0 = M.cdir > 0 ? P.x + P.w : P.x - TANK.chargeV * dt - 2, x1 = x0 + TANK.chargeV * dt + 2;
+    for (let c = Math.floor(x0 / T); c <= Math.floor(x1 / T); c++) for (let r = Math.floor((P.y + 1) / T); r <= Math.floor((P.y + P.h - 2) / T); r++) { const v = tileAt(c, r); if (v && v !== STEEL && v !== ACID) damageTile(c, r, 99); }
+    const box = { x: Math.min(x0, P.x) - 2, y: P.y - 2, w: P.w + TANK.chargeV * dt + 6, h: P.h + 2 };
+    for (const e of ents) if (live(e) && overlap(e, box)) {
+      if (BOSS[e.type]) { if (!M.hitBoss) { M.hitBoss = true; hitEnemy(e, TANK.chargeBoss, 0, 'blast'); } }
+      else { e.vy = -160; hitEnemy(e, TANK.chargeDmg, M.cdir * 320, 'crush'); }
+    }
+    if (Math.random() < 0.8) part(P.x + (M.cdir > 0 ? 2 : P.w - 2), P.y + P.h - 2, -M.cdir * rand(40, 140), rand(-60, -10), theme.dust, rand(0.25, 0.5), rand(3, 5), 0, 'smoke');
+  }
+  else if (dir) { // ram: driving, walking or flying into soft blocks grinds them away (steel holds)
     const ex = dir > 0 ? P.x + P.w + 1 : P.x - 1, c = Math.floor(ex / T), step1 = tank && P.onGround && !rectSolid(P.x + dir * 3, P.y - T, P.w, P.h); // the tank still climbs a one-tile step instead of eating it
     for (let r = Math.floor((P.y + 1) / T); r <= Math.floor((P.y + P.h - 2) / T) && !step1; r++) {
       const v = tileAt(c, r);
@@ -7858,7 +7878,8 @@ function updateMechSuit(dt) {
     if (broke) { P.vy = vy0 * 0.6; shake = Math.min(10, shake + 2); sfx('thud'); }
   }
   if (tank) { // climbs a one-tile step: a wall lower than a tile with room above it is driven up (drawn as a smooth lift)
-    if (dir && P.wall === dir && was && !rectSolid(P.x + dir * 3, P.y - T, P.w, P.h)) { P.y -= T; P.x += dir * 3; M.lift = T; P.vx = dir * 30; P.vy = 0; P.onGround = true; sfx('thud'); }
+    if (mv && P.wall === mv && was && !rectSolid(P.x + mv * 3, P.y - T, P.w, P.h)) { P.y -= T; P.x += mv * 3; M.lift = T; P.vx = mv * 30; P.vy = 0; P.onGround = true; sfx('thud'); }
+    else if (charging && P.wall === M.cdir) { M.charge = 0; P.vx = -M.cdir * 40; shake = Math.min(12, shake + 4); sfx('ting'); sfx('thud'); for (let i = 0; i < 6; i++) part(P.x + (M.cdir > 0 ? P.w : 0), P.y + rand(2, P.h - 2), -M.cdir * rand(40, 160), rand(-120, 20), '#fff6c2', 0.25, 1, G, 'spark'); } // steel: the charge ends with a clang
     M.lift = Math.max(0, M.lift - 70 * dt);
     for (const e of ents) if (live(e) && isQuack(e) && !BOSS[e.type] && overlap(P, e)) { // it drives over small quacks and flattens them; bigger ones are only shoved and scratched
       if (e.max <= 3) { e.vy = -120; hitEnemy(e, 99, P.face * 260, 'crush'); shake = Math.min(10, shake + 2); }
@@ -7891,6 +7912,15 @@ function updateMechSuit(dt) {
     bullets.push({ x: gx, y: gy + rand(-1, 1), vx: P.face * 520, vy: rand(-20, 20), owner: 'p', dmg: 1.5, tdmg: 1.2, life: 0.6, kind: 'photon' });
     body({ kind: 'shell', x: P.x + P.w / 2, y: gy - 2, vx: -P.face * rand(40, 100), vy: rand(-200, -120), col: '#f2c94c', s: 2, r: 1, bounce: 0.5, fric: 0.6, vr: rand(-30, 30), life: 2 });
     fx.push({ kind: 'muzzle', x: gx, y: gy, f: P.face, t: 0.05, max: 0.05 }); sfx('mg');
+  }
+  if ((pressed.special || P.wantSpec) && M.rcool <= 0 && tank) { // the second attack: a salvo of mortar shells that arc over cover and land one behind the other
+    M.rcool = TANK.mortarCool; M.kick = 3;
+    for (let i = 0; i < TANK.mortars; i++) setTimeoutGame(() => {
+      if (!P.mech || P.mech !== M) return;
+      const px = P.x + P.w / 2, py = P.y + 2;
+      bullets.push({ x: px, y: py, vx: P.face * (95 + i * 48), vy: -285, grav: 560, owner: 'p', kind: 'tshell', explode: 24, tp: 3, dmg: TANK.mortarDmg, life: 3 });
+      fx.push({ kind: 'muzzle', x: px, y: py - 4, f: P.face, t: 0.06, max: 0.06 }); sfx('throw'); part(px, py - 3, rand(-20, 20), rand(-70, -30), '#6a6a7a', rand(0.3, 0.5), 3, 0, 'smoke');
+    }, i * 0.13);
   }
   if ((pressed.special || P.wantSpec) && M.rcool <= 0 && !tank) {
     M.rcool = 0.6; sfx('rocket');
@@ -13255,6 +13285,10 @@ collectLights = function (t) { _collectLights(t); const [lo, hi] = fview(); fspa
 
 init();
 state = 'title';
+{ // ?mission=9 in the address starts that campaign mission at once (its number on the world map, open or not), with the bros freed so far: a way to jump straight to a mission
+  const um = +((/[?&]mission=(\d+)/.exec(URL_ARGS) || [])[1] || 0);
+  if (um >= 1 && um <= LEVELS.length && !window.__SB_TEST__) { mode = 'campaign'; newGame(); forceOpen = level = MAP_ORDER[um - 1]; startLevel(level); state = 'play'; }
+}
 if (window.__SB_TEST__) { window.__SB__ = { step, render, keys, pressed, tileAt, damageTile, checkCollapse, explode, hitEnemy, killEnemy, makeEnt, T, reset() { init(); state = 'play'; }, startLevel(n) { startLevel(n); state = 'play'; }, get level() { return level; }, get bullets() { return bullets; }, get unlocked() { return unlocked; }, BRO, BROS, cam, get objectives() { return objectives; }, finishObjectives() { objectives.forEach((o) => { if (o.id !== 'boss') o.n = o.need; }); }, get dossier() { return dossier; }, ignite, get ceasefire() { return ceasefire; }, get grace() { return grace; }, endCeasefire() { ceasefire = 0; }, setReached(n) { cleared = new Set(LEVELS.slice(0, n).map((L) => L.name)); forceOpen = n; }, get briefBro() { return briefBro; }, pollPad, startMode, siege, rush, get mode() { return mode; }, get trophies() { return trophies; }, career, unlock, MOON, SIEGE, get nLevels() { return LEVELS.length; }, pickRescueBro, killPlayer, levelDef, THEMES, RUSH, ACH, get fx() { return fx; }, setTile(c, r, v) { tiles[r * LW + c] = v; thp[r * LW + c] = TILE_HP[v]; miniDirty = true; }, get siegeBest() { return siege.best; }, get G() { return G; }, set titleSel(v) { titleSel = v; }, bgAt: (c, r) => bg[r * LW + c], settings, get paused() { return paused; }, get bodies() { return bodies; }, get falling() { return falling; }, get decals() { return decals; }, get P() { return P; }, get boss() { return boss; }, get state() { return state; }, get ents() { return ents; }, get stats() { return stats; }, get chopper() { return chopper; }, get lives() { return lives; }, setLives(n) { lives = n; }, get plants() { return plants; }, get critters() { return critters; }, sproutAt: () => sproutAt, get lifeT() { return lifeT; }, newCritter, lifeNoise, setRamp(v) { rampOn = v; }, get diff() { return diff; }, sfx, audioInit, tone, noise, get audio() { return { AC, master, echo, amb }; }, get deathLog() { return deathLog; } }; }
 else requestAnimationFrame(frame);
 const startFonts = () => { try { document.fonts && document.fonts.load('8px "Silkscreen"'); } catch (e) { /* fallback font is fine */ } };
@@ -13283,7 +13317,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { fancy: () => fancy, decor
 if (window.__SB_TEST__) Object.assign(window.__SB__, { DIFFS, DENS, setDifficulty, setDensity, difficulty: () => settings.difficulty, density: () => densMul, saveSettings, menuSel: () => menuSel }); // difficulty and density hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LH, GH, ugZones: () => ugZones, deep: (c) => deep[c], ugFloor, camBottom, ugDark, mapRows, drawMinimap, drawFullMap, underStretch, UG_KINDS }); // underground hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { NO_AIM }); // new bros hooks
-if (window.__SB_TEST__) Object.assign(window.__SB__, { FALL, fallDmg, fallCheck, MECH, STRETCH_OF, stretchOf, longScaled, DARK_AMB, DARK_LAMP });
+if (window.__SB_TEST__) Object.assign(window.__SB__, { FALL, fallDmg, fallCheck, MECH, TANK, STRETCH_OF, stretchOf, longScaled, DARK_AMB, DARK_LAMP });
 if (window.__SB_TEST__) Object.assign(window.__SB__, { saveRun, loadRun, resumeRun, clearRun, snapRun, runSaved: () => runSaved, titleItems, titleAt: () => titleSel, setTitleSel(v) { titleSel = v; }, freshSig: () => freshSig, pauseMenu, setMenuSel(v) { menuSel = v; }, RUN_V, isQuack, missionNo, run: () => ({ lives, runScore, unlocked, level, checkpoint, state, mode, paused }), setRun(o) { if (o.lives !== undefined) lives = o.lives; if (o.runScore !== undefined) runScore = o.runScore; if (o.unlocked) unlocked = o.unlocked; } }); // round 9 hooks: the saved run // round 9 hooks: fall damage and the suits
 if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows, BRO_LEGS, LEG_FRAMES, HEADS }); // bro art hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { rankOf, RANK, runResult, recordRun, addScore, hudStep, drawScreen, records: () => records, lastResult: () => lastResult, hud: () => hud, setMode(m) { mode = m; }, setState(v) { state = v; }, leave() { chopper = { x: 0, y: 0, tx: 0, ty: 0, floor: 0, state: 'leave', t: 0 }; endT = 2.7; P.alive = false; P.ride = true; }, setCam(x, y) { cam.x = x; cam.y = y; } }); // round 8 records hooks
