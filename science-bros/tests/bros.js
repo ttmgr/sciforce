@@ -70,6 +70,12 @@ setup('hubble'); const hb = quack(9); S.pressed.special = true; run(1);
 check('Hubble flings quacks away', hb.dead || hb.kx > 300);
 setup('wegener'); const wg = quack(12); S.pressed.special = true; run(2);
 check('Wegener opens the ground under a quack', !(S.tileAt(12, 16) !== 0) || wg.dead);
+// Tectonic shot: the ripple breaks a wall in its path, three blocks up, but never steel
+const quakeWall = (v) => { setup('wegener'); const c = Math.floor(S.P.x / 16) + 4; for (let r = 12; r < 16; r++) S.setTile(c, r, v); return c; };
+{ const c = quakeWall(1); run(130, { fire: true }); check('Wegener: the ripple breaks a dirt wall, three blocks up', [13, 14, 15].every((r) => S.tileAt(c, r) === 0), [12, 13, 14, 15].map((r) => S.tileAt(c, r)).join(' '));
+  check('Wegener: the block above the ripple\'s reach stands', S.tileAt(c, 12) !== 0); }
+{ const c = quakeWall(2); run(25, { fire: true }); const one = S.tileAt(c, 15) !== 0; let broke = false; for (let k = 0; k < 200 && !broke; k++) { run(1, { fire: true }); broke = S.tileAt(c, 15) === 0; } check('Wegener: brick takes several ripples', one && broke); } // the row above then drops into the gap, so catch the moment it breaks
+{ const c = quakeWall(3); run(200, { fire: true }); check('Wegener: steel does not break', S.tileAt(c, 15) === 3); }
 // the six newest bros: each special (and each main weapon's trick) does what it says
 setup('nobel'); let nq = quack(12); S.pressed.special = true; run(1);
 const tnts = S.bullets.filter((b) => b.kind === 'tnt'); let stuckMax = 0, k = 0;

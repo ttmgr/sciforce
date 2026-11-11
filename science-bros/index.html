@@ -283,7 +283,7 @@ const BROS = [
     pal: { h: '#b4b4bc', s: '#f0c9a4', e: '#1b1d2e', g: '#c9d4e6', c: '#e9eef6', t: '#8e2b3c', p: '#2a2e42', b: '#15161f' } },
   { id: 'sagan', name: 'Carl Sagbro', weapon: 'Pale blue dots', wdesc: 'slow glowing orbs that pass through every quack', special: 'Billions and billions', sdesc: 'stars rain down all over the screen', formula: 'we are star stuff', gun: '#8fd3ff',
     pal: { h: '#3a2a20', s: '#f0c9a4', e: '#1b1d2e', c: '#7a4a2a', t: '#2a2420', p: '#2f3346', b: '#25283a' } },
-  { id: 'wegener', name: 'Alfred Wegbro', weapon: 'Tectonic shot', wdesc: 'a ripple along the ground that throws quacks up', special: 'Continental drift', sdesc: 'the ground splits under every quack on screen', formula: 'Pangaea, 300 Mya', gun: '#c9a27a',
+  { id: 'wegener', name: 'Alfred Wegbro', weapon: 'Tectonic shot', wdesc: 'a ripple along the ground that throws quacks up and shakes walls apart', special: 'Continental drift', sdesc: 'the ground splits under every quack on screen', formula: 'Pangaea, 300 Mya', gun: '#c9a27a',
     pal: { h: '#5a4a3a', w: '#4a3a2a', s: '#f0c9a4', e: '#1b1d2e', c: '#3a4a5a', t: '#c9a27a', p: '#2a2e42', b: '#15161f' } },
   { id: 'hubble', name: 'Edwin Hubbro', weapon: 'Redshift', wdesc: 'shots that grow and hit harder the further they fly', special: 'Expanding universe', sdesc: 'everything on screen is flung away from you', formula: 'v = H0 d', gun: '#ff6a4a',
     pal: { h: '#3a2a20', g: '#5a3a26', s: '#f0c9a4', e: '#1b1d2e', c: '#3a3550', t: '#e9eef6', p: '#25283a', b: '#15161f' } },
@@ -3352,7 +3352,7 @@ const DESTRUCT = {
   neutron: { p: 0.5, shape: 'eat', m: 'acid' },
   crt: { p: 0.35, shape: 'chip' }, // Roentbro's cathode ray scratches
   // through everything, or along the ground
-  dot: { shape: 'none' }, leap: { shape: 'none' }, pwave: { shape: 'quake' },
+  dot: { shape: 'none' }, leap: { shape: 'none' }, pwave: { p: 1.5, shape: 'quake' },
   // explosives carve round craters
   vial: { p: 1, r: 1, shape: 'round', m: 'acid' }, bigvial: { p: 1, r: 1.1, shape: 'round', m: 'acid' }, elemU: { p: 1, r: 1, shape: 'round', m: 'acid' },
   glue: { p: 1, r: 1, shape: 'round', m: 'acid' }, fizz: { p: 1, r: 1.2, shape: 'round', m: 'glass' }, confetti: { p: 1, r: 1.1, shape: 'round', m: 'demo' }, beach: { p: 0.8, r: 1, shape: 'round', m: 'stone' }, spud: { p: 1, r: 1, shape: 'round', m: 'soft' }, // gimmick guns and one-use specials
@@ -3377,7 +3377,7 @@ function wreck(key, c, r, dx, dy, dflt = 0.5, k = 1) {
   const hit = (cc, rr, q) => { const w = tileAt(cc, rr); if (w === STEEL) return hitSteel(cc, rr, q * (D.s || 0)); const h = isSolidT(w) ? q * mm[MI[w]] : 0; return h > 0 && damageTile(cc, rr, h); };
   switch (D.shape) {
     case 'none': return false;
-    case 'quake': if (Math.random() < 0.3) decal(x + rand(-7, 7), r * T + rand(0, 4), '#1d1a26', 1); return false; // the ripple cracks the ground
+    case 'quake': if (Math.random() < 0.3) decal(x + rand(-7, 7), r * T + rand(0, 4), '#1d1a26', 1); return hit(c, r, p); // the ripple cracks the ground and shakes walls apart
     case 'burn': // what does not burn is only blackened; a crate may catch fire
       if (mm[MI[v]] <= 0) { if (Math.random() < 0.3) decal(x - sx * 7 + rand(-3, 3), y - sy * 7 + rand(-6, 6), '#1d1a26', 2); return false; }
       if (v === CRATE && Math.random() < 0.04 && !isSolidT(tileAt(c, r - 1))) ignite(x, r * T - 2, 1, 2);
@@ -7985,9 +7985,10 @@ function updateBullets(dt, edt) {
     if (b.kind === 'hoot') b.hitR = 3 + Math.hypot(b.x - b.sx, b.y - (b.sy === undefined ? b.y : b.sy)) * 0.07; // the call widens as it rolls out
     if (b.kind === 'flame') { b.hitR = 2 + (1 - b.life / b.max) * 4; b.vx *= 1 - 0.3 * d; if (Math.random() < 0.25) part(b.x, b.y, rand(-15, 15), rand(-50, -20), '', rand(0.15, 0.3), 2, 0, 'fire'); }
     if (b.kind === 'pwave') { // a ripple that runs along the ground
-      if (solidPx(b.x + Math.sign(b.vx) * 5, b.y) || !solidPx(b.x, b.y + 9)) { b.dead = true; continue; }
+      if (solidPx(b.x + Math.sign(b.vx) * 5, b.y)) { const wc = Math.floor((b.x + Math.sign(b.vx) * 5) / T), wr = Math.floor(b.y / T); for (let k = 0; k < 3; k++) wreck('pwave', wc, wr - k, b.vx, 0, 0); shake = Math.min(14, shake + 1); b.dead = true; continue; } // a wall in its path takes the hit, three blocks up from the ground
+      if (!solidPx(b.x, b.y + 9)) { b.dead = true; continue; }
       if (Math.random() < 0.6) part(b.x, b.y + 5, rand(-30, 30), rand(-90, -30), theme.dust, 0.3, 2, G);
-      if (Math.random() < 0.2) wreck('pwave', Math.floor(b.x / T), Math.floor((b.y + 9) / T), b.vx, 0, 0); // it cracks the ground it runs along
+      if (Math.random() < 0.2) wreck('pwave', Math.floor(b.x / T), Math.floor((b.y + 9) / T), b.vx, 0, 0, 0.15); // it slowly cracks the ground it runs along
       const col = { x: b.x - 4, y: b.y - 64, w: 8, h: 66 }; // the shock goes up as well: it hits what hovers just above the ground
       if (!b.hits) b.hits = new Set();
       for (const e of ents) if (live(e) && !b.hits.has(e) && overlap(e, col) && !(e.x <= b.x && b.x <= e.x + e.w && e.y <= b.y && b.y <= e.y + e.h)) { b.hits.add(e); bulletHit(b, e); }
