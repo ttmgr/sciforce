@@ -127,7 +127,7 @@ for (const l of idx) {
   const forks = plan.filter((p) => p[0] === 'fork').length, detours = S.ugZones().filter((z) => z.c0 >= S.cutAt() - 10 && z.c1 <= S.cutAt() + S.stretchW() + 2).length;
   check(tag + ': an underground part in its own base, and a stretch with ' + wantF + ' forks and ' + wantZ + ' underground detours at full length, scaled to its region (round 9)', base.length >= 1 && forks >= 1 && forks <= S.longScaled(wantF) && detours === S.longScaled(wantZ) && plan.length >= 5 && wantF >= 2 && wantZ >= 2 && S.LONG_MAPS[l] === S.longOf(l), base.length + ' base zones, ' + plan.length + ' sections, ' + forks + ' forks, ' + detours + ' detours');
   S.endCeasefire(); S.P.inv = 1e9; S.P.x = 3 * T; run(30);
-  const air = S.ents.filter((e) => !e.dead && !FLY.includes(e.type) && e.type !== 'para' && !solidT(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T))) && S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T)) !== LADDER && !S.devs.some((d) => d.kind === 'lift' && Math.abs(d.y - (e.y + e.h)) < 3 && e.x + e.w > d.x && e.x < d.x + d.w));
+  const air = S.ents.filter((e) => !e.dead && !FLY.includes(e.type) && e.type !== 'para' && !e.hang && !(e.ts > 0) /* round 10: a hanging pod or a crawler on a wall or ceiling clings */ && !solidT(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T))) && S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T)) !== LADDER && !S.devs.some((d) => d.kind === 'lift' && Math.abs(d.y - (e.y + e.h)) < 3 && e.x + e.w > d.x && e.x < d.x + d.w));
   check(tag + ': nothing floats in mid-air once it settles', air.length === 0, air.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join(' '));
 }
 

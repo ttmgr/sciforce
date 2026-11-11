@@ -138,7 +138,7 @@ for (let l = 0; l < N; l++) {
   check(tag + ': every cage, intel file, objective target and boss arena can be reached', lost.length === 0 && intel.length === 3, intel.length + ' intel, ' + cagesIn.length + ' cages; unreachable: ' + lost.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join(' '));
   // nothing sits in mid-air once the level settles (fliers and hanging things aside)
   S.endCeasefire(); S.P.inv = 1e9; S.P.x = 3 * T; run(30, {});
-  const air = S.ents.filter((e) => !e.dead && !FLY.includes(e.type) && e.type !== 'para' && !solidT(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T))) && S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T)) !== 7 && !S.devs.some((d) => d.kind === 'lift' && Math.abs(d.y - (e.y + e.h)) < 3 && e.x + e.w > d.x && e.x < d.x + d.w));
+  const air = S.ents.filter((e) => !e.dead && !FLY.includes(e.type) && e.type !== 'para' && !e.hang && !(e.ts > 0) /* round 10: a hanging pod or a crawler on a wall or ceiling clings */ && !solidT(S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T))) && S.tileAt(Math.floor((e.x + e.w / 2) / T), Math.floor((e.y + e.h + 1) / T)) !== 7 && !S.devs.some((d) => d.kind === 'lift' && Math.abs(d.y - (e.y + e.h)) < 3 && e.x + e.w > d.x && e.x < d.x + d.w));
   check(tag + ': nothing floats in mid-air', air.length === 0, air.map((e) => e.type + '@' + Math.floor(e.x / T) + ',' + Math.floor(e.y / T)).join(' '));
 }
 

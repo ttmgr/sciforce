@@ -2822,6 +2822,7 @@ function genLevel(seed, dk = 'normal') {
   { const dr = (k) => { const v = Math.sin(seed * 12.9898 + k * 78.233 + 4242.1) * 43758.5453; return v - Math.floor(v); }; // a derived roll: the map's own random streams are not touched
     if (th !== 'moon' && dr(1) < 0.4) { const all = ['dark', 'flooded', 'restless', 'gale'], a = all[Math.floor(dr(2) * 4)]; def.mods = [a]; if (dr(3) < 0.2) def.mods.push(all.filter((k) => k !== a)[Math.floor(dr(4) * 3)]); }
     if (dr(5) < 0.4) def.grant = true; def.hseed = Math.floor(dr(6) * 1e6); }
+  { const ar = rngOf(seed * 7919 + 13); ar(); ar(); if (ar() < 0.25) def.gen.alien = true; } // round 10: about one random mission in four is infested; its own derived roll, the map's streams are not touched
   const camp = { sign: R.pick(W.sign), decor: W.tree[th] === 'crystal' ? 'crystal' : 'sandbags', ceil: th === 'cave' || th === 'sewer' ? 6 : 0 };
   const bossX = { name: bossName, sub: R.pick(W.bossSub), hpMul: D.hp }, neon = R.pick(W.neon), tseed = R.int(1, 1e9), fseed = R.int(1, 1e9);
   def.build = (H) => {
@@ -4727,6 +4728,7 @@ function makeEnt(s) {
   if (s.type === 'target') { e.skin = s.skin; if (s.skin === 'radio') { e.h = 56; e.y = surf(s.c, s.from) * T - 56; } }
   if (s.type === 'icicle') { e.anchor = [s.c, s.hang]; e.y = (s.hang + 1) * T; e.falling = false; e.warn = 0; e.rock = !!s.rock; } // rock: a stalactite in a cave
   if (s.type === 'flag') e.on = false;
+  if (ALIEN[s.type]) alienInit(e, s); // round 10: aliens
   if (BOSS[s.type]) {
     Object.assign(e, { active: false, state: 'idle', t: 1.5, shots: 0, shotT: 0, dying: 0, boomT: 0, anim: 0, ax0: s.ax0, ax1: s.ax1, trig: s.trig, final: !!s.final, gate: s.gate, bossName: s.name, bossSub: s.sub });
     if (s.hpMul) e.hp = e.max = Math.round(e.max * s.hpMul);
@@ -4856,6 +4858,7 @@ function killEnemy(e, how = 'shot') {
   if (BOSS[e.type]) { bossDying(e); return; }
   e.dead = true;
   const [cx, cy] = center(e), f = e.face > 0 ? 0 : 1;
+  if (ALIEN[e.type]) { alienDie(e, how); return; } // round 10: their own goo and scores
   if (e.type === 'barrel') { explode(cx, cy, 44, 6, blamed(e), 4); return; }
   if (e.type === 'propane') { explode(cx, cy, 40, 6, blamed(e), 4); return; }
   if (e.type === 'fueltank') { explode(cx, cy, 72, 8, blamed(e), 5); ignite(cx, cy, 6, 60); shake += 6; return; }
@@ -6621,7 +6624,7 @@ function bossCalm(e, dt) {
 // fifth tile and for every tile after it. The drop is scaled by gravity (the Moon is kinder). Jumps, spring pads and blasts that land a quack back
 // at its old height cost nothing; parachutes, jetpacks and quacks thrown by a special (e.lever, its own rule) are left out. The kill is the player's.
 const FALL = { from: 5, per: 2, gib: 9 };
-const FALLERS = (e) => isQuack(e) || e.type === 'dog' || e.type === 'bomber';
+const FALLERS = (e) => isQuack(e) || e.type === 'dog' || e.type === 'bomber' || e.type === 'alhatch';
 const fallDmg = (drop) => (drop >= FALL.from ? FALL.per * (Math.floor(drop) - FALL.from + 1) : 0); // drop in tiles
 function fallCheck(e) {
   if (e.chute || e.type === 'jetpack' || e.zeroG > 0 || e.lever) { e.air = false; e.fallY = e.y; return; }
@@ -6787,6 +6790,7 @@ function updateEnt(e, dt) {
     case 'citrus': updateCitrus(e, dt * (diff.pace || 1)); break;
     case 'director': updateDirector(e, dt * (diff.pace || 1)); break;
     case 'icicle': updateIcicle(e, dt); break;
+    case 'alhatch': case 'alcrawl': case 'alspit': case 'alpod': case 'alqueen': updateAlien(e, dt); break; // round 10
   }
   if (ground && FALLERS(e) && !e.dead) fallCheck(e);
   if (ground && (rectAcid(e.x, e.y, e.w, e.h) || e.y > ugFloor(e.x + e.w / 2)) && !e.dead) {
@@ -7142,7 +7146,7 @@ function meleeSwing(e, dt, reach) {
 // ---- the second batch of quacks (MORE_FOES). They share the quack brain, so they only act once they have spotted you (on screen, about 12 tiles), forget you when you die and stay quiet in the safe start.
 const MORE_RANGE = { streamer: [190, 90], detox: [190, 60], yogi: [190, 60], alpha: [190, 120], dronecaller: [190, 90] }; // how far they notice you (x, y); the rest use the grunt's
 // the diffuser's oil mist slows you to half speed while you stand in it
-function oilSlow() { for (const f of fx) if (f.kind === 'oil' && f.t > 0 && Math.abs(P.x + P.w / 2 - f.x) < f.r && Math.abs(P.y + P.h / 2 - f.y) < 18) return 0.5; return 1; }
+function oilSlow() { for (const f of fx) if (f.kind === 'oil' && f.t > 0 && Math.abs(P.x + P.w / 2 - f.x) < f.r && Math.abs(P.y + P.h / 2 - f.y) < 18) return 0.5; return hiveSlow(); }
 // the streamer's "viewers": two paratroopers drop in (never more than 5 about)
 function callViewers() {
   let n = ents.filter((o) => o.type === 'para' && !o.dead).length;
@@ -7323,6 +7327,472 @@ function rescue(cage) {
   for (let i = 0; i < 16; i++) part(cage.x + 8, cage.y + 8, rand(-120, 120), rand(-200, -40), i % 2 ? '#8b93ad' : '#a6d854', rand(0.5, 1), 2, G);
   showBanner((fresh ? 'NEW BRO UNLOCKED: ' : 'RESCUED: ') + bro.name.toUpperCase(), fresh ? bro.weapon + ' · ' + bro.special : '+1 bro in reserve · ' + bro.weapon, 2.6);
   if (mode === 'campaign' && Math.random() < 0.7) say('bro', BRO_QUIPS[(Math.random() * BRO_QUIPS.length) | 0], 0.6);
+}
+
+// ---------------------------------------------------------------- aliens (round 10)
+// The Anti-Science League sells fake alien stories. In Crop Circle Fields, the Ancient Alien Temple and some random missions the real thing has turned up, and it is not friendly.
+// Five types of their own (none is a quack, none is in BOSS): alhatch (hatchling), alcrawl (wall and ceiling crawler), alspit (acid lobber), alpod (egg pod) and alqueen (the Brood Mother).
+// Hive growth is an overlay (HIVE.hv holds a nest number per tile), never a tile type. Placement is by rule and seeded, so a mission builds the same way twice. Level-built aliens go through
+// makeEnt like everything else, so markFresh/snapRun/resumeRun cover them; growth that spread during play is not saved (it regrows). No Math.random while a level is built.
+const ALIEN = { alhatch: 1, alcrawl: 1, alspit: 1, alpod: 1, alqueen: 1 };
+const ALIEN_SMALL = { alhatch: 1, alcrawl: 1, alspit: 1 }; // the ones that get the outline of the graphics pass
+const ALIEN_NAME = { alhatch: 'SKITTERLING', alcrawl: 'CEILING CLINGER', alspit: 'ACID LOBBER', alpod: 'BROOD POD', alqueen: 'BROOD MOTHER' };
+const ALIEN_PTS = { alhatch: 50, alcrawl: 150, alspit: 200, alpod: 50, alqueen: 2500 };
+const AL = {
+  hatchRun: 96, hatchRush: 128, leapV: -235, leapCool: 1.3, // hatchling: scuttle and rush speeds (px/s), leap speed, seconds between leaps
+  crawlWalk: 24, crawlChase: 44, // crawler speeds along its surface
+  spitWind: 0.75, spitMin: 2, spitMax: 3, // spitter: wind-up tell and the gap between shots (s)
+  podRange: 64, podWobble: 0.6, // pod: the bro this close (px) sets it off, after a wobble
+  queenHp: 90, queenCap: 6, // Brood Mother: hp at NORMAL, pods alive at once
+  nestCap: 60, spreadEvery: 4, wither: 1.8, slow: 0.75, budEvery: 14, budCap: 2, // hive: tiles per nest, seconds per tile per source, wither time, speed on it, bud gap and cap
+};
+Object.assign(DIMS, { alhatch: [8, 7, 1], alcrawl: [12, 9, 3], alspit: [12, 14, 4], alpod: [10, 12, 3], alqueen: [40, 34, 90] });
+Object.assign(HITTABLE, ALIEN);
+Object.assign(LEAK, { alhatch: ['#7df0c8', 0], alcrawl: ['#7df0c8', 0], alspit: ['#a6ff6a', 0], alpod: ['#7df0c8', 0], alqueen: ['#c24fa0', 0] }); // their own goo
+const alQuiet = () => ceasefire > 0 || grace > 0; // the first 10 s of a mission and just after a respawn
+const ahash = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); }; // a fixed pseudo-random number in [0,1): used while a level is built
+const mxs = (f, x, W, dx, w) => (f ? x + dx : x + W - dx - w); // a rect at offset dx of a sprite W wide, mirrored when it faces left
+
+// ---- hive growth overlay
+const HIVE = { nests: [], hv: new Uint8Array(LW * LH) }; // hv[tile] = nest number + 1
+function hiveReset() { HIVE.hv.fill(0); HIVE.nests = []; AL.hatched = false; }
+function hiveNew(cap = AL.nestCap) { const n = { id: HIVE.nests.length, cap, tiles: [], count: 0, ents: [], acc: 0, tick: 0.2, bud: AL.budEvery, buds: [], wither: 0, seeded: false, near: false, cx: 0 }; HIVE.nests.push(n); return n; }
+function hiveAdd(n, i) { if (HIVE.hv[i] || n.count >= n.cap || !isSolidT(tiles[i])) return false; HIVE.hv[i] = n.id + 1; n.tiles.push(i); n.count++; return true; }
+function hiveSeed(n, m) { // the tile under (or over) a pod or the Brood Mother
+  const c = Math.floor((m.x + m.w / 2) / T);
+  if (m.hang) hiveAdd(n, m.hr * LW + m.hc);
+  else { const r = Math.floor((m.y + m.h + 1) / T); hiveAdd(n, r * LW + c); if (m.type === 'alqueen') { hiveAdd(n, r * LW + c - 1); hiveAdd(n, r * LW + c + 1); } }
+  n.cx = m.x;
+}
+const hiveExposed = (c, r) => !isSolidT(tileAt(c + 1, r)) || !isSolidT(tileAt(c - 1, r)) || !isSolidT(tileAt(c, r + 1)) || !isSolidT(tileAt(c, r - 1));
+const HIVE_DIRS = [[1, 0], [0, -1], [-1, 0], [0, 1]];
+function hiveGrow(n) { // one exposed solid tile next to an infested one (scanned from a random start), or nothing
+  const L = n.tiles, len = L.length, s0 = (Math.random() * len) | 0, d0 = (Math.random() * 4) | 0;
+  for (let j = 0; j < Math.min(len, 40); j++) {
+    const i = L[(s0 + j) % len], c = i % LW, r = (i / LW) | 0;
+    for (let k = 0; k < 4; k++) {
+      const d = HIVE_DIRS[(d0 + k) & 3], cc = c + d[0], rr = r + d[1];
+      if (cc < 1 || cc >= playW - 1 || rr < 1 || rr >= LH - 1 || !isSolidT(tileAt(cc, rr)) || HIVE.hv[rr * LW + cc] || !hiveExposed(cc, rr)) continue;
+      return hiveAdd(n, rr * LW + cc);
+    }
+  }
+  return false;
+}
+function hiveClear(n) { for (const i of n.tiles) if (HIVE.hv[i] === n.id + 1) HIVE.hv[i] = 0; n.tiles.length = 0; n.count = 0; }
+function hiveBurn(n, c, r) { for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const i = (r + dr) * LW + c + dc; if (HIVE.hv[i] === n.id + 1) { HIVE.hv[i] = 0; part(((c + dc) * T) + 8, ((r + dr) * T) + 8, rand(-30, 30), rand(-50, -10), '#4b4766', rand(0.4, 0.8), 3, 0, 'smoke'); } } }
+const hiveUnder = () => { // the nest number + 1 of the infested tile the bro stands on, or 0
+  if (!HIVE.nests.length || !P.alive || !P.onGround) return 0;
+  const r = Math.floor((P.y + P.h + 1) / T);
+  for (const x of [P.x + 2, P.x + P.w - 2]) { const c = Math.floor(x / T), v = HIVE.hv[r * LW + c]; if (v && isSolidT(tiles[r * LW + c])) return v; }
+  return 0;
+};
+function hiveSlow() { const v = hiveUnder(); return v && HIVE.nests[v - 1].wither <= 0 ? AL.slow : 1; } // an infested floor slows the bro (see oilSlow)
+function hiveBud(n) { // a hatchling pops out of the growth near the bro (rare, at most budCap alive per nest)
+  n.buds = n.buds.filter((b) => !b.dead); if (n.buds.length >= AL.budCap) return;
+  const base = Math.floor(P.x / T), fr = Math.floor((P.y + P.h + 1) / T), s0 = P.face > 0 ? 1 : -1;
+  for (const k of [-4, 4, -3, 3, -5, 5]) {
+    const c = base + k * s0; if (!alFloorOk(c, fr, 2)) continue;
+    const h = makeEnt({ type: 'alhatch', c, from: fr - 1 }); h.hunt = 5; h.nest = n.id; ents.push(h); n.buds.push(h);
+    gooBurst(h.x + 4, h.y + 4, 6, 0); sfx('squish', h.x); return;
+  }
+}
+function hiveUpdate(dt) { // once a frame: cheap bookkeeping for a handful of nests, the real work twice a second
+  if (!HIVE.nests.length) return;
+  for (const n of HIVE.nests) {
+    if (n.wither > 0) { n.wither -= dt; if (n.wither <= 0) hiveClear(n); continue; }
+    if (n.near && n.count) { // fire and the player's acid clear growth (checked every frame: a flame crosses a tile quickly)
+      for (const f of fx) if ((f.kind === 'fire' || (f.kind === 'acidpool' && f.by === 'p')) && f.t > 0 && Math.abs(f.c * T - n.cx) < 40 * T) hiveBurn(n, f.c, f.r);
+      for (const b of bullets) if (b.kind === 'flame' && !b.dead && b.owner === 'p') hiveBurn(n, Math.floor(b.x / T), Math.floor(b.y / T));
+    }
+    n.tick -= dt; if (n.tick > 0) continue; n.tick = 0.5;
+    if (!n.seeded) { n.seeded = true; for (const m of n.ents) hiveSeed(n, m); }
+    n.ents = n.ents.filter((m) => !m.dead);
+    for (let k = n.tiles.length - 1; k >= 0; k--) { const i = n.tiles[k]; if (HIVE.hv[i] !== n.id + 1 || !isSolidT(tiles[i])) { if (HIVE.hv[i] === n.id + 1) HIVE.hv[i] = 0; n.tiles[k] = n.tiles[n.tiles.length - 1]; n.tiles.pop(); } } // a broken tile takes its growth with it
+    n.count = n.tiles.length;
+    n.near = Math.abs(P.x - n.cx) < 44 * T; if (!n.near) continue;
+    const src = n.ents.reduce((a, m) => a + (m.wilt > 0 ? 0 : 1), 0); // living pods and Brood Mother: each grows one tile every few seconds
+    if (src > 0 && n.count < n.cap) { n.acc += 0.5 * src; while (n.acc >= AL.spreadEvery) { n.acc -= AL.spreadEvery; if (!hiveGrow(n)) { n.acc = 0; break; } } } else if (!src) n.acc = 0;
+    if (src > 0 && hiveUnder() === n.id + 1 && !alQuiet()) { n.bud -= 0.5; if (n.bud <= 0) { n.bud = AL.budEvery + Math.random() * 10; hiveBud(n); } }
+  }
+}
+const alUpdateFx = updateFx;
+updateFx = function (dt, edt) { alUpdateFx(dt, edt); hiveUpdate(dt); };
+const alDrawTiles = drawTiles;
+drawTiles = function (t) { alDrawTiles(t); if (HIVE.nests.length) hiveDraw(t); };
+function hiveDraw(t) { // only the tiles in view
+  const [c0, c1, r0, r1] = viewTiles(), hv = HIVE.hv;
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+    const i = r * LW + c, v = hv[i]; if (!v) continue;
+    if (!isSolidT(tiles[i])) { hv[i] = 0; continue; }
+    const n = HIVE.nests[v - 1], a = n.wither > 0 ? n.wither / AL.wither : 1, h = ahash(i * 0.37), x = c * T, y = r * T, pulse = 0.5 + 0.5 * Math.sin(t * 2.2 + h * 9);
+    if (a < 1) ctx.globalAlpha = a;
+    const up = !isSolidT(tileAt(c, r - 1)), dn = !isSolidT(tileAt(c, r + 1)), lf = !isSolidT(tileAt(c - 1, r)), rt = !isSolidT(tileAt(c + 1, r));
+    if (up) { ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x, y - 1, T, 4); ctx.fillStyle = '#6b2f86'; ctx.fillRect(x + 1, y - 1, T - 2, 2); ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x + 2 + ((h * 8) | 0), y - 3, 3, 2); ctx.fillStyle = pulse > 0.5 ? '#e06ab8' : '#c24fa0'; ctx.fillRect(x + 4 + ((h * 7) | 0), y - 2, 2, 2); ctx.fillRect(x + 11 - ((h * 5) | 0), y - 1, 2, 1); }
+    if (dn) { ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x, y + T - 3, T, 4); ctx.fillStyle = '#6b2f86'; ctx.fillRect(x + 1, y + T - 3, T - 2, 1); ctx.fillStyle = '#c24fa0'; const dx = 3 + ((h * 9) | 0); ctx.fillRect(x + dx, y + T + 1, 1, 2 + (pulse > 0.5 ? 1 : 0)); ctx.fillRect(x + 12 - ((h * 4) | 0), y + T + 1, 1, 1); }
+    if (lf) { ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x - 1, y, 3, T); ctx.fillStyle = '#6b2f86'; ctx.fillRect(x - 1, y + 2, 1, T - 4); ctx.fillStyle = '#c24fa0'; ctx.fillRect(x - 2, y + 3 + ((h * 8) | 0), 1, 2); }
+    if (rt) { ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x + T - 2, y, 3, T); ctx.fillStyle = '#6b2f86'; ctx.fillRect(x + T + 1, y + 2, 1, T - 4); ctx.fillStyle = '#c24fa0'; ctx.fillRect(x + T + 1, y + 4 + ((h * 7) | 0), 1, 2); }
+    if (!up && !dn && !lf && !rt) { ctx.fillStyle = 'rgba(58,29,92,0.55)'; ctx.fillRect(x, y, T, T); }
+    if (a < 1) ctx.globalAlpha = 1;
+  }
+}
+
+// ---- placement (by rule and seeded; entities only, no tile changes)
+const AL_MISSIONS = { 'CROP CIRCLE FIELDS': 1, 'ANCIENT ALIEN TEMPLE': 1 }; // the two campaign missions with a nest (random missions roll their own: see genLevel)
+const AL_KEEP = { flag: 1, cage: 1, target: 1, mechsuit: 1, tanksuit: 1 };
+function alFloorOk(c, r, room) { // a plain solid tile with a solid base under it and `room` open rows over it, not over a shaft
+  if (c < 2 || c >= playW - 2 || r < 4 || r >= GH - 2) return false;
+  const v = tileAt(c, r);
+  if ((v !== DIRT && v !== BRICK && v !== STEEL) || crumbly[r * LW + c] || deep[c]) return false;
+  if (!isSolidT(tileAt(c, r + 1)) || !isSolidT(tileAt(c, r + 2))) return false;
+  for (let k = 1; k <= room; k++) if (tileAt(c, r - k) !== EMPTY) return false;
+  return true;
+}
+function alCeil(c, r, lo = 3, hi = 9) { // the row of a ceiling tile 3-9 rows over floor row r with only open air between (-1: none)
+  for (let j = 1; j <= hi; j++) {
+    const q = r - j, v = tileAt(c, q); if (q < 1) return -1;
+    if (isSolidT(v)) return j >= lo && (v === DIRT || v === BRICK || v === STEEL) && !crumbly[q * LW + c] && tileAt(c, q + 1) === EMPTY ? q : -1;
+    if (v !== EMPTY) return -1;
+  }
+  return -1;
+}
+let alDeco = new Uint8Array(LW); // columns with floor scenery (set by alienPlace from the finished decoration)
+const alSign = (c, d) => decor.some((o) => (o.kind === 'sign' || o.kind === 'plaque') && Math.abs(o.c - c) < d); // a sign or plaque (the wit signs are placed first) keeps its distance
+function alClear(c, gap, avoid) { // far enough from a flag, cage, target or boss spawn and from devices (wind aside), and from earlier nests
+  for (const s of spawns) if (s.c !== undefined && (AL_KEEP[s.type] || s.final) && Math.abs(s.c - c) <= gap) return false;
+  const dg = Math.min(gap, 8); if (alSign(c, Math.max(4, gap - 4))) return false;
+  for (const d of devs) if (d.kind !== 'wind' && d.x1 > (c - dg) * T && d.x0 < (c + dg + 1) * T) return false;
+  for (const [ac, ad] of avoid) if (Math.abs(ac - c) < ad) return false;
+  return true;
+}
+function alSite(R, lo, hi, half, room, gap, avoid) { // flat open floor 2*half+1 columns wide: no ladder near it, no shaft under it, clear of flags and cages
+  const cand = [];
+  for (let c = lo + half; c <= hi - half; c++) for (let r = 5; r < GH - 2; r++) {
+    if (!alFloorOk(c, r, room)) continue;
+    let ok = true;
+    for (let k = -half; k <= half && ok; k++) ok = alFloorOk(c + k, r, room);
+    for (let k = -half - 1; k <= half + 1 && ok; k++) for (let j = 0; j <= 9 && ok; j++) ok = tileAt(c + k, r - j) !== LADDER && tileAt(c + k, r - j) !== ACID;
+    if (ok && !alDeco[c - 1] && !alDeco[c] && !alDeco[c + 1] && alClear(c, half + gap, avoid)) { let free = 0; for (let k = -half - 2; k <= half + 2; k++) if (!alDeco[c + k]) free++; if (free >= half + 3) cand.push(c * 64 + r); } // enough bare columns around it for its pods
+  }
+  if (!cand.length) return null;
+  const v = cand[Math.floor(R() * cand.length)];
+  return [v >> 6, v & 63];
+}
+function alShuffle(R, a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function alNest(R, c, r, big) { // one nest on the floor row r around column c; spawns only
+  const n = hiveNew(), add = (type, col, row, ex) => spawns.push(Object.assign({ type, c: col, from: row - 1, nest: n.id }, ex || {}));
+  const far6 = (col) => !alSign(col, 4) && !alDeco[col] && !spawns.some((s) => s.c !== undefined && AL_KEEP[s.type] && Math.abs(s.c - col) < 6), ok = (col, room = 2) => alFloorOk(col, r, room) && far6(col); // every one of them stays 6 columns from a flag, cage or target
+  if (big) {
+    add('alqueen', c, r);
+    const slots = alShuffle(R, [-5, -4, -3, 3, 4, 5]), want = 4 + (R() < 0.5 ? 1 : 0); let hung = 0, placed = 0;
+    for (const k of alShuffle(R, [-6, -4, 3, 5, -2, 2, 6])) { if (hung) break; const q = far6(c + k) ? alCeil(c + k, r) : -1; if (q >= 0) { add('alpod', c + k, r, { hr: q }); hung++; placed++; } }
+    for (const k of slots) { if (placed >= want) break; if (ok(c + k)) { add('alpod', c + k, r); placed++; } }
+    { const sk = alShuffle(R, [-7, 7, -8, 8, -6, 6, -9, 9, -10, 10, -11, 11]).filter((k) => ok(c + k, 3)), pick = []; for (const sd of [-1, 1]) { const k = sk.find((q) => q * sd > 0); if (k !== undefined) pick.push(k); } for (const k of sk) if (pick.length < 2 && !pick.includes(k) && !pick.some((q) => Math.abs(q - k) < 2)) pick.push(k); for (const k of pick) add('alspit', c + k, r); } // two spitters, one on each side if the ground allows
+    const ceil = alShuffle(R, [-12, -10, -8, 9, 11, 13, -14, 14]).find((k) => { const q = alCeil(c + k, r + 0, 3, 9); return q >= 0 && tileAt(c + k, q + 2) === EMPTY && far6(c + k); });
+    if (ceil !== undefined) add('alcrawl', c + ceil, r, { hr: alCeil(c + ceil, r) });
+    { let n3 = 0; for (const k of alShuffle(R, [-6, 6, -9, 9, -10, 10, -12, 12, -13, 13])) if (n3 < (ceil !== undefined ? 1 : 2) && !spawns.some((q) => q.nest === n.id && q.c === c + k) && ok(c + k)) { add('alcrawl', c + k, r); n3++; } }
+    for (const k of alShuffle(R, [-9, 10, 9, -10, -11, 11])) if (ok(c + k) && ok(c + k + (k < 0 ? -1 : 1))) { add('alhatch', c + k, r); add('alhatch', c + k + (k < 0 ? -1 : 1), r); break; }
+  } else {
+    let hung = false;
+    for (const k of alShuffle(R, [-2, 2, -1, 1, 3, -3])) { if (spawns.filter((s) => s.nest === n.id && s.type === 'alpod').length >= 2) break; const q = !hung && far6(c + k) ? alCeil(c + k, r) : -1; if (q >= 0) { add('alpod', c + k, r, { hr: q }); hung = true; } else if (ok(c + k)) add('alpod', c + k, r); }
+    const kind = R() < 0.5 ? 'alspit' : 'alcrawl', sd = R() < 0.5 ? -1 : 1;
+    for (const k of [3 * sd, -3 * sd, 2 * sd, -2 * sd]) if (ok(c + k, 3) && !spawns.some((q) => q.nest === n.id && q.c === c + k)) { add(kind, c + k, r); break; }
+  }
+  n.c = c; n.r = r; n.cx = c * T;
+  return n;
+}
+function alienPlace() { // called at the end of buildLevel
+  hiveReset();
+  const L = LV(); if (!L) return;
+  alDeco = new Uint8Array(LW); for (const it of fancy.floor) for (let c = it.c; c < it.c + it.n && c < LW; c++) alDeco[c] = 1; // the scenery is placed already: nothing alien stands on a bush, a flag or a rock
+  let R, lo, hi, groups;
+  const fb = spawns.find((o) => o.final && o.ax0 !== undefined), arena = fb ? fb.ax0 : cutAt + stretchW;
+  if (L.gen) { if (!L.gen.alien) return; R = rngOf(L.gen.seed * 7919 + 31); lo = 44; hi = Math.min(arena, ARENA_AT + stretchW) - 10; groups = 1 + (R() < 0.5 ? 1 : 0); }
+  else if (mode === 'campaign' && level < LEVELS.length && AL_MISSIONS[L.name]) { R = rngOf(seedN(level) * 131 + 977); lo = cutAt + 2; hi = Math.min(arena, cutAt + stretchW) - 4; groups = 2 + (R() < 0.5 ? 1 : 0); }
+  else return;
+  const taken = [], big = alSite(R, lo, hi, 3, 4, 6, taken);
+  if (big) { alNest(R, big[0], big[1], true); taken.push([big[0], 18]); }
+  for (let g = 0; g < groups; g++) {
+    const gh = Math.min(arena, cutAt + stretchW) - 8, s = alSite(R, 30, gh, 2, 3, 4, taken) || alSite(R, 30, gh, 1, 3, 4, taken);
+    if (s) { alNest(R, s[0], s[1], false); taken.push([s[0], 20]); }
+  }
+}
+
+// ---- making them
+function alienInit(e, s) { // called from makeEnt: no Math.random here (a level must build the same way twice)
+  const h = ahash(s.c * 31 + (s.from || 0) * 7 + e.type.length * 3);
+  e.cool = 1 + h * 1.5; e.hunt = 0; e.state = 'idle'; e.home = e.x; e.wt = 1 + h * 2; e.walk = h < 0.5; e.face = h < 0.5 ? 1 : -1;
+  if (e.type === 'alhatch') { e.lr = 52 + h * 28; e.cool = 0; } // the bro this far away (px, 3.5-5 tiles) and it leaps
+  if (e.type === 'alspit') { e.wind = 0; e.cool = AL.spitMin + h; }
+  if (e.type === 'alcrawl') {
+    e.dirn = h < 0.5 ? 1 : -1; e.tell = 0; e.bite = 0; e.ts = -1; e.cool = 0.4;
+    if (s.hr !== undefined) crawlAttach(e, s.c, s.hr, 2, 8);
+    else crawlAttach(e, s.c, Math.floor((e.y + e.h + 1) / T), 0, 8);
+  }
+  if (e.type === 'alpod') { e.wob = 0; e.wilt = 0; if (s.hr !== undefined) { e.hang = true; e.hc = s.c; e.hr = s.hr; e.y = (s.hr + 1) * T + 0.01; } }
+  if (e.type === 'alqueen') { e.hp = e.max = Math.max(1, Math.round(AL.queenHp * DF().boss)); e.seen = false; e.act = null; e.at = 0; e.cyc = 0; e.cool = 2.5; }
+  if (e.type === 'alpod' || e.type === 'alqueen') { const n = s.nest !== undefined && HIVE.nests[s.nest] ? HIVE.nests[s.nest] : hiveNew(); e.nest = n.id; n.ents.push(e); n.cx = e.x; }
+}
+function gooBurst(x, y, n, vx0) { // their own goo, or just dust with gore off
+  const g = settings.gore | 0;
+  if (!g) { for (let i = 0; i < Math.min(n, 4); i++) part(x, y, rand(-40, 40), rand(-60, -10), '#8b84a6', 0.4, 2, 0, 'smoke'); return; }
+  for (let i = 0; i < n * (g === 2 ? 2 : 1); i++) part(x + rand(-3, 3), y + rand(-3, 3), vx0 + rand(-130, 130), rand(-230, -30), i % 3 ? '#7df0c8' : '#37d6c0', rand(0.5, 1.1), 1 + (i % 2), G, 'blood');
+}
+function alienDie(e, how) { // killEnemy hands every alien over here
+  const [cx, cy] = center(e), big = e.type === 'alqueen';
+  addScore(ALIEN_PTS[e.type], true, cx, cy - 10);
+  sfx(big ? 'roar' : 'squish', cx);
+  gooBurst(cx, cy, big ? 40 : e.type === 'alhatch' ? 6 : 10, e.kx * 0.3);
+  for (let i = 0; i < (big ? 14 : e.type === 'alhatch' ? 2 : 4); i++) chunk(cx + rand(-e.w / 3, e.w / 3), cy + rand(-e.h / 3, e.h / 3), rand(-160, 160), rand(-260, -60), i % 2 ? '#4b2a7a' : '#7df0c8');
+  if (how === 'burn') for (let i = 0; i < 4; i++) part(cx, cy, rand(-30, 30), rand(-60, -20), '#4b4766', rand(0.6, 1.2), rand(3, 5), 0, 'smoke');
+  if (big) {
+    const n = HIVE.nests[e.nest];
+    if (n) { n.wither = AL.wither; for (const m of n.ents) if (m !== e && !m.dead) { m.wilt = AL.wither * 0.9; m.wob = 0; } } // every pod and all the growth of this nest wither
+    bigKill(cx, cy); shake = Math.max(shake, 6);
+    showBanner('BROOD MOTHER DOWN', 'the nest withers · +' + ALIEN_PTS.alqueen, 3);
+  }
+}
+
+// ---- the brains
+function alTouch(e, pad) { // does e overlap the bro's hurtbox (grown by pad)? Only when he can be hurt
+  if (!P.alive || P.inv > 0 || alQuiet() || Math.abs(P.x - e.x) > 40) return false;
+  const h = hurtbox();
+  return e.x - pad < h.x + h.w && e.x + e.w + pad > h.x && e.y - pad < h.y + h.h && e.y + e.h + pad > h.y;
+}
+function updateAlien(e, dt) {
+  const far = Math.abs(e.x + e.w / 2 - P.x - 5) > 540 || Math.abs(e.y - P.y) > 360;
+  if (far && (e.onGround || e.hang || e.ts >= 0) && e.type !== 'alqueen' && !(e.wilt > 0) && !(e.wob > 0)) { e.vy = 0; return; } // asleep when far away: no work
+  switch (e.type) {
+    case 'alhatch': alHatch(e, dt); break;
+    case 'alcrawl': alCrawl(e, dt); break;
+    case 'alspit': alSpit(e, dt); break;
+    case 'alpod': alPod(e, dt); break;
+    case 'alqueen': alQueen(e, dt); break;
+  }
+}
+function alHatch(e, dt) { // scuttles at the bro and leaps at him from 3.5-5 tiles; one hit kills it
+  e.cool -= dt; e.hop = (e.hop || 0) - dt; if (e.hunt > 0) e.hunt -= dt;
+  const ex = e.x + e.w / 2, pcx = P.x + P.w / 2, dx = pcx - ex, dy = P.y + P.h / 2 - (e.y + e.h / 2), q = alQuiet();
+  if (!q && P.alive && !(e.hunt > 0) && onScreen(e) && Math.abs(dx) < 210 && Math.abs(dy) < 80 && los(ex, e.y + 2, pcx, P.y + 6)) { e.hunt = 4; floatText(ex, e.y - 6, '!', '#7df0c8'); sfx('alert', ex); }
+  if (q || !P.alive) { e.hunt = 0; e.rush = false; }
+  let want = 0;
+  if (!e.onGround) want = e.leapV || 0; // a leap keeps its speed in the air
+  else {
+    e.leapV = 0;
+    if (e.hunt > 0) {
+      e.face = dx > 0 ? 1 : -1;
+      if (e.cool <= 0 && Math.abs(dx) <= (e.rush ? 100 : e.lr) && Math.abs(dy) < 44) { e.vy = AL.leapV; e.leapV = e.face * clamp(Math.abs(dx) / 0.5, 110, 210); want = e.leapV; e.cool = AL.leapCool; sfx('leap', ex); }
+      else want = e.face * (e.rush ? AL.hatchRush : AL.hatchRun);
+      if (e.wall && e.hop <= 0) { e.vy = -250; e.hop = 0.4; } // hop a one-tile step
+    } else {
+      e.wt -= dt; if (e.wt <= 0) { e.wt = rand(1, 3); e.walk = Math.random() < 0.6; if (Math.random() < 0.4) e.face *= -1; }
+      if (e.walk) { const ahead = e.x + (e.face > 0 ? e.w + 2 : -2); if (!solidPx(ahead, e.y + e.h + 4) || solidPx(ahead, e.y + 3)) e.face *= -1; want = e.face * 22; }
+    }
+  }
+  e.vx = want + e.kx; moveBody(e, dt);
+  if (alTouch(e, -1)) killPlayer('shot', e.face);
+}
+// -- the crawler clings to a solid tile (e.tc, e.tr) on side e.ts (0 top, 1 right, 2 bottom, 3 left) at u px along that edge (clockwise); e.dirn is +1 clockwise, -1 the other way
+const AL_N = [[0, -1], [1, 0], [0, 1], [-1, 0]], AL_TG = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // outward normals and clockwise tangents of the four sides
+function crawlPlace(e) {
+  const s = e.ts, u = e.tu, c = e.tc, r = e.tr, n = AL_N[s];
+  const px = s === 0 ? c * T + u : s === 1 ? (c + 1) * T : s === 2 ? c * T + T - u : c * T, py = s === 0 ? r * T : s === 1 ? r * T + u : s === 2 ? (r + 1) * T : r * T + T - u;
+  e.w = s & 1 ? 9 : 12; e.h = s & 1 ? 12 : 9;
+  e.x = px + n[0] * 4.52 - e.w / 2; e.y = py + n[1] * 4.52 - e.h / 2; // 4.52: a hair off the tile
+}
+function crawlAttach(e, c, r, s, u) { e.tc = c; e.tr = r; e.ts = s; e.tu = u; e.state = 'cling'; e.vy = 0; crawlPlace(e); }
+function crawlStep(e, d) { // d px along the surface; round inside and outside corners, onto the next tile
+  e.tu += d;
+  for (let g = 0; g < 2; g++) {
+    const s = e.ts, n = AL_N[s], t = AL_TG[s], sg = d > 0 ? 1 : -1, ec = e.tc + sg * t[0], er = e.tr + sg * t[1]; // ec, er: the tile ahead along the surface
+    if (sg > 0 ? e.tu >= 10 : e.tu <= 6) {
+      const over = sg > 0 ? e.tu - 10 : 6 - e.tu, nu = sg > 0 ? 6 + over : 10 - over;
+      if (isSolidT(tileAt(ec + n[0], er + n[1]))) { e.tc = ec + n[0]; e.tr = er + n[1]; e.ts = (s + (sg > 0 ? 3 : 1)) & 3; e.tu = nu; return; } // a wall ahead: climb it
+      if (!isSolidT(tileAt(ec, er))) { e.ts = (s + (sg > 0 ? 1 : 3)) & 3; e.tu = nu; return; } // the edge: round it to the other face of this tile
+    }
+    if (sg > 0 ? e.tu >= 16 : e.tu <= 0) { e.tc = ec; e.tr = er; e.tu += sg > 0 ? -16 : 16; continue; }
+    return;
+  }
+}
+function crawlFree(e) { const cx = e.x + e.w / 2, cy = e.y + e.h / 2; e.w = 12; e.h = 9; e.x = cx - 6; e.y = cy - 4.5; e.ts = -1; e.vy = 0; e.vx = 0; }
+function alCrawl(e, dt) { // walks floors, walls and ceilings; drops from a ceiling onto the bro; bites at close range
+  e.cool -= dt; if (e.hunt > 0) e.hunt -= dt;
+  if (e.state === 'drop' || e.state === 'fall' || e.state === 'stun') {
+    if (e.state === 'stun') e.st -= dt;
+    e.vx = 0; moveBody(e, dt);
+    if (e.state !== 'stun' && alTouch(e, e.state === 'drop' ? 1 : -2)) killPlayer('shot', e.face);
+    if (e.onGround && e.state !== 'stun') { e.state = 'stun'; e.st = 0.5; sfx('thud', e.x); dust(e.x + 6, e.y + e.h, 2, 50); }
+    else if (e.state === 'stun' && e.st <= 0) { // back on its feet: cling to the floor it landed on
+      const c = Math.floor((e.x + 6) / T), r = Math.floor((e.y + e.h + 1) / T);
+      if (isSolidT(tileAt(c, r))) crawlAttach(e, c, r, 0, clamp(e.x + 6 - c * T, 6, 10)); else e.st = 0.3;
+    }
+    return;
+  }
+  if (!isSolidT(tileAt(e.tc, e.tr))) { crawlFree(e); e.state = 'fall'; return; } // its tile is gone: it falls and recovers
+  e.vy = 0; e.vx = 0;
+  const q = alQuiet(), ecx = e.x + e.w / 2, ecy = e.y + e.h / 2, dx = P.x + P.w / 2 - ecx, dy = P.y + P.h / 2 - ecy;
+  if (!q && P.alive && onScreen(e) && Math.abs(dx) < 190 && Math.abs(dy) < 120) e.hunt = 3;
+  if (q || !P.alive) e.hunt = 0;
+  if (e.bite > 0) { // the bite: jaws open for a moment, then snap
+    e.bite -= dt;
+    if (e.bite <= 0) { if (alTouch(e, 4)) killPlayer('shot', Math.sign(dx)); e.cool = 1; }
+    crawlPlace(e); return;
+  }
+  if (e.tell > 0) { // the drop: it shivers over the bro, then lets go
+    e.tell -= dt;
+    if (e.tell <= 0) { crawlFree(e); e.state = 'drop'; e.vy = 40; sfx('leap', ecx); return; }
+    else { crawlPlace(e); e.x += Math.sin(e.t * 90) * 0.8; return; }
+  }
+  if (e.ts === 2 && !q && P.alive && Math.abs(dx) < 11 && dy > 8 && dy < 150 && los(ecx, e.y + e.h, P.x + 5, P.y + 4)) { e.tell = 0.35; sfx('alert', ecx); return; }
+  if (e.hunt > 0 && e.cool <= 0 && Math.abs(dx) < 17 && Math.abs(dy) < 17) { e.bite = 0.28; sfx('hiss', ecx); return; }
+  if (e.hunt > 0) { const t = AL_TG[e.ts], dot = dx * t[0] + dy * t[1]; if (Math.abs(dot) > 5) e.dirn = dot > 0 ? 1 : -1; }
+  else { e.wt -= dt; if (e.wt <= 0) { e.wt = rand(4, 9); if (Math.random() < 0.5) e.dirn = -e.dirn; } if (Math.abs(ecx - e.home) > 150 && e.ts !== 1 && e.ts !== 3) e.dirn = (ecx > e.home ? -1 : 1) * AL_TG[e.ts][0]; }
+  crawlStep(e, e.dirn * (e.hunt > 0 ? AL.crawlChase : AL.crawlWalk) * dt);
+  crawlPlace(e);
+}
+function alSpit(e, dt) { // stands still or shuffles; a wind-up tell, then an arcing glob
+  e.vx = 0; const q = alQuiet(), ex = e.x + e.w / 2, dx = P.x + P.w / 2 - ex, dy = P.y + P.h / 2 - (e.y + e.h / 2);
+  if (e.wind > 0) {
+    e.wind -= dt; e.face = dx > 0 ? 1 : -1; if (Math.random() < 0.5) part(ex + e.face * 5, e.y + 4, rand(-10, 10), rand(10, 40), '#a6ff6a', 0.4, 1, G);
+    if (q || !P.alive) e.wind = 0;
+    else if (e.wind <= 0) { // fire: aimed at where the bro will be
+      const hx = ex + e.face * 5, hy = e.y + 3, t = 0.9, px = P.x + P.w / 2 + P.vx * 0.4, py = P.y + P.h / 2;
+      bullets.push({ x: hx, y: hy, vx: (px - hx) / t, vy: Math.max((py - hy - 0.5 * 600 * t * t) / t, -420), grav: 600, owner: 'e', kind: 'glob', life: 4, dmg: 1 });
+      sfx('spit', ex); e.cool = Math.max(0, rand(AL.spitMin, AL.spitMax) / clamp(diff.fire, 0.8, 1.25) - AL.spitWind); // 2-3 s from shot to shot, the tell included; the campaign ramp stretches it a little early on
+    }
+  } else {
+    e.cool = Math.max(0, e.cool - dt);
+    if (!q && P.alive && onScreen(e) && Math.abs(dx) < 270 && Math.abs(dy) < 150) { e.face = dx > 0 ? 1 : -1; if (e.cool <= 0) { e.wind = AL.spitWind; sfx('hiss', ex); } }
+    else { e.wt -= dt; if (e.wt <= 0) { e.wt = rand(1.5, 4); e.walk = Math.random() < 0.4; if (Math.random() < 0.5) e.face *= -1; } if (e.walk && e.onGround) { const ahead = e.x + (e.face > 0 ? e.w + 2 : -2); if (!solidPx(ahead, e.y + e.h + 4) || solidPx(ahead, e.y + 3) || Math.abs(e.x - e.home) > 26) e.face = e.x > e.home ? -1 : 1; e.vx = e.face * 12; } }
+  }
+  e.vx += e.kx; moveBody(e, dt);
+}
+function alHatchPod(e) { // the pod bursts: two hatchlings
+  e.dead = true; const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+  gooBurst(cx, cy, 14, 0); sfx('squish', cx);
+  for (let i = 0; i < 4; i++) chunk(cx, cy, rand(-120, 120), rand(-200, -50), i % 2 ? '#6a4a90' : '#7df0c8');
+  for (let k = 0; k < 2; k++) {
+    const h = makeEnt({ type: 'alhatch', c: 0, y: e.y + e.h - 7 }); h.x = cx - 4 + (k ? 5 : -5); h.hunt = 5; h.face = k ? 1 : -1; h.kx = (k ? 1 : -1) * 70; h.vy = -110; h.nest = e.nest; h.lr = rand(52, 80); ents.push(h);
+  }
+  if (!AL.hatched) { AL.hatched = true; showBanner('WELL, THAT WAS REAL', 'the League sold tickets to this', 2.2); } else if (Math.random() < 0.3) floatText(cx, e.y - 8, ['NOT A HOAX', 'SURPRISE', 'PEER REVIEWED'][(Math.random() * 3) | 0], '#7df0c8');
+}
+function alPod(e, dt) { // sits still; the bro within 4 tiles sets off a 0.6 s wobble, then it bursts
+  if (e.wilt > 0) { e.wilt -= dt; e.vx = 0; if (!e.hang) moveBody(e, dt); if (e.wilt <= 0) { e.dead = true; gooBurst(e.x + 5, e.y + 6, 5, 0); } return; }
+  if (e.hang) { e.vy = 0; if (!isSolidT(tileAt(e.hc, e.hr))) e.hang = false; } else { e.vx = 0; moveBody(e, dt); }
+  if (e.wob > 0) { e.wob -= dt; if (e.wob <= 0) alHatchPod(e); return; }
+  if (alQuiet() || !P.alive) return;
+  const ex = e.x + e.w / 2, ey = e.y + e.h / 2, px = P.x + P.w / 2, py = P.y + P.h / 2;
+  if (Math.abs(px - ex) < AL.podRange && Math.abs(py - ey) < AL.podRange && Math.hypot(px - ex, py - ey) < AL.podRange && los(ex, ey, px, py)) { e.wob = AL.podWobble; sfx('hiss', ex); }
+}
+function alLay(q) { // the Brood Mother lays a pod on the floor near her, up to the cap
+  const n = HIVE.nests[q.nest]; if (!n) return false;
+  const pods = n.ents.filter((m) => m.type === 'alpod' && !m.dead && !(m.wilt > 0));
+  if (pods.length >= AL.queenCap) return false;
+  const qc = Math.floor((q.x + q.w / 2) / T), fr = Math.round((q.y + q.h) / T), ks = [-5, 5, -4, 4, -3, 3, -6, 6, -2, 2], s0 = (Math.random() * ks.length) | 0;
+  for (let i = 0; i < ks.length; i++) {
+    const c = qc + ks[(s0 + i) % ks.length];
+    if (!alFloorOk(c, fr, 2) || pods.some((p) => Math.abs(p.x + 5 - (c * T + 8)) < 9)) continue;
+    const p = makeEnt({ type: 'alpod', c, from: fr - 1, nest: n.id }); ents.push(p);
+    gooBurst(p.x + 5, p.y + 6, 6, 0); sfx('squish', p.x); return true;
+  }
+  return false;
+}
+function alQueen(e, dt) { // rooted in her nest: spits fans of acid, lays pods, screeches to bring the hatchlings
+  e.vx = 0; moveBody(e, dt); e.vy = Math.min(e.vy, 0);
+  const cx = e.x + e.w / 2, n = HIVE.nests[e.nest];
+  if (!e.seen) { if (P.alive && !alQuiet() && onScreen(e)) { e.seen = true; showBanner('THE BROOD MOTHER', 'not plywood · not a hoax · not insured', 2.6); sfx('roar', cx); } return; }
+  if (P.alive) e.face = P.x + 5 > cx ? 1 : -1;
+  if (e.act) {
+    e.at -= dt; if (Math.random() < 0.4) part(cx + e.face * 14, e.y + 14, rand(-20, 20), rand(10, 50), e.act === 'lay' ? '#c24fa0' : '#a6ff6a', 0.4, 1, G);
+    if (e.at > 0) return;
+    const act = e.act; e.act = null; e.cool = e.hp < e.max / 2 ? 1.8 : 2.6;
+    if (!P.alive || alQuiet()) return;
+    if (act === 'spit') { // a fan of 3 globs (5 when she is hurt)
+      const hx = cx + e.face * 16, hy = e.y + 10, t = 1, px = P.x + P.w / 2 + P.vx * 0.4, py = P.y + P.h / 2, k = e.hp < e.max / 2 ? 5 : 3;
+      for (let i = 0; i < k; i++) bullets.push({ x: hx, y: hy, vx: (px - hx) / t + (i - (k - 1) / 2) * 48, vy: Math.max((py - hy - 0.5 * 600 * t * t) / t, -420), grav: 600, owner: 'e', kind: 'glob', life: 4, dmg: 1 });
+      sfx('spit', cx);
+    } else if (act === 'lay') alLay(e);
+    else { shake = Math.max(shake, 3); sfx('roar', cx); floatText(cx, e.y - 14, 'SKREEEE', '#e7eaf6'); for (const o of ents) if (o.type === 'alhatch' && !o.dead && (onScreen(o) || Math.abs(o.x - e.x) < 400)) { o.hunt = 7; o.rush = true; } } // every hatchling on screen rushes
+    return;
+  }
+  if (!P.alive || alQuiet()) return;
+  e.cool -= dt; if (e.cool > 0) return;
+  if (Math.abs(P.x - cx) > 340 || Math.abs(P.y - e.y) > 220) return;
+  const pods = n ? n.ents.filter((m) => m.type === 'alpod' && !m.dead && !(m.wilt > 0)).length : 9, hatch = ents.some((o) => o.type === 'alhatch' && !o.dead && onScreen(o));
+  const seq = ['spit', 'lay', 'spit', 'screech'], want = seq[e.cyc++ % 4];
+  e.act = want === 'lay' && pods >= AL.queenCap ? 'spit' : want === 'screech' && !hatch ? 'spit' : want; e.at = e.act === 'spit' ? 0.9 : e.act === 'lay' ? 0.7 : 0.8; sfx('hiss', cx);
+}
+
+// ---- drawing: fillRect pixel art, nothing cached per entity
+const ALC = { dark: '#2a1646', body: '#4b2a7a', mid: '#6f45a8', hi: '#9a73d6', teal: '#37d6c0', eye: '#ffd23a', goo: '#7df0c8', flesh: '#c24fa0' };
+function drawAlien(e, t) {
+  const x = Math.round(e.x), y = Math.round(e.y), fl = e.flash > 0, f = e.face > 0;
+  switch (e.type) {
+    case 'alhatch': {
+      const air = !e.onGround, fr = Math.floor(e.t * 16) % 2, B = fl ? '#fff' : ALC.body, M = fl ? '#fff' : ALC.mid;
+      ctx.fillStyle = ALC.dark; // legs
+      if (air) ctx.fillRect(mxs(f, x, 8, 0, 5), y + 5, 5, 1);
+      else { ctx.fillRect(mxs(f, x, 8, 1 + fr, 1), y + 5, 1, 2); ctx.fillRect(mxs(f, x, 8, 3, 1), y + 5, 1, 2); ctx.fillRect(mxs(f, x, 8, 5 - fr, 1), y + 5, 1, 2); }
+      ctx.fillStyle = B; ctx.fillRect(mxs(f, x, 8, 0, 6), y + 1, 6, 4);
+      ctx.fillStyle = M; ctx.fillRect(mxs(f, x, 8, 0, 6), y + 4, 6, 1); ctx.fillRect(mxs(f, x, 8, 5, 3), y + 2, 3, 3);
+      ctx.fillStyle = ALC.teal; ctx.fillRect(mxs(f, x, 8, 1, 1), y, 1, 1); ctx.fillRect(mxs(f, x, 8, 3, 1), y, 1, 1);
+      ctx.fillStyle = ALC.eye; ctx.fillRect(mxs(f, x, 8, 6, 1), y + 2, 1, 1);
+      ctx.fillStyle = '#fff'; ctx.fillRect(mxs(f, x, 8, 7, 1), y + 4, 1, 1);
+      break;
+    }
+    case 'alcrawl': {
+      const cx = Math.round(e.x + e.w / 2), cy = Math.round(e.y + e.h / 2), fr = Math.floor(e.t * 8) % 2, open = e.bite > 0 || e.tell > 0;
+      const B = fl ? '#fff' : '#3b2a66', M = fl ? '#fff' : '#5d46a0';
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(e.ts < 0 ? 0 : [0, Math.PI / 2, Math.PI, -Math.PI / 2][e.ts]); if (e.dirn < 0 && e.ts >= 0) ctx.scale(-1, 1); // local: up is away from the tile, right is the way it walks
+      ctx.fillStyle = ALC.dark; for (let k = 0; k < 4; k++) ctx.fillRect(-5 + k * 3 + ((k + fr) & 1), 3, 1, 2);
+      ctx.fillStyle = B; ctx.fillRect(-6, -3, 10, 6); ctx.fillStyle = M; ctx.fillRect(-5, -4, 8, 1); ctx.fillRect(-6, 2, 10, 1);
+      ctx.fillStyle = '#2a1c4c'; ctx.fillRect(-3, -3, 1, 6); ctx.fillRect(0, -3, 1, 6);
+      ctx.fillStyle = fl ? '#fff' : ALC.body; ctx.fillRect(4, -2, 2, 5);
+      ctx.fillStyle = '#ff6a3a'; ctx.fillRect(4, -1, 1, 1);
+      ctx.fillStyle = open ? ALC.eye : '#e8e0ff'; if (open) { ctx.fillRect(6, -2, 1, 2); ctx.fillRect(6, 1, 1, 2); } else ctx.fillRect(6, 0, 1, 2);
+      ctx.restore();
+      break;
+    }
+    case 'alspit': {
+      const w = e.wind > 0, B = fl ? '#fff' : '#2f6a5a', M = fl ? '#fff' : '#4f9a7a', fr = Math.floor(e.t * 6) % 2;
+      ctx.fillStyle = '#1d3a33'; ctx.fillRect(mxs(f, x, 12, 3, 2), y + 12, 2, 2); ctx.fillRect(mxs(f, x, 12, 7 + (e.vx ? fr : 0), 2), y + 12, 2, 2);
+      ctx.fillStyle = B; ctx.fillRect(mxs(f, x, 12, 2, 8), y + 5, 8, 8); ctx.fillStyle = M; ctx.fillRect(mxs(f, x, 12, 3, 6), y + 10, 6, 3);
+      ctx.fillStyle = w ? (Math.floor(e.t * 20) % 2 ? '#e8ffc0' : '#a6ff6a') : ALC.goo; const g = w ? 6 : 4; ctx.fillRect(mxs(f, x, 12, 6 - g / 2, g), y + 8 - (w ? 1 : 0), g, g); // the glob swells in the chest
+      ctx.fillStyle = fl ? '#fff' : '#3f8a72'; ctx.fillRect(mxs(f, x, 12, 6, 5), y + 1 + (w ? -1 : 0), 5, 5);
+      ctx.fillStyle = '#1d3a33'; ctx.fillRect(mxs(f, x, 12, 9, 3), y + 2 + (w ? -1 : 0), 3, w ? 4 : 3);
+      ctx.fillStyle = ALC.eye; ctx.fillRect(mxs(f, x, 12, 7, 1), y + 2 + (w ? -1 : 0), 1, 1);
+      ctx.fillStyle = ALC.teal; ctx.fillRect(mxs(f, x, 12, 2, 1), y + 5, 1, 2); ctx.fillRect(mxs(f, x, 12, 4, 1), y + 4, 1, 2);
+      break;
+    }
+    case 'alpod': {
+      const wob = e.wob > 0, wl = e.wilt > 0, ox = wob ? Math.round(Math.sin(e.t * 70) * 1.4) : 0, a = wl ? clamp(e.wilt / (AL.wither * 0.9), 0, 1) : 1;
+      if (a < 1) ctx.globalAlpha = a;
+      if (e.hang) { ctx.fillStyle = '#4a2a6a'; ctx.fillRect(x + 4 + ox, e.hr * T + T - 1, 2, y - e.hr * T - T + 3); ctx.fillStyle = ALC.flesh; ctx.fillRect(x + 3 + ox, e.hr * T + T - 1, 4, 2); }
+      const W = [4, 6, 8, 10, 10, 10, 10, 10, 8, 8, 6, 4], sh = fl ? '#fff' : wl ? '#6a5a4a' : '#6a4a90', dk = fl ? '#fff' : wl ? '#4a3a2a' : '#4b2f70';
+      for (let k = 0; k < 12; k++) { const w = W[k]; ctx.fillStyle = sh; ctx.fillRect(x + ox + (10 - w) / 2, y + k, w, 1); ctx.fillStyle = dk; ctx.fillRect(x + ox + (10 - w) / 2 + w - 2, y + k, 2, 1); }
+      ctx.fillStyle = ALC.hi; ctx.fillRect(x + ox + 2, y + 3, 1, 2); ctx.fillRect(x + ox + 4, y + 8, 1, 1);
+      if (!wl) { ctx.fillStyle = wob ? '#e8ffc0' : (Math.floor(t * 2 + x) % 2 ? ALC.goo : '#37d6c0'); ctx.fillRect(x + ox + 4, y + 4, 2, wob ? 5 : 3); } // the slit glows, wide open as it hatches
+      if (a < 1) ctx.globalAlpha = 1;
+      break;
+    }
+    case 'alqueen': drawQueen(e, x, y, fl, f, t); break;
+  }
+}
+const QUEEN_ROWS = [[9, 10, 18], [10, 7, 24], [11, 5, 28], [12, 3, 32], [13, 3, 32], [14, 1, 36], [15, 1, 36], [16, 1, 36], [17, 1, 36], [18, 1, 36], [19, 0, 40], [20, 0, 40], [21, 0, 40], [22, 0, 40], [23, 0, 40], [24, 0, 40], [25, 0, 40], [26, 0, 40], [27, 1, 38], [28, 1, 38], [29, 1, 38], [30, 2, 36], [31, 2, 36]]; // y, x, width of her body, a dome
+function drawQueen(e, x, y, fl, f, t) {
+  const R = (dx, dy, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(mxs(f, x, 40, dx, w), y + dy, w, h); };
+  const spit = e.act === 'spit', lay = e.act === 'lay', scr = e.act === 'screech', br = Math.sin(t * 2.5) > 0 ? 0 : 1, hy = (scr ? -3 : 0) + br;
+  const D = fl ? '#fff' : '#3a1d5c', M = fl ? '#fff' : '#5b2f8a', H = fl ? '#fff' : '#7a4fb0', K = fl ? '#fff' : ALC.teal;
+  for (const [ry, rx, rw] of QUEEN_ROWS) { R(rx, ry, rw, 1, ry < 11 || ry > 27 ? D : ry < 14 ? M : ry > 24 ? D : M); }
+  if (!fl) { R(11, 9, 14, 1, H); R(8, 10, 20, 1, H); R(6, 11, 24, 1, H); R(4, 12, 28, 1, H); for (const dx of [9, 15, 21, 27]) R(dx, 13, 1, 17, '#2a1646'); R(3, 22, 34, 1, '#2a1646'); for (const dx of [6, 13, 20, 27]) { R(dx, 5, 2, 3, K); R(dx + 1, 4, 1, 1, K); } }
+  R(0, 14, 9, 14, H); R(1, 12, 7, 2, H); const egg = lay ? '#e8ffc0' : Math.sin(t * 3) > 0 ? ALC.goo : '#37d6c0'; if (!fl) { R(2, 15, 3, 3, egg); R(5, 19, 3, 3, egg); R(2, 22, 3, 3, egg); } // the egg sac on her back
+  if (lay) R(0, 29, 5 + br, 5, ALC.flesh);
+  R(26, 5 + hy, 14, 15, M); R(25, 7 + hy, 2, 12, D); R(28, 3 + hy, 10, 3, K); R(31, 1 + hy, 2, 2, K); R(35, 1 + hy, 2, 2, K); // head and crest
+  R(35, 8 + hy, 3, 3, fl ? '#fff' : ALC.eye); R(31, 8 + hy, 2, 2, fl ? '#fff' : ALC.eye); R(36, 12 + hy, 2, 2, fl ? '#fff' : '#ff6a3a');
+  const open = spit || scr ? 7 : 3; R(33, 14 + hy, 7, open, '#1a0b2e'); R(38, 13 + hy, 2, 3, '#e8e0ff'); R(38, 14 + hy + open - 1, 2, 3, '#e8e0ff');
+  if (spit) R(31, 16 + hy, 6, 5, Math.floor(t * 20) % 2 ? '#e8ffc0' : '#a6ff6a');
+  if (scr) { ctx.strokeStyle = '#e7eaf6'; ctx.globalAlpha = 0.6; const cx = f ? x + 38 : x + 2; ctx.beginPath(); ctx.arc(cx, y + 15, 8 + (t * 40 % 10), f ? -0.9 : Math.PI - 0.9, f ? 0.9 : Math.PI + 0.9); ctx.stroke(); ctx.globalAlpha = 1; }
+  for (const dx of [4, 12, 21, 30]) R(dx, 31, 6, 3, fl ? '#fff' : '#2a1646');
+  if (e.seen) { const fr = clamp(e.hp / e.max, 0, 1); ctx.fillStyle = '#0d0b18'; ctx.fillRect(x + 3, y - 10, 34, 6); ctx.fillStyle = '#3a1d5c'; ctx.fillRect(x + 4, y - 9, 32, 4); ctx.fillStyle = '#e0407a'; ctx.fillRect(x + 4, y - 9, Math.ceil(32 * fr), 4); ctx.fillStyle = '#ff9ac0'; ctx.fillRect(x + 4, y - 9, Math.ceil(32 * fr), 1); }
 }
 
 // ---------------------------------------------------------------- bro-mech
@@ -9503,6 +9973,7 @@ function drawEnt(e, t) {
       if (e.dive || Math.floor(t * 3) % 2) { ctx.fillStyle = '#ff3a2a'; ctx.fillRect(x + 4, y + 3, 2, 1); }
       break;
     }
+    case 'alhatch': case 'alcrawl': case 'alspit': case 'alpod': case 'alqueen': drawAlien(e, t); break; // round 10
     case 'dog': {
       const fr = !e.onGround ? 2 : Math.abs(e.vx) > 12 ? Math.floor(e.rp * 1.5) % 2 : 3;
       ctx.drawImage((e.flash > 0 ? DOG_W : DOG)[fr][f], x - 2, y - 1);
@@ -10993,6 +11464,7 @@ function mapMarks(g, ox, oy, k, c0, c1, blink) {
     else if (e.type === 'mechsuit') dot(e.x + 10, e.y + 12, '#f2c94c', k);
     else if (e.type === 'tanksuit') dot(e.x + 15, e.y + 9, '#5fd0c4', k);
     else if (BOSS[e.type]) dot(e.x + e.w / 2, e.y + e.h / 2, '#e78ac3', 3 * k);
+    else if (e.type === 'alqueen') dot(e.x + e.w / 2, e.y + e.h / 2, '#c24fa0', 3 * k);
     else if (foe(e)) dot(e.x + e.w / 2, e.y + e.h / 2, '#ff5a4a', k);
   }
   if (chopper) dot(chopper.x, chopper.y + 20, '#ffffff', 2 * k);
@@ -11673,7 +12145,7 @@ const gfxDark = () => (ev && ev.name === 'blackout') || ugDark() > 0; // a black
 const GFX_QUIET = ['zeroG', 'jam', 'fervor', 'brave', 'bug', 'hacked', 'react', 'huh', 'chute']; // one-off extras around a quack (bubble, static, halo, pennant, moth, text, marks): kept out of the silhouette
 function gfxQuiet(o, keys, saved) { for (const k of keys) if (o[k]) { saved.push(k, o[k]); o[k] = 0; } }
 function gfxRestore(o, saved) { for (let i = 0; i < saved.length; i += 2) o[saved[i]] = saved[i + 1]; }
-const gfxOutlined = (e) => !e.dead && (e.type === 'dog' || isQuack(e)) && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32;
+const gfxOutlined = (e) => !e.dead && (e.type === 'dog' || isQuack(e) || ALIEN_SMALL[e.type]) && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32;
 const gfxBroOutlined = () => P.alive && !P.ride && !P.mech && !(P.inv > 0 && Math.floor(P.inv * 15) % 2);
 let gfxT = 0, gfxRimDue = false, gfxN = 0; // the render time of this frame (from drawTiles), whether layer c waits to be drawn, how many characters the last pass held
 function gfxOutlinePass() {
@@ -11738,7 +12210,7 @@ drawTiles = function (t) { gfxT = t; g9DrawTiles(t); gfxAO(); };
 // ---- readability: quacks and dogs carry a faint light of their own, and the overall darkness is eased a little (never while DARK, a blackout or the deep is on)
 function gfxGlow() {
   if (!GFX.glow || gfxDark()) return;
-  for (const e of ents) if (!e.dead && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32 && (e.type === 'dog' || isQuack(e))) light(e.x + e.w / 2, e.y + e.h / 2, 25, null, 0.35); // only those on screen: a mission holds over a hundred
+  for (const e of ents) if (!e.dead && e.x + e.w > cam.x - 32 && e.x < cam.x + VW + 32 && (e.type === 'dog' || isQuack(e) || ALIEN[e.type])) light(e.x + e.w / 2, e.y + e.h / 2, 25, null, 0.35); // only those on screen: a mission holds over a hundred
 }
 const g9CollectLights = collectLights;
 collectLights = function (t) { g9CollectLights(t); gfxGlow(); };
@@ -12602,7 +13074,7 @@ function decorate() {
   FP = fpal(th); FB = backPal(th);
   const rnd = (a, b = 0) => fhash(a, b, seed), E = (c, r) => c >= 0 && c < LW && r >= 0 && r < LH && tiles[r * LW + c] === EMPTY;
   const used = new Uint8Array(LW * LH), busy = new Uint8Array(LW), mark = (c0, c1) => { for (let c = Math.max(0, c0); c <= Math.min(LW - 1, c1); c++) busy[c] = 1; };
-  for (const s of spawns) if (typeof s.c === 'number') mark(s.c - 1, s.c + 1);
+  for (const s of spawns) if (typeof s.c === 'number' && !ALIEN[s.type]) mark(s.c - 1, s.c + 1); // (round 10: the alien nests come after the scenery and keep clear of it, so they are left out here)
   for (const d of decor) mark(d.c - 2, d.c + 2);
   for (const L of lamps) mark(L.c - 1, L.c + 1);
   for (const d of devs) if (d.kind !== 'wind' && d.kind !== 'grav' && d.x0 !== undefined && !d.mod) mark(Math.floor(d.x0 / T) - 1, Math.floor(d.x1 / T) + 1);
@@ -12701,7 +13173,7 @@ function decorate() {
   fancy = F;
 }
 const _buildLevel = buildLevel;
-buildLevel = function () { _buildLevel(); if (mode === 'campaign') witSigns(level); decorate(); }; // every level, campaign, stretch or random, is dressed once it is built
+buildLevel = function () { _buildLevel(); if (mode === 'campaign') witSigns(level); decorate(); alienPlace(); }; // every level, campaign, stretch or random, is dressed once it is built; then (round 10) the alien nests, so the scenery does not step around them
 // ---- drawing. Only what is on screen is touched; sprites are drawn once per theme and reused.
 const fspan = (arr, lo, hi, fn) => { let a = 0, b = arr.length; while (a < b) { const m = (a + b) >> 1; if (arr[m].c < lo) a = m + 1; else b = m; } for (; a < arr.length && arr[a].c <= hi; a++) fn(arr[a]); };
 const fview = () => [Math.floor(cam.x / T) - 14, Math.floor((cam.x + VW) / T) + 3];
@@ -12817,6 +13289,7 @@ if (window.__SB_TEST__) Object.assign(window.__SB__, { LOOKS, BRO_ITEM, broRows,
 if (window.__SB_TEST__) Object.assign(window.__SB__, { rankOf, RANK, runResult, recordRun, addScore, hudStep, drawScreen, records: () => records, lastResult: () => lastResult, hud: () => hud, setMode(m) { mode = m; }, setState(v) { state = v; }, leave() { chopper = { x: 0, y: 0, tx: 0, ty: 0, floor: 0, state: 'leave', t: 0 }; endT = 2.7; P.alive = false; P.ride = true; }, setCam(x, y) { cam.x = x; cam.y = y; } }); // round 8 records hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { objHit, modState: () => ({ live: modLive, banner: modBannerT, dark: modDarkK }), restless, modOn, GRANT_GUNS, updateAuditor, melt: () => melt, MELT_V, MELT_LEAD, startMelt, meltSafe, wrap: () => wrapEdge, updateWrap, WRAP_BACK, bossFight, reachesPlayer, rectSolid, bannerNow: () => banner }); // wall rule and Think Tank hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { bossSkin, bossWear, BOSS_NAME, MICRO, bossMarks: () => bossMarks, drawBoss: (e, t) => (e.type === 'crawler' ? drawCrawlers(t) : drawEnt(e, t)) }); // boss art hooks
+if (window.__SB_TEST__) Object.assign(window.__SB__, { ALIEN, AL, AL_MISSIONS, ALIEN_PTS, ALIEN_NAME, HIVE, hiveNew, hiveUpdate, hiveSlow, hiveUnder, hiveAdd, hiveGrow, alienPlace, alienInit, alFloorOk, alCeil, alSite, alClear, alNest, rngOf, seedN, alQuiet, crawlStep, crawlPlace, updateAlien, drawAlien, hiveDraw, alLay, ahash, DIMS, HITTABLE, BOSS, QUACK, LEAK, gfxOutlined, isQuack }); // alien hooks
 if (window.__SB_TEST__) Object.assign(window.__SB__, { GFX, gfxOutlinePass, gfxRim, gfxN: () => gfxN, gfxAO, gfxGlow, gfxDark, GFX_AO, viewTiles, drawEnt, drawTiles, collectLights, gfxLights: () => lights });
 })();
 </script>
