@@ -21,7 +21,8 @@ const plantAt = (kind, c) => { const p = { kind, x: c * T + 8, y: 16 * T, c, r: 
 for (let l = 0; l < S.nLevels; l++) {
   S.startLevel(l); run(1);
   const name = S.levelDef(l).name;
-  check(name + ': plants grow and critters live here', S.plants.length >= 40 && S.critters.length >= 10, S.plants.length + ' plants, ' + S.critters.length + ' critters');
+  // the Detox Express is a steel train: only the dirt platform at the start grows tufts and weeds (birds perch on the roofs)
+  check(name + ': plants grow and critters live here', S.plants.length >= (name === 'DETOX EXPRESS' ? 15 : 40) && S.critters.length >= 10, S.plants.length + ' plants, ' + S.critters.length + ' critters');
   let err = null; try { for (let i = 0; i < 120; i++) run(1, { right: true, fire: i % 4 === 0 }); } catch (e) { err = e; }
   check(name + ': two seconds of play draw without errors', !err, err && err.message);
 }
@@ -73,8 +74,8 @@ check('a shot kills a critter', c4.dead);
 // grass sprouts back on freshly blasted earth
 flat(); S.setTile(30, 15, 1); run(1); S.damageTile(30, 15, 999); run(2);
 const sp = S.sproutAt();
-check('breaking a block leaves the earth under it bare', sp.has(16 * 236 + 30));
-const t0 = sp.get(16 * 236 + 30); run(60 * 15);
+check('breaking a block leaves the earth under it bare', sp.has(16 * S.LW + 30));
+const t0 = sp.get(16 * S.LW + 30); run(60 * 15);
 check('its grass is back after about 14 s', S.lifeT - t0 >= 14);
 flat(); S.explode(40 * T, 16 * T - 4, 30, 0, 'p', 0); run(1);
 check('a blast burns the grass off the earth around it', S.sproutAt().size >= 3, S.sproutAt().size + ' tiles');

@@ -19,7 +19,7 @@ let fails = 0;
 const check = (name, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  (' + info + ')' : '')); if (!ok) fails++; };
 const solid = (c, r) => { const v = S.tileAt(c, r); return v !== 0 && v !== 5; };
 // clear the level of everything but what a check needs, then drop an enemy at a column
-const lone = (lvl = 0) => { if (lvl) S.startLevel(lvl); else S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); run(1); S.P.inv = 1e9; };
+const lone = (lvl = 0) => { if (lvl) S.startLevel(lvl); else S.reset(); run(1); S.ents.forEach((e) => { if (e.type !== 'flag') e.dead = true; }); run(1); S.P.inv = 1e9; S.P.bro = S.BRO.einstein; }; // a new run starts with random bros
 const spawn = (type, c, extra = {}) => { const e = Object.assign(S.makeEnt({ type, c, from: 0 }), extra); S.ents.push(e); return e; };
 const stand = (c) => { S.P.x = c * T + 3; S.P.y = 16 * T - 16; S.P.vx = 0; S.P.vy = 0; };
 
@@ -116,19 +116,20 @@ check('supply crate refills a special', S.P.spec === 2, 'spec ' + S.P.spec);
 
 // new bros
 lone(); stand(6); S.P.bro = S.ents.length >= 0 && S.P.bro; // keep the object, swap id via cage rescue below
+S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf('ada') - 1] - 1; // the next cage crosses Ada's threshold
 const cage = spawn('cage', 9, { bro: 'ada' }); run(1); S.P.x = cage.x; run(2);
 check('rescuing Ada unlocks her', S.unlocked.includes('ada') && S.P.bro.id === 'ada');
 e = spawn('grunt', 16, { face: -1, aware: false }); S.P.face = 1; S.P.spec = 3; S.pressed.special = true; run(1);
 const drone = S.ents.find((o) => o.type === 'drone'); run(120);
 check('Ada drone appears and kills', !!drone && e.dead);
-lone(); stand(6); const c2 = spawn('cage', 9, { bro: 'darwin' }); run(1); S.P.x = c2.x; run(2);
+lone(); stand(6); S.rescues = S.BRO_AT[S.BRO_ORDER.indexOf('darwin') - 1] - 1; const c2 = spawn('cage', 9, { bro: 'darwin' }); run(1); S.P.x = c2.x; run(2);
 const weak = [spawn('grunt', 14), spawn('dog', 18), spawn('scout', 20)];
 S.P.spec = 3; S.pressed.special = true; run(2);
 check('Darwin natural selection kills the weak on screen', weak.every((w) => w.dead));
 
 // Homeopathitron overdose mode fires homing missiles
 lone(); S.reset(); run(1); S.ents.forEach((o) => { if (o.type !== 'boss' && o.type !== 'flag') o.dead = true; }); run(1);
-const mech = S.boss; S.P.inv = 1e9; S.P.x = 184 * T; S.P.y = 15 * T - 16; run(5);
+const mech = S.boss; S.P.inv = 1e9; S.P.x = S.arenaCol(184) * T; S.P.y = 15 * T - 16; run(5);
 mech.hp = 55; let missile = false; for (let i = 0; i < 600 && !missile; i++) { run(1); missile = S.bullets.some((b) => b.kind === 'missile'); }
 check('Homeopathitron enters overdose mode and fires missiles', mech.p2 && missile);
 
@@ -142,7 +143,7 @@ S.hitEnemy(kop, 999, 0); let k = 0; for (; k < 600 && !kop.dead; k++) run(1);
 check('Detoxkopter crashes and dies', kop.dead, k + ' frames'); check('kopter gate opens', !solid(124, 10) && !solid(125, 14));
 
 // Crystal Crawler: tunnels, surfaces, dies segment by segment, chopper comes, level 2 ends the game
-const crawl = S.ents.find((o) => o.type === 'crawler'); S.P.x = 185 * T; S.P.y = 12 * T - 16; S.P.vy = 0; run(5);
+const crawl = S.ents.find((o) => o.type === 'crawler'); S.P.x = S.arenaCol(185) * T; S.P.y = 12 * T - 16; S.P.vy = 0; run(5);
 check('Crystal Crawler activates', crawl.active && crawl.segs.length === 14);
 let surfaced = false; for (let i = 0; i < 900 && !surfaced; i++) { S.P.inv = 1e9; run(1); surfaced = crawl.hy < crawl.surfY - 10; }
 check('Crystal Crawler surfaces', surfaced);
@@ -154,7 +155,7 @@ drew = true; try { S.render(0); } catch (err) { drew = false; console.log(err); 
 check('level-clear screen draws', drew);
 
 // level 3: builds clean, icicles drop on what walks under them, ice is slippery, the tank fights and the game ends
-S.startLevel(2); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(3); check('level 3 builds with nothing floating', S.checkCollapse() === 0);
 check('level 3 has 3 cages, a mech and the tank', S.ents.filter((o) => o.type === 'cage').length === 3 && S.ents.some((o) => o.type === 'mechsuit') && S.ents.some((o) => o.type === 'tank'));
 run(1); S.ents.forEach((o) => { if (!['tank', 'icicle', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 const ic = S.ents.find((o) => o.type === 'icicle');
@@ -163,12 +164,12 @@ S.P.inv = 0; S.P.x = ic.x - 2; S.P.y = 16 * T - 16; S.P.vx = 0; let k3 = 0;
 for (; k3 < 120 && !ic.dead; k3++) run(1);
 check('an icicle drops when you walk under it', ic.dead, k3 + ' frames');
 check('the icicle kills what it lands on', !S.P.alive || q.dead);
-S.startLevel(2); run(1); S.ents.forEach((o) => { if (!['tank', 'flag'].includes(o.type)) o.dead = true; }); run(1);
+S.startLevel(3); run(1); S.ents.forEach((o) => { if (!['tank', 'flag'].includes(o.type)) o.dead = true; }); run(1);
 S.P.inv = 1e9; S.P.x = 13 * T; S.P.y = 14 * T - 16; S.P.vx = 0; run(3);
 for (let i = 0; i < 30; i++) run(1, { right: true }); run(1);
 const v0 = S.P.vx; run(8);
 check('ice is slippery: you keep sliding after letting go', v0 > 60 && S.P.vx > 20, 'vx ' + v0.toFixed(0) + ' -> ' + S.P.vx.toFixed(0));
-const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = 186 * T; S.P.y = 16 * T - 16; S.P.vy = 0; run(5);
+const tank = S.ents.find((o) => o.type === 'tank'); S.P.x = S.arenaCol(186) * T; S.P.y = 16 * T - 16; S.P.vy = 0; run(5);
 check('Snake Oil Tank activates', tank.active);
 let shot = false; for (let i = 0; i < 900 && !shot; i++) { S.P.inv = 1e9; run(1); shot = S.bullets.some((b) => b.owner === 'e' && b.kind === 'bomb') || tank.state === 'flame'; }
 check('Snake Oil Tank attacks', shot, tank.state);
@@ -178,10 +179,10 @@ for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, 
 check('extraction on level 3 leads on to level 4', S.state === 'win', S.state);
 
 // level 4: the Succussion Engine
-S.startLevel(3); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(4); check('level 4 builds with nothing floating', S.checkCollapse() === 0);
 check('level 4 has 4 cages and the engine', S.ents.filter((o) => o.type === 'cage').length === 4 && S.ents.some((o) => o.type === 'engine'));
 run(1); S.ents.forEach((o) => { if (!['engine', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = 192 * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
+const eng = S.ents.find((o) => o.type === 'engine'); S.P.inv = 1e9; S.P.x = S.arenaCol(192) * T; S.P.y = 15 * T - 16; S.P.vy = 0; run(5);
 check('Succussion Engine activates', eng.active);
 const hp0 = eng.hp; S.hitEnemy(eng, 50, 0); check('its core is shielded while the vats stand', eng.hp === hp0);
 let slammed = false; for (let i = 0; i < 400 && !slammed; i++) { S.P.inv = 1e9; run(1); slammed = eng.hammers.some((h) => h.state === 'rise'); }
@@ -195,9 +196,9 @@ for (let i = 0; i < 60 * 25 && S.state === 'play'; i++) { S.P.inv = 1e9; run(1, 
 check('extraction on level 4 leads on to level 5', S.state === 'win', S.state);
 
 // level 5: the Flat Earth Zeppelin
-S.startLevel(4); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
+S.startLevel(5); check('level 5 builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['blimp', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = 180 * T; S.P.y = 16 * T - 16; run(5);
+const zep = S.ents.find((o) => o.type === 'blimp'); S.P.inv = 1e9; S.P.x = S.arenaCol(180) * T; S.P.y = 16 * T - 16; run(5);
 check('Flat Earth Zeppelin activates', zep.active);
 let zshot = false; for (let i = 0; i < 400 && !zshot; i++) { S.P.inv = 1e9; run(1); zshot = S.bullets.some((b) => b.owner === 'e'); }
 check('its gondolas shoot', zshot);
@@ -210,7 +211,7 @@ check('then the zeppelin goes down', zep.dead && !!S.chopper, k3 + ' frames');
 // the last mission: King Citrus
 S.startLevel(S.nLevels - 1); check('the Citadel builds with nothing floating', S.checkCollapse() === 0);
 run(1); S.ents.forEach((o) => { if (!['citrus', 'flag'].includes(o.type)) o.dead = true; }); run(1);
-const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = 186 * T; S.P.y = 15 * T - 16; run(5);
+const kc = S.ents.find((o) => o.type === 'citrus'); S.P.inv = 1e9; S.P.x = S.arenaCol(186) * T; S.P.y = 15 * T - 16; run(5);
 check('King Citrus activates', kc.active);
 let hopped = false; for (let i = 0; i < 300 && !hopped; i++) { S.P.inv = 1e9; run(1); if (!kc.onGround) hopped = true; }
 check('King Citrus hops', hopped);

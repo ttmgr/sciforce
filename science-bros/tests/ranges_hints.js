@@ -25,6 +25,7 @@ for (const b of S.BROS) {
     for (let i = 0; i < 120; i++) { S.P.inv = 1e9; S.P.x = 30 * T; S.P.face = 1; q.x = (30 + d) * T + 2; q.react = 99; q.cool = 99; q.spin = 0; step({ fire: true }); }
     return q.hp < 999;
   };
+  if (b.melee) { check(b.name + ' (melee) hurts a quack 1 tile away', hurtsAt(1)); continue; }
   check(b.name + ' hurts a quack 6 tiles away (or just past it, for lobbed shots)', hurtsAt(6) || hurtsAt(8));
   if (hurtsAt(12)) at12++;
 }
@@ -43,7 +44,7 @@ for (const type of ['sniper', 'mortar', 'rocketeer']) {
   check('a ' + type + ' off the screen (25 tiles) does not attack', shots === 0, shots + ' bullet-frames');
 }
 // boss hints: the shield hint, the arrows and the boss bar status
-S.startLevel(3); S.endCeasefire(); step();
+S.startLevel(4); S.endCeasefire(); step();
 const E = S.ents.find((e) => e.type === 'engine'); S.ents.forEach((e) => { if (e !== E && e.type !== 'flag') e.dead = true; });
 S.P.x = (E.trig + 2) * T; S.P.y = 2 * T; for (let i = 0; i < 120; i++) { S.P.inv = 1e9; step(); }
 check('the Succussion Engine wakes', E.active);

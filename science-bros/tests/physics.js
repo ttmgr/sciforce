@@ -24,14 +24,14 @@ const breakAll = (cells) => cells.forEach(([c, r]) => S.damageTile(c, r, 999));
 fresh();
 check('no floating tiles at start', S.checkCollapse() === 0);
 
-// 2. watchtower: cut both wooden legs and it comes down onto the cliff top
+// 2. lookout on the beach fort: cut both wooden legs and it comes down onto the sand
 fresh();
-const top = S.ents.find((e) => e.type === 'grunt' && Math.abs(e.x / T - 126) < 1 && e.y < 5 * T);
-S.P.x = 100 * T;
-breakAll([[124, 7], [128, 7]]);
+const top = S.ents.find((e) => e.type === 'grunt' && Math.abs(e.x / T - 164) < 1 && e.y < 13 * T);
+S.P.x = 140 * T;
+breakAll([[160, 15], [165, 15]]);
 run(150);
-check('watchtower platform left row 4', !solid(124, 4) && !solid(126, 4) && !solid(128, 4));
-check('watchtower bricks landed on the cliff', solid(125, 7) && solid(127, 7));
+check('lookout platform left row 13', !solid(159, 13) && !solid(162, 13) && !solid(166, 13));
+check('lookout bricks landed on the sand', solid(162, 15) && solid(163, 15));
 check('quack on the tower fell or died', !top || top.dead || top.y > 5 * T, top ? 'y row ' + (top.y / T).toFixed(1) : 'none');
 
 // 3. shooting a quack leaves a ragdoll that comes to rest on the floor
@@ -49,29 +49,29 @@ check('blood left on tiles', S.decals.size > 0, S.decals.size + ' tiles stained'
 
 // 4. explosions tear quacks into gibs
 fresh();
-g = grunts().find((e) => Math.abs(e.x / T - 24) < 1);
+g = grunts().sort((a, b) => a.x - b.x)[0]; // the first quack on the beach
 S.P.x = 4 * T;
 S.explode(g.x + 5, g.y + 8, 30, 6, 'p', 0);
 check('explosion gibs a quack', S.bodies.filter((b) => b.kind === 'gib').length >= 4);
 
-// 5. bunker: cut the left roof off from the girder and the door, and it drops
+// 5. the Remedy Lab: cut the left roof off from the girder and the door, and it drops
 fresh();
-S.P.x = 30 * T;
-breakAll([[50, 9], [50, 10], [44, 13], [44, 14], [44, 15]]);
+S.P.x = 80 * T;
+breakAll([[103, 5], [103, 6], [91, 13], [91, 14], [91, 15]]);
 run(180);
-check('left bunker roof collapsed', !solid(47, 9) && !solid(47, 10));
-check('roof right of the girder still up', solid(60, 9) && solid(60, 10));
+check('left lab roof collapsed', !solid(97, 5) && !solid(97, 6));
+check('roof right of the girder still up', solid(110, 5) && solid(110, 6));
 
-// 6. acid bridge: cut the crates under the tower and it drops, half onto a steel pile, half into the acid
+// 6. tide pool: cut the planks under the lookout and it drops, half onto a steel pile, half into the acid
 fresh();
-S.P.x = 70 * T;
-const turret = S.ents.find((e) => e.type === 'turret' && Math.abs(e.x / T - 88) < 1);
+S.P.x = 60 * T;
+const turret = S.ents.find((e) => e.type === 'turret' && Math.abs(e.x / T - 74) < 1);
 const ty0 = turret.y;
-breakAll([[88, 16], [89, 16]]);
+breakAll([[74, 16], [75, 16]]);
 run(240);
-check('tower fell out of rows 12-15', !solid(88, 12) && !solid(89, 12));
-check('turret on the tower came down', turret.dead || turret.y > ty0 + 8, 'dropped ' + (turret.y - ty0).toFixed(0) + ' px');
-check('steel piles still stand in the acid', solid(80, 17) && solid(96, 17));
+check('lookout fell out of rows 13-15', !solid(74, 13) && !solid(75, 13));
+check('turret on the lookout came down', turret.dead || turret.y > ty0 + 8, 'dropped ' + (turret.y - ty0).toFixed(0) + ' px');
+check('steel piles still stand in the acid', solid(68, 17) && solid(80, 17));
 
 // 7. punch sends a quack flying
 fresh();
